@@ -15,15 +15,15 @@ How it works
 
 Character exports from CC3 and iClone can be dragged into Unity, the import tool can then be opened and the character processed with a single click.
 
-For full details of the workflow, see the [documentation](https://www.github.com/soupday).
+For full details of the workflow, see the [documentation](https://soupday.github.io/cc3_unity_tools/).
 
 
 Obtaining the Tool
 ==================
 
-The tool can be installed using Unity's internal package manager from either the Stable branch of this [git repository](https://www.github.com/soupday) or via download of the .zip of the [latest release](https://github.com/soupday/cc3_unity_tools_hdrp/releases/latest/download/cc3_unity_tools_hdrp.zip).
+The tool can be installed using Unity's internal package manager from either the Stable branch of this [git repository](https://github.com/soupday/cc3_unity_tools) or via download of the 'Source code.zip' of the [latest release](https://github.com/soupday/cc3_unity_tools/releases).
 
-This process is discussed in detail in the [documentation](https://www.github.com/soupday).
+This process is discussed in detail in the [installation documentation](https://soupday.github.io/cc3_unity_tools/installation.html).
 
 **Removal**
 
