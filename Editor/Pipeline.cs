@@ -16,8 +16,6 @@
  * along with CC3_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define PIPELINE_HDRP
-
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,7 +33,7 @@ namespace Reallusion.Import
 
     public static class Pipeline
     {
-#if PIPELINE_HDRP
+#if HDRP_10_5_0_OR_NEWER
         // Shaders
         //
         public const string SHADER_DEFAULT = "HDRP/Lit";
@@ -113,7 +111,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_HDRP";
         // for gamebase single material or actor core...
         public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_HDRP";
-#elif PIPELINE_URP
+#elif URP_10_5_0_OR_NEWER
         // Shaders
         //
         public const string SHADER_DEFAULT = "Universal Render Pipeline/Lit";
@@ -188,7 +186,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Baked_CorneaRef_URP";
         public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Baked_EyeCustom_URP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_URP";
-#elif PIPELINE_3D
+#else
         // Shaders
         //
         public const string SHADER_DEFAULT = "3D/Lit";
@@ -336,14 +334,12 @@ namespace Reallusion.Import
 
         public static RenderPipeline GetRenderPipeline()
         {
-#if PIPELINE_HDRP            
+#if HDRP_10_5_0_OR_NEWER
             return RenderPipeline.HDRP;
-#elif PIPELINE_URP
+#elif URP_10_5_0_OR_NEWER
             return RenderPipeline.URP;
-#elif PIPELINE_3D
-            return RenderPipeline.Builtin;
 #else
-            return RenderPipeline.Unknown;
+            return RenderPipeline.Builtin;
 #endif
         }
 
