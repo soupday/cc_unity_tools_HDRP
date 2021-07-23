@@ -1,4 +1,4 @@
-# proto_cc3_tools
+# CC3 Unity Tools
 
 Read Me
 =======
@@ -27,10 +27,10 @@ This process is discussed in detail in the [documentation](https://www.github.co
 
 **Removal**
 
-Unity's internal packagage manager allows the simple and safe removal of the tool.
+Unity's internal package manager allows the simple and safe removal of the tool.
 
 
 **Updating**
 
-Simply remove the existing tool as above and install the lastest version.
+Simply remove the existing tool as above and install the latest version.
 
