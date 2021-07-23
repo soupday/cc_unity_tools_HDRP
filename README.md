@@ -21,7 +21,7 @@ For full details of the workflow, see the [documentation](https://soupday.github
 Obtaining the Tool
 ==================
 
-The tool can be installed using Unity's internal package manager from either the Stable branch of this [git repository](https://github.com/soupday/cc3_unity_tools) or via download of the 'Source code.zip' of the [latest release](https://github.com/soupday/cc3_unity_tools/releases).
+The tool can be installed using Unity's internal package manager from either the Stable branch of this [git repository](https://github.com/soupday/cc3_unity_tools_HDRP) or via download of the 'Source code.zip' of the [latest release](https://github.com/soupday/cc3_unity_tools_HDRP/releases).
 
 This process is discussed in detail in the [installation documentation](https://soupday.github.io/cc3_unity_tools/installation.html).
 
