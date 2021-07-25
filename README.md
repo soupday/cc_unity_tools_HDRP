@@ -8,7 +8,9 @@ Welcome to the [Unity](https://www.unity.com/) import and auto setup tool for **
 This is a fully featured tool to take exports from CC3/iClone and set them up in Unity with complete visual fidelity.
 
 The tool can produce characters of the highest visual quality using custom Shadergraph shaders.
-Additionally, more performance focussed characters can be produced using simpler shaders with a minimal loss of visual quality. 
+Additionally, more performance focussed characters can be produced using simpler shaders with a minimal loss of visual quality.
+
+Progress and additional information can be found in the [Reallusion forum thread](https://forum.reallusion.com/488356/Unity-Auto-Setup).
 
 How it works
 ============
