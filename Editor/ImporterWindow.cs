@@ -383,7 +383,8 @@ namespace Reallusion.Import
                 contextCharacter.logType = CharacterInfo.ProcessingType.HighQuality;
                 contextCharacter.Write();
                 CreateTreeView(true);
-            }            
+            }
+            GUI.enabled = true;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             
@@ -391,6 +392,7 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
+            if (contextCharacter.logType != CharacterInfo.ProcessingType.HighQuality) GUI.enabled = false;
             if (GUILayout.Button("Bake", GUILayout.Width(FUNCTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 if (contextCharacter.logType == CharacterInfo.ProcessingType.HighQuality)
@@ -402,13 +404,15 @@ namespace Reallusion.Import
                     contextCharacter.bakeIsBaked = true;
                     contextCharacter.Write();
                 }
-            }            
-            GUILayout.FlexibleSpace();
+            }
             GUI.enabled = true;
+            GUILayout.FlexibleSpace();
+            if (contextCharacter.logType == CharacterInfo.ProcessingType.None) GUI.enabled = false;
             if (GUILayout.Button("Animations", GUILayout.Width(FUNCTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 RL.SetAnimationImport(contextCharacter);
             }
+            GUI.enabled = true;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 

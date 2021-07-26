@@ -348,12 +348,7 @@ namespace Reallusion.Import
 
             importer.humanDescription = human;
         }
-
-        /* 
-         * Create an Animator and apply an FBX animation to it.
-         * [in] kFbxObject: Fbx target object
-         * [in] assetPath: Fbx asset path
-         */
+        
         public static void AutoCreateAnimator(GameObject fbx, string assetPath, ModelImporter importer)
         {
             string animatorPath = Path.GetDirectoryName(assetPath) + "/" + fbx.name + "_animator.controller";
@@ -398,11 +393,7 @@ namespace Reallusion.Import
                 }
             }
         }
-
-        /* 
-         * Set the Animation parameters.
-         * [in] kImporter: Model import settings
-         */
+        
         public static void SetAnimation(ModelImporter importer, string assetPath)
         {
             if (importer.defaultClipAnimations.Length > 0)
