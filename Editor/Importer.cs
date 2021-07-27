@@ -88,7 +88,13 @@ namespace Reallusion.Import
 
             // fetch the character json export data.            
             jsonData = info.JsonData;
-            jsonMeshData = jsonData.GetObjectAtPath(characterName + "/Object/" + characterName + "/Meshes");
+            string jsonPath = characterName + "/Object/" + characterName + "/Meshes";
+            jsonMeshData = null;
+            if (jsonData.PathExists(jsonPath))
+                jsonMeshData = jsonData.GetObjectAtPath(jsonPath);
+            else
+                Debug.LogError("Unable to find Json mesh data: " + jsonPath);            
+
             string jsonVersion = jsonData?.GetStringValue(characterName + "/Version");
             if (!string.IsNullOrEmpty(jsonVersion))
                 ImporterWindow.LogReport("JSON version: " + jsonVersion);
@@ -221,7 +227,12 @@ namespace Reallusion.Import
                     {
                         // fetch the json parent for this material.
                         // the json data for the material contains custom shader names, parameters and texture paths.
-                        QuickJSON matJson = jsonMeshData.GetObjectAtPath(obj.name + "/Materials/" + sourceName);
+                        QuickJSON matJson = null;
+                        string jsonPath = obj.name + "/Materials/" + sourceName;
+                        if (jsonMeshData != null && jsonMeshData.PathExists(jsonPath))
+                            matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                        else
+                            Debug.LogError("Unable to find json material data: " + jsonPath);
 
                         // determine the material type, this dictates the shader and template material.
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
@@ -249,7 +260,7 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 bool hasOpacity = false;
-                if (!string.IsNullOrEmpty(matJson?.GetStringValue("Textures/Opacity/Texture Path")))
+                if (matJson != null && matJson.PathExists("Textures/Opacity/Texture Path"))
                 {
                     hasOpacity = true;
                 }
@@ -493,7 +504,7 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 mat.SetColor("_BaseColor", matJson.GetColorValue("Diffuse Color"));
-                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                if (matJson.PathExists("Textures/Glow/Texture Path"))
                     mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength")/100f));
             }
 
@@ -620,7 +631,7 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
-                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                if (matJson.PathExists("Textures/Glow/Texture Path"))
                     mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));                
@@ -723,7 +734,7 @@ namespace Reallusion.Import
             {
                 mat.SetFloat("_IsUpperTeeth", matJson.GetFloatValue("Custom Shader/Variable/Is Upper Teeth"));
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
-                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                if (matJson.PathExists("Textures/Glow/Texture Path"))
                     mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/Teeth MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/Teeth MicroNormal Strength"));
@@ -772,7 +783,7 @@ namespace Reallusion.Import
             if (matJson != null)
             {                
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
-                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                if (matJson.PathExists("Textures/Glow/Texture Path"))
                     mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));
@@ -800,13 +811,19 @@ namespace Reallusion.Import
 
             // if there is no custom shader, then this is the PBR eye material, 
             // we need to find the cornea material json object with the RLEye shader data:
-            if (string.IsNullOrEmpty(customShader))
+            if (string.IsNullOrEmpty(customShader) && matJson != null)
             {
                 QuickJSON parentJson = jsonData.FindParentOf(matJson);
                 if (sourceName.iContains("Eye_L"))
+                {
                     matJson = parentJson.FindObjectWithKey("Cornea_L");
-                else if (sourceName.iContains("Eye_R"))
+                    sourceName.Replace("Eye_L", "Cornea_L");
+                }
+                else if (sourceName.iContains("Eye_R")) 
+                {
                     matJson = parentJson.FindObjectWithKey("Cornea_R");
+                    sourceName.Replace("Eye_R", "Cornea_R");
+                }
             }
 
             if (matJson != null) isLeftEye = matJson.GetFloatValue("Custom Shader/Variable/Is Left Eye") > 0f ? true : false;
@@ -847,7 +864,7 @@ namespace Reallusion.Import
             {
                 // both the cornea and the eye materials need the same settings:
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
-                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                if (matJson.PathExists("Textures/Glow/Texture Path"))
                     mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_ColorBlendStrength", matJson.GetFloatValue("Custom Shader/Variable/BlendMap2 Strength"));
                 mat.SetFloat("_ShadowRadius", matJson.GetFloatValue("Custom Shader/Variable/Shadow Radius"));
@@ -926,7 +943,7 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
-                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                if (matJson.PathExists("Textures/Glow/Texture Path"))
                     mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_AOOccludeAll", matJson.GetFloatValue("Custom Shader/Variable/AO Map Occlude All Lighting"));
                 mat.SetFloat("_BlendStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/Blend/Strength") / 100f));
@@ -1036,13 +1053,18 @@ namespace Reallusion.Import
             bakedDetailMaps = new Dictionary<Material, Texture2D>();
             bakedThicknessMaps = new Dictionary<Material, Texture2D>();
 
+            if (jsonMeshData == null)
+            {
+                Debug.LogError("Unable to bake default maps without valid Json data!");
+            }
+
             int childCount = fbx.transform.childCount;
             for (int i = 0; i < childCount; i++)
             {
                 GameObject obj = fbx.transform.GetChild(i).gameObject;
                 Renderer renderer = obj.GetComponent<Renderer>();
 
-                if (renderer)
+                if (jsonMeshData != null && renderer)
                 {                    
                     foreach (Material sharedMat in renderer.sharedMaterials)
                     {
@@ -1221,10 +1243,13 @@ namespace Reallusion.Import
                 string texturePath = null;
 
                 if (jsonData != null)
-                {
-                    texturePath = jsonData.GetStringValue(jsonPath + "/Texture Path");
-                    offset = jsonData.GetVector2Value(jsonPath + "/Offset");
-                    tiling = jsonData.GetVector2Value(jsonPath + "/Tiling");
+                {                    
+                    if (jsonData.PathExists(jsonPath + "/Texture Path"))
+                        texturePath = jsonData.GetStringValue(jsonPath + "/Texture Path");
+                    if (jsonData.PathExists(jsonPath + "/Offset"))
+                        offset = jsonData.GetVector2Value(jsonPath + "/Offset");
+                    if (jsonData.PathExists(jsonPath + "/Tiling"))
+                        tiling = jsonData.GetVector2Value(jsonPath + "/Tiling");
                 }
 
                 tex = GetTextureFrom(texturePath, materialName, suffix, out string name);
