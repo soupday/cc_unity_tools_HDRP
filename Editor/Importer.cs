@@ -471,6 +471,9 @@ namespace Reallusion.Import
                 matJson, "Textures/Normal",
                 FLAG_NORMAL);
 
+            ConnectTextureTo(sourceName, mat, "_EmissiveColorMap", "Glow",
+                matJson, "Textures/Glow");
+
             // URP/3D
             ConnectTextureTo(sourceName, mat, "_BaseMap", "Diffuse",
                 matJson, "Textures/Base Color",
@@ -489,7 +492,9 @@ namespace Reallusion.Import
             // All
             if (matJson != null)
             {
-                mat.SetColor("_BaseColor", matJson.GetColorValue("Diffuse Color"));                
+                mat.SetColor("_BaseColor", matJson.GetColorValue("Diffuse Color"));
+                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                    mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength")/100f));
             }
 
             //if (materialType == MaterialType.Scalp)
@@ -539,7 +544,7 @@ namespace Reallusion.Import
                 FLAG_NORMAL);
 
             ConnectTextureTo(sourceName, mat, "_MaskMap", "ao",
-                matJson, "Textures/AO");
+                matJson, "Textures/AO");            
 
             if (matJson != null)
             {
@@ -580,6 +585,9 @@ namespace Reallusion.Import
             ConnectTextureTo(sourceName, mat, "_MicroNormalMaskMap", "MicroNMask",
                 matJson, "Custom Shader/Image/MicroNormalMask");
 
+            ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
+                matJson, "Textures/Glow");
+
             if (materialType == MaterialType.Head)
             {
                 ConnectTextureTo(sourceName, mat, "_ColorBlendMap", "BCBMap",
@@ -612,6 +620,8 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
+                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                    mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));                
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");
@@ -706,10 +716,15 @@ namespace Reallusion.Import
             ConnectTextureTo(sourceName, mat, "_GradientAOMap", "GradAO",
                 matJson, "Custom Shader/Image/Gradient AO");
 
+            ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
+                matJson, "Textures/Glow");
+
             if (matJson != null)
             {
                 mat.SetFloat("_IsUpperTeeth", matJson.GetFloatValue("Custom Shader/Variable/Is Upper Teeth"));
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
+                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                    mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/Teeth MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/Teeth MicroNormal Strength"));
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/Front Specular");
@@ -751,9 +766,14 @@ namespace Reallusion.Import
             ConnectTextureTo(sourceName, mat, "_GradientAOMap", "GradAO",
                 matJson, "Custom Shader/Image/Gradient AO");
 
+            ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
+                matJson, "Textures/Glow");
+
             if (matJson != null)
             {                
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
+                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                    mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/Front Specular");
@@ -791,6 +811,9 @@ namespace Reallusion.Import
 
             if (matJson != null) isLeftEye = matJson.GetFloatValue("Custom Shader/Variable/Is Left Eye") > 0f ? true : false;
 
+            ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
+                matJson, "Textures/Glow");
+
             if (isCornea)
             {
                 ConnectTextureTo(sourceName, mat, "_ScleraDiffuseMap", "Sclera",
@@ -823,7 +846,9 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 // both the cornea and the eye materials need the same settings:
-                mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));                
+                mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
+                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                    mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_ColorBlendStrength", matJson.GetFloatValue("Custom Shader/Variable/BlendMap2 Strength"));
                 mat.SetFloat("_ShadowRadius", matJson.GetFloatValue("Custom Shader/Variable/Shadow Radius"));
                 mat.SetFloat("_ShadowHardness", matJson.GetFloatValue("Custom Shader/Variable/Shadow Hardness"));
@@ -882,7 +907,9 @@ namespace Reallusion.Import
             ConnectTextureTo(sourceName, mat, "_SpecularMap", "HSpecMap",
                 matJson, "Custom Shader/Image/Hair Specular Mask Map");
 
-            
+            ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
+                matJson, "Textures/Glow");
+
             if (isHair)
             {
                 mat.SetFloat("_AlphaPower", 1.0f);
@@ -899,6 +926,8 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
+                if (!string.IsNullOrEmpty(matJson.GetStringValue("Textures/Glow/Texture Path")))
+                    mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloat("_AOOccludeAll", matJson.GetFloatValue("Custom Shader/Variable/AO Map Occlude All Lighting"));
                 mat.SetFloat("_BlendStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/Blend/Strength") / 100f));
                 mat.SetColor("_VertexBaseColor", Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/VertexGrayToColor")));

@@ -860,7 +860,7 @@ void RLHairColoredDiffuse(uint3 id : SV_DispatchThreadID)
     float4 mask = SAMPLE(Mask, uv);
 
     float ao = INVERTED_SCALE(mask.g, aoStrength);    
-    float alpha = saturate(1.0 * pow(diffuse.a, alphaPower) / alphaRemap);
+    float alpha = pow(saturate((diffuse.a / alphaRemap)), alphaPower);    
 
     float4 color = lerp(float4(1.0, 1.0, 1.0, 1.0), diffuse, baseColorStrength);
     color = RootEndBlend(color, rootMap.g);
@@ -889,7 +889,7 @@ void RLHairDiffuse(uint3 id : SV_DispatchThreadID)
     float4 mask = SAMPLE(Mask, uv);    
     
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float alpha = saturate(1.0 * pow(saturate(diffuse.a), alphaPower) / alphaRemap);
+    float alpha = pow(saturate((diffuse.a / alphaRemap)), alphaPower);
     
     float4 color = diffuse * diffuseStrength;
     color = lerp(color, color * depthBlend, colorBlendStrength);

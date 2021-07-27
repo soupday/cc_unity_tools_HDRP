@@ -1,0 +1,42 @@
+
+
+BakedEyeOcclusionCustom:
+	Sort: -3
+
+Cornea:
+	Sort: -4
+	Refraction Model: None
+	Is Cornea: On
+
+CorneaRef:
+	Sort: -4
+	Refraction Model: Box
+	Is Cornea: On
+
+Eye:
+	Surface Type: Opaque
+	Is Cornea: Off
+
+Eye Occlusion: 
+	Sort: -3
+
+Hair:
+	n/a
+
+
+Head:
+	IsHead: On
+	Diffuse Profile: Skin
+
+Skin:
+	IsHead: Off	
+	Diffuse Profile: Skin
+
+Tearline:
+	Sort: -2	
+
+Teeth:
+	Diffuse Profile: Skin
+
+Tongue:
+	Diffuse Profile: Skin
