@@ -912,14 +912,14 @@ namespace Reallusion.Import
 
             if (isHair)
             {
-                mat.SetFloat("_AlphaPower", 1.0f);
+                mat.SetFloat("_AlphaPower", 1.5f);
                 mat.SetFloat("_AlphaRemap", 0.5f);
                 mat.SetFloat("_DepthPrepass", 0.95f);
             }
             else
             {
                 mat.SetFloat("_AlphaPower", 1.0f);
-                mat.SetFloat("_AlphaRemap", 0.8f);
+                mat.SetFloat("_AlphaRemap", 1.0f);
                 mat.SetFloat("_DepthPrepass", 0.95f);
             }            
 
