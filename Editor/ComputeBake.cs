@@ -307,8 +307,8 @@ namespace Reallusion.Import
         }
 
         private Material CreateBakedMaterial(Texture2D baseMap, Texture2D maskMap, Texture2D normalMap,
-            Texture2D detailMap, Texture2D subsurfaceMap, Texture2D thicknessMap, Texture2D emissionMap, float tiling,
-            Color emissiveColor,
+            Texture2D detailMap, Texture2D subsurfaceMap, Texture2D thicknessMap, Texture2D emissionMap, 
+            float normalScale, float tiling, Color emissiveColor,
             string sourceName, Material templateMaterial)
         {
             Material bakedMaterial = Util.FindMaterial(sourceName, new string[] { materialsFolder });            
@@ -345,6 +345,8 @@ namespace Reallusion.Import
             bakedMaterial.SetTexture("_BaseColorMap", baseMap);
             bakedMaterial.SetTexture("_MaskMap", maskMap);
             bakedMaterial.SetTexture("_NormalMap", normalMap);
+            if (normalMap)
+                bakedMaterial.SetFloat("_NormalScale", normalScale);
             bakedMaterial.SetTexture("_DetailMap", detailMap);
             bakedMaterial.SetTexture("_EmissionColorMap", emissionMap);
             if (detailMap)
@@ -374,7 +376,8 @@ namespace Reallusion.Import
             Texture2D normalBlend = GetMaterialTexture(mat, "_NormalBlendMap", true);
             Texture2D RGBAMask = GetMaterialTexture(mat, "_RGBAMask");
             Texture2D CFULCMask = GetMaterialTexture(mat, "_CFULCMask");
-            Texture2D EarNeckMask = GetMaterialTexture(mat, "_EarNeckMask");            
+            Texture2D EarNeckMask = GetMaterialTexture(mat, "_EarNeckMask");
+            float normalStrength = mat.GetFloat("_NormalStrength");
             float microNormalStrength = mat.GetFloat("_MicroNormalStrength");
             float microNormalTiling = mat.GetFloat("_MicroNormalTiling");
             float aoStrength = mat.GetFloat("_AOStrength");
@@ -496,7 +499,7 @@ namespace Reallusion.Import
 
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
-                microNormalTiling, emissiveColor,
+                normalStrength, microNormalTiling, emissiveColor,
                 sourceName, 
                 Pipeline.GetTemplateMaterial(MaterialType.Skin, 
                             MaterialQuality.Baked, characterInfo));            
@@ -512,6 +515,7 @@ namespace Reallusion.Import
             Texture2D microNormal = GetMaterialTexture(mat, "_MicroNormalMap", true);
             Texture2D gumsMask = GetMaterialTexture(mat, "_GumsMaskMap");
             Texture2D gradientAO = GetMaterialTexture(mat, "_GradientAOMap");
+            float normalStrength = mat.GetFloat("_NormalStrength");
             float microNormalStrength = mat.GetFloat("_MicroNormalStrength");
             float microNormalTiling = mat.GetFloat("_MicroNormalTiling");
             float aoStrength = mat.GetFloat("_AOStrength");
@@ -572,7 +576,7 @@ namespace Reallusion.Import
 
             return CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
-                microNormalTiling, emissiveColor,
+                normalStrength, microNormalTiling, emissiveColor,
                 sourceName, 
                 Pipeline.GetTemplateMaterial(MaterialType.Teeth, 
                             MaterialQuality.Baked, characterInfo));
@@ -585,6 +589,7 @@ namespace Reallusion.Import
             Texture2D normal = GetMaterialTexture(mat, "_NormalMap", true);
             Texture2D microNormal = GetMaterialTexture(mat, "_MicroNormalMap", true);
             Texture2D gradientAO = GetMaterialTexture(mat, "_GradientAOMap");
+            float normalStrength = mat.GetFloat("_NormalStrength");
             float microNormalStrength = mat.GetFloat("_MicroNormalStrength");
             float microNormalTiling = mat.GetFloat("_MicroNormalTiling");
             float aoStrength = mat.GetFloat("_AOStrength");
@@ -635,7 +640,7 @@ namespace Reallusion.Import
 
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
-                microNormalTiling, emissiveColor,
+                normalStrength, microNormalTiling, emissiveColor,
                 sourceName, 
                 Pipeline.GetTemplateMaterial(MaterialType.Tongue, 
                             MaterialQuality.Baked, characterInfo));
@@ -736,7 +741,7 @@ namespace Reallusion.Import
             // the HDRP/Lit shader seems to use x10 thickness values...
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
-                microNormalTiling, emissiveColor,
+                1f, microNormalTiling, emissiveColor,
                 sourceName, isCornea ? Pipeline.GetTemplateMaterial(MaterialType.Cornea, 
                                             MaterialQuality.Baked, characterInfo) 
                                      : Pipeline.GetTemplateMaterial(MaterialType.Eye, 
@@ -850,7 +855,7 @@ namespace Reallusion.Import
 
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 null, null, null, emissionMap,
-                1, emissiveColor,
+                normalStrength, 1, emissiveColor,
                 sourceName, 
                 Pipeline.GetTemplateMaterial(MaterialType.Hair, 
                             MaterialQuality.Baked, characterInfo));
@@ -870,8 +875,7 @@ namespace Reallusion.Import
                 result.SetFloat("_SpecularShift", specularShift);
                 result.SetFloat("_SecondarySpecularMultiplier", secondarySpecularMultiplier);
                 result.SetFloat("_SecondarySpecularShift", secondarySpecularShift);
-                result.SetFloat("_SecondarySmoothness", secondarySmoothness);
-                result.SetFloat("_NormalStrength", normalStrength);
+                result.SetFloat("_SecondarySmoothness", secondarySmoothness);                
             }
             else
             {
@@ -885,7 +889,6 @@ namespace Reallusion.Import
                 result.SetFloat("_SpecularShift", specularShift);
                 result.SetFloat("_SecondarySpecular", secondarySpecularMultiplier);
                 result.SetFloat("_SecondarySpecularShift", secondarySpecularShift);                
-                result.SetFloat("_NormalStrength", normalStrength);
                 result.SetFloat("_SmoothnessMin", smoothnessMin);
                 result.SetFloat("_SmoothnessMax", smoothnessMax);
             }
@@ -935,7 +938,8 @@ namespace Reallusion.Import
                 sourceName + "_BaseMap");
 
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
-                bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap, 1.0f, Color.black,
+                bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap, 
+                1f, 1f, Color.black,
                 sourceName, Pipeline.GetTemplateMaterial(MaterialType.EyeOcclusion,
                                             MaterialQuality.Baked, characterInfo));
 
