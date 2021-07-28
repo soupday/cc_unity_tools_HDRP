@@ -113,12 +113,16 @@ namespace Reallusion.Import
         {
             string value = Value();
 
-            System.Globalization.NumberStyles style = System.Globalization.NumberStyles.Number;            
-            System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.InvariantCulture;
-
-            if (int.TryParse(value, out int tryInt))
+            if (int.TryParse(value,
+                    System.Globalization.NumberStyles.Integer, 
+                    System.Globalization.CultureInfo.InvariantCulture, 
+                    out int tryInt))
                 values.Add(new MultiValue(name, tryInt));
-            else if (float.TryParse(value, style, culture, out float tryFloat))
+
+            else if (float.TryParse(value, 
+                    System.Globalization.NumberStyles.Number, 
+                    System.Globalization.CultureInfo.InvariantCulture, 
+                    out float tryFloat))
                 values.Add(new MultiValue(name, tryFloat));
         }
 

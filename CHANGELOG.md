@@ -8,7 +8,8 @@ Changelog
 ### v 0.1.3
 - Normal strength settings for all relevant custom shaders.
 - All normal map, micro normal map and blend normal map textures default to Bump mode when empty.
-- Floating point number conversion in Json file uses correct culture.
+- Emission texture and Emissive color properties added to all custom shaders.
+- Fix localization issue with number conversion reading from Json data.
 - Logs errors when Json data fails to read.
 
 ### v 0.1.1
