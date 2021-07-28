@@ -895,7 +895,7 @@ namespace Reallusion.Import
                 float limbusDarkT = Mathf.InverseLerp(0f, 10f, limbusDarkScale);
                 mat.SetFloat("_LimbusDarkRadius", Mathf.Lerp(0.145f, 0.075f, limbusDarkT));
                 //mat.SetFloat("_LimbusDarkWidth", 0.035f);
-                mat.SetFloat("_ScleraBrightness", 0.9f * matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"));
+                mat.SetFloat("_ScleraBrightness", 1f * matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"));
                 mat.SetFloat("_ScleraSmoothness", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Roughness"));
                 mat.SetFloat("_ScleraScale", matJson.GetFloatValue("Custom Shader/Variable/Sclera UV Radius"));
                 mat.SetFloat("_ScleraNormalStrength", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Flatten Normal"));
@@ -1020,8 +1020,12 @@ namespace Reallusion.Import
                 //mat.SetFloat("_TearDuctWidth", 0.05f);
                 mat.SetColor("_OcclusionColor", Color.Lerp(matJson.GetColorValue("Custom Shader/Variable/Shadow Color"), Color.black, 0.2f));
 
-                mat.SetFloat("_OcclusionStrength", 2f * matJson.GetFloatValue("Custom Shader/Variable/Shadow Strength"));
-                mat.SetFloat("_OcclusionStrength2", 2f * matJson.GetFloatValue("Custom Shader/Variable/Shadow2 Strength"));
+                float os1 = matJson.GetFloatValue("Custom Shader/Variable/Shadow Strength");
+                float os2 = matJson.GetFloatValue("Custom Shader/Variable/Shadow2 Strength");
+
+                mat.SetFloat("_OcclusionStrength", Mathf.Pow(os1, 1f / 3f));
+                mat.SetFloat("_OcclusionStrength2", Mathf.Pow(os2, 1f / 3f));
+                mat.SetFloat("_OcclusionPower", 1.75f);
                 //mat.SetFloat("_OcclusionPower", 2f);
 
                 float top = matJson.GetFloatValue("Custom Shader/Variable/Shadow Top");                
@@ -1030,22 +1034,33 @@ namespace Reallusion.Import
                 float outer = matJson.GetFloatValue("Custom Shader/Variable/Shadow Outer Corner");
                 float top2 = matJson.GetFloatValue("Custom Shader/Variable/Shadow2 Top");
 
+                
                 float topMax = Mathf.Lerp(top, 1f, matJson.GetFloatValue("Custom Shader/Variable/Shadow Top Range"));
                 float bottomMax = Mathf.Lerp(bottom, 1f, matJson.GetFloatValue("Custom Shader/Variable/Shadow Bottom Range"));
                 float innerMax = Mathf.Lerp(inner, 1f, matJson.GetFloatValue("Custom Shader/Variable/Shadow Inner Corner Range"));
                 float outerMax = Mathf.Lerp(outer, 1f, matJson.GetFloatValue("Custom Shader/Variable/Shadow Outer Corner Range"));
                 float top2Max = Mathf.Lerp(top2, 1f, matJson.GetFloatValue("Custom Shader/Variable/Shadow2 Top Range"));
-                mat.SetFloat("_TopMin", 0.8f * top);
+                
+                /*
+                float topMax = top + matJson.GetFloatValue("Custom Shader/Variable/Shadow Top Range");
+                float bottomMax = bottom + matJson.GetFloatValue("Custom Shader/Variable/Shadow Bottom Range");
+                float innerMax = inner + matJson.GetFloatValue("Custom Shader/Variable/Shadow Inner Corner Range");
+                float outerMax = outer + matJson.GetFloatValue("Custom Shader/Variable/Shadow Outer Corner Range");
+                float top2Max = top2 + matJson.GetFloatValue("Custom Shader/Variable/Shadow2 Top Range");
+                */
+
+                float scale = 1.0f;
+                mat.SetFloat("_TopMin", scale * top);
                 mat.SetFloat("_TopMax", topMax);
                 mat.SetFloat("_TopCurve", matJson.GetFloatValue("Custom Shader/Variable/Shadow Top Arc"));
-                mat.SetFloat("_BottomMin", 0.8f * bottom);
+                mat.SetFloat("_BottomMin", scale * bottom);
                 mat.SetFloat("_BottomMax", bottomMax);
                 mat.SetFloat("_BottomCurve", matJson.GetFloatValue("Custom Shader/Variable/Shadow Bottom Arc"));
                 mat.SetFloat("_InnerMin", inner);
                 mat.SetFloat("_InnerMax", innerMax);
-                mat.SetFloat("_OuterMin", 0.8f * outer);
+                mat.SetFloat("_OuterMin", scale * outer);
                 mat.SetFloat("_OuterMax", outerMax);
-                mat.SetFloat("_Top2Min", 0.8f * top2);
+                mat.SetFloat("_Top2Min", scale * top2);
                 mat.SetFloat("_Top2Max", top2Max);
             }
         }
