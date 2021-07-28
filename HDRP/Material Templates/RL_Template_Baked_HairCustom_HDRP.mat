@@ -97,7 +97,7 @@ Material:
     - _RenderQueueType: 4
     - _RequireSplitLighting: 0
     - _RimTransmissionIntensity: 0.05
-    - _SecondarySmoothness: 0.6
+    - _SecondarySmoothness: 0.525
     - _SecondarySpecularMultiplier: 0.05
     - _SecondarySpecularShift: 0.15
     - _ShadowClip: 0.25
@@ -132,6 +132,7 @@ Material:
     m_Colors:
     - _DoubleSidedConstants: {r: -1, g: -1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _SpecularTint: {r: 1, g: 1, b: 1, a: 1}
     - _VertexBaseColor: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

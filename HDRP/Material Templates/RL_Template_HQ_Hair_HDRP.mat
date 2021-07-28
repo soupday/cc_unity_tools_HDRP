@@ -78,11 +78,11 @@ Material:
     - _AOOccludeAll: 0
     - _AOStrength: 1
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.1
+    - _AlphaClip: 0.2
     - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 10
     - _AlphaPower: 0.8
-    - _AlphaRemap: 0.6
+    - _AlphaRemap: 0.5
     - _AlphaSrcBlend: 1
     - _AlphaToMask: 1
     - _AlphaToMaskInspectorValue: 1
@@ -92,7 +92,7 @@ Material:
     - _CullMode: 0
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
-    - _DepthPostpass: 0.1
+    - _DepthPostpass: 0.2
     - _DepthPrepass: 0.9
     - _DiffuseStrength: 1
     - _DoubleSidedEnable: 1
@@ -156,6 +156,7 @@ Material:
     m_Colors:
     - _DoubleSidedConstants: {r: -1, g: -1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _EndColor: {r: 0.6039216, g: 0.454902, b: 0.28627446, a: 0}
     - _HighlightAColor: {r: 0.9137255, g: 0.7803922, b: 0.635294, a: 0}
     - _HighlightADistribution: {r: 0.1, g: 0.2, b: 0.3, a: 0}
