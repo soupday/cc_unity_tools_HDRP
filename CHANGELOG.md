@@ -6,7 +6,7 @@ Changelog
 - Back button in the import window.
 
 ### v 0.1.4
-
+- Reworked eye occlusion calculations.
 
 ### v 0.1.3
 - Normal strength settings for all relevant custom shaders.
