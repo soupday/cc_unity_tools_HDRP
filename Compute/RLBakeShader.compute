@@ -404,6 +404,7 @@ void HeadSmoothnessScatterMask(float2 uv, out float ScatterMask, out float Smoot
     float4 In1 = SAMPLE(NMUILMask, uv);
     float4 In2 = SAMPLE(CFULCMask, uv);
     float4 In3 = SAMPLE(EarNeckMask, uv);
+    In3.zw = 0;
     float4 Mod1 = float4(noseMSM, mouthMSM, upperLidMSM, innerLidMSM);
     float4 Mod2 = float4(cheekMSM, foreheadMSM, upperLipMSM, chinMSM);
     float4 Mod3 = float4(neckMSM, earMSM, 0.0, 0.0);
@@ -415,11 +416,8 @@ void HeadSmoothnessScatterMask(float2 uv, out float ScatterMask, out float Smoot
     float mask = saturate(m.x + m.y + m.z + m.w);
     float unmask = 1.0 - mask;
 
-    float4 ms = (In1 * Mod1) + (In2 * Mod2) + (In3 * Mod3);
-    SmoothnessMod = ms.x + ms.y + ms.z + ms.w + (unmask * unmaskedMSM);
-
-    float4 ss = (In1 * Scatter1) + (In2 * Scatter2) + (In3 * Scatter3);
-    ScatterMask = ss.x + ss.y + ss.z + ss.w + (unmask * unmaskedSS);
+    SmoothnessMod = dot(In1, Mod1) + dot(In2, Mod2) + dot(In3, Mod3) + (unmask * unmaskedMSM);
+    ScatterMask = dot(In1, Scatter1) + dot(In2, Scatter2) + dot(In3, Scatter3) + (unmask * unmaskedSS);
 }
 
 float HeadSmoothnessMod(float2 uv)
@@ -435,8 +433,7 @@ float HeadSmoothnessMod(float2 uv)
     float mask = saturate(m.x + m.y + m.z + m.w);
     float unmask = 1.0 - mask;
 
-    float4 ms = (In1 * Mod1) + (In2 * Mod2) + (In3 * Mod3);
-    return ms.x + ms.y + ms.z + ms.w + (unmask * unmaskedMSM);    
+    return dot(In1, Mod1) + dot(In2, Mod2) + dot(In3, Mod3) + (unmask * unmaskedMSM);
 }
 
 float HeadScatterMask(float2 uv)
@@ -453,8 +450,7 @@ float HeadScatterMask(float2 uv)
     float mask = saturate(m.x + m.y + m.z + m.w);
     float unmask = 1.0 - mask;
 
-    float4 ss = (In1 * Scatter1) + (In2 * Scatter2) + (In3 * Scatter3);
-    return ss.x + ss.y + ss.z + ss.w + (unmask * unmaskedSS);
+    return dot(In1, Scatter1) + dot(In2, Scatter2) + dot(In3, Scatter3) + (unmask * unmaskedSS);
 }
 
 void SkinSmoothnessScatterMask(float2 uv, out float ScatterMask, out float SmoothnessMod)
@@ -465,12 +461,9 @@ void SkinSmoothnessScatterMask(float2 uv, out float ScatterMask, out float Smoot
     
     float mask = saturate(In1.r + In1.g + In1.b + In1.a);
     float unmask = 1.0 - mask;
-
-    float4 ms = In1 * Mod1;
-    SmoothnessMod = ms.x + ms.y + ms.z + ms.w + (unmask * unmaskedMSM);
-
-    float4 ss = In1 * Scatter1;
-    ScatterMask = ss.x + ss.y + ss.z + ss.w + (unmask * unmaskedSS);
+    
+    SmoothnessMod = dot(In1, Mod1) + (unmask * unmaskedMSM);
+    ScatterMask = dot(In1, Scatter1) + (unmask * unmaskedSS);
 }
 
 float SkinSmoothnessMod(float2 uv)
@@ -480,9 +473,8 @@ float SkinSmoothnessMod(float2 uv)
 
     float mask = saturate(In1.r + In1.g + In1.b + In1.a);
     float unmask = 1.0 - mask;
-
-    float4 ms = In1 * Mod1;
-    return ms.x + ms.y + ms.z + ms.w + (unmask * unmaskedMSM);
+    
+    return dot(In1, Mod1) + (unmask * unmaskedMSM);
 }
 
 float SkinScatterMask(float2 uv)
@@ -492,9 +484,8 @@ float SkinScatterMask(float2 uv)
 
     float mask = saturate(In1.r + In1.g + In1.b + In1.a);
     float unmask = 1.0 - mask;
-
-    float4 ss = In1 * Scatter1;
-    return ss.x + ss.y + ss.z + ss.w + (unmask * unmaskedSS);
+    
+    return dot(In1, Scatter1) + (unmask * unmaskedSS);
 }
 
 float HeadCavityAO(float2 uv)
