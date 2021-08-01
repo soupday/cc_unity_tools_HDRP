@@ -110,6 +110,7 @@ Material:
     - _FrontAO: 1
     - _MicroNormalStrength: 0.5
     - _MicroNormalTiling: 4
+    - _NormalStrength: 1
     - _OpaqueCullMode: 2
     - _RayTracing: 0
     - _RearAO: 0
@@ -118,9 +119,10 @@ Material:
     - _RefractionModel: 0
     - _RenderQueueType: 1
     - _RequireSplitLighting: 1
+    - _SmoothnessFront: 0
     - _SmoothnessMax: 1
-    - _SmoothnessMin: 0.25
-    - _SmoothnessPower: 1
+    - _SmoothnessPower: 0.5
+    - _SmoothnessRear: 0
     - _SrcBlend: 1
     - _StencilRef: 4
     - _StencilRefDepth: 8

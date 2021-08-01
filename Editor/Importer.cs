@@ -21,6 +21,7 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.Rendering.HighDefinition;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Reallusion.Import
 {
@@ -642,19 +643,8 @@ namespace Reallusion.Import
                     mat.SetFloat("_NormalStrength", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));                
-                float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");
-                
-                // as there is no specular mask channel, I am simulating the specular mask by clamping the smoothness
-                // between 0 and a root curve function of the specular value: i.e. smoothnessMax = pow(specular, P)
-                // this function must range from f(0) = 0 to f(1) = 1 and achieve 0.88 maximum smoothness at 0.5 specular
-                // (0.5 specular being the default specular value for base max smoothness, visually detected as ~0.88 smoothness)
-                // specular values from 0.5 to 1.0 will generate a max smoothness of 0.88 to 1.0.
-                // Thus: P = ln(0.88) / ln(0.5)
-                // This should approximate the specular mask for specular values > 0.2
-                const float smoothnessStdMax = 0.88f;
-                const float specularMid = 0.5f;
-                float P = Mathf.Log(smoothnessStdMax) / Mathf.Log(specularMid);
-                float smoothnessMax = Mathf.Clamp01(Mathf.Pow(specular, P));
+                float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
+                float smoothnessMax = Util.CombineSpecularToSmoothness(specular, 1.0f);
 
                 mat.SetFloat("_SmoothnessMin", 0f);
                 mat.SetFloat("_SmoothnessMax", smoothnessMax);
@@ -747,11 +737,22 @@ namespace Reallusion.Import
                     mat.SetFloat("_NormalStrength", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/Teeth MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/Teeth MicroNormal Strength"));
-                float specular = matJson.GetFloatValue("Custom Shader/Variable/Front Specular");
+                /*float specular = matJson.GetFloatValue("Custom Shader/Variable/Front Specular");
                 float specularT = Mathf.InverseLerp(0f, 0.5f, specular);
                 float roughness = 1f - matJson.GetFloatValue("Custom Shader/Variable/Front Roughness");
                 mat.SetFloat("_SmoothnessMin", roughness * 0.9f);
                 mat.SetFloat("_SmoothnessMax", Mathf.Lerp(0.9f, 1f, specularT));
+                mat.SetFloat("_SmoothnessPower", 0.5f);
+                */
+                float frontSpecular = matJson.GetFloatValue("Custom Shader/Variable/Front Specular");
+                float rearSpecular = matJson.GetFloatValue("Custom Shader/Variable/Back Specular");
+                float frontSmoothness = Util.CombineSpecularToSmoothness(frontSpecular,
+                                            (1f - matJson.GetFloatValue("Custom Shader/Variable/Front Roughness")));
+                float rearSmoothness = Util.CombineSpecularToSmoothness(rearSpecular,
+                                            (1f - matJson.GetFloatValue("Custom Shader/Variable/Back Roughness")));                
+                mat.SetFloat("_SmoothnessFront", frontSmoothness);
+                mat.SetFloat("_SmoothnessRear", rearSmoothness);
+                mat.SetFloat("_SmoothnessMax", 0.88f);
                 mat.SetFloat("_SmoothnessPower", 0.5f);
                 mat.SetFloat("_TeethSSS", matJson.GetFloatValue("Custom Shader/Variable/Teeth Scatter"));
                 mat.SetFloat("_GumsSSS", matJson.GetFloatValue("Custom Shader/Variable/Gums Scatter"));
@@ -798,11 +799,15 @@ namespace Reallusion.Import
                     mat.SetFloat("_NormalStrength", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));
-                float specular = matJson.GetFloatValue("Custom Shader/Variable/Front Specular");
-                float specularT = Mathf.InverseLerp(0f, 0.5f, specular);
-                float roughness = 1f - matJson.GetFloatValue("Custom Shader/Variable/Front Roughness");
-                mat.SetFloat("_SmoothnessMin", roughness * 0.9f);
-                mat.SetFloat("_SmoothnessMax", Mathf.Lerp(0.9f, 1f, specularT));
+                float frontSpecular = matJson.GetFloatValue("Custom Shader/Variable/Front Specular");
+                float rearSpecular = matJson.GetFloatValue("Custom Shader/Variable/Back Specular");
+                float frontSmoothness = Util.CombineSpecularToSmoothness(frontSpecular,
+                                            (1f - matJson.GetFloatValue("Custom Shader/Variable/Front Roughness")));
+                float rearSmoothness = Util.CombineSpecularToSmoothness(rearSpecular,
+                                            (1f - matJson.GetFloatValue("Custom Shader/Variable/Back Roughness")));                
+                mat.SetFloat("_SmoothnessFront", frontSmoothness);
+                mat.SetFloat("_SmoothnessRear", rearSmoothness);
+                mat.SetFloat("_SmoothnessMax", 0.88f);
                 mat.SetFloat("_SmoothnessPower", 0.5f);
                 mat.SetFloat("_TongueSSS", matJson.GetFloatValue("Custom Shader/Variable/_Scatter"));
                 mat.SetFloat("_TongueThickness", Mathf.Clamp01(matJson.GetFloatValue("Subsurface Scatter/Radius") / 5f));

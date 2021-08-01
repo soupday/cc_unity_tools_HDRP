@@ -402,7 +402,7 @@ namespace Reallusion.Import
             float foreheadMSM = mat.GetFloat("_ForeheadSmoothnessMod");
             float upperLipMSM = mat.GetFloat("_UpperLipSmoothnessMod");
             float chinMSM = mat.GetFloat("_ChinSmoothnessMod");
-            float unmaskedMSM = mat.GetFloat("_UnmaskedSmoothnessMod");            
+            float unmaskedMSM = mat.GetFloat("_UnmaskedSmoothnessMod");
             float rSS = mat.GetFloat("_RScatterScale");
             float gSS = mat.GetFloat("_GScatterScale");
             float bSS = mat.GetFloat("_BScatterScale");
@@ -424,85 +424,56 @@ namespace Reallusion.Import
             Texture2D bakedNormalMap = normal;
             Texture2D bakedDetailMap = null;
             Texture2D bakedSubsurfaceMap = subsurface;
-            Texture2D bakedThicknessMap = thickness;            
+            Texture2D bakedThicknessMap = thickness;
             Texture2D emissionMap = emission;
 
             if (isHead)
             {
-                if (diffuse && colorBlend && cavityAO)
-                    bakedBaseMap = BakeHeadDiffuseMap(diffuse, colorBlend, cavityAO, 
-                        colorBlendStrength, mouthAOPower, nostrilAOPower, lipsAOPower,                        
-                        sourceName + "_BaseMap");
+                bakedBaseMap = BakeHeadDiffuseMap(diffuse, colorBlend, cavityAO,
+                    colorBlendStrength, mouthAOPower, nostrilAOPower, lipsAOPower,
+                    sourceName + "_BaseMap");
 
-                if (normal && normalBlend)
-                    bakedNormalMap = BakeBlendNormalMap(normal, normalBlend,
-                        normalBlendStrength,
-                        sourceName + "_Normal");
+                bakedNormalMap = BakeBlendNormalMap(normal, normalBlend,
+                    normalBlendStrength,
+                    sourceName + "_Normal");
 
-                if (mask && cavityAO && RGBAMask && CFULCMask && EarNeckMask)
-                    bakedMaskMap = BakeHeadMaskMap(mask, cavityAO, RGBAMask, CFULCMask, EarNeckMask,
-                        aoStrength, smoothnessMin, smoothnessMax, smoothnessPower, microNormalStrength,
-                        mouthAOPower, nostrilAOPower, lipsAOPower, microSmoothnessMod,
-                        rMSM, gMSM, bMSM, aMSM, earMSM, neckMSM, cheekMSM, foreheadMSM, upperLipMSM, chinMSM, unmaskedMSM,                        
-                        sourceName + "_Mask");
+                bakedMaskMap = BakeHeadMaskMap(mask, cavityAO, RGBAMask, CFULCMask, EarNeckMask,
+                    aoStrength, smoothnessMin, smoothnessMax, smoothnessPower, microNormalStrength,
+                    mouthAOPower, nostrilAOPower, lipsAOPower, microSmoothnessMod,
+                    rMSM, gMSM, bMSM, aMSM, earMSM, neckMSM, cheekMSM, foreheadMSM, upperLipMSM, chinMSM, unmaskedMSM,
+                    sourceName + "_Mask");
 
-                else if (mask)
-                    bakedMaskMap = BakeMaskMap(mask,
-                        aoStrength, smoothnessMin, smoothnessMax, smoothnessPower, microNormalStrength,
-                        sourceName + "_Mask");
-
-                if (subsurface && RGBAMask && CFULCMask && EarNeckMask)
-                    bakedSubsurfaceMap = BakeHeadSubsurfaceMap(subsurface, RGBAMask, CFULCMask, EarNeckMask,
-                        subsurfaceScale,                         
-                        rSS, gSS, bSS, aSS, earSS, neckSS, cheekSS, foreheadSS, upperLipSS, chinSS, unmaskedSS,
-                        sourceName + "_SSSMap");
-
-                else if (subsurface)
-                    bakedSubsurfaceMap = BakeSubsurfaceMap(subsurface,
-                        subsurfaceScale,
-                        sourceName + "_SSSMap");
-
+                bakedSubsurfaceMap = BakeHeadSubsurfaceMap(subsurface, RGBAMask, CFULCMask, EarNeckMask,
+                    subsurfaceScale,
+                    rSS, gSS, bSS, aSS, earSS, neckSS, cheekSS, foreheadSS, upperLipSS, chinSS, unmaskedSS,
+                    sourceName + "_SSSMap");
             }
             else
             {
-                if (mask && RGBAMask)
-                    bakedMaskMap = BakeSkinMaskMap(mask, RGBAMask,
-                        aoStrength, smoothnessMin, smoothnessMax, smoothnessPower, microNormalStrength, microSmoothnessMod,
-                        rMSM, gMSM, bMSM, aMSM, unmaskedMSM,                        
-                        sourceName + "_Mask");
+                bakedMaskMap = BakeSkinMaskMap(mask, RGBAMask,
+                    aoStrength, smoothnessMin, smoothnessMax, smoothnessPower, microNormalStrength, microSmoothnessMod,
+                    rMSM, gMSM, bMSM, aMSM, unmaskedMSM,
+                    sourceName + "_Mask");
 
-                else if (mask)
-                    bakedMaskMap = BakeMaskMap(mask,
-                        aoStrength, smoothnessMin, smoothnessMax, smoothnessPower, microNormalStrength,
-                        sourceName + "_Mask");
-
-                if (subsurface && RGBAMask)
-                    bakedSubsurfaceMap = BakeSkinSubsurfaceMap(subsurface, RGBAMask,
-                        subsurfaceScale,                        
-                        rSS, gSS, bSS, aSS, unmaskedSS,
-                        sourceName + "_SSSMap");
-
-                else if (subsurface)
-                    bakedSubsurfaceMap = BakeSubsurfaceMap(subsurface,
-                        subsurfaceScale,
-                        sourceName + "_SSSMap");
+                bakedSubsurfaceMap = BakeSkinSubsurfaceMap(subsurface, RGBAMask,
+                    subsurfaceScale,
+                    rSS, gSS, bSS, aSS, unmaskedSS,
+                    sourceName + "_SSSMap");
             }
 
-            if (microNormal)
-                bakedDetailMap = BakeDetailMap(microNormal,
-                    sourceName + "_Detail");            
+            bakedDetailMap = BakeDetailMap(microNormal,
+                sourceName + "_Detail");
 
-            if (thickness)
-                bakedThicknessMap = BakeThicknessMap(thickness,
-                    thicknessScale,
-                    sourceName + "_Thickness");
+            bakedThicknessMap = BakeThicknessMap(thickness,
+                thicknessScale,
+                sourceName + "_Thickness");
 
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, emissiveColor,
-                sourceName, 
-                Pipeline.GetTemplateMaterial(MaterialType.Skin, 
-                            MaterialQuality.Baked, characterInfo));            
+                sourceName,
+                Pipeline.GetTemplateMaterial(MaterialType.Skin,
+                            MaterialQuality.Baked, characterInfo));
 
             return result;
         }
@@ -520,7 +491,8 @@ namespace Reallusion.Import
             float microNormalTiling = mat.GetFloat("_MicroNormalTiling");
             float aoStrength = mat.GetFloat("_AOStrength");
             float smoothnessPower = mat.GetFloat("_SmoothnessPower");
-            float smoothnessMin = mat.GetFloat("_SmoothnessMin");
+            float smoothnessFront = mat.GetFloat("_SmoothnessFront");
+            float smoothnessRear = mat.GetFloat("_SmoothnessRear");
             float smoothnessMax = mat.GetFloat("_SmoothnessMax");
             float gumsSaturation = mat.GetFloat("_GumsSaturation");
             float gumsBrightness = mat.GetFloat("_GumsBrightness");
@@ -544,41 +516,31 @@ namespace Reallusion.Import
             Texture2D bakedThicknessMap = null;
             Texture2D emissionMap = emission;
 
-            if (diffuse && gumsMask && gradientAO)
-                bakedBaseMap = BakeTeethDiffuseMap(diffuse, gumsMask, gradientAO,
-                    isUpperTeeth, frontAO, rearAO, gumsSaturation, gumsBrightness, teethSaturation, teethBrightness,
-                    sourceName + "_BaseMap");
+            bakedBaseMap = BakeTeethDiffuseMap(diffuse, gumsMask, gradientAO,
+                isUpperTeeth, frontAO, rearAO, gumsSaturation, gumsBrightness, teethSaturation, teethBrightness,
+                sourceName + "_BaseMap");
 
-            if (mask && gradientAO)
-                bakedMaskMap = BakeTeethMaskMap(mask, gradientAO,
-                    isUpperTeeth, aoStrength, smoothnessMin, smoothnessMax, smoothnessPower,
-                    frontAO, rearAO, microNormalStrength,
-                    sourceName + "_Mask");
+            bakedMaskMap = BakeTeethMaskMap(mask, gradientAO,
+                isUpperTeeth, aoStrength, smoothnessFront, smoothnessRear, smoothnessMax, smoothnessPower,
+                microNormalStrength,
+                sourceName + "_Mask");
 
-            else if (mask)
-                bakedMaskMap = BakeMaskMap(mask,
-                    aoStrength, smoothnessMin, smoothnessMax, smoothnessPower, microNormalStrength,
-                    sourceName + "_Mask");
+            bakedDetailMap = BakeDetailMap(microNormal,
+                sourceName + "_Detail");
 
-            if (microNormal)
-                bakedDetailMap = BakeDetailMap(microNormal,
-                    sourceName + "_Detail");
+            bakedSubsurfaceMap = BakeTeethSubsurfaceMap(gumsMask,
+                gumsSSS, teethSSS,
+                sourceName + "_SSSMap");
 
-            if (gumsMask && gradientAO)
-                bakedSubsurfaceMap = BakeTeethSubsurfaceMap(gumsMask, gradientAO,
-                    isUpperTeeth, rearAO, frontAO, gumsSSS, teethSSS,
-                    sourceName + "_SSSMap");
-
-            if (gumsMask)
-                bakedThicknessMap = BakeTeethThicknessMap(gumsMask,
-                    gumsThickness, teethThickness,
-                    sourceName + "_Thickness");
+            bakedThicknessMap = BakeTeethThicknessMap(gumsMask,
+                gumsThickness, teethThickness,
+                sourceName + "_Thickness");
 
             return CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, emissiveColor,
-                sourceName, 
-                Pipeline.GetTemplateMaterial(MaterialType.Teeth, 
+                sourceName,
+                Pipeline.GetTemplateMaterial(MaterialType.Teeth,
                             MaterialQuality.Baked, characterInfo));
         }
 
@@ -594,7 +556,8 @@ namespace Reallusion.Import
             float microNormalTiling = mat.GetFloat("_MicroNormalTiling");
             float aoStrength = mat.GetFloat("_AOStrength");
             float smoothnessPower = mat.GetFloat("_SmoothnessPower");
-            float smoothnessMin = mat.GetFloat("_SmoothnessMin");
+            float smoothnessFront = mat.GetFloat("_SmoothnessFront");
+            float smoothnessRear = mat.GetFloat("_SmoothnessRear");
             float smoothnessMax = mat.GetFloat("_SmoothnessMax");
             float tongueSaturation = mat.GetFloat("_TongueSaturation");
             float tongueBrightness = mat.GetFloat("_TongueBrightness");
@@ -613,30 +576,17 @@ namespace Reallusion.Import
             Texture2D bakedThicknessMap = null;
             Texture2D emissionMap = emission;
 
-            if (diffuse && gradientAO)
-                bakedBaseMap = BakeTongueDiffuseMap(diffuse, gradientAO,
-                    frontAO, rearAO, tongueSaturation, tongueBrightness,
-                    sourceName + "_BaseMap");
+            bakedBaseMap = BakeTongueDiffuseMap(diffuse, gradientAO,
+                frontAO, rearAO, tongueSaturation, tongueBrightness,
+                sourceName + "_BaseMap");
 
-            if (mask && gradientAO)
-                bakedMaskMap = BakeTongueMaskMap(mask, gradientAO,
-                    aoStrength, smoothnessMin, smoothnessMax, smoothnessPower,
-                    frontAO, rearAO, microNormalStrength,
-                    sourceName + "_Mask");
+            bakedMaskMap = BakeTongueMaskMap(mask, gradientAO,
+                aoStrength, smoothnessFront, smoothnessRear, smoothnessMax, smoothnessPower,
+                microNormalStrength,
+                sourceName + "_Mask");
 
-            else if (mask)
-                bakedMaskMap = BakeMaskMap(mask,
-                    aoStrength, smoothnessMin, smoothnessMax, smoothnessPower, microNormalStrength,
-                    sourceName + "_Mask");
-
-            if (microNormal)
-                bakedDetailMap = BakeDetailMap(microNormal,
-                    sourceName + "_Detail");
-
-            if (gradientAO)
-                bakedSubsurfaceMap = BakeTongueSubsurfaceMap(gradientAO,
-                    rearAO, frontAO, tongueSSS,
-                    sourceName + "_SSSMap");
+            bakedDetailMap = BakeDetailMap(microNormal,
+                sourceName + "_Detail");
 
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
@@ -645,6 +595,7 @@ namespace Reallusion.Import
                 Pipeline.GetTemplateMaterial(MaterialType.Tongue, 
                             MaterialQuality.Baked, characterInfo));
 
+            result.SetFloat("_SubsurfaceMask", tongueSSS);
             result.SetFloat("_Thickness", tongueThickness);
             return result;
         }
@@ -699,23 +650,20 @@ namespace Reallusion.Import
 
             if (isCornea)
             {
-                if (sclera && blend)
-                    bakedBaseMap = BakeCorneaDiffuseMap(sclera, blend,
-                        scleraScale, scleraHue, scleraSaturation, scleraBrightness,
-                        irisScale, irisRadius, limbusWidth,
-                        shadowRadius, shadowHardness, cornerShadowColor,
-                        colorBlendStrength,
-                        sourceName + "_BaseMap");
+                bakedBaseMap = BakeCorneaDiffuseMap(sclera, blend,
+                    scleraScale, scleraHue, scleraSaturation, scleraBrightness,
+                    irisScale, irisRadius, limbusWidth,
+                    shadowRadius, shadowHardness, cornerShadowColor,
+                    colorBlendStrength,
+                    sourceName + "_BaseMap");
 
-                if (mask)
-                    bakedMaskMap = BakeCorneaMaskMap(mask, aoStrength, corneaSmoothness, 
-                        scleraSmoothness, irisScale,
-                        irisRadius, limbusWidth, microNormalStrength,
-                        sourceName + "_Mask");
+                bakedMaskMap = BakeCorneaMaskMap(mask, aoStrength, corneaSmoothness,
+                    scleraSmoothness, irisScale,
+                    irisRadius, limbusWidth, microNormalStrength,
+                    sourceName + "_Mask");
 
-                if (microNormal)
-                    bakedDetailMap = BakeDetailMap(microNormal,
-                        sourceName + "_Detail");
+                bakedDetailMap = BakeDetailMap(microNormal,
+                    sourceName + "_Detail");
 
                 // RGB textures cannot store low enough values for the refraction thickness
                 // so normalize it and use the thickness remap in the HDRP/Lit shader.
@@ -725,20 +673,17 @@ namespace Reallusion.Import
             }
             else
             {
-                if (cornea && blend)
-                    bakedBaseMap = BakeEyeDiffuseMap(cornea, blend,
-                        irisScale, irisHue, irisSaturation, irisBrightness,
-                        limbusDarkRadius, limbusDarkWidth, limbusColor, colorBlendStrength,
-                        sourceName + "_BaseMap");
+                bakedBaseMap = BakeEyeDiffuseMap(cornea, blend,
+                    irisScale, irisHue, irisSaturation, irisBrightness,
+                    limbusDarkRadius, limbusDarkWidth, limbusColor, colorBlendStrength,
+                    sourceName + "_BaseMap");
 
-                if (mask)
-                    bakedMaskMap = BakeEyeMaskMap(mask, aoStrength, irisSmoothness, 
-                        scleraSmoothness, irisScale,
-                        limbusDarkRadius, limbusDarkWidth, irisRadius, depthRadius,
-                        sourceName + "_Mask");
+                bakedMaskMap = BakeEyeMaskMap(mask, aoStrength, irisSmoothness,
+                    scleraSmoothness, irisScale,
+                    limbusDarkRadius, limbusDarkWidth, irisRadius, depthRadius,
+                    sourceName + "_Mask");
             }
 
-            // the HDRP/Lit shader seems to use x10 thickness values...
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 1f, microNormalTiling, emissiveColor,
@@ -827,20 +772,20 @@ namespace Reallusion.Import
             Texture2D bakedNormalMap = normal;
             Texture2D emissionMap = emission;
 
-            if (enableColor && diffuse && id && root)
+            if (enableColor)
             {
                 bakedBaseMap = BakeHairDiffuseMap(diffuse, blend, id, root, mask,
                     diffuseStrength, alphaPower, alphaRemap, aoStrength, aoOccludeAll,
-                    rootColor, rootColorStrength, endColor, endColorStrength, globalStrength, 
+                    rootColor, rootColorStrength, endColor, endColorStrength, globalStrength,
                     invertRootMap, baseColorStrength,
-                    highlightAColor, highlightADistribution, highlightAOverlapEnd, 
+                    highlightAColor, highlightADistribution, highlightAOverlapEnd,
                     highlightAOverlapInvert, highlightAStrength,
-                    highlightBColor, highlightBDistribution, highlightBOverlapEnd, 
+                    highlightBColor, highlightBDistribution, highlightBOverlapEnd,
                     highlightBOverlapInvert, highlightBStrength,
                     blendStrength, vertexBaseColor, vertexColorStrength,
-                    sourceName + "_BaseMap");                
+                    sourceName + "_BaseMap");
             }
-            else if (diffuse)
+            else
             {
                 bakedBaseMap = BakeHairDiffuseMap(diffuse, blend, mask,
                     diffuseStrength, alphaPower, alphaRemap, aoStrength, aoOccludeAll,
@@ -848,16 +793,15 @@ namespace Reallusion.Import
                     sourceName + "_BaseMap");
             }
 
-            if (mask)
-                bakedMaskMap = BakeHairMaskMap(mask, specular,
-                    aoStrength, smoothnessMin, smoothnessMax, smoothnessPower,
-                    sourceName + "_Mask");
+            bakedMaskMap = BakeHairMaskMap(mask, specular,
+                aoStrength, smoothnessMin, smoothnessMax, smoothnessPower,
+                sourceName + "_Mask");
 
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
                 null, null, null, emissionMap,
                 normalStrength, 1, emissiveColor,
-                sourceName, 
-                Pipeline.GetTemplateMaterial(MaterialType.Hair, 
+                sourceName,
+                Pipeline.GetTemplateMaterial(MaterialType.Hair,
                             MaterialQuality.Baked, characterInfo));
 
             if (characterInfo.bakeCustomShaders)
@@ -875,7 +819,7 @@ namespace Reallusion.Import
                 result.SetFloat("_SpecularShift", specularShift);
                 result.SetFloat("_SecondarySpecularMultiplier", secondarySpecularMultiplier);
                 result.SetFloat("_SecondarySpecularShift", secondarySpecularShift);
-                result.SetFloat("_SecondarySmoothness", secondarySmoothness);                
+                result.SetFloat("_SecondarySmoothness", secondarySmoothness);
             }
             else
             {
@@ -888,7 +832,7 @@ namespace Reallusion.Import
                 result.SetFloat("_Specular", specularMultiplier);
                 result.SetFloat("_SpecularShift", specularShift);
                 result.SetFloat("_SecondarySpecular", secondarySpecularMultiplier);
-                result.SetFloat("_SecondarySpecularShift", secondarySpecularShift);                
+                result.SetFloat("_SecondarySpecularShift", secondarySpecularShift);
                 result.SetFloat("_SmoothnessMin", smoothnessMin);
                 result.SetFloat("_SmoothnessMax", smoothnessMax);
             }
@@ -1350,8 +1294,8 @@ namespace Reallusion.Import
         }
 
         private Texture2D BakeTeethMaskMap(Texture2D mask, Texture2D gradientAO,
-            float isUpperTeeth, float aoStrength, float smoothnessMin, float smoothnessMax, float smoothnessPower,
-            float frontAO, float rearAO, float microNormalStrength,
+            float isUpperTeeth, float aoStrength, float smoothnessFront, float smoothnessRear, float smoothnessMax, float smoothnessPower,
+            float microNormalStrength,
             string name)
         {
             Vector2Int maxSize = GetMaxSize(mask);
@@ -1369,13 +1313,12 @@ namespace Reallusion.Import
                 bakeShader.SetTexture(kernel, "Mask", mask);
                 bakeShader.SetTexture(kernel, "GradientAO", gradientAO);
                 bakeShader.SetFloat("aoStrength", aoStrength);
-                bakeShader.SetFloat("smoothnessMin", smoothnessMin);
+                bakeShader.SetFloat("smoothnessFront", smoothnessFront);
+                bakeShader.SetFloat("smoothnessRear", smoothnessRear);
                 bakeShader.SetFloat("smoothnessMax", smoothnessMax);
                 bakeShader.SetFloat("smoothnessPower", smoothnessPower);
                 bakeShader.SetFloat("microNormalStrength", microNormalStrength);
                 bakeShader.SetFloat("isUpperTeeth", isUpperTeeth);
-                bakeShader.SetFloat("frontAO", frontAO);
-                bakeShader.SetFloat("rearAO", rearAO);
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
                 return bakeTarget.SaveAndReimport();
             }
@@ -1383,8 +1326,8 @@ namespace Reallusion.Import
             return null;
         }
 
-        private Texture2D BakeTeethSubsurfaceMap(Texture2D gumsMask, Texture2D gradientAO,
-            float isUpperTeeth, float rearAO, float frontAO, float gumsSSS, float teethSSS,
+        private Texture2D BakeTeethSubsurfaceMap(Texture2D gumsMask,
+            float gumsSSS, float teethSSS,
             string name)
         {
             Vector2Int maxSize = new Vector2Int(256, 256);
@@ -1394,16 +1337,11 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
-                gumsMask = CheckMask(gumsMask);
-                gradientAO = CheckMask(gradientAO);
+                gumsMask = CheckMask(gumsMask);                
 
                 int kernel = bakeShader.FindKernel("RLTeethSubsurface");
                 bakeTarget.Create(bakeShader, kernel);
-                bakeShader.SetTexture(kernel, "GumsMask", gumsMask);
-                bakeShader.SetTexture(kernel, "GradientAO", gradientAO);
-                bakeShader.SetFloat("isUpperTeeth", isUpperTeeth);
-                bakeShader.SetFloat("rearAO", rearAO);
-                bakeShader.SetFloat("frontAO", frontAO);
+                bakeShader.SetTexture(kernel, "GumsMask", gumsMask);                                
                 bakeShader.SetFloat("gumsSSS", gumsSSS);
                 bakeShader.SetFloat("teethSSS", teethSSS);
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
@@ -1468,8 +1406,8 @@ namespace Reallusion.Import
         }
 
         private Texture2D BakeTongueMaskMap(Texture2D mask, Texture2D gradientAO,
-            float aoStrength, float smoothnessMin, float smoothnessMax, float smoothnessPower,
-            float frontAO, float rearAO, float microNormalStrength,
+            float aoStrength, float smoothnessFront, float smoothnessRear, float smoothnessMax, float smoothnessPower,
+            float microNormalStrength,
             string name)
         {
             Vector2Int maxSize = GetMaxSize(mask);
@@ -1487,44 +1425,17 @@ namespace Reallusion.Import
                 bakeShader.SetTexture(kernel, "Mask", mask);
                 bakeShader.SetTexture(kernel, "GradientAO", gradientAO);
                 bakeShader.SetFloat("aoStrength", aoStrength);
-                bakeShader.SetFloat("smoothnessMin", smoothnessMin);
+                bakeShader.SetFloat("smoothnessFront", smoothnessFront);
+                bakeShader.SetFloat("smoothnessRear", smoothnessRear);
                 bakeShader.SetFloat("smoothnessMax", smoothnessMax);
                 bakeShader.SetFloat("smoothnessPower", smoothnessPower);
                 bakeShader.SetFloat("microNormalStrength", microNormalStrength);
-                bakeShader.SetFloat("frontAO", frontAO);
-                bakeShader.SetFloat("rearAO", rearAO);
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
                 return bakeTarget.SaveAndReimport();
             }
 
             return null;
-        }
-
-        private Texture2D BakeTongueSubsurfaceMap(Texture2D gradientAO,
-            float rearAO, float frontAO, float tongueSSS,
-            string name)
-        {
-            Vector2Int maxSize = new Vector2Int(256, 256);
-            ComputeBakeTexture bakeTarget =
-                new ComputeBakeTexture(maxSize, texturesFolder, name);
-
-            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
-            if (bakeShader)
-            {
-                gradientAO = CheckMask(gradientAO);
-
-                int kernel = bakeShader.FindKernel("RLTongueSubsurface");
-                bakeTarget.Create(bakeShader, kernel);
-                bakeShader.SetTexture(kernel, "GradientAO", gradientAO);
-                bakeShader.SetFloat("rearAO", rearAO);
-                bakeShader.SetFloat("frontAO", frontAO);
-                bakeShader.SetFloat("tongueSSS", tongueSSS);
-                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
-                return bakeTarget.SaveAndReimport();
-            }
-
-            return null;
-        }
+        }        
 
         private Texture2D BakeCorneaDiffuseMap(Texture2D sclera, Texture2D colorBlend,
             float scleraScale, float scleraHue, float scleraSaturation, float scleraBrightness,
