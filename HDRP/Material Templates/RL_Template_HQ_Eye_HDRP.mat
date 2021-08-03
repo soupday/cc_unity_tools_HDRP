@@ -92,7 +92,7 @@ Material:
     - _IrisSmoothness: 0
     - _IsLeftEye: 0
     - _LimbusDarkRadius: 0.1
-    - _LimbusDarkWidth: 0.055
+    - _LimbusDarkWidth: 0.025
     - _LimbusWidth: 0.055
     - _OpaqueCullMode: 2
     - _PupilScale: 0.8
