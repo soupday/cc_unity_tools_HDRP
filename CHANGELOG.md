@@ -2,11 +2,13 @@ Changelog
 =========
 
 ### TODO
-- Tiling and offset attaching baked textures?
+- Tiling and offset when baking textures?...
+- Refresh button on tools window.
 - Back button in the import window.
 
 ### v 0.1.5
 - Reworked and cleaned up Teeth and Tongue shaders & bake shaders.
+- Fix to editor code .asmdef preventing build for non editor platforms.
 
 ### v 0.1.4
 - Reworked eye occlusion calculations.
