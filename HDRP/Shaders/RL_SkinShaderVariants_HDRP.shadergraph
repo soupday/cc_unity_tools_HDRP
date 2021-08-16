@@ -626,9 +626,6 @@
             "m_Id": "d689efd5ae68433590c7ff751c0edd9f"
         },
         {
-            "m_Id": "a493db744a314454a97fc48bf63029fa"
-        },
-        {
             "m_Id": "054d372238b9453397bdd30799bcae8c"
         },
         {
@@ -1426,27 +1423,13 @@
                 "m_Node": {
                     "m_Id": "39abf23a0de14b4f9a35f8bda206a3f5"
                 },
-                "m_SlotId": 4
+                "m_SlotId": 0
             },
             "m_InputSlot": {
                 "m_Node": {
-                    "m_Id": "a493db744a314454a97fc48bf63029fa"
+                    "m_Id": "726753be6bb047f896bf629f180df013"
                 },
-                "m_SlotId": 1
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
-                    "m_Id": "39abf23a0de14b4f9a35f8bda206a3f5"
-                },
-                "m_SlotId": 5
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "a493db744a314454a97fc48bf63029fa"
-                },
-                "m_SlotId": 2
+                "m_SlotId": 0
             }
         },
         {
@@ -2404,20 +2387,6 @@
         {
             "m_OutputSlot": {
                 "m_Node": {
-                    "m_Id": "a493db744a314454a97fc48bf63029fa"
-                },
-                "m_SlotId": 0
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "726753be6bb047f896bf629f180df013"
-                },
-                "m_SlotId": 0
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
                     "m_Id": "a5535127f7b24e0cb24732d098701601"
                 },
                 "m_SlotId": 1
@@ -3328,13 +3297,16 @@
                 "m_Id": "e1e6ea93dab24d4086de0ce0507e9306"
             },
             {
+                "m_Id": "bc0c9bafa3544deaaba658da5d1457a2"
+            },
+            {
                 "m_Id": "6b280d605cf34b63ae417129545c2f7d"
             },
             {
-                "m_Id": "08c1176d7dfe406bb0f6283ca763d553"
+                "m_Id": "fce699c8ebf3428887ef6a715d55d4f9"
             },
             {
-                "m_Id": "fce699c8ebf3428887ef6a715d55d4f9"
+                "m_Id": "08c1176d7dfe406bb0f6283ca763d553"
             },
             {
                 "m_Id": "e701720035d44304a33f4b64350fc6e3"
@@ -3343,16 +3315,13 @@
                 "m_Id": "273f61f0afd2438d95da7144e127460e"
             },
             {
-                "m_Id": "8d0e91598db04dc39429e4727f60af22"
-            },
-            {
                 "m_Id": "9f2e5d9fd18c4aa5af7842cc348626ab"
             },
             {
-                "m_Id": "6a4b619cae09428e850340b327dc2247"
+                "m_Id": "8d0e91598db04dc39429e4727f60af22"
             },
             {
-                "m_Id": "bc0c9bafa3544deaaba658da5d1457a2"
+                "m_Id": "6a4b619cae09428e850340b327dc2247"
             }
         ]
     },
@@ -10861,7 +10830,7 @@
     "m_SourceType": 1,
     "m_FunctionName": "BodyMask",
     "m_FunctionSource": "",
-    "m_FunctionBody": "float mask = saturate(In1.r + In1.g + In1.b + In1.a);\r\nfloat unmask = 1.0 - mask;\r\n\r\nfloat4 ms = In1 * Mod1;\r\nSmoothnessMod = ms.x + ms.y + ms.z + ms.w + (UMMS * unmask);\n\r\nfloat4 ss = In1 * Scatter1;\r\nScatterMask = ss.x + ss.y + ss.z + ss.w + (UMSS * unmask);"
+    "m_FunctionBody": "float mask = saturate(In1.r + In1.g + In1.b + In1.a);\r\nfloat unmask = 1.0 - mask;\r\n\r\nSmoothnessMod = dot(In1, Mod1) + (UMMS * unmask);\nScatterMask = dot(In1, Scatter1) + (UMSS * unmask);"
 }
 
 {
@@ -10914,23 +10883,6 @@
     "m_ShaderOutputName": "Out",
     "m_StageCapability": 3,
     "m_BareResource": false
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "6900b1e0fc0b422b8af2eebacbad2380",
-    "m_Id": 2,
-    "m_DisplayName": "Y",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "Y",
-    "m_StageCapability": 3,
-    "m_Value": 0.0,
-    "m_DefaultValue": 0.0,
-    "m_Labels": [
-        "Y"
-    ]
 }
 
 {
@@ -12071,23 +12023,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "7815477c477c4768ba8b407ecd90a927",
-    "m_Id": 4,
-    "m_DisplayName": "W",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "W",
-    "m_StageCapability": 3,
-    "m_Value": 0.0,
-    "m_DefaultValue": 0.0,
-    "m_Labels": [
-        "W"
-    ]
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.DynamicValueMaterialSlot",
     "m_ObjectId": "782a837085ed47e68824a838329a24b7",
     "m_Id": 0,
@@ -12455,21 +12390,6 @@
         "x": 0.5,
         "y": 2.0
     }
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "833d7e6a9bcd446f99b67b6cbd31446b",
-    "m_Id": 1,
-    "m_DisplayName": "X",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "X",
-    "m_StageCapability": 3,
-    "m_Value": 0.0,
-    "m_DefaultValue": 0.0,
-    "m_Labels": []
 }
 
 {
@@ -14762,56 +14682,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector4Node",
-    "m_ObjectId": "a493db744a314454a97fc48bf63029fa",
-    "m_Group": {
-        "m_Id": "dfa824146c2f43d5a5ea6bd8b9c3463a"
-    },
-    "m_Name": "Vector 4",
-    "m_DrawState": {
-        "m_Expanded": true,
-        "m_Position": {
-            "serializedVersion": "2",
-            "x": -4961.0,
-            "y": 63.999900817871097,
-            "width": 131.0,
-            "height": 149.0
-        }
-    },
-    "m_Slots": [
-        {
-            "m_Id": "833d7e6a9bcd446f99b67b6cbd31446b"
-        },
-        {
-            "m_Id": "6900b1e0fc0b422b8af2eebacbad2380"
-        },
-        {
-            "m_Id": "ad1b646a178846de9bdfddfb1483ce0a"
-        },
-        {
-            "m_Id": "7815477c477c4768ba8b407ecd90a927"
-        },
-        {
-            "m_Id": "bde4bb65369c477984df0b27f6494bd1"
-        }
-    ],
-    "synonyms": [],
-    "m_Precision": 0,
-    "m_PreviewExpanded": true,
-    "m_PreviewMode": 0,
-    "m_CustomColors": {
-        "m_SerializableColors": []
-    },
-    "m_Value": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 0.0
-    }
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.RedirectNodeData",
     "m_ObjectId": "a5535127f7b24e0cb24732d098701601",
     "m_Group": {
@@ -15589,23 +15459,6 @@
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
     "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "ad1b646a178846de9bdfddfb1483ce0a",
-    "m_Id": 3,
-    "m_DisplayName": "Z",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "Z",
-    "m_StageCapability": 3,
-    "m_Value": 0.0,
-    "m_DefaultValue": 0.0,
-    "m_Labels": [
-        "Z"
-    ]
 }
 
 {
@@ -16864,31 +16717,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
-    "m_ObjectId": "bde4bb65369c477984df0b27f6494bd1",
-    "m_Id": 0,
-    "m_DisplayName": "Out",
-    "m_SlotType": 1,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "Out",
-    "m_StageCapability": 3,
-    "m_Value": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 0.0
-    },
-    "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 0.0
-    },
-    "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.NormalStrengthNode",
     "m_ObjectId": "be0b6de023f04f3c8f86fdf44da92670",
     "m_Group": {
@@ -17365,7 +17193,7 @@
     "m_SourceType": 1,
     "m_FunctionName": "HeadMask",
     "m_FunctionSource": "",
-    "m_FunctionBody": "float4 m = In1 + In2 + In3;\nfloat mask = saturate(m.x + m.y + m.z + m.w);\nfloat unmask = 1.0 - mask;\n\nfloat4 ms = (In1 * Mod1) + (In2 * Mod2) + (In3 * Mod3);\nSmoothnessMod = ms.x + ms.y + ms.z + ms.w + (UMMS * unmask);\n\nfloat4 ss = (In1 * Scatter1) + (In2 * Scatter2) + (In3 * Scatter3);\nScatterMask = ss.x + ss.y + ss.z + ss.w + (UMSS * unmask);"
+    "m_FunctionBody": "In3.zw = 0;\nfloat4 m = In1 + In2 + In3;\nfloat mask = saturate(m.x + m.y + m.z + m.w);\nfloat unmask = 1.0 - mask;\n\nSmoothnessMod = dot(In1, Mod1) + dot(In2, Mod2) + dot(In3, Mod3) + (UMMS * unmask);\nScatterMask = dot(In1, Scatter1) + dot(In2, Scatter2) + dot(In3, Scatter3) + (UMSS * unmask);"
 }
 
 {
@@ -18873,7 +18701,7 @@
     "m_Title": "Micro Smoothness & Scatter Mask Head",
     "m_Position": {
         "x": -5471.0,
-        "y": -460.99993896484377
+        "y": -461.0
     }
 }
 
