@@ -115,7 +115,7 @@ Material:
     - _CullMode: 2
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
-    - _DiffusionProfileHash: 2.7317202
+    - _DiffusionProfileHash: 3.6477203
     - _DoubleSidedEnable: 0
     - _DoubleSidedNormalMode: 2
     - _DstBlend: 0
@@ -135,6 +135,7 @@ Material:
     - _NeckScatterScale: 1
     - _NeckSmoothnessMod: 0
     - _NormalBlendStrength: 0.5
+    - _NormalStrength: 1
     - _NostrilCavityAO: 2.5
     - _OpaqueCullMode: 2
     - _RScatterScale: 1
@@ -180,7 +181,7 @@ Material:
     - _ZTestTransparent: 4
     - _ZWrite: 1
     m_Colors:
-    - _DiffusionProfileAsset: {r: -1.405437e+32, g: 2.0030989e-26, b: 0.00000006313206, a: -4.4045647e-18}
+    - _DiffusionProfileAsset: {r: 0.000007811633, g: -1.6874267e-36, b: -4.0477928e+21, a: 8.3947815e+11}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
@@ -211,5 +212,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_DiffusionProfileReferences:
-  - {fileID: 11400000, guid: 26bdddf49760c61438938733f07fa2a2, type: 2}
+  - {fileID: 11400000, guid: b50e0337e68c0f84696e5be3cc744353, type: 2}
   m_MaterialReferences: []

@@ -17,7 +17,11 @@
  */
 
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Diagnostics;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Reallusion.Import
 {
@@ -340,6 +344,50 @@ namespace Reallusion.Import
             return RenderPipeline.URP;
 #else
             return RenderPipeline.Builtin;
+#endif
+        }
+
+        public static void AddDiffusionProfilesHDRP()
+        {
+#if HDRP_10_5_0_OR_NEWER
+            HDRenderPipelineAsset pipelineAsset = GraphicsSettings.renderPipelineAsset as HDRenderPipelineAsset;
+            string assetPath = AssetDatabase.GetAssetPath(pipelineAsset);            
+
+            SerializedObject hdrp = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath(assetPath)[0]);
+            SerializedProperty list = hdrp.FindProperty("diffusionProfileSettingsList");
+            
+            SerializedProperty item;
+            int index;
+
+            Object skinProfileAsset = Util.FindAsset("RL_Skin_Profile");
+            Object teethProfileAsset = Util.FindAsset("RL_Teeth_Profile");
+
+            bool addSkinProfile = true;
+            bool addTeethProfile = true;
+            foreach (SerializedProperty p in list)
+            {
+                if (p.objectReferenceValue == skinProfileAsset) addSkinProfile = false;
+                if (p.objectReferenceValue == teethProfileAsset) addTeethProfile = false;
+            }
+
+            if (addSkinProfile)
+            {
+                index = list.arraySize;
+                list.InsertArrayElementAtIndex(index);
+                item = list.GetArrayElementAtIndex(index);
+                item.objectReferenceValue = skinProfileAsset;
+            }
+
+            if (addTeethProfile)
+            {
+                index = list.arraySize;
+                list.InsertArrayElementAtIndex(index);
+                item = list.GetArrayElementAtIndex(index);
+                item.objectReferenceValue = teethProfileAsset;
+            }
+
+            if (addSkinProfile || addTeethProfile)
+                hdrp.ApplyModifiedProperties();
 #endif
         }
 

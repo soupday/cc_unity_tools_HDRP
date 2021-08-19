@@ -311,6 +311,25 @@ namespace Reallusion.Import
             return null;
         }
 
+        public static Object FindAsset(string search, string[] folders = null)
+        {
+            if (folders == null) folders = new string[] { "Assets", "Packages" };
+
+            string[] guids = AssetDatabase.FindAssets(search, folders);
+
+            foreach (string guid in guids)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                string assetName = Path.GetFileNameWithoutExtension(assetPath);
+                if (assetName.EndsWith(search, System.StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return AssetDatabase.LoadAssetAtPath<Object>(assetPath);
+                }
+            }
+
+            return null;
+        }
+
         public static GameObject FindPreviewScenePrefab()
         {
             string[] texGuids;

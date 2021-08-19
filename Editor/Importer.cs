@@ -116,6 +116,9 @@ namespace Reallusion.Import
 
         public bool Import()
         {
+            // make sure custom diffusion profiles are installed
+            Pipeline.AddDiffusionProfilesHDRP();
+
             // firstly make sure the fbx is in:
             //      material creation mode: import via materialDescription
             //      location: use emmbedded materials

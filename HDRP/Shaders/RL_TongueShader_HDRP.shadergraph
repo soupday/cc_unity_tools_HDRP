@@ -2497,7 +2497,7 @@
         "selectedEntry": 0,
         "popupEntries": []
     },
-    "m_SerializedDiffusionProfile": "{\n    \"diffusionProfileAsset\": {\n        \"fileID\": 11400000,\n        \"guid\": \"26bdddf49760c61438938733f07fa2a2\",\n        \"type\": 2\n    }\n}",
+    "m_SerializedDiffusionProfile": "{\n    \"diffusionProfileAsset\": {\n        \"fileID\": 11400000,\n        \"guid\": \"b50e0337e68c0f84696e5be3cc744353\",\n        \"type\": 2\n    }\n}",
     "m_Version": 1
 }
 
