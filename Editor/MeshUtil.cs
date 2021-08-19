@@ -82,6 +82,14 @@ namespace Reallusion.Import
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.None);
         }
 
+#if HDRP_10_5_0_OR_NEWER
+        [MenuItem("CC3/Tools/Add HDRP Diffusion Profiles", priority = 180)]
+        private static void DoAddDiffusionProfiles()
+        {
+            Pipeline.AddDiffusionProfilesHDRP();
+        }
+#endif
+
         public static Mesh GetMeshFromSelected(Object obj)
         {
             if (obj.GetType() == typeof(Mesh))
