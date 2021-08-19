@@ -1,10 +1,8 @@
 Changelog
 =========
 
-### TODO
-- Tiling and offset when baking textures?...
-- Refresh button on tools window.
-- Back button in the import window.
+### v 0.1.6
+- Added custom diffusion profiles.
 
 ### v 0.1.5
 - Reworked and cleaned up Teeth and Tongue shaders & bake shaders.
@@ -27,3 +25,8 @@ Changelog
 
 ### v 0.1.0
 - Initial release.
+
+### TODO
+- Tiling and offset when baking textures?...
+- Refresh button on tools window.
+- Back button in the import window.
