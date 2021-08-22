@@ -55,13 +55,11 @@ namespace Reallusion.Import
             { "NonStdLookAtDataCopyFromCCBase", BaseGeneration.ActorCore }
         };
 
-        public static BaseGeneration GetCharacterGeneration(GameObject fbx, string name, QuickJSON jsonData)
+        public static BaseGeneration GetCharacterGeneration(GameObject fbx, string generationString)
         {
-            QuickJSON characterData = jsonData?.GetObjectAtPath(name + "/Object/" + name);
-            string generation = characterData?.GetStringValue("Generation");
-            if (!string.IsNullOrEmpty(generation))
+            if (!string.IsNullOrEmpty(generationString))
             {
-                if (GENERATION_MAP.TryGetValue(generation, out BaseGeneration gen)) return gen;
+                if (GENERATION_MAP.TryGetValue(generationString, out BaseGeneration gen)) return gen;
             }
             else
             {
@@ -70,40 +68,42 @@ namespace Reallusion.Import
                     Transform[] children = fbx.transform.GetComponentsInChildren<Transform>(true);
                     foreach (Transform child in children)
                     {
-                        if (child.gameObject.name == "RootNode_0_") return BaseGeneration.ActorCore;
-                        if (child.gameObject.name == "CC_Base_L_Pinky3") return BaseGeneration.G3;
-                        if (child.gameObject.name == "pinky_03_l") return BaseGeneration.GameBase;
-                        if (child.gameObject.name == "CC_Base_L_Finger42") return BaseGeneration.G1;
-                    }
-                    return BaseGeneration.G3;
-                }
-                else
-                {
-                    QuickJSON jsonBaseBody = characterData.GetObjectAtPath("Meshes/CC_Base_Body");
-                    QuickJSON jsonG1BodyMaterial = characterData.GetObjectAtPath("Meshes/CC_Base_Body/Materials/Skin_Body");
-                    QuickJSON jsonG3BodyMaterial = characterData.GetObjectAtPath("Meshes/CC_Base_Body/Materials/Std_Skin_Body");
-                    QuickJSON jsonGameBodyMaterial = characterData.GetObjectAtPath("Meshes/CC_Base_Body/Materials/ga_skin_body");
-                    QuickJSON jsonGameBody = characterData.GetObjectAtPath("Meshes/CC_Game_Body");
-                    QuickJSON jsonGameTongue = characterData.GetObjectAtPath("Meshes/CC_Game_Tongue");
-                    QuickJSON jsonActorCoreMaterial = characterData.GetObjectAtPath("Meshes/CC_Game_Body/Materials/Character_Pbr");
+                        string objectName = child.gameObject.name;
 
-                    if (jsonBaseBody != null)
-                    {
-                        if (jsonG3BodyMaterial != null)
-                            return BaseGeneration.G3;
-                        else if (jsonGameBodyMaterial != null)
-                            return BaseGeneration.GameBase;
-                        else if (jsonG1BodyMaterial != null)
-                            return BaseGeneration.G1;
-                        else if (jsonActorCoreMaterial != null)
-                            return BaseGeneration.ActorCore;
+                        if (objectName.iContains("RootNode_0_")) return BaseGeneration.ActorCore;
+                        if (objectName.iContains("CC_Base_L_Pinky3")) return BaseGeneration.G3;
+                        if (objectName.iContains("pinky_03_l")) return BaseGeneration.GameBase;
+                        if (objectName.iContains("CC_Base_L_Finger42")) return BaseGeneration.G1;
                     }
-                    else if (jsonGameBody != null || jsonGameTongue != null)
-                        if (jsonActorCoreMaterial != null)
-                            return BaseGeneration.ActorCore;
-                        else
+
+                    foreach (Transform child in children)
+                    {
+                        string objectName = child.gameObject.name;
+
+                        if (objectName.iContains("CC_Game_Body") || objectName.iContains("CC_Game_Tongue"))
+                        {
                             return BaseGeneration.GameBase;
-                }
+                        }
+
+                        if (objectName == "CC_Base_Body")
+                        {
+                            Renderer renderer = child.GetComponent<Renderer>();
+                            foreach (Material mat in renderer.sharedMaterials)
+                            {
+                                string materialName = mat.name;
+                                if (materialName.iContains("Skin_Body"))
+                                    return BaseGeneration.G1;
+                                else if (materialName.iContains("Std_Skin_Body"))
+                                    return BaseGeneration.G3;
+                                else if (materialName.iContains("ga_skin_body"))
+                                    return BaseGeneration.GameBase;
+                            }
+                        }
+
+                    }                    
+
+                    return BaseGeneration.G3;
+                }                
             }
             return BaseGeneration.Unknown;
         }

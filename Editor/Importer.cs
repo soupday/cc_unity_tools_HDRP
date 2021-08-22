@@ -88,7 +88,7 @@ namespace Reallusion.Import
             ImporterWindow.LogReport("Using material folder: " + materialsFolder);
 
             // fetch the character json export data.            
-            jsonData = info.JsonData;
+            jsonData = info.GetJsonData();
             string jsonPath = characterName + "/Object/" + characterName + "/Meshes";
             jsonMeshData = null;
             if (jsonData.PathExists(jsonPath))

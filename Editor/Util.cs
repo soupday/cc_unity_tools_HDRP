@@ -76,20 +76,15 @@ namespace Reallusion.Import
         public static bool IsCC3Character(string guid)
         {
             string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-            string assetFolder = Path.GetDirectoryName(assetPath);
-            if (AssetDatabase.IsValidFolder(assetFolder))
+            if (assetPath.iEndsWith(".fbx"))
             {
-                if (assetPath.EndsWith(".fbx", System.StringComparison.InvariantCultureIgnoreCase))
+                string assetFolder = Path.GetDirectoryName(assetPath);
+                string assetName = Path.GetFileNameWithoutExtension(assetPath);
+                if (HasJSONAsset(assetFolder, assetName))
                 {
-                    string assetName = Path.GetFileNameWithoutExtension(assetPath);
-                    string[] searchFolders = { assetFolder };
-
-                    if (GetJSONAsset(assetName, searchFolders) != null)
+                    if (AssetDatabase.IsValidFolder(Path.Combine(assetFolder, "textures", assetName)))
                     {
-                        if (AssetDatabase.IsValidFolder(Path.Combine(assetFolder, "textures", assetName)))
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }
@@ -146,16 +141,49 @@ namespace Reallusion.Import
             return c;
         }
         
-        public static TextAsset GetJSONAsset(string name, string[] folders)
+        public static bool HasJSONAsset(string folder, string name)
         {
-            string[] foundGUIDs = AssetDatabase.FindAssets(name, folders);
-            foreach (string guid in foundGUIDs)
+            string jsonPath = Path.Combine(folder, name + ".json");
+            return File.Exists(jsonPath);
+        }
+
+        public static QuickJSON GetJsonData(string jsonPath)
+        {            
+            if (File.Exists(jsonPath))
             {
-                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                if (assetPath.EndsWith(".json", System.StringComparison.InvariantCultureIgnoreCase))
-                    return AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+                TextAsset jsonAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(jsonPath);
+                QuickJSON jsonData = new QuickJSON(jsonAsset.text);
+                return jsonData;
             }
+            
             return null;
+        }
+
+        public static string GetJsonGenerationString(string jsonPath)
+        {
+            StreamReader jsonFile = File.OpenText(jsonPath);
+            string line;
+            int count = 0;
+            while((line = jsonFile.ReadLine()) != null)
+            {                                
+                if (line.Contains("\"Generation\":"))
+                {
+                    int colon = line.IndexOf(':');
+                    if (colon >= 0)
+                    {
+                        int q1 = line.IndexOf('"', colon + 1);
+                        int q2 = line.IndexOf('"', q1 + 1);
+                        if (q1 >= 0 && q2 >= 0)
+                        {
+                            return line.Substring(q1 + 1, q2 - q1 - 1);
+                        }
+                    }
+                    break;
+                }
+                if (count++ > 25) break;
+            }
+
+            return "Unknown";
         }
 
         public static List<string> GetValidCharacterGUIDS()
@@ -274,7 +302,7 @@ namespace Reallusion.Import
         {
             if (folders == null) folders = new string[] { "Assets", "Packages" };
 
-            string[] guids = AssetDatabase.FindAssets("t:material", folders);
+            string[] guids = AssetDatabase.FindAssets(name + " t:material", folders);
 
             foreach (string guid in guids)
             {
@@ -296,7 +324,7 @@ namespace Reallusion.Import
         {
             string[] texGuids;
 
-            texGuids = AssetDatabase.FindAssets("t:texture2d", folders);
+            texGuids = AssetDatabase.FindAssets(search + " t:texture2d", folders);
 
             foreach (string guid in texGuids)
             {
@@ -458,7 +486,7 @@ namespace Reallusion.Import
 
             foreach (string name in names)
             {
-                string[] searchGuids = AssetDatabase.FindAssets("t:material " + name, assetFolders);
+                string[] searchGuids = AssetDatabase.FindAssets(name + " t:material", assetFolders);
                 foreach (string guid in searchGuids)
                 {
                     string searchPath = AssetDatabase.GUIDToAssetPath(guid);

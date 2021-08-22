@@ -1,6 +1,10 @@
 Changelog
 =========
 
+### v 0.1.7
+- Reduced memory use for asset searches and character discovery.
+- Cached key character lookup data, should improve importer window memory use and responsiveness.
+
 ### v 0.1.6
 - Added custom diffusion profiles.
 

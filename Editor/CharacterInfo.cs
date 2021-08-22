@@ -30,14 +30,13 @@ namespace Reallusion.Import
         public string guid;
         public string path;        
         public string infoPath;
+        public string jsonPath;
         public string name;
-        public string folder;        
-        public TextAsset infoAsset;
+        public string folder;                
         public ProcessingType logType = ProcessingType.None;
         public bool qualRefractiveEyes = true;
         public bool bakeIsBaked = false;
         public bool bakeCustomShaders = true;
-        private QuickJSON jsonData;
         private BaseGeneration generation;
 
         public CharacterInfo(GameObject obj)
@@ -47,8 +46,8 @@ namespace Reallusion.Import
             name = Path.GetFileNameWithoutExtension(path);
             folder = Path.GetDirectoryName(path);
             infoPath = Path.Combine(folder, name + "_ImportInfo.txt");
-            infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
-            if (infoAsset)
+            jsonPath = Path.Combine(folder, name + ".json");
+            if (File.Exists(infoPath))
                 Read();
             else
                 Write();
@@ -62,35 +61,27 @@ namespace Reallusion.Import
             name = Path.GetFileNameWithoutExtension(path);
             folder = Path.GetDirectoryName(path);            
             infoPath = Path.Combine(folder, name + "_ImportInfo.txt");
-            infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
-            if (infoAsset)
+            jsonPath = Path.Combine(folder, name + ".json");
+            if (File.Exists(infoPath))            
                 Read();
             else
                 Write();
         }        
 
-        public QuickJSON JsonData
+        public QuickJSON GetJsonData()
         {
-            get
-            {
-                if (jsonData == null)
-                {
-                    TextAsset jsonAsset = Util.GetJSONAsset(name, new string[] { folder });
-                    jsonData = new QuickJSON(jsonAsset.text);
-                }
-
-                return jsonData;
-            }
+            return Util.GetJsonData(jsonPath);
         }
 
-
-        public BaseGeneration Generation 
+        public BaseGeneration Generation
         { 
             get 
             { 
                 if (generation == BaseGeneration.None)
                 {
-                    generation = RL.GetCharacterGeneration(fbx, name, JsonData);
+                    string gen = Util.GetJsonGenerationString(jsonPath);
+                    generation = RL.GetCharacterGeneration(fbx, gen);
+                    Write();
                 }
 
                 return generation;
@@ -117,6 +108,10 @@ namespace Reallusion.Import
 
         public void Read()
         {
+            TextAsset infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
+
+            generation = BaseGeneration.None;
+
             string[] lineEndings = new string[] { "\r\n", "\r", "\n" };
             char[] propertySplit = new char[] { '=' };
             string[] lines = infoAsset.text.Split(lineEndings, System.StringSplitOptions.None);
@@ -148,7 +143,10 @@ namespace Reallusion.Import
                     case "bakeCustomShaders":
                         if (value == "true") bakeCustomShaders = true;
                         else bakeCustomShaders = false;
-                        break;                    
+                        break;
+                    case "generation":
+                        generation = (BaseGeneration)System.Enum.Parse(typeof(BaseGeneration), value);
+                        break;
                 }
             }
         }
@@ -157,12 +155,12 @@ namespace Reallusion.Import
         {
             StreamWriter writer = new StreamWriter(infoPath, false);
             writer.WriteLine("logType=" + logType.ToString());
+            writer.WriteLine("generation=" + generation.ToString());
             writer.WriteLine("qualRefractiveEyes=" + (qualRefractiveEyes ? "true" : "false"));
             writer.WriteLine("bakeIsBaked=" + (bakeIsBaked ? "true" : "false"));
             writer.WriteLine("bakeCustomShaders=" + (bakeCustomShaders ? "true" : "false"));            
             writer.Close();
-            AssetDatabase.ImportAsset(infoPath);
-            infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
+            AssetDatabase.ImportAsset(infoPath);            
         }
     }
 
