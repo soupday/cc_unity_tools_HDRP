@@ -81,6 +81,7 @@ namespace Reallusion.Import
         {
             if (!string.IsNullOrEmpty(backScenePath) && File.Exists(backScenePath))
             {
+                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
                 Scene backScene = EditorSceneManager.OpenScene(backScenePath);
                 if (backScene.IsValid())
                     backScenePath = null;
@@ -384,7 +385,7 @@ namespace Reallusion.Import
 
             GUILayout.FlexibleSpace();
 
-            if (!string.IsNullOrEmpty(backScenePath) && File.Exists(backScenePath))
+            if (false && !string.IsNullOrEmpty(backScenePath) && File.Exists(backScenePath))
             {               
                 if (GUILayout.Button("Back", GUILayout.Width(65f), GUILayout.Height(BUTTON_HEIGHT)))
                 {

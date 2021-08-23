@@ -27,7 +27,7 @@ namespace Reallusion.Import
 {
     public static class Util
     {
-        public const int LOG_LEVEL = 0;
+        public static int LOG_LEVEL = 0;
 
         public static bool iEquals(this string a, string b)
         {
