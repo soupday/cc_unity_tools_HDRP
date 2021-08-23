@@ -118,7 +118,7 @@ Material:
     - _RequireSplitLighting: 0
     - _RimTransmissionIntensity: 0.05
     - _RootColorStrength: 1
-    - _SecondarySmoothness: 0.525
+    - _SecondarySmoothness: 0.625
     - _SecondarySpecularMultiplier: 0.05
     - _SecondarySpecularShift: 0.15
     - _ShadowClip: 0.2
