@@ -3,7 +3,9 @@ Changelog
 
 ### v 0.1.7
 - Reduced memory use for asset searches and character discovery.
-- Cached key character lookup data, should improve importer window memory use and responsiveness.
+- Prevented Import Tool window from holding on to character object references and hogging all the memory.
+- Right Click menu "Import Character" now opens Import Tool window *only* for that character.
+- Added refresh button on Import Tool window to rebuild the character list for when characters are added or removed.
 
 ### v 0.1.6
 - Added custom diffusion profiles.
