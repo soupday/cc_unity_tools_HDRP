@@ -25,76 +25,83 @@ namespace Reallusion.Import
     public class CharacterInfo
     {
         public enum ProcessingType { None, Basic, HighQuality }
-
-        public GameObject fbx;
+        
         public string guid;
         public string path;        
         public string infoPath;
+        public string jsonPath;
         public string name;
-        public string folder;        
-        public TextAsset infoAsset;
+        public string folder;                
         public ProcessingType logType = ProcessingType.None;
         public bool qualRefractiveEyes = true;
         public bool bakeIsBaked = false;
         public bool bakeCustomShaders = true;
-        private QuickJSON jsonData;
-        private BaseGeneration generation;
 
-        public CharacterInfo(GameObject obj)
-        {
-            path = AssetDatabase.GetAssetPath(obj);
-            fbx = obj;
-            name = Path.GetFileNameWithoutExtension(path);
-            folder = Path.GetDirectoryName(path);
-            infoPath = Path.Combine(folder, name + "_ImportInfo.txt");
-            infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
-            if (infoAsset)
-                Read();
-            else
-                Write();
-        }
+        private BaseGeneration generation;
+        private GameObject fbx;
+        private QuickJSON jsonData;
 
         public CharacterInfo(string guid)
         {
             this.guid = guid;
             path = AssetDatabase.GUIDToAssetPath(this.guid);
-            fbx = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             name = Path.GetFileNameWithoutExtension(path);
             folder = Path.GetDirectoryName(path);            
             infoPath = Path.Combine(folder, name + "_ImportInfo.txt");
-            infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
-            if (infoAsset)
+            jsonPath = Path.Combine(folder, name + ".json");
+            if (File.Exists(infoPath))            
                 Read();
             else
                 Write();
-        }        
+        }
+
+        public GameObject Fbx
+        {
+            get
+            {
+                if (fbx == null)
+                {
+                    fbx = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                    Util.LogInfo("CharInfo: " + name + " FBX Loaded");
+                }
+                return fbx;
+            }
+        }
 
         public QuickJSON JsonData
-        {
+        { 
             get
             {
                 if (jsonData == null)
                 {
-                    TextAsset jsonAsset = Util.GetJSONAsset(name, new string[] { folder });
-                    jsonData = new QuickJSON(jsonAsset.text);
+                    jsonData = Util.GetJsonData(jsonPath);
+                    Util.LogInfo("CharInfo: " + name + " JsonData Fetched");
                 }
-
                 return jsonData;
             }
         }
-
-
-        public BaseGeneration Generation 
+        
+        public BaseGeneration Generation
         { 
             get 
             { 
                 if (generation == BaseGeneration.None)
                 {
-                    generation = RL.GetCharacterGeneration(fbx, name, JsonData);
+                    string gen = Util.GetJsonGenerationString(jsonPath);                    
+                    generation = RL.GetCharacterGeneration(Fbx, gen);
+                    Util.LogInfo("CharInfo: " + name + " Generation " + generation.ToString());
+                    Write();
                 }
 
                 return generation;
             } 
+        }        
+
+        public void Release()
+        {
+            jsonData = null;
+            fbx = null;
+            Util.LogInfo("CharInfo: " + name + " Data Released!");
         }
 
         public bool CanHaveHighQualityMaterials
@@ -117,6 +124,10 @@ namespace Reallusion.Import
 
         public void Read()
         {
+            TextAsset infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
+
+            generation = BaseGeneration.None;
+
             string[] lineEndings = new string[] { "\r\n", "\r", "\n" };
             char[] propertySplit = new char[] { '=' };
             string[] lines = infoAsset.text.Split(lineEndings, System.StringSplitOptions.None);
@@ -148,7 +159,10 @@ namespace Reallusion.Import
                     case "bakeCustomShaders":
                         if (value == "true") bakeCustomShaders = true;
                         else bakeCustomShaders = false;
-                        break;                    
+                        break;
+                    case "generation":
+                        generation = (BaseGeneration)System.Enum.Parse(typeof(BaseGeneration), value);
+                        break;
                 }
             }
         }
@@ -157,12 +171,12 @@ namespace Reallusion.Import
         {
             StreamWriter writer = new StreamWriter(infoPath, false);
             writer.WriteLine("logType=" + logType.ToString());
+            writer.WriteLine("generation=" + generation.ToString());
             writer.WriteLine("qualRefractiveEyes=" + (qualRefractiveEyes ? "true" : "false"));
             writer.WriteLine("bakeIsBaked=" + (bakeIsBaked ? "true" : "false"));
             writer.WriteLine("bakeCustomShaders=" + (bakeCustomShaders ? "true" : "false"));            
             writer.Close();
-            AssetDatabase.ImportAsset(infoPath);
-            infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
+            AssetDatabase.ImportAsset(infoPath);            
         }
     }
 

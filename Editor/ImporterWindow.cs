@@ -22,18 +22,25 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using System;
+using System.Xml.Serialization;
+using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 
 namespace Reallusion.Import
 {
     public class ImporterWindow : EditorWindow
     {
+        public enum Mode { none, single, multi }
+
         private static readonly string windowTitle = "CC3 Import Tool";        
         private static CharacterInfo contextCharacter;
         private static List<CharacterInfo> validCharacters;
-        private static List<string> postprocessCharacters;
+        private static string backScenePath;
+        private static Mode mode;
                         
         private Vector2 iconScrollView;
         private bool previewCharacterAfterGUI;
+        private bool refreshAfterGUI;
 
         const float ICON_SIZE = 80f;
         const float WINDOW_MARGIN = 4f;
@@ -46,10 +53,7 @@ namespace Reallusion.Import
         const float ACTION_HEIGHT = 76f;
         const float ICON_WIDTH = 120f;
 
-
-        private static string logText = "Log Start:";
         private static GUIStyle logStyle, mainStyle, buttonStyle, labelStyle, boldStyle;
-
         private static Texture2D iconUnprocessed;
         private static Texture2D iconBasic;
         private static Texture2D iconHQ;
@@ -61,7 +65,28 @@ namespace Reallusion.Import
         [SerializeField] TreeViewState treeViewState;
 
         //The TreeView is not serializable, so it should be reconstructed from the tree data.
-        CharacterTreeView characterTreeView;                
+        CharacterTreeView characterTreeView;
+
+
+        public static void StoreBackScene()
+        {
+            Scene currentScene = SceneManager.GetActiveScene();
+            if (currentScene.IsValid() && !string.IsNullOrEmpty(currentScene.path))
+            {                
+                backScenePath = currentScene.path;
+            }
+        }
+
+        public static void GoBackScene()
+        {
+            if (!string.IsNullOrEmpty(backScenePath) && File.Exists(backScenePath))
+            {
+                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+                Scene backScene = EditorSceneManager.OpenScene(backScenePath);
+                if (backScene.IsValid())
+                    backScenePath = null;
+            }
+        }
 
         private void SetContextCharacter(UnityEngine.Object obj)
         {
@@ -74,41 +99,38 @@ namespace Reallusion.Import
 
             if (contextCharacter == null || contextCharacter.guid != guid)
             {
+                if (contextCharacter != null) contextCharacter.Release();
                 contextCharacter = GetCharacterState(guid);
                 
                 CreateTreeView(oldCharacter != contextCharacter);
 
                 EditorPrefs.SetString("RL_Importer_Context_Path", contextCharacter.path);
-                
-                LogReport("Setting Target Character to: " + contextCharacter.name + " (" + contextCharacter.Generation.ToString() + ")");
             }
-        }
+        }        
 
-        public static ImporterWindow Init()
-        {
-            ClearAllData();
-            Type hwt = Type.GetType("UnityEditor.SceneHierarchyWindow, UnityEditor.dll");            
-            //EditorWindow hierarchyWindow = GetWindow<EditorWindow>();
+        public static ImporterWindow Init(Mode windowMode, UnityEngine.Object characterObject)
+        {                        
+            Type hwt = Type.GetType("UnityEditor.SceneHierarchyWindow, UnityEditor.dll");
             ImporterWindow window = GetWindow<ImporterWindow>(windowTitle, hwt);
             window.minSize = new Vector2(300f, 500f);
-            window.Show();
-            return window;
-        }
 
-        public static ImporterWindow InitPost(List<string> characters)
-        {
             ClearAllData();
-            postprocessCharacters = characters;
-            ImporterWindow window = Init();
-            return window;
-        }
+            window.SetActiveCharacter(characterObject, windowMode);
+            window.InitData();                                
+            window.Show();
 
-        public void SetActiveCharacter(UnityEngine.Object obj)
+            return window;
+        }        
+
+        public void SetActiveCharacter(UnityEngine.Object obj, Mode mode)
         {
             if (Util.IsCC3Character(obj))
             {
-                SetContextCharacter(obj);
+                EditorPrefs.SetString("RL_Importer_Context_Path", AssetDatabase.GetAssetPath(obj));
             }
+
+            ImporterWindow.mode = mode;
+            EditorPrefs.SetString("RL_Importer_Mode", mode.ToString());
         }
 
         private void InitData()
@@ -117,21 +139,61 @@ namespace Reallusion.Import
             iconUnprocessed = Util.FindTexture(folders, "RLIcon_UnprocessedChar");
             iconBasic = Util.FindTexture(folders, "RLIcon_BasicChar");
             iconHQ = Util.FindTexture(folders, "RLIcon_HQChar");
-            iconBaked = Util.FindTexture(folders, "RLIcon_BakedChar");            
+            iconBaked = Util.FindTexture(folders, "RLIcon_BakedChar");
 
-            validCharacters = new List<CharacterInfo>();
-            List<string> validCharacterGUIDs = Util.GetValidCharacterGUIDS();
-            foreach (string validGUID in validCharacterGUIDs)
-            {                
-                validCharacters.Add(new CharacterInfo(validGUID));
-            }
+            RefreshCharacterList();
 
-            if (Util.IsCC3Character(Selection.activeGameObject))
+            MakeStyle();
+        }
+
+        private void RefreshCharacterList()
+        {
+            if (validCharacters == null)
+                validCharacters = new List<CharacterInfo>();
+            else
+                validCharacters.Clear();
+
+            if (mode == Mode.none)
             {
-                SetContextCharacter(Selection.activeGameObject);
+                mode = Mode.multi;
+                string modeValue = EditorPrefs.GetString("RL_Importer_Mode");                
+                if (!string.IsNullOrEmpty(modeValue))
+                    mode = (Mode)Enum.Parse(typeof(Mode), modeValue);                    
             }
 
-            if (contextCharacter == null && validCharacters.Count > 0) 
+            if (mode == Mode.single)
+            {
+                string editorPrefsContextPath = EditorPrefs.GetString("RL_Importer_Context_Path");
+                if (!string.IsNullOrEmpty(editorPrefsContextPath) &&
+                    File.Exists(editorPrefsContextPath))
+                {
+                    string guid = AssetDatabase.AssetPathToGUID(editorPrefsContextPath);
+                    if (!string.IsNullOrEmpty(guid))
+                        validCharacters.Add(new CharacterInfo(guid));
+                }
+
+                // fallback to multi mode
+                if (validCharacters.Count == 0) mode = Mode.multi;
+            }
+
+            if (mode == Mode.multi)
+            {
+                List<string> validCharacterGUIDs = Util.GetValidCharacterGUIDS();
+                foreach (string validGUID in validCharacterGUIDs)
+                {
+                    validCharacters.Add(new CharacterInfo(validGUID));
+                }
+            }
+        }
+
+        private void RestoreData()
+        {
+            if (validCharacters == null) InitData();
+        }
+
+        private void RestoreSelection()
+        {
+            if (contextCharacter == null && validCharacters.Count > 0)
             {
                 string editorPrefsContextPath = EditorPrefs.GetString("RL_Importer_Context_Path");
                 if (!string.IsNullOrEmpty(editorPrefsContextPath))
@@ -143,17 +205,23 @@ namespace Reallusion.Import
                     }
                 }
 
+                if (Selection.activeGameObject)
+                {
+                    string selectionPath = AssetDatabase.GetAssetPath(Selection.activeGameObject);
+                    for (int i = 0; i < validCharacters.Count; i++)
+                    {
+                        if (validCharacters[i].path == selectionPath)
+                            SetContextCharacter(validCharacters[i].guid);
+                    }               
+                }
+
                 if (contextCharacter == null)
                     SetContextCharacter(validCharacters[0].guid);
-            }            
-
-            MakeStyle();
+            }
         }
 
         private CharacterInfo GetCharacterState(string guid)
-        {
-            if (validCharacters == null) InitData();
-
+        {            
             foreach (CharacterInfo s in validCharacters)
             {
                 if (s.guid.Equals(guid)) return s;
@@ -172,7 +240,7 @@ namespace Reallusion.Import
                 {
                     treeViewState = new TreeViewState();
                 }
-                characterTreeView = new CharacterTreeView(treeViewState, contextCharacter.fbx);
+                characterTreeView = new CharacterTreeView(treeViewState, contextCharacter.Fbx);
 
                 characterTreeView.ExpandToDepth(2);
                 if (clearSelection) characterTreeView.ClearSelection();
@@ -180,13 +248,15 @@ namespace Reallusion.Import
         }
         
         private void OnGUI()
-        {            
-            if (validCharacters == null) InitData();
+        {
+            RestoreData();
+            RestoreSelection();
+
             if (validCharacters == null || validCharacters.Count == 0)
             {
                 GUILayout.Label("No CC3/iClone Characters detected!");
                 return;
-            }
+            }            
 
             float width = position.width - WINDOW_MARGIN;
             float height = position.height - WINDOW_MARGIN;
@@ -199,6 +269,7 @@ namespace Reallusion.Import
             Rect treeviewBlock = new Rect(iconBlock.xMax, actionBlock.yMax, infoBlock.width, height - actionBlock.yMax);
 
             previewCharacterAfterGUI = false;
+            refreshAfterGUI = false;
 
             CheckDragAndDrop();
 
@@ -213,7 +284,16 @@ namespace Reallusion.Import
             OnGUITreeViewArea(treeviewBlock);
 
             // creating a new preview scene in between GUI Layouts causes errors...
-            if (previewCharacterAfterGUI) Util.PreviewCharacter(contextCharacter.fbx);
+            if (previewCharacterAfterGUI)
+            {
+                StoreBackScene();
+                Util.PreviewCharacter(contextCharacter.Fbx);
+            }
+
+            if (refreshAfterGUI)
+            {
+                RefreshCharacterList();
+            }
         }
 
         private void OnGUIIconArea(Rect iconBlock)
@@ -302,12 +382,44 @@ namespace Reallusion.Import
             GUILayout.FlexibleSpace();
 
             GUILayout.BeginHorizontal();
+
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Preview Scene", GUILayout.Width(FUNCTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
+
+            if (false && !string.IsNullOrEmpty(backScenePath) && File.Exists(backScenePath))
+            {               
+                if (GUILayout.Button("Back", GUILayout.Width(65f), GUILayout.Height(BUTTON_HEIGHT)))
+                {
+                    GoBackScene();
+                }
+            }
+            else
+            {
+                GUILayout.Space(69f);
+            }
+
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("Preview", GUILayout.Width(65), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 previewCharacterAfterGUI = true;
             }
+
             GUILayout.FlexibleSpace();
+
+            if (mode == Mode.multi)
+            {
+                if (GUILayout.Button("Refresh", GUILayout.Width(65), GUILayout.Height(BUTTON_HEIGHT)))
+                {
+                    refreshAfterGUI = true;
+                }                
+            }
+            else
+            {
+                GUILayout.Space(69f);
+            }
+
+            GUILayout.FlexibleSpace();
+
             GUILayout.EndHorizontal();
 
             GUILayout.FlexibleSpace();
@@ -368,7 +480,7 @@ namespace Reallusion.Import
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Default", GUILayout.Width(ACTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
-                LogReport("Doing: Connect Default Materials.");
+                Util.LogInfo("Doing: Connect Default Materials.");
                 ImportCharacter(contextCharacter, MaterialQuality.Default);
                 contextCharacter.logType = CharacterInfo.ProcessingType.Basic;
                 contextCharacter.Write();
@@ -378,7 +490,7 @@ namespace Reallusion.Import
             if (!contextCharacter.CanHaveHighQualityMaterials) GUI.enabled = false;
             if (GUILayout.Button("High Quality", GUILayout.Width(ACTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
-                LogReport("Doing: Connect High Quality Materials.");
+                Util.LogInfo("Doing: Connect High Quality Materials.");
                 ImportCharacter(contextCharacter, MaterialQuality.High);
                 contextCharacter.logType = CharacterInfo.ProcessingType.HighQuality;
                 contextCharacter.Write();
@@ -398,7 +510,7 @@ namespace Reallusion.Import
                 if (contextCharacter.logType == CharacterInfo.ProcessingType.HighQuality)
                 {
      
-                    ComputeBake baker = new ComputeBake(contextCharacter.fbx, contextCharacter);
+                    ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
                     baker.BakeHQ();
 
                     contextCharacter.bakeIsBaked = true;
@@ -410,7 +522,7 @@ namespace Reallusion.Import
             if (contextCharacter.logType == CharacterInfo.ProcessingType.None) GUI.enabled = false;
             if (GUILayout.Button("Animations", GUILayout.Width(FUNCTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
-                RL.SetAnimationImport(contextCharacter);
+                RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);
             }
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
@@ -459,15 +571,12 @@ namespace Reallusion.Import
         
         private static void ClearAllData()
         {
-            logText = "Log Start:";
+            if (contextCharacter != null) contextCharacter.Release();
             contextCharacter = null;            
 
             if (validCharacters != null) validCharacters.Clear();
             validCharacters = null;
-
-            if (postprocessCharacters != null) postprocessCharacters.Clear();
-            postprocessCharacters = null;
-
+            
             logStyle = null;
             mainStyle = null;
             buttonStyle = null;
@@ -481,15 +590,9 @@ namespace Reallusion.Import
         }
 
         private void OnDestroy()
-        {
+        {            
             ClearAllData();
-        }
-
-        public static void LogReport(string s)
-        {
-            logText += "\n";
-            logText += s;
-        }
+        }        
 
         private static void MakeStyle()
         {

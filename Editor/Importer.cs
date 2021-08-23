@@ -62,11 +62,11 @@ namespace Reallusion.Import
 
         public Importer(CharacterInfo info)
         {
-            ImporterWindow.LogReport("Initializing character import.");
+            Util.LogInfo("Initializing character import.");
 
             // fetch all the asset details for this character fbx object.
             characterInfo = info;
-            fbx = info.fbx;            
+            fbx = info.Fbx;
             id = fbx.GetInstanceID();
             fbxPath = info.path;
             importer = (ModelImporter)AssetImporter.GetAtPath(fbxPath);
@@ -78,14 +78,14 @@ namespace Reallusion.Import
             texFolder = Path.Combine(fbxFolder, "textures", characterName);
             textureFolders = new List<string>() { fbmFolder, texFolder };
 
-            ImporterWindow.LogReport("Using texture folders:");
-            ImporterWindow.LogReport("    " + fbmFolder);
-            ImporterWindow.LogReport("    " + texFolder);
+            Util.LogInfo("Using texture folders:");
+            Util.LogInfo("    " + fbmFolder);
+            Util.LogInfo("    " + texFolder);
 
             // find or create the materials folder for the character import.
             string parentMaterialsFolder = Util.CreateFolder(fbxFolder, MATERIALS_FOLDER);
             materialsFolder = Util.CreateFolder(parentMaterialsFolder, characterName);
-            ImporterWindow.LogReport("Using material folder: " + materialsFolder);
+            Util.LogInfo("Using material folder: " + materialsFolder);
 
             // fetch the character json export data.            
             jsonData = info.JsonData;
@@ -98,7 +98,7 @@ namespace Reallusion.Import
 
             string jsonVersion = jsonData?.GetStringValue(characterName + "/Version");
             if (!string.IsNullOrEmpty(jsonVersion))
-                ImporterWindow.LogReport("JSON version: " + jsonVersion);
+                Util.LogInfo("JSON version: " + jsonVersion);
 
             generation = info.Generation;
 
@@ -138,7 +138,7 @@ namespace Reallusion.Import
             // only if we need to...
             if (!AssetDatabase.IsValidFolder(fbmFolder))
             {
-                ImporterWindow.LogReport("Extracting embedded textures to: " + fbmFolder);
+                Util.LogInfo("Extracting embedded textures to: " + fbmFolder);
                 Util.CreateFolder(fbxPath, characterName + ".fbm");
                 importer.ExtractTextures(fbmFolder);
             }
@@ -159,7 +159,7 @@ namespace Reallusion.Import
             // if nescessary write changes and reimport so that the fbx is populated with mappable material names:
             if (reimport)
             {
-                ImporterWindow.LogReport("Resetting import settings for correct material generation and reimporting.");
+                Util.LogInfo("Resetting import settings for correct material generation and reimporting.");
                 AssetDatabase.WriteImportSettingsIfDirty(fbxPath);
                 AssetDatabase.ImportAsset(fbxPath, ImportAssetOptions.ForceUpdate);
             }
@@ -170,9 +170,9 @@ namespace Reallusion.Import
                 CacheBakedMaps();
             }
 
-            ProcessObjectTree(fbx);            
+            ProcessObjectTree(fbx);
 
-            ImporterWindow.LogReport("Writing changes to asset database.");
+            Util.LogInfo("Writing changes to asset database.");
 
             // set humanoid animation type
             RL.HumanoidImportSettings(fbx, importer, characterName, generation, jsonData);
@@ -184,9 +184,9 @@ namespace Reallusion.Import
             AssetDatabase.Refresh();
 
             // create prefab
-            RL.CreatePrefabFromFbx(characterInfo);
+            RL.CreatePrefabFromFbx(characterInfo, fbx);
 
-            ImporterWindow.LogReport("Done!");
+            Util.LogInfo("Done!");
 
             Selection.activeObject = fbx;
 
@@ -219,7 +219,7 @@ namespace Reallusion.Import
 
             if (renderer)
             {
-                ImporterWindow.LogReport("Processing sub-object: " + obj.name);
+                Util.LogInfo("Processing sub-object: " + obj.name);
 
                 foreach (Material sharedMat in renderer.sharedMaterials)
                 {
@@ -241,7 +241,7 @@ namespace Reallusion.Import
                         // determine the material type, this dictates the shader and template material.
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
 
-                        ImporterWindow.LogReport("    Material name: " + sourceName + ", type:" + materialType.ToString());
+                        Util.LogInfo("    Material name: " + sourceName + ", type:" + materialType.ToString());
 
                         // re-use or create the material.
                         Material mat = CreateRemapMaterial(materialType, sharedMat, sourceName);
@@ -253,7 +253,7 @@ namespace Reallusion.Import
                     }
                     else
                     {
-                        ImporterWindow.LogReport("    Material name: " + sourceName + " already processed.");
+                        Util.LogInfo("    Material name: " + sourceName + " already processed.");
                     }
                 }
             }
@@ -380,7 +380,7 @@ namespace Reallusion.Import
                 // save the material to the asset database.
                 AssetDatabase.CreateAsset(remapMaterial, matPath);
 
-                ImporterWindow.LogReport("    Created new material: " + remapMaterial.name);
+                Util.LogInfo("    Created new material: " + remapMaterial.name);
 
                 // add the new remapped material to the importer remaps.
                 importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), sourceName), remapMaterial);
@@ -389,7 +389,7 @@ namespace Reallusion.Import
             // copy the template material properties to the remapped material.
             if (templateMaterial)
             {
-                ImporterWindow.LogReport("    Using template material: " + templateMaterial.name);
+                Util.LogInfo("    Using template material: " + templateMaterial.name);
                 //Debug.Log("Copying from Material template: " + templateMaterial.name);
                 if (templateMaterial.shader && templateMaterial.shader != remapMaterial.shader)
                     remapMaterial.shader = templateMaterial.shader;
@@ -1297,7 +1297,7 @@ namespace Reallusion.Import
                     mat.SetTextureOffset(shaderRef, offset);
                     mat.SetTextureScale(shaderRef, tiling);
 
-                    ImporterWindow.LogReport("        Connected texture: " + tex.name);
+                    Util.LogInfo("        Connected texture: " + tex.name);
 
                     SetTextureImport(tex, name, flags);
                 }

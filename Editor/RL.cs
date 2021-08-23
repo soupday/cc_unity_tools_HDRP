@@ -55,13 +55,11 @@ namespace Reallusion.Import
             { "NonStdLookAtDataCopyFromCCBase", BaseGeneration.ActorCore }
         };
 
-        public static BaseGeneration GetCharacterGeneration(GameObject fbx, string name, QuickJSON jsonData)
+        public static BaseGeneration GetCharacterGeneration(GameObject fbx, string generationString)
         {
-            QuickJSON characterData = jsonData?.GetObjectAtPath(name + "/Object/" + name);
-            string generation = characterData?.GetStringValue("Generation");
-            if (!string.IsNullOrEmpty(generation))
+            if (!string.IsNullOrEmpty(generationString))
             {
-                if (GENERATION_MAP.TryGetValue(generation, out BaseGeneration gen)) return gen;
+                if (GENERATION_MAP.TryGetValue(generationString, out BaseGeneration gen)) return gen;
             }
             else
             {
@@ -70,40 +68,42 @@ namespace Reallusion.Import
                     Transform[] children = fbx.transform.GetComponentsInChildren<Transform>(true);
                     foreach (Transform child in children)
                     {
-                        if (child.gameObject.name == "RootNode_0_") return BaseGeneration.ActorCore;
-                        if (child.gameObject.name == "CC_Base_L_Pinky3") return BaseGeneration.G3;
-                        if (child.gameObject.name == "pinky_03_l") return BaseGeneration.GameBase;
-                        if (child.gameObject.name == "CC_Base_L_Finger42") return BaseGeneration.G1;
-                    }
-                    return BaseGeneration.G3;
-                }
-                else
-                {
-                    QuickJSON jsonBaseBody = characterData.GetObjectAtPath("Meshes/CC_Base_Body");
-                    QuickJSON jsonG1BodyMaterial = characterData.GetObjectAtPath("Meshes/CC_Base_Body/Materials/Skin_Body");
-                    QuickJSON jsonG3BodyMaterial = characterData.GetObjectAtPath("Meshes/CC_Base_Body/Materials/Std_Skin_Body");
-                    QuickJSON jsonGameBodyMaterial = characterData.GetObjectAtPath("Meshes/CC_Base_Body/Materials/ga_skin_body");
-                    QuickJSON jsonGameBody = characterData.GetObjectAtPath("Meshes/CC_Game_Body");
-                    QuickJSON jsonGameTongue = characterData.GetObjectAtPath("Meshes/CC_Game_Tongue");
-                    QuickJSON jsonActorCoreMaterial = characterData.GetObjectAtPath("Meshes/CC_Game_Body/Materials/Character_Pbr");
+                        string objectName = child.gameObject.name;
 
-                    if (jsonBaseBody != null)
-                    {
-                        if (jsonG3BodyMaterial != null)
-                            return BaseGeneration.G3;
-                        else if (jsonGameBodyMaterial != null)
-                            return BaseGeneration.GameBase;
-                        else if (jsonG1BodyMaterial != null)
-                            return BaseGeneration.G1;
-                        else if (jsonActorCoreMaterial != null)
-                            return BaseGeneration.ActorCore;
+                        if (objectName.iContains("RootNode_0_")) return BaseGeneration.ActorCore;
+                        if (objectName.iContains("CC_Base_L_Pinky3")) return BaseGeneration.G3;
+                        if (objectName.iContains("pinky_03_l")) return BaseGeneration.GameBase;
+                        if (objectName.iContains("CC_Base_L_Finger42")) return BaseGeneration.G1;
                     }
-                    else if (jsonGameBody != null || jsonGameTongue != null)
-                        if (jsonActorCoreMaterial != null)
-                            return BaseGeneration.ActorCore;
-                        else
+
+                    foreach (Transform child in children)
+                    {
+                        string objectName = child.gameObject.name;
+
+                        if (objectName.iContains("CC_Game_Body") || objectName.iContains("CC_Game_Tongue"))
+                        {
                             return BaseGeneration.GameBase;
-                }
+                        }
+
+                        if (objectName == "CC_Base_Body")
+                        {
+                            Renderer renderer = child.GetComponent<Renderer>();
+                            foreach (Material mat in renderer.sharedMaterials)
+                            {
+                                string materialName = mat.name;
+                                if (materialName.iContains("Skin_Body"))
+                                    return BaseGeneration.G1;
+                                else if (materialName.iContains("Std_Skin_Body"))
+                                    return BaseGeneration.G3;
+                                else if (materialName.iContains("ga_skin_body"))
+                                    return BaseGeneration.GameBase;
+                            }
+                        }
+
+                    }                    
+
+                    return BaseGeneration.G3;
+                }                
             }
             return BaseGeneration.Unknown;
         }
@@ -442,7 +442,7 @@ namespace Reallusion.Import
             }
         }
 
-        public static void SetAnimationImport(CharacterInfo info)
+        public static void SetAnimationImport(CharacterInfo info, GameObject fbx)
         {
             string assetPath = info.path;
             ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(info.path);
@@ -452,17 +452,17 @@ namespace Reallusion.Import
 
             SetAnimation(importer, info.path);            
 
-            AutoCreateAnimator(info.fbx, info.path, importer);            
+            AutoCreateAnimator(fbx, info.path, importer);            
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            CreatePrefabFromFbx(info);
+            CreatePrefabFromFbx(info, fbx);
 
             //System.Media.SystemSounds.Asterisk.Play();
         }
 
-        public static void CreatePrefabFromFbx(CharacterInfo info)
+        public static void CreatePrefabFromFbx(CharacterInfo info, GameObject fbx)
         {
             bool noMotion = !info.name.iContains("_Motion");
 
@@ -471,16 +471,16 @@ namespace Reallusion.Import
                 // Set the Prefab
                 if (info.path.iContains("_lod"))
                 {
-                    CreateOneLODPrefabFromModel(info);
+                    CreateOneLODPrefabFromModel(info, fbx);
                 }
                 else
                 {
-                    CreatePrefabFromModel(info);
+                    CreatePrefabFromModel(info, fbx);
                 }
             }
         }
 
-        public static void CreatePrefabFromModel(CharacterInfo info)
+        public static void CreatePrefabFromModel(CharacterInfo info, GameObject fbx)
         {
             // Create a Prefab folder:          
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
@@ -500,7 +500,7 @@ namespace Reallusion.Import
                 catch { }
             }
             
-            if (!prefabTemp) prefabTemp = GameObject.Instantiate<GameObject>(info.fbx, null);
+            if (!prefabTemp) prefabTemp = GameObject.Instantiate<GameObject>(fbx, null);
             
 
             // Apply Animator:
@@ -519,7 +519,7 @@ namespace Reallusion.Import
         }
 
         
-        public static void CreateOneLODPrefabFromModel(CharacterInfo info)
+        public static void CreateOneLODPrefabFromModel(CharacterInfo info, GameObject fbx)
         {
             GameObject lodObject = new GameObject();
             LODGroup lodGroup = lodObject.AddComponent<LODGroup>();
@@ -528,7 +528,7 @@ namespace Reallusion.Import
             string prefabPath = Path.Combine(namedPrefabFolder, info.name + ".prefab");
             string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");
 
-            Renderer[] renderers = info.fbx.transform.GetComponentsInChildren<Renderer>(true);
+            Renderer[] renderers = fbx.transform.GetComponentsInChildren<Renderer>(true);
             int lodLevel = 0;
             foreach (Renderer child in renderers)
             {
@@ -542,7 +542,7 @@ namespace Reallusion.Import
             if (renderers.Length == lodLevel)
             {
                 LOD[] lods = new LOD[lodLevel];
-                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(info.fbx) as GameObject;
+                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(fbx) as GameObject;
                 lodPrefabTemp.transform.SetParent(lodObject.transform, false);
                 Renderer[] prefabRenderers = lodPrefabTemp.transform.GetComponentsInChildren<Renderer>(true);
 
@@ -572,7 +572,7 @@ namespace Reallusion.Import
             {
                 lodLevel++;
                 LOD[] lods = new LOD[lodLevel];
-                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(info.fbx) as GameObject;
+                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(fbx) as GameObject;
                 lodPrefabTemp.transform.SetParent(lodObject.transform, false);
                 Renderer[] prefabRenderers = lodPrefabTemp.transform.GetComponentsInChildren<Renderer>(true);
 

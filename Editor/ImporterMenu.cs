@@ -26,14 +26,13 @@ namespace Reallusion.Import
         [MenuItem("CC3/Import Characters", priority = 1)]
         public static void InitCC3ImportGUI()
         {
-            ImporterWindow.Init();
+            ImporterWindow.Init(ImporterWindow.Mode.multi, Selection.activeObject);
         }
 
         [MenuItem("Assets/CC3/Import Character", priority = 2000)]
         public static void InitAssetCC3ImportGUI()
         {
-            ImporterWindow window = ImporterWindow.Init();
-            window.SetActiveCharacter(Selection.activeObject);
+            ImporterWindow.Init(ImporterWindow.Mode.single, Selection.activeObject);
         }
 
         [MenuItem("Assets/CC3/Import Character", true)]

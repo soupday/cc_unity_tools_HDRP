@@ -21,11 +21,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Reallusion.Import
 {
     public static class Util
-    {        
+    {
+        public static int LOG_LEVEL = 0;
+
         public static bool iEquals(this string a, string b)
         {
             return a.Equals(b, System.StringComparison.InvariantCultureIgnoreCase);
@@ -76,20 +79,15 @@ namespace Reallusion.Import
         public static bool IsCC3Character(string guid)
         {
             string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-            string assetFolder = Path.GetDirectoryName(assetPath);
-            if (AssetDatabase.IsValidFolder(assetFolder))
+            if (assetPath.iEndsWith(".fbx"))
             {
-                if (assetPath.EndsWith(".fbx", System.StringComparison.InvariantCultureIgnoreCase))
+                string assetFolder = Path.GetDirectoryName(assetPath);
+                string assetName = Path.GetFileNameWithoutExtension(assetPath);
+                if (HasJSONAsset(assetFolder, assetName))
                 {
-                    string assetName = Path.GetFileNameWithoutExtension(assetPath);
-                    string[] searchFolders = { assetFolder };
-
-                    if (GetJSONAsset(assetName, searchFolders) != null)
+                    if (AssetDatabase.IsValidFolder(Path.Combine(assetFolder, "textures", assetName)))
                     {
-                        if (AssetDatabase.IsValidFolder(Path.Combine(assetFolder, "textures", assetName)))
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }
@@ -146,16 +144,53 @@ namespace Reallusion.Import
             return c;
         }
         
-        public static TextAsset GetJSONAsset(string name, string[] folders)
+        public static bool HasJSONAsset(string folder, string name)
         {
-            string[] foundGUIDs = AssetDatabase.FindAssets(name, folders);
-            foreach (string guid in foundGUIDs)
+            string jsonPath = Path.Combine(folder, name + ".json");
+            return File.Exists(jsonPath);
+        }
+
+        public static QuickJSON GetJsonData(string jsonPath)
+        {            
+            if (File.Exists(jsonPath))
             {
-                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                if (assetPath.EndsWith(".json", System.StringComparison.InvariantCultureIgnoreCase))
-                    return AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+                TextAsset jsonAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(jsonPath);
+                QuickJSON jsonData = new QuickJSON(jsonAsset.text);
+                return jsonData;
             }
+            
             return null;
+        }
+
+        public static string GetJsonGenerationString(string jsonPath)
+        {
+            if (File.Exists(jsonPath))
+            {
+                StreamReader jsonFile = File.OpenText(jsonPath);
+                string line;
+                int count = 0;
+                while ((line = jsonFile.ReadLine()) != null)
+                {
+                    if (line.Contains("\"Generation\":"))
+                    {
+                        int colon = line.IndexOf(':');
+                        if (colon >= 0)
+                        {
+                            int q1 = line.IndexOf('"', colon + 1);
+                            int q2 = line.IndexOf('"', q1 + 1);
+                            if (q1 >= 0 && q2 >= 0)
+                            {
+                                string generation = line.Substring(q1 + 1, q2 - q1 - 1);                                
+                                return generation;
+                            }
+                        }
+                        break;
+                    }
+                    if (count++ > 25) break;
+                }
+            }
+
+            return "Unknown";
         }
 
         public static List<string> GetValidCharacterGUIDS()
@@ -274,7 +309,7 @@ namespace Reallusion.Import
         {
             if (folders == null) folders = new string[] { "Assets", "Packages" };
 
-            string[] guids = AssetDatabase.FindAssets("t:material", folders);
+            string[] guids = AssetDatabase.FindAssets(name + " t:material", folders);
 
             foreach (string guid in guids)
             {
@@ -296,7 +331,7 @@ namespace Reallusion.Import
         {
             string[] texGuids;
 
-            texGuids = AssetDatabase.FindAssets("t:texture2d", folders);
+            texGuids = AssetDatabase.FindAssets(search + " t:texture2d", folders);
 
             foreach (string guid in texGuids)
             {
@@ -458,14 +493,14 @@ namespace Reallusion.Import
 
             foreach (string name in names)
             {
-                string[] searchGuids = AssetDatabase.FindAssets("t:material " + name, assetFolders);
+                string[] searchGuids = AssetDatabase.FindAssets(name + " t:material", assetFolders);
                 foreach (string guid in searchGuids)
                 {
                     string searchPath = AssetDatabase.GUIDToAssetPath(guid);
                     string searchName = Path.GetFileNameWithoutExtension(searchPath).ToLowerInvariant();
                     if (searchName.Contains(name))
                     {
-                        Debug.Log(searchName);
+                        //Debug.Log(searchName);
                         results.Add(AssetDatabase.LoadAssetAtPath<Material>(searchPath));
                     }
                 }
@@ -517,33 +552,8 @@ namespace Reallusion.Import
         {
             if (!character) return;
 
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-
-            //old code block
-            /*
-            UnityEngine.SceneManagement.Scene previewScene = EditorSceneManager.OpenScene("Assets/CC3Import/Scenes/PreviewScene.unity");
-
-            if (previewScene.IsValid())
-            {
-                if (previewScene.isLoaded)
-                {
-                    GameObject container = GameObject.Find("Character Container");
-                    if (container)
-                    {
-                        DestroyEditorChildObjects(container);
-
-                        GameObject clone = PrefabUtility.InstantiatePrefab(character, container.transform) as GameObject;
-                        if (clone)
-                        {
-                            Selection.activeGameObject = clone;
-                            SceneView.FrameLastActiveSceneView();
-                        }
-                    }
-                }
-            }
-            */
-            
-            //new code block start
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;            
+                        
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
             GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
             GameObject container = GameObject.Find("Character Container");
@@ -558,8 +568,6 @@ namespace Reallusion.Import
                     SceneView.FrameLastActiveSceneView();
                 }
             }
-            //new code block end
-            
         }        
 
         public static GameObject GetPrefabFromObject(Object obj)
@@ -572,6 +580,30 @@ namespace Reallusion.Import
             }
 
             return null;
+        }
+
+        public static void LogInfo(string message)
+        {
+            if (LOG_LEVEL >= 2)
+            {
+                Debug.Log(message);
+            }
+        }
+
+        public static void LogWarn(string message)
+        {
+            if (LOG_LEVEL >= 1)
+            {
+                Debug.LogWarning(message);
+            }
+        }
+
+        public static void LogError(string message)
+        {
+            if (LOG_LEVEL >= 0)
+            {
+                Debug.LogError(message);
+            }
         }
     }
 }
