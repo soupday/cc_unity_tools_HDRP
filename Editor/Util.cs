@@ -21,11 +21,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Reallusion.Import
 {
     public static class Util
-    {        
+    {
+        public const int LOG_LEVEL = 0;
+
         public static bool iEquals(this string a, string b)
         {
             return a.Equals(b, System.StringComparison.InvariantCultureIgnoreCase);
@@ -161,26 +164,30 @@ namespace Reallusion.Import
 
         public static string GetJsonGenerationString(string jsonPath)
         {
-            StreamReader jsonFile = File.OpenText(jsonPath);
-            string line;
-            int count = 0;
-            while((line = jsonFile.ReadLine()) != null)
-            {                                
-                if (line.Contains("\"Generation\":"))
+            if (File.Exists(jsonPath))
+            {
+                StreamReader jsonFile = File.OpenText(jsonPath);
+                string line;
+                int count = 0;
+                while ((line = jsonFile.ReadLine()) != null)
                 {
-                    int colon = line.IndexOf(':');
-                    if (colon >= 0)
+                    if (line.Contains("\"Generation\":"))
                     {
-                        int q1 = line.IndexOf('"', colon + 1);
-                        int q2 = line.IndexOf('"', q1 + 1);
-                        if (q1 >= 0 && q2 >= 0)
+                        int colon = line.IndexOf(':');
+                        if (colon >= 0)
                         {
-                            return line.Substring(q1 + 1, q2 - q1 - 1);
+                            int q1 = line.IndexOf('"', colon + 1);
+                            int q2 = line.IndexOf('"', q1 + 1);
+                            if (q1 >= 0 && q2 >= 0)
+                            {
+                                string generation = line.Substring(q1 + 1, q2 - q1 - 1);                                
+                                return generation;
+                            }
                         }
+                        break;
                     }
-                    break;
+                    if (count++ > 25) break;
                 }
-                if (count++ > 25) break;
             }
 
             return "Unknown";
@@ -493,7 +500,7 @@ namespace Reallusion.Import
                     string searchName = Path.GetFileNameWithoutExtension(searchPath).ToLowerInvariant();
                     if (searchName.Contains(name))
                     {
-                        Debug.Log(searchName);
+                        //Debug.Log(searchName);
                         results.Add(AssetDatabase.LoadAssetAtPath<Material>(searchPath));
                     }
                 }
@@ -545,33 +552,8 @@ namespace Reallusion.Import
         {
             if (!character) return;
 
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-
-            //old code block
-            /*
-            UnityEngine.SceneManagement.Scene previewScene = EditorSceneManager.OpenScene("Assets/CC3Import/Scenes/PreviewScene.unity");
-
-            if (previewScene.IsValid())
-            {
-                if (previewScene.isLoaded)
-                {
-                    GameObject container = GameObject.Find("Character Container");
-                    if (container)
-                    {
-                        DestroyEditorChildObjects(container);
-
-                        GameObject clone = PrefabUtility.InstantiatePrefab(character, container.transform) as GameObject;
-                        if (clone)
-                        {
-                            Selection.activeGameObject = clone;
-                            SceneView.FrameLastActiveSceneView();
-                        }
-                    }
-                }
-            }
-            */
-            
-            //new code block start
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;            
+                        
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
             GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
             GameObject container = GameObject.Find("Character Container");
@@ -586,8 +568,6 @@ namespace Reallusion.Import
                     SceneView.FrameLastActiveSceneView();
                 }
             }
-            //new code block end
-            
         }        
 
         public static GameObject GetPrefabFromObject(Object obj)
@@ -600,6 +580,30 @@ namespace Reallusion.Import
             }
 
             return null;
+        }
+
+        public static void LogInfo(string message)
+        {
+            if (LOG_LEVEL >= 2)
+            {
+                Debug.Log(message);
+            }
+        }
+
+        public static void LogWarn(string message)
+        {
+            if (LOG_LEVEL >= 1)
+            {
+                Debug.LogWarning(message);
+            }
+        }
+
+        public static void LogError(string message)
+        {
+            if (LOG_LEVEL >= 0)
+            {
+                Debug.LogError(message);
+            }
         }
     }
 }

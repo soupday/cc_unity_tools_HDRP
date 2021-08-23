@@ -25,8 +25,7 @@ namespace Reallusion.Import
     public class CharacterInfo
     {
         public enum ProcessingType { None, Basic, HighQuality }
-
-        public GameObject fbx;
+        
         public string guid;
         public string path;        
         public string infoPath;
@@ -37,27 +36,15 @@ namespace Reallusion.Import
         public bool qualRefractiveEyes = true;
         public bool bakeIsBaked = false;
         public bool bakeCustomShaders = true;
-        private BaseGeneration generation;
 
-        public CharacterInfo(GameObject obj)
-        {
-            path = AssetDatabase.GetAssetPath(obj);
-            fbx = obj;
-            name = Path.GetFileNameWithoutExtension(path);
-            folder = Path.GetDirectoryName(path);
-            infoPath = Path.Combine(folder, name + "_ImportInfo.txt");
-            jsonPath = Path.Combine(folder, name + ".json");
-            if (File.Exists(infoPath))
-                Read();
-            else
-                Write();
-        }
+        private BaseGeneration generation;
+        private GameObject fbx;
+        private QuickJSON jsonData;
 
         public CharacterInfo(string guid)
         {
             this.guid = guid;
             path = AssetDatabase.GUIDToAssetPath(this.guid);
-            fbx = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             name = Path.GetFileNameWithoutExtension(path);
             folder = Path.GetDirectoryName(path);            
             infoPath = Path.Combine(folder, name + "_ImportInfo.txt");
@@ -66,26 +53,55 @@ namespace Reallusion.Import
                 Read();
             else
                 Write();
-        }        
-
-        public QuickJSON GetJsonData()
-        {
-            return Util.GetJsonData(jsonPath);
         }
 
+        public GameObject Fbx
+        {
+            get
+            {
+                if (fbx == null)
+                {
+                    fbx = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                    Util.LogInfo("CharInfo: " + name + " FBX Loaded");
+                }
+                return fbx;
+            }
+        }
+
+        public QuickJSON JsonData
+        { 
+            get
+            {
+                if (jsonData == null)
+                {
+                    jsonData = Util.GetJsonData(jsonPath);
+                    Util.LogInfo("CharInfo: " + name + " JsonData Fetched");
+                }
+                return jsonData;
+            }
+        }
+        
         public BaseGeneration Generation
         { 
             get 
             { 
                 if (generation == BaseGeneration.None)
                 {
-                    string gen = Util.GetJsonGenerationString(jsonPath);
-                    generation = RL.GetCharacterGeneration(fbx, gen);
+                    string gen = Util.GetJsonGenerationString(jsonPath);                    
+                    generation = RL.GetCharacterGeneration(Fbx, gen);
+                    Util.LogInfo("CharInfo: " + name + " Generation " + generation.ToString());
                     Write();
                 }
 
                 return generation;
             } 
+        }        
+
+        public void Release()
+        {
+            jsonData = null;
+            fbx = null;
+            Util.LogInfo("CharInfo: " + name + " Data Released!");
         }
 
         public bool CanHaveHighQualityMaterials
