@@ -299,8 +299,14 @@ namespace Reallusion.Import
         public void SaveAsPrefab()
         {
             string prefabFolder = Util.CreateFolder(fbxFolder, Importer.PREFABS_FOLDER);
-            string namedPrefabFolder = Util.CreateFolder(prefabFolder, characterName);
-            string prefabPath = Path.Combine(namedPrefabFolder, characterName + "_Baked.prefab");
+            //string namedPrefabFolder = Util.CreateFolder(prefabFolder, characterName);
+
+            string prefabPath;
+            if (characterInfo.bakeSeparatePrefab)
+                prefabPath = Path.Combine(prefabFolder, characterName + "_Baked.prefab");
+            else
+                prefabPath = Path.Combine(prefabFolder, characterName + ".prefab");
+
             GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
             Selection.activeObject = variant;
             GameObject.DestroyImmediate(clone);
