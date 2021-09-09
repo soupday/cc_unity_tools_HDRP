@@ -36,8 +36,9 @@ namespace Reallusion.Import
         public bool qualRefractiveEyes = true;
         public bool bakeIsBaked = false;
         public bool bakeCustomShaders = true;
+        public bool bakeSeparatePrefab = true;
 
-        private BaseGeneration generation;
+        private BaseGeneration generation = BaseGeneration.None;
         private GameObject fbx;
         private QuickJSON jsonData;
 
@@ -126,8 +127,6 @@ namespace Reallusion.Import
         {
             TextAsset infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
 
-            generation = BaseGeneration.None;
-
             string[] lineEndings = new string[] { "\r\n", "\r", "\n" };
             char[] propertySplit = new char[] { '=' };
             string[] lines = infoAsset.text.Split(lineEndings, System.StringSplitOptions.None);
@@ -160,6 +159,10 @@ namespace Reallusion.Import
                         if (value == "true") bakeCustomShaders = true;
                         else bakeCustomShaders = false;
                         break;
+                    case "bakeSeparatePrefab":
+                        if (value == "true") bakeSeparatePrefab = true;
+                        else bakeSeparatePrefab = false;
+                        break;
                     case "generation":
                         generation = (BaseGeneration)System.Enum.Parse(typeof(BaseGeneration), value);
                         break;
@@ -174,7 +177,8 @@ namespace Reallusion.Import
             writer.WriteLine("generation=" + generation.ToString());
             writer.WriteLine("qualRefractiveEyes=" + (qualRefractiveEyes ? "true" : "false"));
             writer.WriteLine("bakeIsBaked=" + (bakeIsBaked ? "true" : "false"));
-            writer.WriteLine("bakeCustomShaders=" + (bakeCustomShaders ? "true" : "false"));            
+            writer.WriteLine("bakeCustomShaders=" + (bakeCustomShaders ? "true" : "false"));
+            writer.WriteLine("bakeSeparatePrefab=" + (bakeSeparatePrefab ? "true" : "false"));
             writer.Close();
             AssetDatabase.ImportAsset(infoPath);            
         }

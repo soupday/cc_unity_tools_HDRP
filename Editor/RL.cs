@@ -484,8 +484,8 @@ namespace Reallusion.Import
         {
             // Create a Prefab folder:          
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
-            string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
-            string prefabPath = Path.Combine(namedPrefabFolder, info.name + ".prefab");
+            //string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
+            string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
             string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");
 
             // Apply to the scene:
@@ -524,8 +524,8 @@ namespace Reallusion.Import
             GameObject lodObject = new GameObject();
             LODGroup lodGroup = lodObject.AddComponent<LODGroup>();
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
-            string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
-            string prefabPath = Path.Combine(namedPrefabFolder, info.name + ".prefab");
+            //string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
+            string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
             string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");
 
             Renderer[] renderers = fbx.transform.GetComponentsInChildren<Renderer>(true);

@@ -456,6 +456,12 @@ namespace Reallusion.Import
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            contextCharacter.bakeSeparatePrefab = GUILayout.Toggle(contextCharacter.bakeSeparatePrefab, "Bake - To Separate Prefab");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
             GUI.enabled = true;
             
             GUILayout.FlexibleSpace();
