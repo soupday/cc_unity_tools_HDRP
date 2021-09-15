@@ -40,6 +40,7 @@ namespace Reallusion.Import
         private readonly List<string> sourceTextureFolders;        
         private readonly ModelImporter importer;
         private readonly List<string> importAssets;
+        private bool isLOD = false;
 
         public const int MAX_SIZE = 4096;
         public const string COMPUTE_SHADER = "RLBakeShader";
@@ -211,54 +212,7 @@ namespace Reallusion.Import
             {
                 CopyToClone();
 
-                int childCount = clone.transform.childCount;
-                for (int i = 0; i < childCount; i++)
-                {
-                    GameObject child = clone.transform.GetChild(i).gameObject;
-                    Renderer renderer = child.GetComponent<Renderer>();
-                    if (renderer)
-                    {
-                        foreach (Material sharedMat in renderer.sharedMaterials)
-                        {
-                            // in case any of the materials have been renamed after a previous import, get the source name.
-                            string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);                            
-                            string shaderName = Util.GetShaderName(sharedMat);
-                            Material bakedMaterial = null;
-
-                            switch (shaderName)
-                            {
-                                case Pipeline.SHADER_HQ_SKIN:
-                                    bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
-                                    break;
-
-                                case Pipeline.SHADER_HQ_TEETH:
-                                    bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
-                                    break;
-
-                                case Pipeline.SHADER_HQ_TONGUE:
-                                    bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
-                                    break;
-
-                                case Pipeline.SHADER_HQ_HAIR:
-                                    bakedMaterial = BakeHairMaterial(sharedMat, sourceName);
-                                    break;
-
-                                case Pipeline.SHADER_HQ_EYE:
-                                    bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
-                                    break;
-
-                                case Pipeline.SHADER_HQ_EYE_OCCLUSION:
-                                    bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);
-                                    break;
-                            }
-
-                            if (bakedMaterial)
-                            {
-                                ReplaceMaterial(sharedMat, bakedMaterial);
-                            }
-                        }
-                    }
-                }
+                BakeTree(clone);
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -267,7 +221,73 @@ namespace Reallusion.Import
 
                 //System.Media.SystemSounds.Asterisk.Play();
             }
-        }        
+        }
+
+        public void BakeTree(GameObject obj)
+        {
+            int childCount = obj.transform.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                GameObject child = obj.transform.GetChild(i).gameObject;
+
+                if (child.GetComponent<Renderer>() != null)
+                {
+                    BakeObject(child);
+                }
+                else if (child.name.iContains("_LOD0"))
+                {
+                    BakeTree(child);
+                    isLOD = true;
+                }
+            }
+        }
+
+        public void BakeObject(GameObject child)
+        {            
+            Renderer renderer = child.GetComponent<Renderer>();
+            if (renderer)
+            {
+                foreach (Material sharedMat in renderer.sharedMaterials)
+                {
+                    // in case any of the materials have been renamed after a previous import, get the source name.
+                    string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
+                    string shaderName = Util.GetShaderName(sharedMat);
+                    Material bakedMaterial = null;
+
+                    switch (shaderName)
+                    {
+                        case Pipeline.SHADER_HQ_SKIN:
+                            bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
+                            break;
+
+                        case Pipeline.SHADER_HQ_TEETH:
+                            bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
+                            break;
+
+                        case Pipeline.SHADER_HQ_TONGUE:
+                            bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
+                            break;
+
+                        case Pipeline.SHADER_HQ_HAIR:
+                            bakedMaterial = BakeHairMaterial(sharedMat, sourceName);
+                            break;
+
+                        case Pipeline.SHADER_HQ_EYE:
+                            bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
+                            break;
+
+                        case Pipeline.SHADER_HQ_EYE_OCCLUSION:
+                            bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);
+                            break;
+                    }
+
+                    if (bakedMaterial)
+                    {
+                        ReplaceMaterial(sharedMat, bakedMaterial);
+                    }
+                }
+            }
+        }
 
         private void ReplaceMaterial(Material from, Material to)
         {
@@ -297,19 +317,29 @@ namespace Reallusion.Import
         }
 
         public void SaveAsPrefab()
-        {
+        {            
             string prefabFolder = Util.CreateFolder(fbxFolder, Importer.PREFABS_FOLDER);
-            //string namedPrefabFolder = Util.CreateFolder(prefabFolder, characterName);
+            //string namedPrefabFolder = Util.CreateFolder(prefabFolder, characterName);            
 
-            string prefabPath;
-            if (characterInfo.bakeSeparatePrefab)
-                prefabPath = Path.Combine(prefabFolder, characterName + "_Baked.prefab");
+            if (isLOD)
+            {
+                string lodPrefabPath = Path.Combine(prefabFolder, characterName + "_LODModels.prefab");
+                GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, lodPrefabPath);                
+                GameObject.DestroyImmediate(clone);
+                RL.CreateOneLODPrefabFromModel(characterInfo, variant, characterInfo.bakeSeparatePrefab ? "_Baked" : "");                
+            }
             else
-                prefabPath = Path.Combine(prefabFolder, characterName + ".prefab");
+            {
+                string prefabPath;
+                if (characterInfo.bakeSeparatePrefab)
+                    prefabPath = Path.Combine(prefabFolder, characterName + "_Baked.prefab");
+                else
+                    prefabPath = Path.Combine(prefabFolder, characterName + ".prefab");
 
-            GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
-            Selection.activeObject = variant;
-            GameObject.DestroyImmediate(clone);
+                GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
+                Selection.activeObject = variant;
+                GameObject.DestroyImmediate(clone);
+            }            
         }
 
         private Material CreateBakedMaterial(Texture2D baseMap, Texture2D maskMap, Texture2D normalMap,
