@@ -187,7 +187,7 @@ namespace Reallusion.Import
 
             Util.LogInfo("Done!");
 
-            Selection.activeObject = fbx;
+            Selection.activeObject = prefab;
 
             //System.Media.SystemSounds.Asterisk.Play();
 

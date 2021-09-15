@@ -492,33 +492,23 @@ namespace Reallusion.Import
             GameObject prefab = null;
 
             // Apply to the scene:
-            GameObject prefabTemp = null;
-            if (File.Exists(prefabPath))
-            {
-                try
-                {
-                    var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) as GameObject;
-                    prefabTemp = GameObject.Instantiate<GameObject>(existingPrefab, null);
-                }
-                catch { }
-            }
-            
-            if (!prefabTemp) prefabTemp = GameObject.Instantiate<GameObject>(fbx, null);
-            
+            GameObject clone = PrefabUtility.InstantiatePrefab(fbx) as GameObject;            
 
             // Apply Animator:
-            if (!prefabTemp.GetComponent<Animator>().runtimeAnimatorController)
+            if (!clone.GetComponent<Animator>().runtimeAnimatorController)
             {
                 if (File.Exists(animatorControllerPath))
-                    prefabTemp.GetComponent<Animator>().runtimeAnimatorController = 
+                    clone.GetComponent<Animator>().runtimeAnimatorController = 
                             AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(animatorControllerPath);
 
-                prefabTemp.GetComponent<Animator>().applyRootMotion = true;
-                prefabTemp.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-                prefab = PrefabUtility.SaveAsPrefabAsset(prefabTemp, prefabPath);
+                clone.GetComponent<Animator>().applyRootMotion = true;
+                clone.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;                
             }
 
-            UnityEngine.Object.DestroyImmediate(prefabTemp);
+            if (!prefab)
+                prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
+
+            UnityEngine.Object.DestroyImmediate(clone);
 
             return prefab;
         }

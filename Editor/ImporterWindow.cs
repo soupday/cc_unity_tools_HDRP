@@ -491,7 +491,8 @@ namespace Reallusion.Import
                 contextCharacter.Write();
                 CreateTreeView(true);
 
-                if (contextCharacter.isLOD) Util.ReplacePreviewCharacter(contextCharacter.Fbx, prefab);
+                if (prefab)
+                    Util.AddPreviewCharacter(contextCharacter.Fbx, prefab, Vector3.zero, true);
             }            
             GUILayout.FlexibleSpace();
             if (!contextCharacter.CanHaveHighQualityMaterials) GUI.enabled = false;
@@ -503,7 +504,8 @@ namespace Reallusion.Import
                 contextCharacter.Write();
                 CreateTreeView(true);
 
-                if (contextCharacter.isLOD) Util.ReplacePreviewCharacter(contextCharacter.Fbx, prefab);
+                if (prefab)
+                    Util.AddPreviewCharacter(contextCharacter.Fbx, prefab, Vector3.zero, true);
             }
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
@@ -519,10 +521,17 @@ namespace Reallusion.Import
                 if (contextCharacter.logType == CharacterInfo.ProcessingType.HighQuality)
                 {     
                     ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
-                    baker.BakeHQ();
+                    GameObject prefab = baker.BakeHQ();
 
                     contextCharacter.bakeIsBaked = true;
                     contextCharacter.Write();
+
+                    if (prefab)
+                    {
+                        Vector3 position = Vector3.zero;
+                        if (contextCharacter.bakeSeparatePrefab) position = new Vector3(-0.35f, 0f, 0.35f);
+                        Util.AddPreviewCharacter(contextCharacter.Fbx, prefab, position, false);
+                    }
                 }
             }
             GUI.enabled = true;
