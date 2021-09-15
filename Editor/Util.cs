@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using System.Diagnostics.Eventing.Reader;
+using UnityEditor.Experimental.SceneManagement;
 
 namespace Reallusion.Import
 {
@@ -92,7 +92,7 @@ namespace Reallusion.Import
                 }
             }
             return false;
-        }
+        }        
 
         public static Color LinearTosRGBOld(Color c)
         {
@@ -570,16 +570,92 @@ namespace Reallusion.Import
             }
         }        
 
-        public static GameObject GetPrefabFromObject(Object obj)
+        public static void AddPreviewCharacter(GameObject fbx, GameObject prefab, Vector3 offset, bool replace)
         {
-            Object source = PrefabUtility.GetCorrespondingObjectFromSource(obj);
-            Object parent = PrefabUtility.GetPrefabInstanceHandle(source);
-            if (parent.GetType() == typeof(GameObject))
+            GameObject container = GameObject.Find("Character Container");
+            if (container)
             {
-                return (GameObject)parent;
+                // don't replace an existing copy of the prefab...
+                for (int i = 0; i < container.transform.childCount; i++)
+                {
+                    GameObject child = container.transform.GetChild(i).gameObject;
+                    GameObject source = GetPrefabFromObject(child);
+                    if (source == prefab)
+                    {
+                        Debug.Log("Keeping existing generated prefab...");
+                        child.transform.position = offset;
+                        return;
+                    }
+                }
+
+                for (int i = 0; i < container.transform.childCount; i++)
+                {
+                    GameObject child = container.transform.GetChild(i).gameObject;
+
+                    GameObject source;
+                    if (child.name.iContains("_lod") && child.transform.childCount == 1)
+                        source = GetRootPrefabFromObject(child.transform.GetChild(0).gameObject);
+                    else
+                        source = GetRootPrefabFromObject(child);
+
+                    if (source == fbx)
+                    {
+                        if (replace) GameObject.DestroyImmediate(child);
+                        if (replace)
+                            Debug.Log("Replacing preview character with generated Prefab.");
+                        else
+                            Debug.Log("Adding generated Prefab.");
+                        GameObject clone = PrefabUtility.InstantiatePrefab(prefab, container.transform) as GameObject;
+                        if (clone)
+                        {
+                            clone.transform.position += offset;
+                            Selection.activeGameObject = clone;
+                        }
+
+                        return;
+                    }
+                }                
+            }
+        }                  
+
+        public static GameObject GetPrefabFromObject(Object obj)
+        {            
+            Object source = PrefabUtility.GetCorrespondingObjectFromSource(obj);
+            if (source)
+            {                
+                Object parent = PrefabUtility.GetPrefabInstanceHandle(source);
+                if (parent)
+                {
+                    if (parent.GetType() == typeof(GameObject))
+                    {
+                        return (GameObject)parent;
+                    }
+                }
+
+                if (source.GetType() == typeof(GameObject))
+                {
+                    return (GameObject)source;
+                }
             }
 
             return null;
+        }
+
+        public static GameObject GetRootPrefabFromObject(GameObject obj)
+        {            
+            GameObject prefab = GetPrefabFromObject(obj);
+
+            if (prefab)
+            {
+                GameObject parent = GetRootPrefabFromObject(prefab);
+
+                if (parent)
+                    return parent;
+                else
+                    return prefab;
+            }
+
+            return obj;
         }
 
         public static void LogInfo(string message)

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+### v 0.1.8
+- After applying materials or baking materials in the tool window, the generated prefab is selected in the project window.
+- Characters in the preview window are replaced with the generated Prefab after material setup.
+- Fixed baking LOD Group character materials.
+- Baking LOD Group characters now also creates LOD Group prefab.
+
 ### v 0.1.7
 - Reduced memory use for asset searches and character discovery.
 - Prevented Import Tool window from holding on to character object references and hogging all the memory.

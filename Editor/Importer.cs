@@ -21,7 +21,6 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.Rendering.HighDefinition;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Reallusion.Import
 {
@@ -114,7 +113,7 @@ namespace Reallusion.Import
             quality = qual;
         }
 
-        public bool Import()
+        public GameObject Import()
         {
             // make sure custom diffusion profiles are installed
             Pipeline.AddDiffusionProfilesHDRP();
@@ -184,15 +183,15 @@ namespace Reallusion.Import
             AssetDatabase.Refresh();
 
             // create prefab
-            RL.CreatePrefabFromFbx(characterInfo, fbx);
+            GameObject prefab = RL.CreatePrefabFromFbx(characterInfo, fbx);
 
             Util.LogInfo("Done!");
 
-            Selection.activeObject = fbx;
+            Selection.activeObject = prefab;
 
             //System.Media.SystemSounds.Asterisk.Play();
 
-            return true;
+            return prefab;
         }
 
         void ProcessObjectTree(GameObject obj)
