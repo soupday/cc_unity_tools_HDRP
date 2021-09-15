@@ -2,7 +2,9 @@ Changelog
 =========
 
 ### v 0.1.8
-- LOD characters in the preview window are replaced with the generated LOD Group prefab after material setup.
+- After applying materials or baking materials in the tool window, the generated prefab is selected in the project window.
+- Characters in the preview window are replaced with the generated Prefab after material setup.
+- Fixed baking LOD Group character materials.
 - Baking LOD Group characters now also creates LOD Group prefab.
 
 ### v 0.1.7
