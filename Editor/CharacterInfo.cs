@@ -37,6 +37,7 @@ namespace Reallusion.Import
         public bool bakeIsBaked = false;
         public bool bakeCustomShaders = true;
         public bool bakeSeparatePrefab = true;
+        public bool isLOD = false;
 
         private BaseGeneration generation = BaseGeneration.None;
         private GameObject fbx;
@@ -50,6 +51,8 @@ namespace Reallusion.Import
             folder = Path.GetDirectoryName(path);            
             infoPath = Path.Combine(folder, name + "_ImportInfo.txt");
             jsonPath = Path.Combine(folder, name + ".json");
+            if (path.iContains("_lod")) isLOD = true;
+
             if (File.Exists(infoPath))            
                 Read();
             else
@@ -148,23 +151,22 @@ namespace Reallusion.Import
                         else logType = ProcessingType.None;
                         break;
                     case "qualRefractiveEyes":
-                        if (value == "true") qualRefractiveEyes = true;
-                        else qualRefractiveEyes = false;
+                        qualRefractiveEyes = value == "true" ? true : false;
                         break;
                     case "bakeIsBaked":
-                        if (value == "true") bakeIsBaked = true;
-                        else bakeIsBaked = false;
+                        bakeIsBaked = value == "true" ? true : false;
                         break;
                     case "bakeCustomShaders":
-                        if (value == "true") bakeCustomShaders = true;
-                        else bakeCustomShaders = false;
+                        bakeCustomShaders = value == "true" ? true : false;
                         break;
                     case "bakeSeparatePrefab":
-                        if (value == "true") bakeSeparatePrefab = true;
-                        else bakeSeparatePrefab = false;
+                        bakeSeparatePrefab = value == "true" ? true : false;
                         break;
                     case "generation":
                         generation = (BaseGeneration)System.Enum.Parse(typeof(BaseGeneration), value);
+                        break;
+                    case "isLOD":
+                        isLOD = value == "true" ? true : false;
                         break;
                 }
             }
@@ -175,6 +177,7 @@ namespace Reallusion.Import
             StreamWriter writer = new StreamWriter(infoPath, false);
             writer.WriteLine("logType=" + logType.ToString());
             writer.WriteLine("generation=" + generation.ToString());
+            writer.WriteLine("isLOD=" + (isLOD ? "true" : "false"));
             writer.WriteLine("qualRefractiveEyes=" + (qualRefractiveEyes ? "true" : "false"));
             writer.WriteLine("bakeIsBaked=" + (bakeIsBaked ? "true" : "false"));
             writer.WriteLine("bakeCustomShaders=" + (bakeCustomShaders ? "true" : "false"));

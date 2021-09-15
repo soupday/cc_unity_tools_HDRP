@@ -462,7 +462,7 @@ namespace Reallusion.Import
             //System.Media.SystemSounds.Asterisk.Play();
         }
 
-        public static void CreatePrefabFromFbx(CharacterInfo info, GameObject fbx)
+        public static GameObject CreatePrefabFromFbx(CharacterInfo info, GameObject fbx)
         {
             bool noMotion = !info.name.iContains("_Motion");
 
@@ -470,23 +470,26 @@ namespace Reallusion.Import
             {
                 // Set the Prefab
                 if (info.path.iContains("_lod"))
-                {
-                    CreateOneLODPrefabFromModel(info, fbx);
+                {                    
+                    return CreateOneLODPrefabFromModel(info, fbx);
                 }
                 else
-                {
-                    CreatePrefabFromModel(info, fbx);
+                {                    
+                    return CreatePrefabFromModel(info, fbx);
                 }
             }
+
+            return null;
         }
 
-        public static void CreatePrefabFromModel(CharacterInfo info, GameObject fbx)
+        public static GameObject CreatePrefabFromModel(CharacterInfo info, GameObject fbx)
         {
             // Create a Prefab folder:          
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
             //string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
             string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
             string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");
+            GameObject prefab = null;
 
             // Apply to the scene:
             GameObject prefabTemp = null;
@@ -512,21 +515,23 @@ namespace Reallusion.Import
 
                 prefabTemp.GetComponent<Animator>().applyRootMotion = true;
                 prefabTemp.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-                PrefabUtility.SaveAsPrefabAsset(prefabTemp, prefabPath);
+                prefab = PrefabUtility.SaveAsPrefabAsset(prefabTemp, prefabPath);
             }
 
             UnityEngine.Object.DestroyImmediate(prefabTemp);
+
+            return prefab;
         }
 
         
-        public static void CreateOneLODPrefabFromModel(CharacterInfo info, GameObject fbx, string suffix = "")
+        public static GameObject CreateOneLODPrefabFromModel(CharacterInfo info, GameObject fbx, string suffix = "")
         {
             GameObject lodObject = new GameObject();
             LODGroup lodGroup = lodObject.AddComponent<LODGroup>();
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
             //string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
             string prefabPath = Path.Combine(prefabFolder, info.name + suffix + ".prefab");
-            string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");
+            string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");            
 
             Renderer[] renderers = fbx.transform.GetComponentsInChildren<Renderer>(true);
             int lodLevel = 0;
@@ -611,8 +616,10 @@ namespace Reallusion.Import
                 lodGroup.RecalculateBounds();
             }
 
-            PrefabUtility.SaveAsPrefabAsset(lodObject, prefabPath);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(lodObject, prefabPath);
             UnityEngine.Object.DestroyImmediate(lodObject);
+
+            return prefab;
         }
     }
 }

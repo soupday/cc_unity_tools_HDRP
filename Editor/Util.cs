@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using System.Diagnostics.Eventing.Reader;
 
 namespace Reallusion.Import
 {
@@ -92,7 +91,7 @@ namespace Reallusion.Import
                 }
             }
             return false;
-        }
+        }        
 
         public static Color LinearTosRGBOld(Color c)
         {
@@ -570,13 +569,46 @@ namespace Reallusion.Import
             }
         }        
 
+        public static void ReplacePreviewCharacter(GameObject fbx, GameObject prefab)
+        {
+            GameObject container = GameObject.Find("Character Container");
+            if (container)
+            {
+                for (int i = 0; i < container.transform.childCount; i++)
+                {
+                    GameObject child = container.transform.GetChild(i).gameObject;
+                    GameObject source = GetPrefabFromObject(child);
+                    if (source == fbx)
+                    {
+                        GameObject.DestroyImmediate(child);
+                        GameObject clone = PrefabUtility.InstantiatePrefab(prefab, container.transform) as GameObject;
+                        if (clone)
+                        {
+                            Selection.activeGameObject = clone;                            
+                        }
+                    }
+                }                
+            }
+        }
+
         public static GameObject GetPrefabFromObject(Object obj)
         {
             Object source = PrefabUtility.GetCorrespondingObjectFromSource(obj);
-            Object parent = PrefabUtility.GetPrefabInstanceHandle(source);
-            if (parent.GetType() == typeof(GameObject))
+            if (source)
             {
-                return (GameObject)parent;
+                Object parent = PrefabUtility.GetPrefabInstanceHandle(source);
+                if (parent)
+                {
+                    if (parent.GetType() == typeof(GameObject))
+                    {
+                        return (GameObject)parent;
+                    }
+                }
+
+                if (source.GetType() == typeof(GameObject))
+                {
+                    return (GameObject)source;
+                }
             }
 
             return null;

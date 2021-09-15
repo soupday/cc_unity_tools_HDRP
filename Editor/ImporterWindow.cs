@@ -22,7 +22,6 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using System;
-using System.Xml.Serialization;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 
@@ -487,20 +486,24 @@ namespace Reallusion.Import
             if (GUILayout.Button("Default", GUILayout.Width(ACTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 Util.LogInfo("Doing: Connect Default Materials.");
-                ImportCharacter(contextCharacter, MaterialQuality.Default);
+                GameObject prefab = ImportCharacter(contextCharacter, MaterialQuality.Default);
                 contextCharacter.logType = CharacterInfo.ProcessingType.Basic;
                 contextCharacter.Write();
                 CreateTreeView(true);
+
+                if (contextCharacter.isLOD) Util.ReplacePreviewCharacter(contextCharacter.Fbx, prefab);
             }            
             GUILayout.FlexibleSpace();
             if (!contextCharacter.CanHaveHighQualityMaterials) GUI.enabled = false;
             if (GUILayout.Button("High Quality", GUILayout.Width(ACTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 Util.LogInfo("Doing: Connect High Quality Materials.");
-                ImportCharacter(contextCharacter, MaterialQuality.High);
+                GameObject prefab = ImportCharacter(contextCharacter, MaterialQuality.High);
                 contextCharacter.logType = CharacterInfo.ProcessingType.HighQuality;
                 contextCharacter.Write();
                 CreateTreeView(true);
+
+                if (contextCharacter.isLOD) Util.ReplacePreviewCharacter(contextCharacter.Fbx, prefab);
             }
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
@@ -514,8 +517,7 @@ namespace Reallusion.Import
             if (GUILayout.Button("Bake", GUILayout.Width(FUNCTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 if (contextCharacter.logType == CharacterInfo.ProcessingType.HighQuality)
-                {
-     
+                {     
                     ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
                     baker.BakeHQ();
 
@@ -568,11 +570,11 @@ namespace Reallusion.Import
             GUILayout.EndArea();            
         }        
 
-        private void ImportCharacter(CharacterInfo info, MaterialQuality quality)
+        private GameObject ImportCharacter(CharacterInfo info, MaterialQuality quality)
         {
             Importer import = new Importer(info);            
             import.SetQuality(quality);
-            import.Import();
+            return import.Import();
         }
         
         private static void ClearAllData()

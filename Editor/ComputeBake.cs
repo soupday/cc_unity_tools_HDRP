@@ -235,7 +235,7 @@ namespace Reallusion.Import
                     BakeObject(child);
                 }
                 else if (child.name.iContains("_LOD0"))
-                {
+                {                    
                     BakeTree(child);
                     isLOD = true;
                 }

@@ -1,6 +1,10 @@
 Changelog
 =========
 
+### v 0.1.8
+- LOD characters in the preview window are replaced with the generated LOD Group prefab after material setup.
+- Baking LOD Group characters now also creates LOD Group prefab.
+
 ### v 0.1.7
 - Reduced memory use for asset searches and character discovery.
 - Prevented Import Tool window from holding on to character object references and hogging all the memory.
