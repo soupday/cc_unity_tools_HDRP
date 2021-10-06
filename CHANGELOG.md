@@ -1,6 +1,9 @@
 Changelog
 =========
 
+### v 0.1.8b
+- Fix to baking functions with missing textures.
+
 ### v 0.1.8
 - After applying materials or baking materials in the tool window, the generated prefab is selected in the project window.
 - Characters in the preview window are replaced with the generated Prefab after material setup.
