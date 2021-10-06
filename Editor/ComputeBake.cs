@@ -42,6 +42,7 @@ namespace Reallusion.Import
         private readonly List<string> importAssets;        
 
         public const int MAX_SIZE = 4096;
+        public const int MIN_SIZE = 128;
         public const string COMPUTE_SHADER = "RLBakeShader";
         public const string BAKE_FOLDER = "Baked";
         public const string TEXTURES_FOLDER = "Textures";
@@ -72,7 +73,8 @@ namespace Reallusion.Import
 
         private static Vector2Int GetMaxSize(Texture2D a)
         {
-            Vector2Int max = new Vector2Int(a.width, a.height);
+            Vector2Int max = new Vector2Int(MIN_SIZE, MIN_SIZE);
+            if (a) max = new Vector2Int(a.width, a.height);
             if (max.x > MAX_SIZE) max.x = MAX_SIZE;
             if (max.y > MAX_SIZE) max.y = MAX_SIZE;
             return max;
@@ -80,9 +82,13 @@ namespace Reallusion.Import
 
         private static Vector2Int GetMaxSize(Texture2D a, Texture2D b)
         {
-            Vector2Int max = new Vector2Int(a.width, a.height);
-            if (b.width > max.x) max.x = b.width;
-            if (b.height > max.y) max.y = b.height;
+            Vector2Int max = new Vector2Int(MIN_SIZE, MIN_SIZE);
+            if (a) max = new Vector2Int(a.width, a.height);
+            if (b)
+            {
+                if (b.width > max.x) max.x = b.width;
+                if (b.height > max.y) max.y = b.height;
+            }
             if (max.x > MAX_SIZE) max.x = MAX_SIZE;
             if (max.y > MAX_SIZE) max.y = MAX_SIZE;
             return max;
@@ -90,11 +96,18 @@ namespace Reallusion.Import
 
         private static Vector2Int GetMaxSize(Texture2D a, Texture2D b, Texture2D c)
         {
-            Vector2Int max = new Vector2Int(a.width, a.height);
-            if (b.width > max.x) max.x = b.width;
-            if (b.height > max.y) max.y = b.height;
-            if (c.width > max.x) max.x = c.width;
-            if (c.height > max.y) max.y = c.height;
+            Vector2Int max = new Vector2Int(MIN_SIZE, MIN_SIZE);
+            if (a) max = new Vector2Int(a.width, a.height);
+            if (b)
+            {
+                if (b.width > max.x) max.x = b.width;
+                if (b.height > max.y) max.y = b.height;
+            }
+            if (c)
+            {
+                if (c.width > max.x) max.x = c.width;
+                if (c.height > max.y) max.y = c.height;
+            }
             if (max.x > MAX_SIZE) max.x = MAX_SIZE;
             if (max.y > MAX_SIZE) max.y = MAX_SIZE;
             return max;
