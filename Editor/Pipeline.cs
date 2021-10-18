@@ -19,8 +19,12 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Diagnostics;
 using UnityEngine.Rendering;
+#if HDRP_10_5_0_OR_NEWER
 using UnityEngine.Rendering.HighDefinition;
+using UnityEditor.Rendering.HighDefinition;
+#endif
 
 namespace Reallusion.Import
 {
@@ -118,12 +122,12 @@ namespace Reallusion.Import
         // Shaders
         //
         public const string SHADER_DEFAULT = "Universal Render Pipeline/Lit";
-        public const string SHADER_DEFAULT_HAIR = "Universal Render Pipeline/Hair";
+        public const string SHADER_DEFAULT_HAIR = "Universal Render Pipeline/Hair"; // n/a
         //
         public const string SHADER_HQ_SKIN = "RL_SkinShaderVariants_URP";
         public const string SHADER_HQ_HEAD = "RL_SkinShaderVariants_URP";
         public const string SHADER_HQ_CORNEA = "RL_EyeShaderVariants_URP";
-        public const string SHADER_HQ_EYE = "RL_EyeShaderVariants_URP";
+        public const string SHADER_HQ_EYE = "Universal Render Pipeline/Lit";
         public const string SHADER_HQ_EYE_OCCLUSION = "RL_EyeOcclusionShader_URP";
         public const string SHADER_HQ_TEARLINE = "RL_TearlineShader_URP";
         public const string SHADER_HQ_HAIR = "RL_HairShaderVariants_URP";
@@ -136,21 +140,21 @@ namespace Reallusion.Import
 
         // HQ Materials
         //
-        public const string MATERIAL_HQ_SKIN = "RL_Template_Skin_URP";
-        public const string MATERIAL_HQ_HEAD = "RL_Template_Head_URP";
-        public const string MATERIAL_HQ_CORNEA = "RL_Template_Cornea_URP";
-        public const string MATERIAL_HQ_EYE = "RL_Template_Eye_URP";
-        public const string MATERIAL_HQ_EYE_OCCLUSION = "RL_Template_EyeOcclusion_URP";
-        public const string MATERIAL_HQ_TEARLINE = "RL_Template_Tearline_URP";
-        public const string MATERIAL_HQ_HAIR = "RL_Template_Hair_URP";
+        public const string MATERIAL_HQ_SKIN = "RL_Template_HQ_Skin_URP";
+        public const string MATERIAL_HQ_HEAD = "RL_Template_HQ_Head_URP";
+        public const string MATERIAL_HQ_CORNEA = "RL_Template_HQ_Cornea_URP";
+        public const string MATERIAL_HQ_EYE = "RL_Template_HQ_Eye_URP";
+        public const string MATERIAL_HQ_EYE_OCCLUSION = "RL_Template_HQ_EyeOcclusion_URP";
+        public const string MATERIAL_HQ_TEARLINE = "RL_Template_HQ_Tearline_URP";
+        public const string MATERIAL_HQ_HAIR = "RL_Template_HQ_Hair_URP";
         public const string MATERIAL_HQ_SCALPBASE = "RL_Template_Default_ScalpBase_URP";
         public const string MATERIAL_HQ_EYELASH = "RL_Template_Default_Eyelash_URP";
-        public const string MATERIAL_HQ_TEETH = "RL_Template_Teeth_URP";
-        public const string MATERIAL_HQ_TONGUE = "RL_Template_Tongue_URP";
+        public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_URP";
+        public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_URP";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_URP";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_URP";
         // variants
-        public const string MATERIAL_HQ_CORNEA_REFRACTIVE = "RL_Template_CorneaRef_URP";
+        public const string MATERIAL_HQ_CORNEA_REFRACTIVE = "RL_Template_HQ_CorneaRef_URP";
 
         // Default Materials
         //
@@ -158,8 +162,8 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_HEAD = "RL_Template_Default_Skin_URP";
         public const string MATERIAL_DEFAULT_CORNEA = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_DEFAULT_EYE = "RL_Template_Default_Opaque_URP";
-        public const string MATERIAL_DEFAULT_EYE_OCCLUSION = "RL_Template_EyeOcclusion_URP";
-        public const string MATERIAL_DEFAULT_TEARLINE = "RL_Template_Tearline_URP";
+        public const string MATERIAL_DEFAULT_EYE_OCCLUSION = "RL_Template_Default_EyeOcclusion_URP";
+        public const string MATERIAL_DEFAULT_TEARLINE = "RL_Template_Default_Tearline_URP";
         public const string MATERIAL_DEFAULT_HAIR = "RL_Template_Default_Hair_URP";
         public const string MATERIAL_DEFAULT_SCALPBASE = "RL_Template_Default_ScalpBase_URP";
         public const string MATERIAL_DEFAULT_EYELASH = "RL_Template_Default_Eyelash_URP";
@@ -176,7 +180,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HEAD = "RL_Temaplte_Baked_Skin_URP";
         public const string MATERIAL_BAKED_CORNEA = "RL_Template_Baked_Cornea_URP";
         public const string MATERIAL_BAKED_EYE = "RL_Template_Baked_Eye_URP";
-        public const string MATERIAL_BAKED_EYE_OCCLUSION = "RL_Template_EyeOcclusion_URP";
+        public const string MATERIAL_BAKED_EYE_OCCLUSION = "RL_Template_Baked_EyeOcclusion_URP";
         public const string MATERIAL_BAKED_TEARLINE = "RL_Template_Tearline_URP";
         public const string MATERIAL_BAKED_HAIR = "RL_Template_Baked_Hair_URP";
         public const string MATERIAL_BAKED_SCALPBASE = "RL_Template_Default_ScalpBase_URP";
@@ -188,7 +192,10 @@ namespace Reallusion.Import
         // variants
         public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Baked_CorneaRef_URP";
         public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Baked_EyeCustom_URP";
+        public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_URP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_URP";
+        // for gamebase single material or actor core...
+        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_URP";
 #else
         // Shaders
         //
@@ -343,6 +350,13 @@ namespace Reallusion.Import
             return RenderPipeline.URP;
 #else
             return RenderPipeline.Builtin;
+#endif
+        }
+
+        public static void ResetMaterial(Material mat)
+        {
+#if HDRP_10_5_0_OR_NEWER
+            HDShaderUtils.ResetMaterialKeywords(mat);
 #endif
         }
 

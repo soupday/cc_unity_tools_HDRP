@@ -50,6 +50,8 @@ namespace Reallusion.Import
 
         private Texture2D maskTex = null;
 
+        private RenderPipeline RP => Pipeline.GetRenderPipeline();
+
         public ComputeBake(UnityEngine.Object character, CharacterInfo info)
         {
             fbx = (GameObject)character;
@@ -344,7 +346,7 @@ namespace Reallusion.Import
             }            
         }
 
-        private Material CreateBakedMaterial(Texture2D baseMap, Texture2D maskMap, Texture2D normalMap,
+        private Material CreateBakedMaterial(Texture2D baseMap, Texture2D maskMap, Texture2D metallicGlossMap, Texture2D aoMap, Texture2D normalMap,
             Texture2D detailMap, Texture2D subsurfaceMap, Texture2D thicknessMap, Texture2D emissionMap, 
             float normalScale, float tiling, Color emissiveColor,
             string sourceName, Material templateMaterial)
@@ -380,17 +382,30 @@ namespace Reallusion.Import
             }
 
             // apply the textures...
-            bakedMaterial.SetTexture("_BaseColorMap", baseMap);
-            bakedMaterial.SetTexture("_MaskMap", maskMap);
-            bakedMaterial.SetTexture("_NormalMap", normalMap);
-            if (normalMap)
-                bakedMaterial.SetFloat("_NormalScale", normalScale);
-            bakedMaterial.SetTexture("_DetailMap", detailMap);
-            bakedMaterial.SetTexture("_EmissionColorMap", emissionMap);
-            if (detailMap)
-                bakedMaterial.SetTextureScale("_DetailMap", new Vector2(tiling, tiling));
-            bakedMaterial.SetTexture("_SubsurfaceMaskMap", subsurfaceMap);
-            bakedMaterial.SetTexture("_ThicknessMap", thicknessMap);
+            if (RP == RenderPipeline.HDRP)
+            {
+                bakedMaterial.SetTexture("_BaseColorMap", baseMap);
+                bakedMaterial.SetTexture("_MaskMap", maskMap);
+                bakedMaterial.SetTexture("_NormalMap", normalMap);
+                if (normalMap)
+                    bakedMaterial.SetFloat("_NormalScale", normalScale);
+                bakedMaterial.SetTexture("_DetailMap", detailMap);
+                bakedMaterial.SetTexture("_EmissionColorMap", emissionMap);
+                if (detailMap)
+                    bakedMaterial.SetTextureScale("_DetailMap", new Vector2(tiling, tiling));
+                bakedMaterial.SetTexture("_SubsurfaceMaskMap", subsurfaceMap);
+                bakedMaterial.SetTexture("_ThicknessMap", thicknessMap);
+            }
+            else
+            {
+                bakedMaterial.SetTexture("_BaseMap", baseMap);
+                bakedMaterial.SetTexture("_MetallicGlossMap", metallicGlossMap);
+                bakedMaterial.SetTexture("_OcclusionMap", aoMap);
+                bakedMaterial.SetTexture("_BumpMap", normalMap);
+                if (normalMap)
+                    bakedMaterial.SetFloat("_BumpScale", normalScale);                
+                bakedMaterial.SetTexture("_EmissionMap", emissionMap);                
+            }
 
             // add the path of the remapped material for later re-import.
             string remapPath = AssetDatabase.GetAssetPath(bakedMaterial);
@@ -405,6 +420,8 @@ namespace Reallusion.Import
         {
             Texture2D diffuse = GetMaterialTexture(mat, "_DiffuseMap");
             Texture2D mask = GetMaterialTexture(mat, "_MaskMap");
+            Texture2D metallicGloss = GetMaterialTexture(mat, "_MetallicAlphaMap");
+            Texture2D ao = GetMaterialTexture(mat, "_AOMap");
             Texture2D subsurface = GetMaterialTexture(mat, "_SSSMap");
             Texture2D thickness = GetMaterialTexture(mat, "_ThicknessMap");
             Texture2D normal = GetMaterialTexture(mat, "_NormalMap", true);
@@ -459,6 +476,8 @@ namespace Reallusion.Import
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
+            Texture2D bakedMetallicGlossMap = metallicGloss;
+            Texture2D bakedAOMap = ao;
             Texture2D bakedNormalMap = normal;
             Texture2D bakedDetailMap = null;
             Texture2D bakedSubsurfaceMap = subsurface;
@@ -506,7 +525,7 @@ namespace Reallusion.Import
                 thicknessScale,
                 sourceName + "_Thickness");
 
-            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
+            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, emissiveColor,
                 sourceName,
@@ -520,6 +539,8 @@ namespace Reallusion.Import
         {
             Texture2D diffuse = GetMaterialTexture(mat, "_DiffuseMap");
             Texture2D mask = GetMaterialTexture(mat, "_MaskMap");
+            Texture2D metallicGloss = GetMaterialTexture(mat, "_MetallicAlphaMap");
+            Texture2D ao = GetMaterialTexture(mat, "_AOMap");
             Texture2D normal = GetMaterialTexture(mat, "_NormalMap", true);
             Texture2D microNormal = GetMaterialTexture(mat, "_MicroNormalMap", true);
             Texture2D gumsMask = GetMaterialTexture(mat, "_GumsMaskMap");
@@ -548,6 +569,8 @@ namespace Reallusion.Import
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
+            Texture2D bakedMetallicGlossMap = metallicGloss;
+            Texture2D bakedAOMap = ao;
             Texture2D bakedNormalMap = normal;
             Texture2D bakedDetailMap = null;
             Texture2D bakedSubsurfaceMap = null;
@@ -574,7 +597,7 @@ namespace Reallusion.Import
                 gumsThickness, teethThickness,
                 sourceName + "_Thickness");
 
-            return CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
+            return CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, emissiveColor,
                 sourceName,
@@ -586,6 +609,8 @@ namespace Reallusion.Import
         {
             Texture2D diffuse = GetMaterialTexture(mat, "_DiffuseMap");
             Texture2D mask = GetMaterialTexture(mat, "_MaskMap");
+            Texture2D metallicGloss = GetMaterialTexture(mat, "_MetallicAlphaMap");
+            Texture2D ao = GetMaterialTexture(mat, "_AOMap");
             Texture2D normal = GetMaterialTexture(mat, "_NormalMap", true);
             Texture2D microNormal = GetMaterialTexture(mat, "_MicroNormalMap", true);
             Texture2D gradientAO = GetMaterialTexture(mat, "_GradientAOMap");
@@ -608,6 +633,8 @@ namespace Reallusion.Import
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
+            Texture2D bakedMetallicGlossMap = metallicGloss;
+            Texture2D bakedAOMap = ao;
             Texture2D bakedNormalMap = normal;
             Texture2D bakedDetailMap = null;
             Texture2D bakedSubsurfaceMap = null;
@@ -626,7 +653,7 @@ namespace Reallusion.Import
             bakedDetailMap = BakeDetailMap(microNormal,
                 sourceName + "_Detail");
 
-            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
+            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, emissiveColor,
                 sourceName, 
@@ -644,6 +671,8 @@ namespace Reallusion.Import
             Texture2D cornea = GetMaterialTexture(mat, "_CorneaDiffuseMap");
             Texture2D blend = GetMaterialTexture(mat, "_ColorBlendMap");
             Texture2D mask = GetMaterialTexture(mat, "_MaskMap");
+            Texture2D metallicGloss = GetMaterialTexture(mat, "_MetallicAlphaMap");
+            Texture2D ao = GetMaterialTexture(mat, "_AOMap");
             Texture2D microNormal = GetMaterialTexture(mat, "_ScleraNormalMap", true);
             float microNormalStrength = mat.GetFloat("_ScleraNormalStrength");
             float microNormalTiling = mat.GetFloat("_ScleraNormalTiling");
@@ -680,6 +709,8 @@ namespace Reallusion.Import
 
             Texture2D bakedBaseMap = cornea;
             Texture2D bakedMaskMap = mask;
+            Texture2D bakedMetallicGlossMap = metallicGloss;
+            Texture2D bakedAOMap = ao;
             Texture2D bakedNormalMap = null;
             Texture2D bakedDetailMap = null;
             Texture2D bakedSubsurfaceMap = null;
@@ -722,7 +753,7 @@ namespace Reallusion.Import
                     sourceName + "_Mask");
             }
 
-            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
+            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 1f, microNormalTiling, emissiveColor,
                 sourceName, isCornea ? Pipeline.GetTemplateMaterial(MaterialType.Cornea, 
@@ -755,6 +786,8 @@ namespace Reallusion.Import
         {
             Texture2D diffuse = GetMaterialTexture(mat, "_DiffuseMap");
             Texture2D mask = GetMaterialTexture(mat, "_MaskMap");
+            Texture2D metallicGloss = GetMaterialTexture(mat, "_MetallicAlphaMap");
+            Texture2D ao = GetMaterialTexture(mat, "_AOMap");
             Texture2D normal = GetMaterialTexture(mat, "_NormalMap", true);
             Texture2D blend = GetMaterialTexture(mat, "_BlendMap");
             Texture2D flow = GetMaterialTexture(mat, "_FlowMap");
@@ -807,6 +840,8 @@ namespace Reallusion.Import
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
+            Texture2D bakedMetallicGlossMap = metallicGloss;
+            Texture2D bakedAOMap = ao;
             Texture2D bakedNormalMap = normal;
             Texture2D emissionMap = emission;
 
@@ -835,7 +870,7 @@ namespace Reallusion.Import
                 aoStrength, smoothnessMin, smoothnessMax, smoothnessPower,
                 sourceName + "_Mask");
 
-            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
+            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 null, null, null, emissionMap,
                 normalStrength, 1, emissiveColor,
                 sourceName,
@@ -907,6 +942,8 @@ namespace Reallusion.Import
 
             Texture2D bakedBaseMap = null;
             Texture2D bakedMaskMap = null;
+            Texture2D bakedMetallicGlossMap = null;
+            Texture2D bakedAOMap = null;
             Texture2D bakedNormalMap = null;
             Texture2D bakedDetailMap = null;
             Texture2D bakedSubsurfaceMap = null;
@@ -919,7 +956,7 @@ namespace Reallusion.Import
                 tearDuctPosition, tearDuctWidth, occlusionColor,                
                 sourceName + "_BaseMap");
 
-            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedNormalMap,
+            Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap, 
                 1f, 1f, Color.black,
                 sourceName, Pipeline.GetTemplateMaterial(MaterialType.EyeOcclusion,
