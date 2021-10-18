@@ -119,8 +119,8 @@ Material:
     - _RefractionModel: 0
     - _RenderQueueType: 1
     - _RequireSplitLighting: 1
-    - _SmoothnessFront: 0
-    - _SmoothnessMax: 1
+    - _SmoothnessFront: 0.496
+    - _SmoothnessMax: 0.88
     - _SmoothnessPower: 0.5
     - _SmoothnessRear: 0
     - _SrcBlend: 1
