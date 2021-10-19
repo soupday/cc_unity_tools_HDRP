@@ -497,5 +497,6 @@ namespace Reallusion.Import
                 }
             }
         }
+        
     }
 }

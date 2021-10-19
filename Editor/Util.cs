@@ -464,23 +464,43 @@ namespace Reallusion.Import
 
         public static int GetLinkedMaterialIndex(string sourceName, string shaderName)
         {
+            // identify linked materials by shader name:
             if ((shaderName.iContains(Pipeline.SHADER_HQ_HEAD) || 
                  shaderName.iContains(Pipeline.SHADER_HQ_SKIN)) && 
-                !sourceName.iContains("Std_Nails")) return 0;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) || 
-                shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return 1;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION)) return 2;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_TEARLINE)) return 3;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH)) return 4;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR)) return 5;
+                !sourceName.iContains("Std_Nails")) return CharacterTreeView.LINKED_INDEX_SKIN;
+            if (Pipeline.GetRenderPipeline() == RenderPipeline.HDRP)
+            {
+                if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) ||
+                    shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;                
+            }
+            else
+            {
+                // Eye is PBR in URP and Built-in
+                if (shaderName.iContains(Pipeline.SHADER_HQ_EYE)) return CharacterTreeView.LINKED_INDEX_EYE_URP;
+                if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;
+            }
+            if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION)) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
+            if (shaderName.iContains(Pipeline.SHADER_HQ_TEARLINE)) return CharacterTreeView.LINKED_INDEX_TEARLINE;
+            if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH)) return CharacterTreeView.LINKED_INDEX_TEETH;
+            if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR)) return CharacterTreeView.LINKED_INDEX_HAIR;
 
+            // then try by source material name:
             if (sourceName.iContains("Std_Skin_Head") || sourceName.iContains("Std_Skin_Body") ||
                 sourceName.iContains("Std_Skin_Arm") || sourceName.iContains("Std_Skin_Leg"))
-                return 0;            
-            if (sourceName.iContains("Std_Eye_Occlusion_")) return 2;
-            if (sourceName.iContains("Std_Tearline_")) return 3;
-            if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return 1;
-            if (sourceName.iContains("Std_Upper_Teeth") || sourceName.iContains("Std_Lower_Teeth")) return 4;
+                return CharacterTreeView.LINKED_INDEX_SKIN;            
+            if (sourceName.iContains("Std_Eye_Occlusion_")) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
+            if (sourceName.iContains("Std_Tearline_")) return CharacterTreeView.LINKED_INDEX_TEARLINE;
+            if (Pipeline.GetRenderPipeline() == RenderPipeline.HDRP)
+            {
+                if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;
+            }
+            else
+            {
+                if (sourceName.iContains("Std_Eye_")) return CharacterTreeView.LINKED_INDEX_EYE_URP;
+                if (sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;
+            }
+            if (sourceName.iContains("Std_Upper_Teeth") || sourceName.iContains("Std_Lower_Teeth")) return CharacterTreeView.LINKED_INDEX_TEETH;
+
             return -1;
         }
 

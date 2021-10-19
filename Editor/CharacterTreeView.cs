@@ -32,6 +32,15 @@ namespace Reallusion.Import
         public bool selectLinked = true;
         public IList<int> selectedIndices;
 
+        public const int NUM_LINKED_INDICES = 7;
+        public const int LINKED_INDEX_SKIN = 0;
+        public const int LINKED_INDEX_CORNEA = 1;
+        public const int LINKED_INDEX_EYE_OCCLUSION = 2;
+        public const int LINKED_INDEX_TEARLINE = 3;
+        public const int LINKED_INDEX_TEETH = 4;
+        public const int LINKED_INDEX_HAIR = 5;
+        public const int LINKED_INDEX_EYE_URP = 6;
+
         public CharacterTreeView(TreeViewState treeViewState, GameObject obj) : base(treeViewState)
         {
             //Force Treeview to reload its data (will force BuildRoot and BuildRows to be called)
@@ -53,8 +62,8 @@ namespace Reallusion.Import
 
             var allItems = new List<TreeViewItem>();
 
-            linkedIndices = new List<int>[6];
-            for (int i = 0; i < 6; i++)
+            linkedIndices = new List<int>[NUM_LINKED_INDICES];
+            for (int i = 0; i < linkedIndices.Length; i++)
                 linkedIndices[i] = new List<int>();            
 
             mDepth = 0;//base level        
