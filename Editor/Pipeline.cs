@@ -199,8 +199,8 @@ namespace Reallusion.Import
 #else
         // Shaders
         //
-        public const string SHADER_DEFAULT = "3D/Lit";
-        public const string SHADER_DEFAULT_HAIR = "3D/Hair";
+        public const string SHADER_DEFAULT = "Standard";
+        public const string SHADER_DEFAULT_HAIR = "Standard";
         //
         public const string SHADER_HQ_SKIN = "RL_SkinShaderVariants_3D";
         public const string SHADER_HQ_HEAD = "RL_SkinShaderVariants_3D";
@@ -209,12 +209,12 @@ namespace Reallusion.Import
         public const string SHADER_HQ_EYE_OCCLUSION = "RL_EyeOcclusionShader_3D";
         public const string SHADER_HQ_TEARLINE = "RL_TearlineShader_3D";
         public const string SHADER_HQ_HAIR = "RL_HairShaderVariants_3D";
-        public const string SHADER_HQ_SCALPBASE = "3D/Lit";
-        public const string SHADER_HQ_EYELASH = "3D/Lit";
+        public const string SHADER_HQ_SCALPBASE = "Standard";
+        public const string SHADER_HQ_EYELASH = "Standard";
         public const string SHADER_HQ_TEETH = "RL_TeethShader_3D";
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_3D";
-        public const string SHADER_HQ_ALPHACLIP = "3D/Lit";
-        public const string SHADER_HQ_OPAQUE = "3D/Lit";
+        public const string SHADER_HQ_ALPHACLIP = "Standard";
+        public const string SHADER_HQ_OPAQUE = "Standard";
 
         // HQ Materials
         //
@@ -270,7 +270,10 @@ namespace Reallusion.Import
         // variants
         public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Baked_CorneaRef_3D";
         public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Baked_EyeCustom_3D";
+        public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_3D";
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_3D";
+        // for gamebase single material or actor core...
+        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_3D";
 #endif
 
         private static Dictionary<MaterialType, string> DICT_SHADERS = new Dictionary<MaterialType, string>

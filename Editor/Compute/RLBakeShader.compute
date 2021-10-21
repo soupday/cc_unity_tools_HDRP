@@ -1181,8 +1181,8 @@ float EyeOcclusionGradient(float2 uv)
     float y = uv.y;
     float right = smoothstep(eoInnerMin, eoInnerMax, 1 - x);
     float left = smoothstep(eoOuterMin, eoOuterMax, x);
-    float top = pow(smoothstep(eoTopMin, eoTopMax, 1 - y), eoBottomCurve);
-    float bottom = pow(smoothstep(eoBottomMin, eoBottomMax, y), eoTopCurve);
+    float top = pow(smoothstep(eoTopMin, eoTopMax, 1 - y), eoTopCurve);
+    float bottom = pow(smoothstep(eoBottomMin, eoBottomMax, y), eoBottomCurve);
     float alpha1 = saturate((1.0 - saturate(8.0 * right * left * top * bottom)) * eoOcclusionStrength);
     float alpha2 = saturate(smoothstep(eoTop2Min, eoTop2Max, y) * eoOcclusionStrength2);
     float edge2 = ((1.0 - eoTearDuctPosition) * eoTearDuctWidth) + eoTearDuctPosition;
