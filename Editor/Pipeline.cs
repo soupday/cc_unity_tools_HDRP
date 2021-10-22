@@ -204,8 +204,8 @@ namespace Reallusion.Import
         //
         public const string SHADER_HQ_SKIN = "RL_SkinShaderVariants_3D";
         public const string SHADER_HQ_HEAD = "RL_SkinShaderVariants_3D";
-        public const string SHADER_HQ_CORNEA = "RL_EyeShaderVariants_3D";
-        public const string SHADER_HQ_EYE = "RL_EyeShaderVariants_3D";
+        public const string SHADER_HQ_CORNEA = "RL_CorneaShader_3D";
+        public const string SHADER_HQ_EYE = "Standard";
         public const string SHADER_HQ_EYE_OCCLUSION = "RL_EyeOcclusionShader_3D";
         public const string SHADER_HQ_TEARLINE = "RL_TearlineShader_3D";
         public const string SHADER_HQ_HAIR = "RL_HairShaderVariants_3D";
@@ -218,21 +218,21 @@ namespace Reallusion.Import
 
         // HQ Materials
         //
-        public const string MATERIAL_HQ_SKIN = "RL_Template_Skin_3D";
-        public const string MATERIAL_HQ_HEAD = "RL_Template_Head_3D";
-        public const string MATERIAL_HQ_CORNEA = "RL_Template_Cornea_3D";
-        public const string MATERIAL_HQ_EYE = "RL_Template_Eye_3D";
-        public const string MATERIAL_HQ_EYE_OCCLUSION = "RL_Template_EyeOcclusion_3D";
-        public const string MATERIAL_HQ_TEARLINE = "RL_Template_Tearline_3D";
-        public const string MATERIAL_HQ_HAIR = "RL_Template_Hair_3D";
+        public const string MATERIAL_HQ_SKIN = "RL_Template_HQ_Skin_3D";
+        public const string MATERIAL_HQ_HEAD = "RL_Template_HQ_Head_3D";
+        public const string MATERIAL_HQ_CORNEA = "RL_Template_HQ_Cornea_3D";
+        public const string MATERIAL_HQ_EYE = "RL_Template_HQ_Eye_3D";
+        public const string MATERIAL_HQ_EYE_OCCLUSION = "RL_Template_HQ_EyeOcclusion_3D";
+        public const string MATERIAL_HQ_TEARLINE = "RL_Template_HQ_Tearline_3D";
+        public const string MATERIAL_HQ_HAIR = "RL_Template_HQ_Hair_3D";
         public const string MATERIAL_HQ_SCALPBASE = "RL_Template_Default_ScalpBase_3D";
         public const string MATERIAL_HQ_EYELASH = "RL_Template_Default_Eyelash_3D";
-        public const string MATERIAL_HQ_TEETH = "RL_Template_Teeth_3D";
-        public const string MATERIAL_HQ_TONGUE = "RL_Template_Tongue_3D";
+        public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_3D";
+        public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_3D";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_3D";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_3D";
         // variants
-        public const string MATERIAL_HQ_CORNEA_REFRACTIVE = "RL_Template_CorneaRef_3D";
+        public const string MATERIAL_HQ_CORNEA_REFRACTIVE = "RL_Template_HQ_CorneaRef_3D";
 
         // Default Materials
         //
@@ -258,7 +258,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HEAD = "RL_Temaplte_Baked_Skin_3D";
         public const string MATERIAL_BAKED_CORNEA = "RL_Template_Baked_Cornea_3D";
         public const string MATERIAL_BAKED_EYE = "RL_Template_Baked_Eye_3D";
-        public const string MATERIAL_BAKED_EYE_OCCLUSION = "RL_Template_EyeOcclusion_3D";
+        public const string MATERIAL_BAKED_EYE_OCCLUSION = "RL_Template_Baked_EyeOcclusion_3D";
         public const string MATERIAL_BAKED_TEARLINE = "RL_Template_Tearline_3D";
         public const string MATERIAL_BAKED_HAIR = "RL_Template_Baked_Hair_3D";
         public const string MATERIAL_BAKED_SCALPBASE = "RL_Template_Default_ScalpBase_3D";

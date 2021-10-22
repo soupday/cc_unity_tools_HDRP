@@ -471,11 +471,11 @@ namespace Reallusion.Import
         {
             string customShader = matJson?.GetStringValue("Custom Shader/Shader Name");
 
-            // these default materials should *not* attach any textures as I don't use them for these:
-            if (customShader == "RLEyeTearline" || customShader == "RLEyeOcclusion") return;            
+            // these default materials should *not* attach any textures:
+            if (customShader == "RLEyeTearline" || customShader == "RLEyeOcclusion") return;
 
             if (RP == RenderPipeline.HDRP)
-            {                
+            {
                 ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Diffuse",
                     matJson, "Textures/Base Color",
                     FLAG_SRGB);
@@ -491,10 +491,15 @@ namespace Reallusion.Import
                     matJson, "Textures/Glow");
             }
             else
-            {                
-                ConnectTextureTo(sourceName, mat, "_BaseMap", "Diffuse",
-                    matJson, "Textures/Base Color",
-                    FLAG_SRGB);
+            {
+                if (RP == RenderPipeline.URP)
+                    ConnectTextureTo(sourceName, mat, "_BaseMap", "Diffuse",
+                        matJson, "Textures/Base Color",
+                        FLAG_SRGB);
+                else
+                    ConnectTextureTo(sourceName, mat, "_MainTex", "Diffuse",
+                        matJson, "Textures/Base Color",
+                        FLAG_SRGB);
 
                 ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
                     matJson, "Textures/MetallicAlpha");
@@ -508,12 +513,15 @@ namespace Reallusion.Import
 
                 ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
                     matJson, "Textures/Glow");
-            }                        
+            }            
 
             // All
             if (matJson != null)
             {
-                mat.SetColor("_BaseColor", matJson.GetColorValue("Diffuse Color"));
+                if (RP != RenderPipeline.Builtin)
+                    mat.SetColor("_BaseColor", matJson.GetColorValue("Diffuse Color"));
+                else
+                    mat.SetColor("_Color", matJson.GetColorValue("Diffuse Color"));
 
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
                 {
@@ -1110,8 +1118,9 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 mat.SetFloat("_DepthOffset", 0.005f * matJson.GetFloatValue("Custom Shader/Variable/Depth Offset"));                
-                mat.SetFloat("_InnerOffset", 0.005f * matJson.GetFloatValue("Custom Shader/Variable/Depth Offset"));                
-                mat.SetFloat("_Smoothness", 1f - matJson.GetFloatValue("Custom Shader/Variable/Roughness"));                
+                mat.SetFloat("_InnerOffset", 0.005f * matJson.GetFloatValue("Custom Shader/Variable/Depth Offset"));
+
+                mat.SetFloat("_Smoothness", 0.88f - 0.88f * matJson.GetFloatValue("Custom Shader/Variable/Roughness"));
             }
         }
 
@@ -1171,13 +1180,13 @@ namespace Reallusion.Import
         {
             ComputeBake baker = new ComputeBake(fbx, characterInfo);
 
-            string texturePath = null;
+            string jsonTexturePath = null;
             if (jsonData != null)
             {
-                texturePath = jsonData.GetStringValue(jsonPath + "/Texture Path");
+                jsonTexturePath = jsonData.GetStringValue(jsonPath + "/Texture Path");
             }
 
-            Texture2D tex = GetTextureFrom(texturePath, sourceName, suffix, out string name);
+            Texture2D tex = GetTextureFrom(jsonTexturePath, sourceName, suffix, out string name);
             Texture2D bakedTex = null;
 
             if (tex)
@@ -1201,19 +1210,26 @@ namespace Reallusion.Import
             }
         }
 
-        private Texture2D GetTextureFrom(string texturePath, string materialName, string suffix, out string name)
+        private Texture2D GetTextureFrom(string jsonTexturePath, string materialName, string suffix, out string name)
         {
             Texture2D tex = null;
             name = "";
 
             // try to find the texture from the supplied texture path (usually from the json data).
-            if (!string.IsNullOrEmpty(texturePath))
-            {
-                name = Path.GetFileNameWithoutExtension(texturePath);
-                tex = Util.FindTexture(textureFolders.ToArray(), name);
+            if (!string.IsNullOrEmpty(jsonTexturePath))
+            {             
+                // try to load the texture asset directly from the json path.
+                tex = AssetDatabase.LoadAssetAtPath<Texture2D>(Util.CombineJsonTexPath(fbxFolder, jsonTexturePath));
+
+                // if that fails, try to find the texture by name in the texture folders.
+                if (!tex)
+                {
+                    name = Path.GetFileNameWithoutExtension(jsonTexturePath);
+                    tex = Util.FindTexture(textureFolders.ToArray(), name);
+                }
             }
 
-            // then try to find the texture from the material name and suffix.
+            // as a final fallback try to find the texture from the material name and suffix.
             if (!tex)
             {
                 name = materialName + "_" + suffix;
@@ -1307,19 +1323,19 @@ namespace Reallusion.Import
             {
                 Vector2 offset = Vector2.zero;
                 Vector2 tiling = Vector2.one;
-                string texturePath = null;
+                string jsonTexturePath = null;
 
                 if (jsonData != null)
                 {                    
                     if (jsonData.PathExists(jsonPath + "/Texture Path"))
-                        texturePath = jsonData.GetStringValue(jsonPath + "/Texture Path");
+                        jsonTexturePath = jsonData.GetStringValue(jsonPath + "/Texture Path");
                     if (jsonData.PathExists(jsonPath + "/Offset"))
                         offset = jsonData.GetVector2Value(jsonPath + "/Offset");
                     if (jsonData.PathExists(jsonPath + "/Tiling"))
                         tiling = jsonData.GetVector2Value(jsonPath + "/Tiling");
                 }
 
-                tex = GetTextureFrom(texturePath, materialName, suffix, out string name);
+                tex = GetTextureFrom(jsonTexturePath, materialName, suffix, out string name);
 
                 if (tex)
                 {
@@ -1331,6 +1347,10 @@ namespace Reallusion.Import
                     Util.LogInfo("        Connected texture: " + tex.name);
 
                     SetTextureImport(tex, name, flags);
+                }
+                else
+                {
+                    mat.SetTexture(shaderRef, null);
                 }
             }
 

@@ -277,7 +277,7 @@ namespace Reallusion.Import
                                 bakedMaterial = BakeHairMaterial(sharedMat, sourceName);
                                 break;
 
-                            case Pipeline.SHADER_HQ_EYE:
+                            case Pipeline.SHADER_HQ_CORNEA:
                                 bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
                                 break;
 
@@ -404,10 +404,12 @@ namespace Reallusion.Import
             }
             else
             {
-                bakedMaterial.SetTexture("_BaseMap", baseMap);
+                if (RP == RenderPipeline.URP)
+                    bakedMaterial.SetTexture("_BaseMap", baseMap);
+                else
+                    bakedMaterial.SetTexture("_MainTex", baseMap);
                 bakedMaterial.SetTexture("_MetallicGlossMap", metallicGlossMap);
-                if (metallicGlossMap) bakedMaterial.SetFloat("_Smoothness", 1.0f);
-                else bakedMaterial.SetFloat("_Smoothness", 0.5f);
+                // glossiness / smoothness should be set in the baked template materials
                 bakedMaterial.SetTexture("_OcclusionMap", aoMap);
                 bakedMaterial.SetTexture("_BumpMap", normalMap);
                 if (normalMap) bakedMaterial.SetFloat("_BumpScale", normalScale);

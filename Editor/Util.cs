@@ -295,7 +295,7 @@ namespace Reallusion.Import
                 ComputeShader shader = AssetDatabase.LoadAssetAtPath<ComputeShader>(path);
                 if (shader != null)
                 {
-                    if (shader.name.EndsWith(name, System.StringComparison.InvariantCultureIgnoreCase))
+                    if (shader.name.iEquals(name))
                     {
                         return shader;
                     }
@@ -317,7 +317,7 @@ namespace Reallusion.Import
                 Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (mat)
                 {
-                    if (mat.name.EndsWith(name, System.StringComparison.InvariantCultureIgnoreCase))
+                    if (mat.name.iEquals(name))
                     {
                         return mat;
                     }
@@ -337,7 +337,7 @@ namespace Reallusion.Import
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 string texName = Path.GetFileNameWithoutExtension(assetPath);
-                if (texName.EndsWith(search, System.StringComparison.CurrentCultureIgnoreCase))
+                if (texName.iEquals(search))
                 {
                     return AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
                 }
@@ -356,13 +356,23 @@ namespace Reallusion.Import
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 string assetName = Path.GetFileNameWithoutExtension(assetPath);
-                if (assetName.EndsWith(search, System.StringComparison.CurrentCultureIgnoreCase))
+                if (assetName.iEquals(search))
                 {
                     return AssetDatabase.LoadAssetAtPath<Object>(assetPath);
                 }
             }
 
             return null;
+        }
+
+        public static string CombineJsonTexPath(string fbxPath, string jsonTexPath)
+        {
+            // remove any ./ prefix from the json path
+            if (jsonTexPath.iStartsWith("./"))
+                jsonTexPath = jsonTexPath.Substring(2);
+            // convert slashes to backslashes
+            jsonTexPath = jsonTexPath.Replace("/", "\\");
+            return Path.Combine(fbxPath, jsonTexPath);            
         }
 
         public static GameObject FindPreviewScenePrefab()
@@ -475,8 +485,7 @@ namespace Reallusion.Import
             }
             else
             {
-                // Eye is PBR in URP and Built-in
-                if (shaderName.iContains(Pipeline.SHADER_HQ_EYE)) return CharacterTreeView.LINKED_INDEX_EYE_URP;
+                // Eye is PBR in URP and Built-in                
                 if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;
             }
             if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION)) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
@@ -495,8 +504,7 @@ namespace Reallusion.Import
                 if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;
             }
             else
-            {
-                if (sourceName.iContains("Std_Eye_")) return CharacterTreeView.LINKED_INDEX_EYE_URP;
+            {                
                 if (sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;
             }
             if (sourceName.iContains("Std_Upper_Teeth") || sourceName.iContains("Std_Lower_Teeth")) return CharacterTreeView.LINKED_INDEX_TEETH;
