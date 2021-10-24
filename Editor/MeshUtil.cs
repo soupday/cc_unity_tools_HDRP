@@ -368,6 +368,8 @@ namespace Reallusion.Import
 
         public static void CharacterOpenCloseMouth(Object obj)
         {
+            if (!obj) return;
+
             GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
 
             if (root)
@@ -421,6 +423,8 @@ namespace Reallusion.Import
 
         public static void CharacterOpenCloseEyes(Object obj)
         {
+            if (!obj) return;
+
             GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
 
             if (root)
@@ -469,6 +473,8 @@ namespace Reallusion.Import
         public enum EyeLookDir { None = 0, Left = 1, Right = 2, Up = 4, Down = 8 }
         public static void CharacterEyeLook(Object obj, EyeLookDir dirFlags)
         {
+            if (!obj) return;
+
             GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
 
             if (root)

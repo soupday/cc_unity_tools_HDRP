@@ -443,11 +443,14 @@ namespace Reallusion.Import
 
             if (!contextCharacter.CanHaveHighQualityMaterials) GUI.enabled = false;
 
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            contextCharacter.qualRefractiveEyes = GUILayout.Toggle(contextCharacter.qualRefractiveEyes, "Eye - Refractive");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            if (Pipeline.isHDRP)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                contextCharacter.qualRefractiveEyes = GUILayout.Toggle(contextCharacter.qualRefractiveEyes, "Eye - Refractive");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();

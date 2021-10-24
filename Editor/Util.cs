@@ -29,36 +29,6 @@ namespace Reallusion.Import
     {
         public static int LOG_LEVEL = 0;
 
-        public static bool iEquals(this string a, string b)
-        {
-            return a.Equals(b, System.StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        public static bool iContains(this string a, string b)
-        {
-            return a.ToLowerInvariant().Contains(b.ToLowerInvariant());
-        }
-
-        public static bool iStartsWith(this string a, string b)
-        {
-            return a.StartsWith(b, System.StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        public static bool iEndsWith(this string a, string b)
-        {
-            return a.EndsWith(b, System.StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        public static void SetRemapRange(this Material mat, string shaderRef, float from, float to)
-        {
-            Color range;
-            range.r = from;
-            range.g = to;
-            range.b = 0f;
-            range.a = 0f;
-            mat.SetColor(shaderRef, range);
-        }
-
         public static bool ImportCharacter(CharacterInfo info, MaterialQuality quality)
         {
             Importer importCharacter = new Importer(info);

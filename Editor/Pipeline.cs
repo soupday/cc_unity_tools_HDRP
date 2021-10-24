@@ -112,6 +112,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
         public const string MATERIAL_BAKED_OPAQUE = "RL_Template_Default_Opaque_HDRP";
         // variants
+        public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Baked_CorneaRef_HDRP";        
         public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Baked_EyeCustom_HDRP";
         public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_HDRP";
@@ -179,7 +180,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_SKIN = "RL_Template_Baked_Skin_URP";
         public const string MATERIAL_BAKED_HEAD = "RL_Temaplte_Baked_Skin_URP";
         public const string MATERIAL_BAKED_CORNEA = "RL_Template_Baked_Cornea_URP";
-        public const string MATERIAL_BAKED_EYE = "RL_Template_Baked_Eye_URP";
+        public const string MATERIAL_BAKED_EYE = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_BAKED_EYE_OCCLUSION = "RL_Template_Baked_EyeOcclusion_URP";
         public const string MATERIAL_BAKED_TEARLINE = "RL_Template_Tearline_URP";
         public const string MATERIAL_BAKED_HAIR = "RL_Template_Baked_Hair_URP";
@@ -190,8 +191,9 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_ALPHACLIP = "RL_Template_Default_AlphaClip_URP";
         public const string MATERIAL_BAKED_OPAQUE = "RL_Template_Default_Opaque_URP";
         // variants
-        public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Baked_CorneaRef_URP";
-        public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Baked_EyeCustom_URP";
+        public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Baked_CorneaCustom_URP";
+        public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Default_Opaque_URP";
+        public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_URP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_URP";
         // for gamebase single material or actor core...
@@ -257,7 +259,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_SKIN = "RL_Template_Baked_Skin_3D";
         public const string MATERIAL_BAKED_HEAD = "RL_Temaplte_Baked_Skin_3D";
         public const string MATERIAL_BAKED_CORNEA = "RL_Template_Baked_Cornea_3D";
-        public const string MATERIAL_BAKED_EYE = "RL_Template_Baked_Eye_3D";
+        public const string MATERIAL_BAKED_EYE = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_BAKED_EYE_OCCLUSION = "RL_Template_Baked_EyeOcclusion_3D";
         public const string MATERIAL_BAKED_TEARLINE = "RL_Template_Tearline_3D";
         public const string MATERIAL_BAKED_HAIR = "RL_Template_Baked_Hair_3D";
@@ -268,8 +270,9 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_ALPHACLIP = "RL_Template_Default_AlphaClip_3D";
         public const string MATERIAL_BAKED_OPAQUE = "RL_Template_Default_Opaque_3D";
         // variants
-        public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Baked_CorneaRef_3D";
-        public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Baked_EyeCustom_3D";
+        public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Baked_CorneaCustom_3D";
+        public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Default_Opaque_3D";
+        public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_3D";
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_3D";
         // for gamebase single material or actor core...
@@ -343,6 +346,11 @@ namespace Reallusion.Import
             { MaterialType.DefaultAlpha, MATERIAL_BAKED_ALPHACLIP },
             { MaterialType.DefaultOpaque, MATERIAL_BAKED_OPAQUE },
         };
+
+        public static RenderPipeline RP => GetRenderPipeline();
+        public static bool is3D => RP == RenderPipeline.Builtin;
+        public static bool isURP => RP == RenderPipeline.URP;
+        public static bool isHDRP => RP == RenderPipeline.HDRP;
 
 
         public static RenderPipeline GetRenderPipeline()
@@ -430,14 +438,23 @@ namespace Reallusion.Import
                 return Util.FindMaterial(MATERIAL_DEFAULT_SINGLE_MATERIAL);
 
             // option based overrides
-            if (materialType == MaterialType.Cornea && quality == MaterialQuality.High && info.qualRefractiveEyes)
-                return Util.FindMaterial(MATERIAL_HQ_CORNEA_REFRACTIVE);
+            if (isHDRP)
+            {
+                // SSR is HDRP only...
+                if (materialType == MaterialType.Cornea && quality == MaterialQuality.High && info.qualRefractiveEyes)
+                    return Util.FindMaterial(MATERIAL_HQ_CORNEA_REFRACTIVE);
 
+                if (materialType == MaterialType.Cornea && quality == MaterialQuality.Baked && info.qualRefractiveEyes)
+                    return Util.FindMaterial(MATERIAL_BAKED_CORNEA_REFRACTIVE);
+            }
+            else
+            {
+                if (materialType == MaterialType.Cornea && quality == MaterialQuality.Baked && info.bakeCustomShaders)
+                    return Util.FindMaterial(MATERIAL_BAKED_CORNEA_CUSTOM);
+            }
+            
             if (materialType == MaterialType.Hair && quality == MaterialQuality.Baked && info.bakeCustomShaders)
                 return Util.FindMaterial(MATERIAL_BAKED_HAIR_CUSTOM);
-
-            if (materialType == MaterialType.Cornea && quality == MaterialQuality.Baked && info.qualRefractiveEyes)
-                return Util.FindMaterial(MATERIAL_BAKED_CORNEA_REFRACTIVE);
 
             if (materialType == MaterialType.Eye && quality == MaterialQuality.Baked && info.bakeCustomShaders)
                 return Util.FindMaterial(MATERIAL_BAKED_EYE_CUSTOM);

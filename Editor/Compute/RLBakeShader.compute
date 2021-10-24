@@ -30,6 +30,7 @@
 #pragma kernel RLTongueAO
 #pragma kernel RLCorneaDiffuse
 #pragma kernel RLEyeDiffuse
+#pragma kernel RLCorneaOnlyDiffuse
 #pragma kernel RLCorneaMask
 #pragma kernel RLCorneaDetailMask
 #pragma kernel RLCorneaMetallicGloss
@@ -396,7 +397,7 @@ void RLDetailMask(uint3 id : SV_DispatchThreadID)
     float4 mask = SAMPLE(Mask, uv);
 
     float detailMask = mask.b;
-    float4 packed = float4(detailMask, detailMask, detailMask, 1.0);
+    float4 packed = float4(detailMask, detailMask, detailMask, detailMask);
 
     Result[id.xy] = packed;
 }
@@ -900,7 +901,7 @@ float EyeDepthMask(float radial)
 
 float EyeShadowMask(float radial)
 {
-    return saturate(Remap_float(radial, shadowRadius, shadowRadius * shadowHardness, 1.0, 0.0));
+    return saturate(smoothstep(shadowRadius * shadowHardness * scleraScale, shadowRadius * scleraScale, radial));
 }
 
 
@@ -950,6 +951,38 @@ void RLEyeDiffuse(uint3 id : SV_DispatchThreadID)
 }
 
 [numthreads(1, 1, 1)]
+void RLCorneaOnlyDiffuse(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+    float2 touvCornea = TilingOffset(uv, irisScale, float2(0.5, 0.5));
+    float2 touvSclera = TilingOffset(uv, scleraScale, float2(0.5, 0.5));
+
+    float4 cornea = SAMPLE(CorneaDiffuse, touvCornea);
+    float3 hsv = HSV(cornea, irisHue, irisSaturation, irisBrightness);
+    cornea = float4(hsv, 1.0);
+   
+    float4 sclera = SAMPLE(ScleraDiffuse, touvSclera);
+    hsv = HSV(sclera, scleraHue, scleraSaturation, scleraBrightness);
+    sclera = float4(hsv, 1.0);
+    
+    float4 colorBlend = SAMPLE(ColorBlend, uv);    
+
+    float radial = RADIAL(uv);
+    float shadowMask = EyeShadowMask(radial);
+    float limbusMask = EyeLimbusMask(radial);
+    float irisMask = EyeIrisMask(radial);
+
+    cornea = lerp(cornea, cornea * sRGBToLinear(limbusColor), limbusMask);
+    sclera = lerp(sclera, sclera * sRGBToLinear(cornerShadowColor), shadowMask);
+    float4 color = lerp(cornea, sclera, irisMask);
+
+    color = BlendMultiply_float4(color, colorBlend, colorBlendStrength);
+    color.a = 1.0;
+
+    Result[id.xy] = LinearTosRGB(color);
+}
+
+[numthreads(1, 1, 1)]
 void RLCorneaMask(uint3 id : SV_DispatchThreadID)
 {
     float2 uv = GetUV(id.xy);
@@ -976,8 +1009,9 @@ void RLCorneaDetailMask(uint3 id : SV_DispatchThreadID)
 
     float radial = RADIAL(uv);
     float irisMask = EyeIrisMask(radial);
+    float depthMask = EyeDepthMask(radial);
     float detailMask = irisMask;    
-    float4 packed = float4(detailMask, detailMask, detailMask, 1.0);
+    float4 packed = float4(0.5, depthMask, 0.5, detailMask);
 
     Result[id.xy] = packed;
 }
@@ -1082,8 +1116,8 @@ void RLHairColoredDiffuse(uint3 id : SV_DispatchThreadID)
     float4 depthBlend = SAMPLE(ColorBlend, uv);
     float4 mask = SAMPLE(Mask, uv);
 
-    float ao = INVERTED_SCALE(mask.g, aoStrength);    
-    float alpha = pow(saturate((diffuse.a / alphaRemap)), alphaPower);    
+    float ao = INVERTED_SCALE(mask.g, aoStrength);
+    float alpha = pow(saturate((diffuse.a / alphaRemap)), alphaPower);
 
     float4 color = lerp(float4(1.0, 1.0, 1.0, 1.0), diffuse, baseColorStrength);
     color = RootEndBlend(color, rootMap.g);
@@ -1094,7 +1128,7 @@ void RLHairColoredDiffuse(uint3 id : SV_DispatchThreadID)
 
     color = color * diffuseStrength;
     color = lerp(color, color * depthBlend, colorBlendStrength);
-    color = lerp(color, color * ao, aoOccludeAll);
+    color = lerp(color, color * ao, aoOccludeAll * 0.5);
     
     color = LinearTosRGB(color);
     color.a = alpha;
@@ -1116,7 +1150,7 @@ void RLHairDiffuse(uint3 id : SV_DispatchThreadID)
     
     float4 color = diffuse * diffuseStrength;
     color = lerp(color, color * depthBlend, colorBlendStrength);
-    color = lerp(color, color * ao, aoOccludeAll);
+    color = lerp(color, color * ao, aoOccludeAll * 0.5);
 
     color = LinearTosRGB(color);
     color.a = alpha;
