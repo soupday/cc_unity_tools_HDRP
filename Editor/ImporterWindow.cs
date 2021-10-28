@@ -452,6 +452,15 @@ namespace Reallusion.Import
                 GUILayout.EndHorizontal();
             }
 
+            if (Pipeline.isURP)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                contextCharacter.dualMaterialHair = GUILayout.Toggle(contextCharacter.dualMaterialHair, "Hair - Setup 2 Pass Material");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             contextCharacter.bakeCustomShaders = GUILayout.Toggle(contextCharacter.bakeCustomShaders, "Bake - Custom Shaders");

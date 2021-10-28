@@ -186,6 +186,11 @@ namespace Reallusion.Import
             // create prefab
             GameObject prefab = RL.CreatePrefabFromFbx(characterInfo, fbx);
 
+            if (characterInfo.dualMaterialHair)
+            {
+                MeshUtil.Extract2PassHairMeshes(prefab);
+            }
+
             Util.LogInfo("Done!");
 
             Selection.activeObject = prefab;

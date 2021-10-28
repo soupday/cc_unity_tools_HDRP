@@ -1,6 +1,19 @@
 Changelog
 =========
 
+### v 0.2.0
+- Fix to eye occlusion compute bake shader.
+- Adusted eye shader for smoother corner shadow gradient.
+- Built-in Pipeline
+    - Added emission to the Built-in high quality and baked shaders.
+
+### v 0.1.9
+- URP & Built-in Pipelines
+    - Added shaders and materials to use the build-in and Universal render pipeline.
+- Code base
+    - Bake shaders and materials updated to support standard shader and URP/Lit shader.
+    - Fixes to material setup texture discovery.
+
 ### v 0.1.8b
 - Fix to baking functions with missing textures.
 

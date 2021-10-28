@@ -51,6 +51,16 @@ namespace Reallusion.Import
             return false;
         }
 
+        public static bool SetTextureIf(this Material mat, string shaderRef, Texture tex)
+        {
+            if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
+            {
+                mat.SetTexture(shaderRef, tex);
+                return true;
+            }
+            return false;
+        }
+
         public static bool SetTextureScaleIf(this Material mat, string shaderRef, Vector2 scale)
         {
             if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)

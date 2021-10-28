@@ -26,6 +26,7 @@ namespace Reallusion.Import
     public class ComputeBake
     {
         private readonly GameObject fbx;
+        private readonly GameObject prefab;
         private GameObject clone;
         private CharacterInfo characterInfo;
         private readonly string characterName;
@@ -37,8 +38,6 @@ namespace Reallusion.Import
         private readonly string materialsFolder;
         private readonly string fbmFolder;
         private readonly string texFolder;
-        private readonly List<string> sourceTextureFolders;        
-        private readonly ModelImporter importer;
         private readonly List<string> importAssets;        
 
         public const int MAX_SIZE = 4096;
@@ -59,6 +58,7 @@ namespace Reallusion.Import
         {
             fbx = (GameObject)character;
             fbxPath = AssetDatabase.GetAssetPath(fbx);
+            prefab = Util.GetCharacterPrefab(fbx);
             characterInfo = info;
             characterName = Path.GetFileNameWithoutExtension(fbxPath);
             fbxFolder = Path.GetDirectoryName(fbxPath);
@@ -68,10 +68,7 @@ namespace Reallusion.Import
             materialsFolder = Util.CreateFolder(characterFolder, MATERIALS_FOLDER);
 
             fbmFolder = Path.Combine(fbxFolder, characterName + ".fbm");
-            texFolder = Path.Combine(fbxFolder, "textures", characterName);
-            sourceTextureFolders = new List<string>() { fbmFolder, texFolder };
-
-            importer = (ModelImporter)AssetImporter.GetAtPath(fbxPath);
+            texFolder = Path.Combine(fbxFolder, "textures", characterName);            
 
             importAssets = new List<string>();
         }
@@ -267,6 +264,8 @@ namespace Reallusion.Import
                         string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
                         string shaderName = Util.GetShaderName(sharedMat);
                         Material bakedMaterial = null;
+                        Material firstPass = null;
+                        Material secondPass = null;
 
                         switch (shaderName)
                         {
@@ -282,8 +281,9 @@ namespace Reallusion.Import
                                 bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
                                 break;
 
+                            case Pipeline.SHADER_HQ_HAIR_1ST_PASS:
                             case Pipeline.SHADER_HQ_HAIR:
-                                bakedMaterial = BakeHairMaterial(sharedMat, sourceName);
+                                bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);
                                 break;
 
                             case Pipeline.SHADER_HQ_CORNEA:
@@ -295,7 +295,19 @@ namespace Reallusion.Import
                                 break;
                         }
 
-                        if (bakedMaterial)
+                        if (firstPass && secondPass)
+                        {
+                            ReplaceMaterial(sharedMat, firstPass);
+                            // Get the 2nd pass shared material
+                            foreach (Material secondPassMat in renderer.sharedMaterials)
+                            {
+                                if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
+                                {
+                                    ReplaceMaterial(secondPassMat, secondPass);
+                                }
+                            }
+                        }
+                        else if (bakedMaterial)
                         {
                             ReplaceMaterial(sharedMat, bakedMaterial);
                         }
@@ -324,7 +336,10 @@ namespace Reallusion.Import
 
         public void CopyToClone()
         {
-            clone = (GameObject)PrefabUtility.InstantiatePrefab(fbx);
+            if (prefab)
+                clone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            else
+                clone = (GameObject)PrefabUtility.InstantiatePrefab(fbx);
         }
 
         public GameObject SaveAsPrefab()
@@ -335,10 +350,10 @@ namespace Reallusion.Import
             if (characterInfo.isLOD)
             {
                 string lodPrefabPath = Path.Combine(prefabFolder, characterName + "_LODModels.prefab");
-                GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, lodPrefabPath);                
+                GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, lodPrefabPath);
                 GameObject.DestroyImmediate(clone);
-                GameObject prefab = RL.CreateOneLODPrefabFromModel(characterInfo, variant, characterInfo.bakeSeparatePrefab ? "_Baked" : "");
-                return prefab;
+                GameObject bakedPrefab = RL.CreateOneLODPrefabFromModel(characterInfo, variant, characterInfo.bakeSeparatePrefab ? "_Baked" : "");
+                return bakedPrefab;
             }
             else
             {
@@ -366,7 +381,7 @@ namespace Reallusion.Import
         {
             Material bakedMaterial = Util.FindMaterial(sourceName, new string[] { materialsFolder });            
             Shader shader = Pipeline.GetDefaultShader();
-
+            
             if (!bakedMaterial)
             {
                 // create the remapped material and save it as an asset.
@@ -402,6 +417,7 @@ namespace Reallusion.Import
                 bakedMaterial.SetTextureIf("_NormalMap", normalMap);
                 if (normalMap) bakedMaterial.SetFloatIf("_NormalScale", normalScale);                
                 bakedMaterial.SetTextureIf("_EmissionColorMap", emissionMap);
+                bakedMaterial.SetColorIf("_EmissionColor", emissiveColor);
                 if (detailMap)
                 {
                     bakedMaterial.SetTextureIf("_DetailMap", detailMap);
@@ -433,6 +449,14 @@ namespace Reallusion.Import
                     bakedMaterial.SetFloatIf("_DetailNormalMapScale", detailScale);
                 }
                 bakedMaterial.SetTextureIf("_EmissionMap", emissionMap);
+                bakedMaterial.SetColorIf("_EmissionColor", emissiveColor);
+                if (emissiveColor.r + emissiveColor.g +  emissiveColor.b > 0f)
+                {
+                    bakedMaterial.EnableKeyword("_EMISSION");
+                    bakedMaterial.SetTextureIf("_EmissionMap", emissionMap);
+                    bakedMaterial.SetColorIf("_EmissionColor", emissiveColor);
+                    bakedMaterial.globalIlluminationFlags = bakedMaterial.globalIlluminationFlags | MaterialGlobalIlluminationFlags.BakedEmissive;
+                }
             }
 
             // add the path of the remapped material for later re-import.
@@ -915,7 +939,7 @@ namespace Reallusion.Import
 
 
 
-        private Material BakeHairMaterial(Material mat, string sourceName)
+        private Material BakeHairMaterial(Material mat, string sourceName, out Material firstPass, out Material secondPass)
         {
             Texture2D diffuse = GetMaterialTexture(mat, "_DiffuseMap");
             Texture2D mask = GetMaterialTexture(mat, "_MaskMap");
@@ -973,6 +997,9 @@ namespace Reallusion.Import
             Texture2D emission = GetMaterialTexture(mat, "_EmissionMap");
             Color emissiveColor = mat.GetColor("_EmissiveColor");
 
+            firstPass = null;
+            secondPass = null;
+
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
             Texture2D bakedMetallicGlossMap = null;
@@ -1018,7 +1045,8 @@ namespace Reallusion.Import
                     sourceName + "_Occlusion", "RLHairAO");
             }
 
-
+            // TODO: if the shader is 1st pass hair, create both 1st and 2nd pass hair materials from these textures...
+            
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 null, null, null, null, emissionMap,
                 normalStrength, 1f, 1f, emissiveColor,
@@ -1058,6 +1086,54 @@ namespace Reallusion.Import
                 result.SetFloatIf("_SecondarySpecularShift", secondarySpecularShift);
                 result.SetFloatIf("_SmoothnessMin", smoothnessMin);
                 result.SetFloatIf("_SmoothnessMax", smoothnessMax);
+            }
+            
+            if (mat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
+            {
+                firstPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
+                    null, null, null, null, emissionMap,
+                    normalStrength, 1f, 1f, emissiveColor,
+                    sourceName,
+                    Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked));
+
+                secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
+                    null, null, null, null, emissionMap,
+                    normalStrength, 1f, 1f, emissiveColor,
+                    sourceName.Replace("_1st_Pass", "_2nd_Pass"),
+                    Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked));
+
+                // multi material pass hair is custom baked shader only:
+                firstPass.SetTextureIf("_FlowMap", flow);
+                firstPass.SetColorIf("_VertexBaseColor", vertexBaseColor);
+                firstPass.SetFloatIf("_VertexColorStrength", vertexColorStrength);
+                firstPass.SetColorIf("_SpecularTint", specularTint);
+                firstPass.SetFloatIf("_AlphaClip", alphaClip);
+                firstPass.SetFloatIf("_AlphaClip2", alphaClip);
+                firstPass.SetFloatIf("_ShadowClip", shadowClip);
+                firstPass.SetFloatIf("_DepthPrepass", depthPrepass); // Mathf.Lerp(depthPrepass, 1.0f, 0.5f));
+                firstPass.SetFloatIf("_DepthPostpass", depthPostpass);
+                firstPass.SetFloatIf("_RimTransmissionIntensity", rimTransmissionIntensity);
+                firstPass.SetFloatIf("_SpecularMultiplier", specularMultiplier);
+                firstPass.SetFloatIf("_SpecularShift", specularShift);
+                firstPass.SetFloatIf("_SecondarySpecularMultiplier", secondarySpecularMultiplier);
+                firstPass.SetFloatIf("_SecondarySpecularShift", secondarySpecularShift);
+                firstPass.SetFloatIf("_SecondarySmoothness", secondarySmoothness);
+
+                secondPass.SetTextureIf("_FlowMap", flow);
+                secondPass.SetColorIf("_VertexBaseColor", vertexBaseColor);
+                secondPass.SetFloatIf("_VertexColorStrength", vertexColorStrength);
+                secondPass.SetColorIf("_SpecularTint", specularTint);
+                secondPass.SetFloatIf("_AlphaClip", alphaClip);
+                secondPass.SetFloatIf("_AlphaClip2", alphaClip);
+                secondPass.SetFloatIf("_ShadowClip", shadowClip);
+                secondPass.SetFloatIf("_DepthPrepass", depthPrepass); // Mathf.Lerp(depthPrepass, 1.0f, 0.5f));
+                secondPass.SetFloatIf("_DepthPostpass", depthPostpass);
+                secondPass.SetFloatIf("_RimTransmissionIntensity", rimTransmissionIntensity);
+                secondPass.SetFloatIf("_SpecularMultiplier", specularMultiplier);
+                secondPass.SetFloatIf("_SpecularShift", specularShift);
+                secondPass.SetFloatIf("_SecondarySpecularMultiplier", secondarySpecularMultiplier);
+                secondPass.SetFloatIf("_SecondarySpecularShift", secondarySpecularShift);
+                secondPass.SetFloatIf("_SecondarySmoothness", secondarySmoothness);
             }
 
             return result;

@@ -34,9 +34,10 @@ namespace Reallusion.Import
         public string folder;                
         public ProcessingType logType = ProcessingType.None;
         public bool qualRefractiveEyes = true;
+        public bool dualMaterialHair = false;
         public bool bakeIsBaked = false;
         public bool bakeCustomShaders = true;
-        public bool bakeSeparatePrefab = true;
+        public bool bakeSeparatePrefab = true;        
         public bool isLOD = false;
 
         private BaseGeneration generation = BaseGeneration.None;
@@ -153,6 +154,9 @@ namespace Reallusion.Import
                     case "qualRefractiveEyes":
                         qualRefractiveEyes = value == "true" ? true : false;
                         break;
+                    case "dualMaterialHair":
+                        dualMaterialHair = value == "true" ? true : false;
+                        break;
                     case "bakeIsBaked":
                         bakeIsBaked = value == "true" ? true : false;
                         break;
@@ -179,6 +183,7 @@ namespace Reallusion.Import
             writer.WriteLine("generation=" + generation.ToString());
             writer.WriteLine("isLOD=" + (isLOD ? "true" : "false"));
             writer.WriteLine("qualRefractiveEyes=" + (qualRefractiveEyes ? "true" : "false"));
+            writer.WriteLine("dualMaterialHair=" + (dualMaterialHair ? "true" : "false"));
             writer.WriteLine("bakeIsBaked=" + (bakeIsBaked ? "true" : "false"));
             writer.WriteLine("bakeCustomShaders=" + (bakeCustomShaders ? "true" : "false"));
             writer.WriteLine("bakeSeparatePrefab=" + (bakeSeparatePrefab ? "true" : "false"));
