@@ -402,16 +402,22 @@ namespace Reallusion.Import
         {
 #if HDRP_10_5_0_OR_NEWER
             HDRenderPipelineAsset pipelineAsset = GraphicsSettings.renderPipelineAsset as HDRenderPipelineAsset;
+            if (!pipelineAsset) return;
+
             string assetPath = AssetDatabase.GetAssetPath(pipelineAsset);            
 
             SerializedObject hdrp = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath(assetPath)[0]);
+            if (hdrp == null) return;
             SerializedProperty list = hdrp.FindProperty("diffusionProfileSettingsList");
-            
+            if (list == null) return;
+
             SerializedProperty item;
             int index;
 
             Object skinProfileAsset = Util.FindAsset("RL_Skin_Profile");
             Object teethProfileAsset = Util.FindAsset("RL_Teeth_Profile");
+
+            if (!skinProfileAsset || !teethProfileAsset) return;
 
             bool addSkinProfile = true;
             bool addTeethProfile = true;
