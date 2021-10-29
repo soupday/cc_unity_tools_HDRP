@@ -830,10 +830,31 @@ namespace Reallusion.Import
             to.CopyPropertiesFromMaterial(from);            
         }
 
+        private static void FixHDRP2PassMaterials(Material firstPass, Material secondPass)
+        {
+            if (Pipeline.isHDRP)
+            {
+                firstPass.SetFloat("_SurfaceType", 0f);
+                firstPass.SetFloat("_ENUMCLIPQUALITY_ON", 0f);
+                Pipeline.ResetMaterial(firstPass);
+
+                secondPass.SetFloat("_SurfaceType", 1f);
+                secondPass.SetFloat("_AlphaCutoffEnable", 0f);
+                secondPass.SetFloat("_TransparentDepthPostpassEnable", 0f);
+                secondPass.SetFloat("_TransparentDepthPrepassEnable", 0f);
+                secondPass.SetFloat("_EnableBlendModePreserveSpecularLighting", 0f);
+                secondPass.SetFloat("_ZTestDepthEqualForOpaque", 2f);
+                secondPass.SetFloat("_ZTestTransparent", 2f);
+                secondPass.SetFloat("_ENUMCLIPQUALITY_ON", 0f);
+                Pipeline.ResetMaterial(secondPass);
+            }
+        }
+
         public static void Extract2PassHairMeshes(Object obj)
         {
             if (!obj) return;            
             GameObject sceneRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            if (!sceneRoot) sceneRoot = (GameObject)obj;
             GameObject fbxAsset = Util.GetRootPrefabFromObject(sceneRoot);
             GameObject prefab = Util.GetCharacterPrefab(fbxAsset);
             string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
@@ -879,7 +900,8 @@ namespace Reallusion.Import
                             // with the two material system.
                             oldMat.SetFloatIf("_AlphaClip", 0.5f);
                             oldMat.SetFloatIf("_AlphaClip2", 0.5f);
-                            oldMat.SetFloatIf("_AlphaRemap", 0.75f);
+                            oldMat.SetFloatIf("_AlphaPower", 1.0f);
+                            oldMat.SetFloatIf("_AlphaRemap", 1.0f);
                         }
 
                         if (subMeshCount > 1 && oldMat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
@@ -919,6 +941,7 @@ namespace Reallusion.Import
                             Material secondPass = new Material(secondPassTemplate);
                             CopyMaterialParameters(oldMat, firstPass);
                             CopyMaterialParameters(oldMat, secondPass);
+                            FixHDRP2PassMaterials(firstPass, secondPass);
                             // save the materials to the asset database.
                             AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
                             AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));
@@ -946,6 +969,7 @@ namespace Reallusion.Import
                             Material secondPass = new Material(secondPassTemplate);
                             CopyMaterialParameters(oldMat, firstPass);
                             CopyMaterialParameters(oldMat, secondPass);
+                            FixHDRP2PassMaterials(firstPass, secondPass);
                             // save the materials to the asset database.
                             AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
                             AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));

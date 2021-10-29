@@ -531,6 +531,23 @@ namespace Reallusion.Import
                 mat.SetColor(shaderRef, value);
         }
 
+        public static bool GetMultiPassMaterials(Material target, out Material firstPass, out Material secondPass)
+        {
+            firstPass = null;
+            secondPass = null;
+
+            string path = AssetDatabase.GetAssetPath(target);
+            string folder = Path.GetDirectoryName(path);
+            string name = Path.GetFileNameWithoutExtension(path);
+            string pass1Path = Path.Combine(folder, name + "_1st_Pass.mat");
+            string pass2Path = Path.Combine(folder, name + "_2nd_Pass.mat");
+            if (File.Exists(pass1Path)) firstPass = AssetDatabase.LoadAssetAtPath<Material>(pass1Path);
+            if (File.Exists(pass2Path)) secondPass = AssetDatabase.LoadAssetAtPath<Material>(pass2Path);
+
+            if (firstPass && secondPass) return true;
+            return false;
+        }
+
         public static void DestroyEditorChildObjects(GameObject obj)
         {
             GameObject[] children = new GameObject[obj.transform.childCount];

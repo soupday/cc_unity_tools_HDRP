@@ -46,7 +46,8 @@ namespace Reallusion.Import
         const float TOP_PADDING = 16f;
         const float ACTION_BUTTON_WIDTH = 100f;        
         const float BUTTON_HEIGHT = 30f;
-        const float FUNCTION_BUTTON_WIDTH = 100f;        
+        const float FUNCTION_BUTTON_WIDTH = 100f;
+        const float FUNCTION_BUTTON_WIDTH_MED = 64f;
         const float INFO_HEIGHT = 90f;
         const float OPTION_HEIGHT = 60f;
         const float ACTION_HEIGHT = 76f;
@@ -102,6 +103,9 @@ namespace Reallusion.Import
                 contextCharacter = GetCharacterState(guid);
                 
                 CreateTreeView(oldCharacter != contextCharacter);
+
+                if (Pipeline.isHDRP && contextCharacter.IsBuiltDualHair) characterTreeView.EnableMultiPass();
+                else characterTreeView.DisableMultiPass();
 
                 EditorPrefs.SetString("RL_Importer_Context_Path", contextCharacter.path);
             }
@@ -386,7 +390,8 @@ namespace Reallusion.Import
 
             if (false && !string.IsNullOrEmpty(backScenePath) && File.Exists(backScenePath))
             {               
-                if (GUILayout.Button("Back", GUILayout.Width(65f), GUILayout.Height(BUTTON_HEIGHT)))
+                if (GUILayout.Button(new GUIContent("Back", "Go back to the last valid scene."), 
+                    GUILayout.Width(65f), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     GoBackScene();
                 }
@@ -398,7 +403,8 @@ namespace Reallusion.Import
 
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button("Preview", GUILayout.Width(65), GUILayout.Height(BUTTON_HEIGHT)))
+            if (GUILayout.Button(new GUIContent("Preview", "View the current character in a preview scene."), 
+                GUILayout.Width(65), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 previewCharacterAfterGUI = true;
             }
@@ -407,7 +413,8 @@ namespace Reallusion.Import
 
             if (mode == Mode.multi)
             {
-                if (GUILayout.Button("Refresh", GUILayout.Width(65), GUILayout.Height(BUTTON_HEIGHT)))
+                if (GUILayout.Button(new GUIContent("Refresh", "Reload the character list, for after adding or removing characters."), 
+                    GUILayout.Width(65), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     refreshAfterGUI = true;
                 }                
@@ -452,14 +459,13 @@ namespace Reallusion.Import
                 GUILayout.EndHorizontal();
             }
 
-            if (Pipeline.isURP)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                contextCharacter.dualMaterialHair = GUILayout.Toggle(contextCharacter.dualMaterialHair, "Hair - Setup 2 Pass Material");
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
-            }
+            /*
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            contextCharacter.dualMaterialHair = GUILayout.Toggle(contextCharacter.dualMaterialHair, "Hair - Setup 2 Pass Material");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            */
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -495,26 +501,33 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Default", GUILayout.Width(ACTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
+            if (GUILayout.Button(new GUIContent("Default", "Setup materials to use the more basic default shaders."), 
+                GUILayout.Width(ACTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 Util.LogInfo("Doing: Connect Default Materials.");
                 GameObject prefab = ImportCharacter(contextCharacter, MaterialQuality.Default);
                 contextCharacter.logType = CharacterInfo.ProcessingType.Basic;
+                contextCharacter.dualMaterialHair = false;
                 contextCharacter.Write();
                 CreateTreeView(true);
+                characterTreeView.DisableMultiPass();
 
                 if (prefab)
                     Util.AddPreviewCharacter(contextCharacter.Fbx, prefab, Vector3.zero, true);
             }            
             GUILayout.FlexibleSpace();
             if (!contextCharacter.CanHaveHighQualityMaterials) GUI.enabled = false;
-            if (GUILayout.Button("High Quality", GUILayout.Width(ACTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
+            if (GUILayout.Button(new GUIContent("High Quality", "Setup materials to use the high quality shaders."),
+                GUILayout.Width(ACTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 Util.LogInfo("Doing: Connect High Quality Materials.");
                 GameObject prefab = ImportCharacter(contextCharacter, MaterialQuality.High);
                 contextCharacter.logType = CharacterInfo.ProcessingType.HighQuality;
+                contextCharacter.dualMaterialHair = false;
                 contextCharacter.Write();
                 CreateTreeView(true);
+                if (Pipeline.isHDRP && contextCharacter.IsBuiltDualHair) characterTreeView.EnableMultiPass();
+                else characterTreeView.DisableMultiPass();
 
                 if (prefab)
                     Util.AddPreviewCharacter(contextCharacter.Fbx, prefab, Vector3.zero, true);
@@ -528,7 +541,8 @@ namespace Reallusion.Import
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (contextCharacter.logType != CharacterInfo.ProcessingType.HighQuality) GUI.enabled = false;
-            if (GUILayout.Button("Bake", GUILayout.Width(FUNCTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
+            if (GUILayout.Button(new GUIContent("Bake", "Bake high quality materials down to compatible textures for the default shaders. i.e. HDRP/Lit, URP/Lut or Standard shader."),
+                GUILayout.Width(FUNCTION_BUTTON_WIDTH_MED), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 if (contextCharacter.logType == CharacterInfo.ProcessingType.HighQuality)
                 {     
@@ -549,9 +563,22 @@ namespace Reallusion.Import
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
             if (contextCharacter.logType == CharacterInfo.ProcessingType.None) GUI.enabled = false;
-            if (GUILayout.Button("Animations", GUILayout.Width(FUNCTION_BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
+            if (GUILayout.Button(new GUIContent("Anim.", "Process character animations and create a default animtor controller."),
+                GUILayout.Width(FUNCTION_BUTTON_WIDTH_MED), GUILayout.Height(BUTTON_HEIGHT)))
             {
                 RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);
+            }
+            GUI.enabled = true;
+            GUILayout.FlexibleSpace();
+            if (contextCharacter.logType != CharacterInfo.ProcessingType.HighQuality || contextCharacter.IsBuiltDualHair) GUI.enabled = false;
+            if (GUILayout.Button(new GUIContent("2 Pass", "Convert hair meshes to use two material passes. Two pass hair is generally higher quality, where the hair is first drawn opaque with alpha cutout and the remaing edges drawn in softer alpha blending, but can come at a performance cost."), 
+                GUILayout.Width(FUNCTION_BUTTON_WIDTH_MED), GUILayout.Height(BUTTON_HEIGHT)))
+            {
+                contextCharacter.dualMaterialHair = true;
+                MeshUtil.Extract2PassHairMeshes(contextCharacter.Fbx);                
+                contextCharacter.Write();
+                if (Pipeline.isHDRP && contextCharacter.IsBuiltDualHair) characterTreeView.EnableMultiPass();
+                else characterTreeView.DisableMultiPass();
             }
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
