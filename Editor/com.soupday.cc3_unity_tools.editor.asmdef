@@ -22,6 +22,11 @@
             "name": "com.unity.render-pipelines.high-definition",
             "expression": "10.5.0",
             "define": "HDRP_10_5_0_OR_NEWER"
+        },
+        {
+            "name": "com.unity.render-pipelines.high-definition",
+            "expression": "12.0.0",
+            "define": "HDRP_12_0_0_OR_NEWER"
         }
     ],
     "noEngineReferences": false

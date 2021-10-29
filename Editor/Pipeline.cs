@@ -400,11 +400,16 @@ namespace Reallusion.Import
 
         public static void AddDiffusionProfilesHDRP()
         {
-#if HDRP_10_5_0_OR_NEWER
+#if HDRP_10_5_0_OR_NEWER                        
+#if HDRP_12_0_0_OR_NEWER
+            RenderPipelineGlobalSettings pipelineSettings = GraphicsSettings.GetSettingsForRenderPipeline<HDRenderPipeline>();
+            if (!pipelineSettings) return;
+            string assetPath = AssetDatabase.GetAssetPath(pipelineSettings);
+#else
             HDRenderPipelineAsset pipelineAsset = GraphicsSettings.renderPipelineAsset as HDRenderPipelineAsset;
             if (!pipelineAsset) return;
-
-            string assetPath = AssetDatabase.GetAssetPath(pipelineAsset);            
+            string assetPath = AssetDatabase.GetAssetPath(pipelineAsset);
+#endif
 
             SerializedObject hdrp = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath(assetPath)[0]);
             if (hdrp == null) return;
