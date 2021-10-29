@@ -864,7 +864,7 @@ namespace Reallusion.Import
             string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, name);            
 
             if (!prefab) return;
-
+            
             GameObject clone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             int processCount = 0;
 
@@ -1014,11 +1014,11 @@ namespace Reallusion.Import
             }
 
             if (prefab && processCount > 0)
-            {
+            {                
                 Debug.Log("Updating character prefab...");
                 // save the clone as the prefab for this character         
                 string prefabPath = AssetDatabase.GetAssetPath(prefab);
-                prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
+                prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);                
                 UnityEngine.Object.DestroyImmediate(clone);
             }
             else
