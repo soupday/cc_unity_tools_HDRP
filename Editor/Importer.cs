@@ -184,7 +184,7 @@ namespace Reallusion.Import
             AssetDatabase.Refresh();
 
             // create prefab
-            GameObject prefab = RL.CreatePrefabFromFbx(characterInfo, fbx);            
+            GameObject prefab = RL.CreatePrefabFromFbx(characterInfo, fbx);
 
             Util.LogInfo("Done!");
 
@@ -622,7 +622,8 @@ namespace Reallusion.Import
                 matJson, "Custom Shader/Image/Transmission Map");
 
             ConnectTextureTo(sourceName, mat, "_MicroNormalMap", "MicroN",
-                matJson, "Custom Shader/Image/MicroNormal");
+                matJson, "Custom Shader/Image/MicroNormal", 
+                FLAG_NORMAL);
 
             ConnectTextureTo(sourceName, mat, "_MicroNormalMaskMap", "MicroNMask",
                 matJson, "Custom Shader/Image/MicroNormalMask");
@@ -743,7 +744,8 @@ namespace Reallusion.Import
                 matJson, "Textures/AO");
 
             ConnectTextureTo(sourceName, mat, "_MicroNormalMap", "MicroN",
-                matJson, "Custom Shader/Image/MicroNormal");
+                matJson, "Custom Shader/Image/MicroNormal",
+                FLAG_NORMAL);
 
             ConnectTextureTo(sourceName, mat, "_GumsMaskMap", "GumsMask",
                 matJson, "Custom Shader/Image/Gums Mask");
@@ -813,7 +815,8 @@ namespace Reallusion.Import
                 matJson, "Textures/AO");
 
             ConnectTextureTo(sourceName, mat, "_MicroNormalMap", "MicroN",
-                matJson, "Custom Shader/Image/MicroNormal");
+                matJson, "Custom Shader/Image/MicroNormal",
+                FLAG_NORMAL);
 
             ConnectTextureTo(sourceName, mat, "_GradientAOMap", "GradAO",
                 matJson, "Custom Shader/Image/Gradient AO");
@@ -1202,7 +1205,7 @@ namespace Reallusion.Import
                         break;
 
                     case "_DetailMap":
-                        SetTextureImport(tex, name, FLAG_FOR_BAKE);
+                        SetTextureImport(tex, name, FLAG_FOR_BAKE + FLAG_NORMAL);
                         bakedTex = baker.BakeDefaultDetailMap(tex, name);
                         bakedDetailMaps.Add(sharedMat, bakedTex);
                         break;

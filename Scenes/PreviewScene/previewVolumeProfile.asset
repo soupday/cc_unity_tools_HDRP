@@ -16,14 +16,14 @@ MonoBehaviour:
   m_AdvancedMode: 0
   indirectDiffuseLightingMultiplier:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 5
     min: 0
   indirectDiffuseLightingLayers:
     m_OverrideState: 0
     m_Value: 255
   reflectionLightingMultiplier:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 5
     min: 0
   reflectionLightingLayers:
     m_OverrideState: 0
@@ -169,7 +169,7 @@ MonoBehaviour:
     m_Value: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 1.43
+    m_Value: 1
     min: 0
     max: 4
   directLightingStrength:
@@ -336,6 +336,7 @@ MonoBehaviour:
   - {fileID: -1355376055549233226}
   - {fileID: 7677725660589811616}
   - {fileID: -5756600513109043636}
+  - {fileID: 7717845016526237137}
 --- !u!114 &4745465664678062571
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -550,6 +551,30 @@ MonoBehaviour:
     min: -180
     max: 180
   saturation:
+    m_OverrideState: 1
+    m_Value: 10
+    min: -100
+    max: 100
+--- !u!114 &7717845016526237137
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b51a78e223a2e504bb88a059b55229ea, type: 3}
+  m_Name: WhiteBalance
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  temperature:
+    m_OverrideState: 1
+    m_Value: -5
+    min: -100
+    max: 100
+  tint:
     m_OverrideState: 0
     m_Value: 0
     min: -100
