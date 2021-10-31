@@ -457,9 +457,56 @@ namespace Reallusion.Import
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            CreatePrefabFromFbx(info, fbx);
+            string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);            
+            string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
+            string prefabBakedPath = Path.Combine(prefabFolder, info.name + "_Baked.prefab");
+            string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");
+            if (File.Exists(animatorControllerPath))
+            {
+                if (File.Exists(prefabPath))
+                {
+                    GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                    GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
 
-            //System.Media.SystemSounds.Asterisk.Play();
+                    // Apply Animator:
+                    if (!clone.GetComponent<Animator>().runtimeAnimatorController)
+                    {                        
+                        clone.GetComponent<Animator>().runtimeAnimatorController =
+                                AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(animatorControllerPath);
+
+                        clone.GetComponent<Animator>().applyRootMotion = true;
+                        clone.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+
+                        PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
+                    }
+
+                    UnityEngine.Object.DestroyImmediate(clone);                    
+                }
+                else
+                {
+                    CreatePrefabFromFbx(info, fbx);
+                }
+
+                if (File.Exists(prefabBakedPath))
+                {
+                    GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabBakedPath);
+                    GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+
+                    // Apply Animator:
+                    if (!clone.GetComponent<Animator>().runtimeAnimatorController)
+                    {
+                        clone.GetComponent<Animator>().runtimeAnimatorController =
+                                AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(animatorControllerPath);
+
+                        clone.GetComponent<Animator>().applyRootMotion = true;
+                        clone.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+
+                        PrefabUtility.SaveAsPrefabAsset(clone, prefabBakedPath);
+                    }                    
+
+                    UnityEngine.Object.DestroyImmediate(clone);
+                }
+            }            
         }
 
         public static GameObject CreatePrefabFromFbx(CharacterInfo info, GameObject fbx)

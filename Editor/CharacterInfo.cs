@@ -33,11 +33,18 @@ namespace Reallusion.Import
         public string name;
         public string folder;                
         public ProcessingType logType = ProcessingType.None;
-        public bool qualRefractiveEyes = true;
-        public bool bakeIsBaked = false;
-        public bool bakeCustomShaders = true;
-        public bool bakeSeparatePrefab = true;
         public bool isLOD = false;
+        public bool bakeIsBaked = false;
+
+        public bool qualRefractiveEyes = true;
+        public bool dualMaterialHair = false;        
+        public bool bakeCustomShaders = true;
+        public bool bakeSeparatePrefab = true;        
+        
+        private bool _qualRefractiveEyes = true;
+        private bool _dualMaterialHair = false;
+        private bool _bakeCustomShaders = true;
+        private bool _bakeSeparatePrefab = true;        
 
         private BaseGeneration generation = BaseGeneration.None;
         private GameObject fbx;
@@ -57,6 +64,19 @@ namespace Reallusion.Import
                 Read();
             else
                 Write();
+        }
+
+        public void ApplySettings()
+        {
+            _qualRefractiveEyes = qualRefractiveEyes;
+            _dualMaterialHair = dualMaterialHair;
+            _bakeCustomShaders = bakeCustomShaders;
+            _bakeSeparatePrefab = bakeSeparatePrefab;
+        }
+
+        public bool IsBuiltDualHair
+        {
+            get { return _dualMaterialHair; }
         }
 
         public GameObject Fbx
@@ -151,16 +171,23 @@ namespace Reallusion.Import
                         else logType = ProcessingType.None;
                         break;
                     case "qualRefractiveEyes":
-                        qualRefractiveEyes = value == "true" ? true : false;
+                        _qualRefractiveEyes = value == "true" ? true : false;
+                        qualRefractiveEyes = _qualRefractiveEyes;
+                        break;
+                    case "dualMaterialHair":
+                        _dualMaterialHair = value == "true" ? true : false;
+                        dualMaterialHair = _dualMaterialHair;
                         break;
                     case "bakeIsBaked":
-                        bakeIsBaked = value == "true" ? true : false;
+                        bakeIsBaked = value == "true" ? true : false;                        
                         break;
                     case "bakeCustomShaders":
-                        bakeCustomShaders = value == "true" ? true : false;
+                        _bakeCustomShaders = value == "true" ? true : false;
+                        bakeCustomShaders = _bakeCustomShaders;
                         break;
                     case "bakeSeparatePrefab":
-                        bakeSeparatePrefab = value == "true" ? true : false;
+                        _bakeSeparatePrefab = value == "true" ? true : false;
+                        bakeSeparatePrefab = _bakeSeparatePrefab;
                         break;
                     case "generation":
                         generation = (BaseGeneration)System.Enum.Parse(typeof(BaseGeneration), value);
@@ -174,14 +201,16 @@ namespace Reallusion.Import
 
         public void Write()
         {
+            ApplySettings();
             StreamWriter writer = new StreamWriter(infoPath, false);
             writer.WriteLine("logType=" + logType.ToString());
             writer.WriteLine("generation=" + generation.ToString());
             writer.WriteLine("isLOD=" + (isLOD ? "true" : "false"));
-            writer.WriteLine("qualRefractiveEyes=" + (qualRefractiveEyes ? "true" : "false"));
+            writer.WriteLine("qualRefractiveEyes=" + (_qualRefractiveEyes ? "true" : "false"));
+            writer.WriteLine("dualMaterialHair=" + (_dualMaterialHair ? "true" : "false"));
             writer.WriteLine("bakeIsBaked=" + (bakeIsBaked ? "true" : "false"));
-            writer.WriteLine("bakeCustomShaders=" + (bakeCustomShaders ? "true" : "false"));
-            writer.WriteLine("bakeSeparatePrefab=" + (bakeSeparatePrefab ? "true" : "false"));
+            writer.WriteLine("bakeCustomShaders=" + (_bakeCustomShaders ? "true" : "false"));
+            writer.WriteLine("bakeSeparatePrefab=" + (_bakeSeparatePrefab ? "true" : "false"));
             writer.Close();
             AssetDatabase.ImportAsset(infoPath);            
         }

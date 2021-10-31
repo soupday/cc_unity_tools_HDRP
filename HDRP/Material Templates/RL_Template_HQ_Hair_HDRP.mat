@@ -81,8 +81,8 @@ Material:
     - _AlphaClip: 0.2
     - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 10
-    - _AlphaPower: 0.8
-    - _AlphaRemap: 0.5
+    - _AlphaPower: 1
+    - _AlphaRemap: 1
     - _AlphaSrcBlend: 1
     - _AlphaToMask: 1
     - _AlphaToMaskInspectorValue: 1
@@ -93,7 +93,7 @@ Material:
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
     - _DepthPostpass: 0.2
-    - _DepthPrepass: 0.9
+    - _DepthPrepass: 0.95
     - _DiffuseStrength: 1
     - _DoubleSidedEnable: 1
     - _DoubleSidedNormalMode: 0

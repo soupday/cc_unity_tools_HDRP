@@ -29,36 +29,6 @@ namespace Reallusion.Import
     {
         public static int LOG_LEVEL = 0;
 
-        public static bool iEquals(this string a, string b)
-        {
-            return a.Equals(b, System.StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        public static bool iContains(this string a, string b)
-        {
-            return a.ToLowerInvariant().Contains(b.ToLowerInvariant());
-        }
-
-        public static bool iStartsWith(this string a, string b)
-        {
-            return a.StartsWith(b, System.StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        public static bool iEndsWith(this string a, string b)
-        {
-            return a.EndsWith(b, System.StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        public static void SetRemapRange(this Material mat, string shaderRef, float from, float to)
-        {
-            Color range;
-            range.r = from;
-            range.g = to;
-            range.b = 0f;
-            range.a = 0f;
-            mat.SetColor(shaderRef, range);
-        }
-
         public static bool ImportCharacter(CharacterInfo info, MaterialQuality quality)
         {
             Importer importCharacter = new Importer(info);
@@ -295,7 +265,7 @@ namespace Reallusion.Import
                 ComputeShader shader = AssetDatabase.LoadAssetAtPath<ComputeShader>(path);
                 if (shader != null)
                 {
-                    if (shader.name.EndsWith(name, System.StringComparison.InvariantCultureIgnoreCase))
+                    if (shader.name.iEquals(name))
                     {
                         return shader;
                     }
@@ -317,7 +287,7 @@ namespace Reallusion.Import
                 Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (mat)
                 {
-                    if (mat.name.EndsWith(name, System.StringComparison.InvariantCultureIgnoreCase))
+                    if (mat.name.iEquals(name))
                     {
                         return mat;
                     }
@@ -337,7 +307,7 @@ namespace Reallusion.Import
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 string texName = Path.GetFileNameWithoutExtension(assetPath);
-                if (texName.EndsWith(search, System.StringComparison.CurrentCultureIgnoreCase))
+                if (texName.iEquals(search))
                 {
                     return AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
                 }
@@ -356,13 +326,23 @@ namespace Reallusion.Import
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 string assetName = Path.GetFileNameWithoutExtension(assetPath);
-                if (assetName.EndsWith(search, System.StringComparison.CurrentCultureIgnoreCase))
+                if (assetName.iEquals(search))
                 {
                     return AssetDatabase.LoadAssetAtPath<Object>(assetPath);
                 }
             }
 
             return null;
+        }
+
+        public static string CombineJsonTexPath(string fbxPath, string jsonTexPath)
+        {
+            // remove any ./ prefix from the json path
+            if (jsonTexPath.iStartsWith("./"))
+                jsonTexPath = jsonTexPath.Substring(2);
+            // convert slashes to backslashes
+            jsonTexPath = jsonTexPath.Replace("/", "\\");
+            return Path.Combine(fbxPath, jsonTexPath);            
         }
 
         public static GameObject FindPreviewScenePrefab()
@@ -464,23 +444,41 @@ namespace Reallusion.Import
 
         public static int GetLinkedMaterialIndex(string sourceName, string shaderName)
         {
+            // identify linked materials by shader name:
             if ((shaderName.iContains(Pipeline.SHADER_HQ_HEAD) || 
                  shaderName.iContains(Pipeline.SHADER_HQ_SKIN)) && 
-                !sourceName.iContains("Std_Nails")) return 0;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) || 
-                shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return 1;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION)) return 2;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_TEARLINE)) return 3;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH)) return 4;
-            if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR)) return 5;
+                !sourceName.iContains("Std_Nails")) return CharacterTreeView.LINKED_INDEX_SKIN;
+            if (Pipeline.GetRenderPipeline() == RenderPipeline.HDRP)
+            {
+                if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) ||
+                    shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;                
+            }
+            else
+            {
+                // Eye is PBR in URP and Built-in                
+                if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;
+            }
+            if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION)) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
+            if (shaderName.iContains(Pipeline.SHADER_HQ_TEARLINE)) return CharacterTreeView.LINKED_INDEX_TEARLINE;
+            if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH)) return CharacterTreeView.LINKED_INDEX_TEETH;
+            if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR)) return CharacterTreeView.LINKED_INDEX_HAIR;
 
+            // then try by source material name:
             if (sourceName.iContains("Std_Skin_Head") || sourceName.iContains("Std_Skin_Body") ||
                 sourceName.iContains("Std_Skin_Arm") || sourceName.iContains("Std_Skin_Leg"))
-                return 0;            
-            if (sourceName.iContains("Std_Eye_Occlusion_")) return 2;
-            if (sourceName.iContains("Std_Tearline_")) return 3;
-            if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return 1;
-            if (sourceName.iContains("Std_Upper_Teeth") || sourceName.iContains("Std_Lower_Teeth")) return 4;
+                return CharacterTreeView.LINKED_INDEX_SKIN;            
+            if (sourceName.iContains("Std_Eye_Occlusion_")) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
+            if (sourceName.iContains("Std_Tearline_")) return CharacterTreeView.LINKED_INDEX_TEARLINE;
+            if (Pipeline.GetRenderPipeline() == RenderPipeline.HDRP)
+            {
+                if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;
+            }
+            else
+            {                
+                if (sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;
+            }
+            if (sourceName.iContains("Std_Upper_Teeth") || sourceName.iContains("Std_Lower_Teeth")) return CharacterTreeView.LINKED_INDEX_TEETH;
+
             return -1;
         }
 
@@ -533,6 +531,23 @@ namespace Reallusion.Import
                 mat.SetColor(shaderRef, value);
         }
 
+        public static bool GetMultiPassMaterials(Material target, out Material firstPass, out Material secondPass)
+        {
+            firstPass = null;
+            secondPass = null;
+
+            string path = AssetDatabase.GetAssetPath(target);
+            string folder = Path.GetDirectoryName(path);
+            string name = Path.GetFileNameWithoutExtension(path);
+            string pass1Path = Path.Combine(folder, name + "_1st_Pass.mat");
+            string pass2Path = Path.Combine(folder, name + "_2nd_Pass.mat");
+            if (File.Exists(pass1Path)) firstPass = AssetDatabase.LoadAssetAtPath<Material>(pass1Path);
+            if (File.Exists(pass2Path)) secondPass = AssetDatabase.LoadAssetAtPath<Material>(pass2Path);
+
+            if (firstPass && secondPass) return true;
+            return false;
+        }
+
         public static void DestroyEditorChildObjects(GameObject obj)
         {
             GameObject[] children = new GameObject[obj.transform.childCount];
@@ -552,6 +567,8 @@ namespace Reallusion.Import
         {
             if (!character) return;
 
+            GameObject prefab = GetCharacterPrefab(character);
+
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;            
                         
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
@@ -561,7 +578,7 @@ namespace Reallusion.Import
             {
                 DestroyEditorChildObjects(container);
 
-                GameObject clone = PrefabUtility.InstantiatePrefab(character, container.transform) as GameObject;
+                GameObject clone = PrefabUtility.InstantiatePrefab(prefab ? prefab : character, container.transform) as GameObject;
                 if (clone)
                 {
                     Selection.activeGameObject = clone;
@@ -579,7 +596,7 @@ namespace Reallusion.Import
                 for (int i = 0; i < container.transform.childCount; i++)
                 {
                     GameObject child = container.transform.GetChild(i).gameObject;
-                    GameObject source = GetPrefabFromObject(child);
+                    GameObject source = GetSourcePrefabFromObject(child);
                     if (source == prefab)
                     {
                         Debug.Log("Keeping existing generated prefab...");
@@ -616,9 +633,21 @@ namespace Reallusion.Import
                     }
                 }                
             }
-        }                  
+        }      
+        
+        public static GameObject GetCharacterPrefab(GameObject fbx)
+        { 
+            string path = AssetDatabase.GetAssetPath(fbx);
+            if (path.iEndsWith(".prefab")) return fbx;
+            string folder = Path.GetDirectoryName(path);
+            string name = Path.GetFileNameWithoutExtension(path);
+            string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + ".prefab");
+            if (File.Exists(prefabPath))
+                return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            return null;
+        }        
 
-        public static GameObject GetPrefabFromObject(Object obj)
+        public static GameObject GetSourcePrefabFromObject(Object obj)
         {            
             Object source = PrefabUtility.GetCorrespondingObjectFromSource(obj);
             if (source)
@@ -643,7 +672,7 @@ namespace Reallusion.Import
 
         public static GameObject GetRootPrefabFromObject(GameObject obj)
         {            
-            GameObject prefab = GetPrefabFromObject(obj);
+            GameObject prefab = GetSourcePrefabFromObject(obj);
 
             if (prefab)
             {

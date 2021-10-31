@@ -1,6 +1,25 @@
 Changelog
 =========
 
+### v 0.2.0
+- Fix to eye occlusion compute bake shader.
+- Adusted eye shader corner shadow gradient.
+- Teeth, Tongue & Eye micro normals maps correctly set to normal maps.
+- **2021.2**
+    - 2021.2 uses HDRP pipeline 12.0.0, which has some incompatibilities with previous versions:
+    - Fix to correctly add diffusion profiles in HDRP 12.0.0.
+    - Updates to hair shaders to correctly apply depth pre-pass and post-pass.
+- **Built-in Pipeline**
+    - Added emission to the Built-in high quality and baked shaders.
+    - Removed post processing settings from the preview scene, as they caused errors in later versions.
+
+### v 0.1.9
+- **URP & Built-in Pipelines**
+    - Added shaders and materials to use the build-in and Universal render pipeline.
+- **Code base**
+    - Bake shaders and materials updated to support Standard shader and URP/Lit shader.
+    - Fixes to material setup texture discovery.
+
 ### v 0.1.8b
 - Fix to baking functions with missing textures.
 

@@ -31,6 +31,16 @@ namespace Reallusion.Import
         public List<int>[] linkedIndices;
         public bool selectLinked = true;
         public IList<int> selectedIndices;
+        private bool enableMultiPassMaterials;
+
+        public const int NUM_LINKED_INDICES = 7;
+        public const int LINKED_INDEX_SKIN = 0;
+        public const int LINKED_INDEX_CORNEA = 1;
+        public const int LINKED_INDEX_EYE_OCCLUSION = 2;
+        public const int LINKED_INDEX_TEARLINE = 3;
+        public const int LINKED_INDEX_TEETH = 4;
+        public const int LINKED_INDEX_HAIR = 5;
+        public const int LINKED_INDEX_EYE_URP = 6;
 
         public CharacterTreeView(TreeViewState treeViewState, GameObject obj) : base(treeViewState)
         {
@@ -53,8 +63,8 @@ namespace Reallusion.Import
 
             var allItems = new List<TreeViewItem>();
 
-            linkedIndices = new List<int>[6];
-            for (int i = 0; i < 6; i++)
+            linkedIndices = new List<int>[NUM_LINKED_INDICES];
+            for (int i = 0; i < linkedIndices.Length; i++)
                 linkedIndices[i] = new List<int>();            
 
             mDepth = 0;//base level        
@@ -124,6 +134,19 @@ namespace Reallusion.Import
             }
         }
 
+        public void EnableMultiPass()
+        {
+            if (Pipeline.isHDRP)
+                enableMultiPassMaterials = true;
+            else
+                enableMultiPassMaterials = false;
+        }
+
+        public void DisableMultiPass()
+        {
+            enableMultiPassMaterials = false;
+        }
+
         public void ClearSelection()
         {
             IList<int> list = new int[] { 0 };
@@ -144,29 +167,60 @@ namespace Reallusion.Import
             }
         }
 
+        private bool TrySelectMultiPassMaterial(int index, List<Object> selectedObjects)
+        {
+            if (enableMultiPassMaterials)
+            {
+                if (objList[index].GetType() == typeof(Material))
+                {
+                    Material m = objList[index] as Material;
+                    if (m && m.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                    {
+                        if (Util.GetMultiPassMaterials(m, out Material firstPass, out Material secondPass))
+                        {
+                            selectedObjects.Add(firstPass);
+                            selectedObjects.Add(secondPass);
+                            return true;
+                        }                 
+                    }
+                }                
+            }
+            return false;
+        }
+
         protected override void SelectionChanged(IList<int> selectedIds)
         {
             if (selectedIds.Count == 1)
-            {
+            {                
                 SelectLinked(selectedIds[0]);
             }
 
             if (HasSelection())
-            {
+            {                
                 selectedIndices = GetSelection();
+                List<Object> selectedObjects = new List<Object>(selectedIndices.Count);
                 if (selectedIndices.Count > 1)
-                {
-                    UnityEngine.Object[] selectedObjects = new UnityEngine.Object[selectedIndices.Count];
-                    int num = 0;
+                {                    
                     foreach (int i in selectedIndices)
                     {
-                        selectedObjects[num++] = objList[i];
+                        if (!TrySelectMultiPassMaterial(i, selectedObjects))
+                        {
+                            selectedObjects.Add(objList[i]);
+                        }
                     }
-                    Selection.objects = selectedObjects;
+                    Selection.objects = selectedObjects.ToArray();
                 }
                 else
                 {
-                    Selection.activeObject = objList[selectedIndices[0]];
+                    int i = selectedIndices[0];
+                    if (TrySelectMultiPassMaterial(i, selectedObjects))
+                    {
+                        Selection.objects = selectedObjects.ToArray();
+                    }
+                    else
+                    {
+                        Selection.activeObject = objList[i];
+                    }
                 }
             }
         }

@@ -7,9 +7,6 @@
             "m_Id": "cb42572a46a74a588ef3935f3a667eb7"
         },
         {
-            "m_Id": "028c7c4762f843e5818661e89e339595"
-        },
-        {
             "m_Id": "4ef79e9b5e3e473abf150852f1ee2eaa"
         },
         {
@@ -3300,28 +3297,28 @@
                 "m_Id": "bc0c9bafa3544deaaba658da5d1457a2"
             },
             {
-                "m_Id": "6b280d605cf34b63ae417129545c2f7d"
+                "m_Id": "08c1176d7dfe406bb0f6283ca763d553"
             },
             {
                 "m_Id": "fce699c8ebf3428887ef6a715d55d4f9"
             },
             {
-                "m_Id": "08c1176d7dfe406bb0f6283ca763d553"
+                "m_Id": "6b280d605cf34b63ae417129545c2f7d"
             },
             {
                 "m_Id": "e701720035d44304a33f4b64350fc6e3"
             },
             {
-                "m_Id": "273f61f0afd2438d95da7144e127460e"
+                "m_Id": "6a4b619cae09428e850340b327dc2247"
             },
             {
                 "m_Id": "9f2e5d9fd18c4aa5af7842cc348626ab"
             },
             {
-                "m_Id": "8d0e91598db04dc39429e4727f60af22"
+                "m_Id": "273f61f0afd2438d95da7144e127460e"
             },
             {
-                "m_Id": "6a4b619cae09428e850340b327dc2247"
+                "m_Id": "8d0e91598db04dc39429e4727f60af22"
             }
         ]
     },
@@ -3521,29 +3518,6 @@
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
     "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Internal.Texture2DShaderProperty",
-    "m_ObjectId": "028c7c4762f843e5818661e89e339595",
-    "m_Guid": {
-        "m_GuidSerialized": "fe28c848-a268-4f7b-88d8-5706f970fabb"
-    },
-    "m_Name": "Occlusion Map",
-    "m_DefaultReferenceName": "",
-    "m_OverrideReferenceName": "_AOMap",
-    "m_GeneratePropertyBlock": true,
-    "m_Precision": 0,
-    "overrideHLSLDeclaration": false,
-    "hlslDeclarationOverride": 0,
-    "m_Hidden": false,
-    "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
-        "m_Guid": ""
-    },
-    "m_Modifiable": true,
-    "m_DefaultType": 0
 }
 
 {
@@ -4388,7 +4362,7 @@
     "m_FloatType": 1,
     "m_RangeValues": {
         "x": 0.0,
-        "y": 1.0
+        "y": 2.0
     }
 }
 
@@ -8056,7 +8030,7 @@
     "m_Value": 2.5,
     "m_FloatType": 1,
     "m_RangeValues": {
-        "x": 0.0,
+        "x": 0.10000000149011612,
         "y": 5.0
     }
 }
@@ -9460,7 +9434,7 @@
     "m_Value": 2.5,
     "m_FloatType": 1,
     "m_RangeValues": {
-        "x": 0.0,
+        "x": 0.10000000149011612,
         "y": 5.0
     }
 }
@@ -16772,7 +16746,7 @@
     "m_FloatType": 1,
     "m_RangeValues": {
         "x": 0.0,
-        "y": 1.0
+        "y": 2.0
     }
 }
 
@@ -17215,7 +17189,7 @@
     "m_FloatType": 1,
     "m_RangeValues": {
         "x": 0.0,
-        "y": 1.0
+        "y": 2.0
     }
 }
 
@@ -17912,7 +17886,7 @@
     "m_Value": 2.5,
     "m_FloatType": 1,
     "m_RangeValues": {
-        "x": 0.0,
+        "x": 0.10000000149011612,
         "y": 5.0
     }
 }
