@@ -59,8 +59,3 @@ Changelog
 
 ### v 0.1.0
 - Initial release.
-
-### TODO
-- Tiling and offset when baking textures?...
-- Refresh button on tools window.
-- Back button in the import window.
