@@ -266,8 +266,8 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_HEAD = "RL_Template_Default_Skin_3D";
         public const string MATERIAL_DEFAULT_CORNEA = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_DEFAULT_EYE = "RL_Template_Default_Opaque_3D";
-        public const string MATERIAL_DEFAULT_EYE_OCCLUSION = "RL_Template_EyeOcclusion_3D";
-        public const string MATERIAL_DEFAULT_TEARLINE = "RL_Template_Tearline_3D";
+        public const string MATERIAL_DEFAULT_EYE_OCCLUSION = "RL_Template_Default_EyeOcclusion_3D";
+        public const string MATERIAL_DEFAULT_TEARLINE = "RL_Template_Default_Tearline_3D";
         public const string MATERIAL_DEFAULT_HAIR = "RL_Template_Default_Hair_3D";
         public const string MATERIAL_DEFAULT_SCALPBASE = "RL_Template_Default_ScalpBase_3D";
         public const string MATERIAL_DEFAULT_EYELASH = "RL_Template_Default_Eyelash_3D";

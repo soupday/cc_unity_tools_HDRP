@@ -1517,7 +1517,7 @@ namespace Reallusion.Import
         {
             Vector2Int maxSize = GetMaxSize(microNormal);
             ComputeBakeTexture bakeTarget =
-                new ComputeBakeTexture(maxSize, texturesFolder, name, Importer.FLAG_NORMAL);
+                new ComputeBakeTexture(maxSize, texturesFolder, name);
 
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)

@@ -165,7 +165,7 @@ namespace Reallusion.Import
             }
 
             // before we do anything else, if we are connecting default materials we need to bake a few maps first...
-            if (quality == MaterialQuality.Default)
+            if (quality == MaterialQuality.Default && Pipeline.isHDRP)
             {
                 CacheBakedMaps();
             }
@@ -1205,7 +1205,7 @@ namespace Reallusion.Import
                         break;
 
                     case "_DetailMap":
-                        SetTextureImport(tex, name, FLAG_FOR_BAKE + FLAG_NORMAL);
+                        SetTextureImport(tex, name, FLAG_FOR_BAKE);
                         bakedTex = baker.BakeDefaultDetailMap(tex, name);
                         bakedDetailMaps.Add(sharedMat, bakedTex);
                         break;
