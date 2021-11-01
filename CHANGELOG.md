@@ -1,6 +1,11 @@
 Changelog
 =========
 
+### v 0.2.1
+- Fix to 2-Pass mesh extraction crashing when no vertex colors were present.
+- Fix to Bump maps being incorrectly detected during material setups.
+- Added normal strength calculations to built-in hair shaders.
+
 ### v 0.2.0
 - Fix to eye occlusion compute bake shader.
 - Adusted eye shader corner shadow gradient.
