@@ -1223,11 +1223,11 @@ namespace Reallusion.Import
             {             
                 // try to load the texture asset directly from the json path.
                 tex = AssetDatabase.LoadAssetAtPath<Texture2D>(Util.CombineJsonTexPath(fbxFolder, jsonTexturePath));
+                name = Path.GetFileNameWithoutExtension(jsonTexturePath);
 
                 // if that fails, try to find the texture by name in the texture folders.
                 if (!tex)
-                {
-                    name = Path.GetFileNameWithoutExtension(jsonTexturePath);
+                {                    
                     tex = Util.FindTexture(textureFolders.ToArray(), name);
                 }
             }

@@ -1,10 +1,17 @@
 Changelog
 =========
 
+### v 0.2.1
+- Fix to 2-Pass mesh extraction crashing when no vertex colors were present.
+- Fix to Bump maps being incorrectly detected during material setups.
+- Added normal strength calculations to built-in hair shaders.
+
 ### v 0.2.0
 - Fix to eye occlusion compute bake shader.
 - Adusted eye shader corner shadow gradient.
 - Teeth, Tongue & Eye micro normals maps correctly set to normal maps.
+- Added two pass hair material system, whereby all hair submeshes are extracted into single meshes and multiple materials can by applied to each hair mesh.
+  Thus creating a two (or more) pass rendering system for hair that is fully compliant with SRP batching.
 - **2021.2**
     - 2021.2 uses HDRP pipeline 12.0.0, which has some incompatibilities with previous versions:
     - Fix to correctly add diffusion profiles in HDRP 12.0.0.
@@ -59,8 +66,3 @@ Changelog
 
 ### v 0.1.0
 - Initial release.
-
-### TODO
-- Tiling and offset when baking textures?...
-- Refresh button on tools window.
-- Back button in the import window.
