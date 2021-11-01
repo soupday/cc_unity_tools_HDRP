@@ -1,10 +1,10 @@
 {
   "name": "com.soupday.cc3_unity_tools",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "displayName": "CC3 Unity Tools",
   "description": "This is a prototype of the Unity importer for Character Creator 3/iClone 7",
-  "unity": "2020.3",
-  "unityRelease": "4f1",
+  "unity": "2021.2",
+  "unityRelease": "0f1",
   "documentationUrl": "https://soupday.github.io/cc3_unity_tools/index.html",
   "changelogUrl": "https://github.com/soupday/CHANGELOG.md",
   "licensesUrl": "https://github.com/soupday/cc3_unity_tools/blob/stable/LICENSE",
@@ -20,6 +20,6 @@
   },
   "type": "tool",
   "dependencies": {
-    "com.unity.render-pipelines.high-definition": "10.5.0"
+    "com.unity.render-pipelines.high-definition": "12.0.0"
   }
 }
