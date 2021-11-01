@@ -152,7 +152,19 @@ namespace Reallusion.Import
                         importer.textureCompression = TextureImporterCompression.Uncompressed;
                         importer.compressionQuality = 0;
                         importer.maxTextureSize = 4096;
-                        if (isNormal) importer.textureType = TextureImporterType.NormalMap;
+                        if (isNormal)
+                        {
+                            importer.textureType = TextureImporterType.NormalMap;
+
+                            string texPath = AssetDatabase.GetAssetPath(tex);
+                            string texName = Path.GetFileNameWithoutExtension(texPath);
+                            if (texName.iEndsWith("Bump"))
+                            {
+                                importer.convertToNormalmap = true;
+                                importer.heightmapScale = 0.025f;
+                                importer.normalmapFilter = TextureImporterNormalFilter.Standard;
+                            }
+                        }
                         else importer.textureType = TextureImporterType.Default;
                         importer.SaveAndReimport();
                     }
