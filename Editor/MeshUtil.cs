@@ -550,7 +550,7 @@ namespace Reallusion.Import
             // now create the extracted mesh
             Mesh newMesh = new Mesh();
             Vector3[] vertices = new Vector3[numNewVerts];
-            Vector2[] uv = new Vector2[numNewVerts];
+            Vector2[] uv = new Vector2[srcUv.Length > 0 ? numNewVerts : 0];
             Vector2[] uv2 = new Vector2[srcUv2.Length > 0 ? numNewVerts : 0];
             Vector2[] uv3 = new Vector2[srcUv3.Length > 0 ? numNewVerts : 0];
             Vector2[] uv4 = new Vector2[srcUv4.Length > 0 ? numNewVerts : 0];
@@ -558,10 +558,10 @@ namespace Reallusion.Import
             Vector2[] uv6 = new Vector2[srcUv6.Length > 0 ? numNewVerts : 0];
             Vector2[] uv7 = new Vector2[srcUv7.Length > 0 ? numNewVerts : 0];
             Vector2[] uv8 = new Vector2[srcUv8.Length > 0 ? numNewVerts : 0];
-            Vector3[] normals = new Vector3[numNewVerts];
-            Color[] colors = new Color[numNewVerts];
-            BoneWeight[] boneWeights = new BoneWeight[numNewVerts];
-            Vector4[] tangents = new Vector4[numNewVerts];            
+            Vector3[] normals = new Vector3[srcNormals.Length > 0 ? numNewVerts : 0];
+            Color[] colors = new Color[srcColors.Length > 0 ? numNewVerts : 0];
+            BoneWeight[] boneWeights = new BoneWeight[srcBoneWeights.Length > 0 ? numNewVerts : 0];
+            Vector4[] tangents = new Vector4[srcTangents.Length > 0 ? numNewVerts : 0];            
             // copy and remap all the submesh vert data into the new mesh
             for (int vertIndex = 0; vertIndex < maxVerts; vertIndex++)
             {                
@@ -569,7 +569,8 @@ namespace Reallusion.Import
                 if (remappedIndex >= 0)
                 {
                     vertices[remappedIndex] = srcVertices[vertIndex];
-                    uv[remappedIndex] = srcUv[vertIndex];
+                    if (srcUv.Length > 0)
+                        uv[remappedIndex] = srcUv[vertIndex];
                     if (srcUv2.Length > 0)
                         uv2[remappedIndex] = srcUv2[vertIndex];
                     if (srcUv3.Length > 0)
@@ -584,10 +585,14 @@ namespace Reallusion.Import
                         uv7[remappedIndex] = srcUv7[vertIndex];
                     if (srcUv8.Length > 0)
                         uv8[remappedIndex] = srcUv8[vertIndex];
-                    normals[remappedIndex] = srcNormals[vertIndex];
-                    colors[remappedIndex] = srcColors[vertIndex];
-                    boneWeights[remappedIndex] = srcBoneWeights[vertIndex];
-                    tangents[remappedIndex] = srcTangents[vertIndex];
+                    if (srcNormals.Length >0)
+                        normals[remappedIndex] = srcNormals[vertIndex];
+                    if (srcColors.Length > 0)
+                        colors[remappedIndex] = srcColors[vertIndex];
+                    if (srcBoneWeights.Length > 0)
+                        boneWeights[remappedIndex] = srcBoneWeights[vertIndex];
+                    if (srcBoneWeights.Length > 0)
+                        tangents[remappedIndex] = srcTangents[vertIndex];
                 }
             }            
             newMesh.vertices = vertices;
@@ -707,7 +712,7 @@ namespace Reallusion.Import
             // now create the extracted mesh
             Mesh newMesh = new Mesh();
             Vector3[] vertices = new Vector3[numNewVerts];
-            Vector2[] uv = new Vector2[numNewVerts];
+            Vector2[] uv = new Vector2[srcUv.Length > 0 ? numNewVerts : 0];
             Vector2[] uv2 = new Vector2[srcUv2.Length > 0 ? numNewVerts : 0];
             Vector2[] uv3 = new Vector2[srcUv3.Length > 0 ? numNewVerts : 0];
             Vector2[] uv4 = new Vector2[srcUv4.Length > 0 ? numNewVerts : 0];
@@ -715,10 +720,10 @@ namespace Reallusion.Import
             Vector2[] uv6 = new Vector2[srcUv6.Length > 0 ? numNewVerts : 0];
             Vector2[] uv7 = new Vector2[srcUv7.Length > 0 ? numNewVerts : 0];
             Vector2[] uv8 = new Vector2[srcUv8.Length > 0 ? numNewVerts : 0];
-            Vector3[] normals = new Vector3[numNewVerts];
-            Color[] colors = new Color[numNewVerts];
-            BoneWeight[] boneWeights = new BoneWeight[numNewVerts];
-            Vector4[] tangents = new Vector4[numNewVerts];
+            Vector3[] normals = new Vector3[srcNormals.Length > 0 ? numNewVerts : 0];
+            Color[] colors = new Color[srcColors.Length > 0 ? numNewVerts : 0];
+            BoneWeight[] boneWeights = new BoneWeight[srcBoneWeights.Length > 0 ? numNewVerts : 0];
+            Vector4[] tangents = new Vector4[srcTangents.Length > 0 ? numNewVerts : 0];            
             // copy and remap all the submesh vert data into the new mesh
             for (int vertIndex = 0; vertIndex < maxVerts; vertIndex++)
             {
@@ -726,7 +731,8 @@ namespace Reallusion.Import
                 if (remappedIndex >= 0)
                 {
                     vertices[remappedIndex] = srcVertices[vertIndex];
-                    uv[remappedIndex] = srcUv[vertIndex];
+                    if (srcUv.Length > 0)
+                        uv[remappedIndex] = srcUv[vertIndex];
                     if (srcUv2.Length > 0)
                         uv2[remappedIndex] = srcUv2[vertIndex];
                     if (srcUv3.Length > 0)
@@ -741,10 +747,14 @@ namespace Reallusion.Import
                         uv7[remappedIndex] = srcUv7[vertIndex];
                     if (srcUv8.Length > 0)
                         uv8[remappedIndex] = srcUv8[vertIndex];
-                    normals[remappedIndex] = srcNormals[vertIndex];
-                    colors[remappedIndex] = srcColors[vertIndex];
-                    boneWeights[remappedIndex] = srcBoneWeights[vertIndex];
-                    tangents[remappedIndex] = srcTangents[vertIndex];
+                    if (srcNormals.Length >0)
+                        normals[remappedIndex] = srcNormals[vertIndex];
+                    if (srcColors.Length > 0)
+                        colors[remappedIndex] = srcColors[vertIndex];
+                    if (srcBoneWeights.Length > 0)
+                        boneWeights[remappedIndex] = srcBoneWeights[vertIndex];
+                    if (srcBoneWeights.Length > 0)
+                        tangents[remappedIndex] = srcTangents[vertIndex];
                 }
             }
             newMesh.vertices = vertices;
