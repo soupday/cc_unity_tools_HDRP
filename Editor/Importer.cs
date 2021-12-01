@@ -672,7 +672,7 @@ namespace Reallusion.Import
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
                 float smoothnessMax = Util.CombineSpecularToSmoothness(specular, 1.0f);                
                 mat.SetFloat("_SmoothnessMax", smoothnessMax);                
-                mat.SetFloat("_SubsurfaceScale", matJson.GetFloatValue("Custom Shader/Variable/Unmasked Scatter Scale"));
+                mat.SetFloat("_SubsurfaceScale", matJson.GetFloatValue("Subsurface Scatter/Lerp"));
                 mat.SetFloat("_ThicknessScale", Mathf.Clamp01(matJson.GetFloatValue("Subsurface Scatter/Radius") / 5f));
                 mat.SetFloat("_MicroSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale"));
                 mat.SetFloat("_UnmaskedSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Unmasked Roughness Scale"));
