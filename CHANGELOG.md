@@ -1,6 +1,9 @@
 Changelog
 =========
 
+### v 0.2.2
+- Skin subsurface scattering fix for Unity 2021.1
+
 ### v 0.2.1
 - Fix to 2-Pass mesh extraction crashing when no vertex colors were present.
 - Fix to Bump maps being incorrectly detected during material and baking setups.
