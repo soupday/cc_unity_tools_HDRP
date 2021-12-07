@@ -493,11 +493,13 @@ namespace Reallusion.Import
             {
                 if (info.qualRefractiveEyes)
                 {
+                    // HQ refractive eyes have transparent refractive cornea
                     if (materialType == MaterialType.Cornea)
                         return Util.FindMaterial(MATERIAL_HQ_CORNEA_REFRACTIVE);
                 }
                 else
                 {
+                    // HQ parallax eyes doesn't use Eye material (set to default PBR)
                     if (materialType == MaterialType.Eye)
                         return Util.FindMaterial(MATERIAL_DEFAULT_OPAQUE);                    
                 }
@@ -508,24 +510,32 @@ namespace Reallusion.Import
                 {
                     if (info.qualRefractiveEyes)
                     {
-                        if (materialType == MaterialType.Cornea)
-                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_REFRACTIVE);
-
+                        // custom baked refractive eyes need vertex displacement for iris depth
                         if (materialType == MaterialType.Eye)
                             return Util.FindMaterial(MATERIAL_BAKED_EYE_CUSTOM);
                     }
                     else
                     {
+                        // custom baked parallax eyes use UV parallax effect in cornea
                         if (materialType == MaterialType.Cornea)
-                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_CUSTOM);                        
+                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_CUSTOM);
                     }
 
+                    // custom baked hair uses vertex color blending
                     if (materialType == MaterialType.Hair)
                         return Util.FindMaterial(MATERIAL_BAKED_HAIR_CUSTOM);
                                         
+                    // custom baked eye occlusion for vertex displacement
                     if (materialType == MaterialType.EyeOcclusion)
                         return Util.FindMaterial(MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM);
                 }                
+
+                if (info.qualRefractiveEyes)
+                {
+                    // custom or not, baked refractive cornea is the same (cornea transparency)
+                    if (materialType == MaterialType.Cornea)
+                        return Util.FindMaterial(MATERIAL_BAKED_CORNEA_REFRACTIVE);
+                }
             }
 
             // fetch the material dictionary for this quality setting:
