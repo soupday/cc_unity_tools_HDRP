@@ -1,37 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-5756600513109043636
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f034cba68ab55e046ae1445a42f18c0e, type: 3}
-  m_Name: IndirectLightingController
-  m_EditorClassIdentifier: 
-  active: 1
-  m_AdvancedMode: 0
-  indirectDiffuseLightingMultiplier:
-    m_OverrideState: 1
-    m_Value: 5
-    min: 0
-  indirectDiffuseLightingLayers:
-    m_OverrideState: 0
-    m_Value: 255
-  reflectionLightingMultiplier:
-    m_OverrideState: 1
-    m_Value: 5
-    min: 0
-  reflectionLightingLayers:
-    m_OverrideState: 0
-    m_Value: 255
-  reflectionProbeIntensityMultiplier:
-    m_OverrideState: 0
-    m_Value: 1
-    min: 0
 --- !u!114 &-4758912127805933462
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -267,7 +235,7 @@ MonoBehaviour:
     m_Value: 0
   exposure:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 10
   multiplier:
     m_OverrideState: 1
     m_Value: 2
@@ -294,7 +262,7 @@ MonoBehaviour:
     m_Value: 0
   top:
     m_OverrideState: 1
-    m_Value: {r: 0, g: 0, b: 0, a: 1}
+    m_Value: {r: 0.16037738, g: 0.16037738, b: 0.16037738, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
@@ -306,7 +274,7 @@ MonoBehaviour:
     showEyeDropper: 1
   bottom:
     m_OverrideState: 1
-    m_Value: {r: 0, g: 0, b: 0, a: 1}
+    m_Value: {r: 0.31132078, g: 0.31132078, b: 0.31132078, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
@@ -335,8 +303,6 @@ MonoBehaviour:
   - {fileID: 8737792840871171769}
   - {fileID: -1355376055549233226}
   - {fileID: 7677725660589811616}
-  - {fileID: -5756600513109043636}
-  - {fileID: 7717845016526237137}
 --- !u!114 &4745465664678062571
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -362,7 +328,7 @@ MonoBehaviour:
     m_Value: 1
   fixedExposure:
     m_OverrideState: 1
-    m_Value: 3
+    m_Value: 10
   compensation:
     m_OverrideState: 1
     m_Value: 0
@@ -553,30 +519,6 @@ MonoBehaviour:
   saturation:
     m_OverrideState: 1
     m_Value: 10
-    min: -100
-    max: 100
---- !u!114 &7717845016526237137
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b51a78e223a2e504bb88a059b55229ea, type: 3}
-  m_Name: WhiteBalance
-  m_EditorClassIdentifier: 
-  active: 1
-  m_AdvancedMode: 0
-  temperature:
-    m_OverrideState: 1
-    m_Value: -5
-    min: -100
-    max: 100
-  tint:
-    m_OverrideState: 0
-    m_Value: 0
     min: -100
     max: 100
 --- !u!114 &8737792840871171769

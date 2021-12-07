@@ -36,7 +36,7 @@ namespace Reallusion.Import
         public bool isLOD = false;
         public bool bakeIsBaked = false;
 
-        public bool qualRefractiveEyes = true;
+        public bool qualRefractiveEyes = false;
         public bool dualMaterialHair = false;        
         public bool bakeCustomShaders = true;
         public bool bakeSeparatePrefab = true;        

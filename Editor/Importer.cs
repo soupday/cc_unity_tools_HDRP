@@ -57,6 +57,7 @@ namespace Reallusion.Import
         public const int FLAG_FOR_BAKE = 4;
         public const int FLAG_ALPHA_CLIP = 8;
         public const int FLAG_HAIR = 16;
+        public const int FLAG_ALPHA_DATA = 32;
 
         private RenderPipeline RP => Pipeline.GetRenderPipeline();
 
@@ -260,7 +261,7 @@ namespace Reallusion.Import
         }        
 
         private MaterialType GetMaterialType(GameObject obj, Material mat, string sourceName, QuickJSON matJson)
-        {
+        {            
             if (matJson != null)
             {
                 bool hasOpacity = false;
@@ -443,7 +444,8 @@ namespace Reallusion.Import
             }
 
             else if (shaderName.EndsWith(Pipeline.SHADER_HQ_EYE) || 
-                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA))
+                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA) ||
+                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA_PARALLAX))
             {
                 ConnectHQEyeMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
@@ -929,7 +931,12 @@ namespace Reallusion.Import
                 mat.SetFloat("_ShadowHardness", matJson.GetFloatValue("Custom Shader/Variable/Shadow Hardness"));
                 float specularScale = matJson.GetFloatValue("Custom Shader/Variable/Specular Scale");
                 mat.SetColor("_CornerShadowColor", matJson.GetColorValue("Custom Shader/Variable/Eye Corner Darkness Color"));
-                mat.SetFloat("_IrisDepth", 0.004f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));
+
+                if (characterInfo.qualRefractiveEyes)
+                    mat.SetFloat("_IrisDepth", 0.004f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));
+                else
+                    mat.SetFloat("_IrisDepth", 0.1f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));
+
                 mat.SetFloat("_IrisSmoothness", 0f); // 1f - matJson.GetFloatValue("Custom Shader/Variable/_Iris Roughness"));
                 mat.SetFloat("_IrisBrightness", matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));
                 mat.SetFloat("_PupilScale", 0.8f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));

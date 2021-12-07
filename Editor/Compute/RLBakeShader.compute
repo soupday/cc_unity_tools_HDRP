@@ -37,6 +37,7 @@
 #pragma kernel RLCorneaAO
 #pragma kernel RLEyeMask
 #pragma kernel RLCorneaThickness
+#pragma kernel RLCorneaSubsurfaceMask
 #pragma kernel RLHairColoredDiffuse
 #pragma kernel RLHairDiffuse
 #pragma kernel RLHairMask
@@ -142,6 +143,7 @@ float shadowRadius, shadowHardness;
 float4 cornerShadowColor, limbusColor;
 float depthRadius;
 float corneaSmoothness, scleraSmoothness, irisSmoothness;
+float scleraSubsurfaceScale, irisSubsurfaceScale;
 
 TEX2D(Flow);
 TEX2D(ID);
@@ -977,7 +979,7 @@ void RLCorneaOnlyDiffuse(uint3 id : SV_DispatchThreadID)
     float4 color = lerp(cornea, sclera, irisMask);
 
     color = BlendMultiply_float4(color, colorBlend, colorBlendStrength);
-    color.a = 1.0;
+    color.a = irisMask;
 
     Result[id.xy] = LinearTosRGB(color);
 }
@@ -1083,6 +1085,19 @@ void RLCorneaThickness(uint3 id : SV_DispatchThreadID)
     thickness.a = 1.0;
     
     Result[id.xy] = thickness;
+}
+
+[numthreads(1, 1, 1)]
+void RLCorneaSubsurfaceMask(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float radial = RADIAL(uv);
+    float irisMask = saturate(1.0 - EyeIrisMask(radial));
+    float sssMask = lerp(scleraSubsurfaceScale, irisSubsurfaceScale, irisMask);
+    float4 sss = float4(sssMask, sssMask, sssMask, thicknessScale);
+    
+    Result[id.xy] = sss;
 }
 
 float4 RootEndBlend(float4 color, float rootMask) 

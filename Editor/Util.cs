@@ -451,7 +451,8 @@ namespace Reallusion.Import
             if (Pipeline.GetRenderPipeline() == RenderPipeline.HDRP)
             {
                 if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) ||
-                    shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;                
+                    shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;
+                if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX)) return CharacterTreeView.LINKED_INDEX_CORNEA_PARALLAX;
             }
             else
             {

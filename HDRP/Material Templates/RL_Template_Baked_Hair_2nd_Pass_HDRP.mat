@@ -1,5 +1,18 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-195450499016413138
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da692e001514ec24dbc4cca1949ff7e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 11
 --- !u!21 &2100000
 Material:
   serializedVersion: 6
@@ -7,14 +20,14 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RL_Template_HQ_Hair_2nd_Pass_HDRP
-  m_Shader: {fileID: -6465566751694194690, guid: 913a13959a6beae4b9d21bcd34541c26, type: 3}
+  m_Name: RL_Template_Baked_Hair_2nd_Pass_HDRP
+  m_Shader: {fileID: -6465566751694194690, guid: 384d88ff5b296a44b89f1fb2d4442c01, type: 3}
   m_ShaderKeywords: _DISABLE_SSR_TRANSPARENT _DOUBLESIDED_ON _ENABLE_FOG_ON_TRANSPARENT
-    _ENUMCLIPQUALITY_ON_STANDARD _SURFACE_TYPE_TRANSPARENT _TRANSPARENT_WRITES_MOTION_VEC
+    _SURFACE_TYPE_TRANSPARENT _TRANSPARENT_WRITES_MOTION_VEC
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 3001
+  m_CustomRenderQueue: 3000
   stringTagMap:
     MotionVector: User
     RenderType: Transparent
@@ -26,11 +39,7 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _BlendMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _DiffuseMap:
+    - _BaseColorMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -42,10 +51,6 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _IDMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _MaskMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -54,11 +59,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _RootMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _SpecularMap:
+    - _SmoothnessMask:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -75,58 +76,46 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - BOOLEAN_ENABLECOLOR: 0
-    - BOOLEAN_SECOND_PASS: 0
-    - _AOOccludeAll: 0
-    - _AOStrength: 1
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.05
+    - _AlphaClip: 0.1
+    - _AlphaClipThreshold: 0.5
+    - _AlphaClipThresholdDepthPostpass: 0
+    - _AlphaClipThresholdDepthPrepass: 1
     - _AlphaCutoffEnable: 0
     - _AlphaDstBlend: 10
-    - _AlphaPower: 1
-    - _AlphaRemap: 1
     - _AlphaSrcBlend: 1
+    - _AlphaThresholdShadow: 0.5
     - _AlphaToMask: 0
     - _AlphaToMaskInspectorValue: 1
-    - _BaseColorStrength: 1
     - _BlendMode: 0
-    - _BlendStrength: 1
     - _CullMode: 0
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
-    - _DepthPostpass: 0
-    - _DepthPrepass: 1
-    - _DiffuseStrength: 1
+    - _DepthPostpass: 1
+    - _DepthPrepass: 0.9
     - _DoubleSidedEnable: 1
     - _DoubleSidedNormalMode: 0
     - _DstBlend: 10
     - _ENUMCLIPQUALITY_ON: 0
-    - _EnableBlendModePreserveSpecularLighting: 1
+    - _EnableBlendModePreserveSpecularLighting: 0
     - _EnableFogOnTransparent: 1
-    - _EndColorStrength: 1
-    - _GlobalStrength: 1
-    - _HighlightAOverlapEnd: 1
-    - _HighlightAOverlapInvert: 1
-    - _HighlightAStrength: 1
-    - _HighlightBOverlapEnd: 1
-    - _HighlightBOverlapInvert: 1
-    - _HighlightBStrength: 0
-    - _InvertRootMap: 0
-    - _NormalStrength: 0.013
+    - _LightmapUV: 0
+    - _NormalScale: 1
+    - _NormalStrength: 1
     - _OpaqueCullMode: 2
     - _ReceivesSSR: 1
     - _ReceivesSSRTransparent: 0
     - _RenderQueueType: 4
     - _RequireSplitLighting: 0
     - _RimTransmissionIntensity: 0.05
-    - _RootColorStrength: 1
     - _SecondarySmoothness: 0.625
+    - _SecondarySpecular: 0.2
     - _SecondarySpecularMultiplier: 0.05
     - _SecondarySpecularShift: 0.15
-    - _ShadowClip: 0.5
-    - _SmoothnessMax: 0.8
+    - _ShadowClip: 0.25
+    - _SmoothnessMax: 0.5
     - _SmoothnessMin: 0
-    - _SmoothnessPower: 1
+    - _Specular: 0.2
     - _SpecularMultiplier: 0.5
     - _SpecularShift: 0.15
     - _SrcBlend: 1
@@ -142,11 +131,12 @@ Material:
     - _StencilWriteMaskMV: 40
     - _SupportDecals: 1
     - _SurfaceType: 1
+    - _TransmissionRim: 0.05
     - _TransparentBackfaceEnable: 1
     - _TransparentCullMode: 2
     - _TransparentDepthPostpassEnable: 0
     - _TransparentDepthPrepassEnable: 0
-    - _TransparentSortPriority: 1
+    - _TransparentSortPriority: 0
     - _TransparentWritingMotionVec: 1
     - _TransparentZWrite: 0
     - _UseShadowThreshold: 1
@@ -156,28 +146,14 @@ Material:
     - _ZTestTransparent: 2
     - _ZWrite: 0
     m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _DoubleSidedConstants: {r: -1, g: -1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
-    - _EndColor: {r: 0.6039216, g: 0.454902, b: 0.28627446, a: 0}
-    - _HighlightAColor: {r: 0.9137255, g: 0.7803922, b: 0.635294, a: 0}
-    - _HighlightADistribution: {r: 0.1, g: 0.2, b: 0.3, a: 0}
-    - _HighlightBColor: {r: 1, g: 1, b: 1, a: 0}
-    - _HighlightBDistribution: {r: 0.6, g: 0.7, b: 0.8, a: 0}
-    - _RootColor: {r: 0.32941175, g: 0.14117646, b: 0.050980367, a: 0}
+    - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecularTint: {r: 1, g: 1, b: 1, a: 1}
+    - _TransmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _VertexBaseColor: {r: 0, g: 0, b: 0, a: 0}
+    - _uvBaseST: {r: 1, g: 1, b: 0, a: 0}
+    - _uvSmoothnessST: {r: 1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
---- !u!114 &2688478677752794627
-MonoBehaviour:
-  m_ObjectHideFlags: 11
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da692e001514ec24dbc4cca1949ff7e8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  version: 11

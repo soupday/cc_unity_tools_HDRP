@@ -38,6 +38,7 @@ namespace Reallusion.Import
         public bool IsNormal { get { return (flags & Importer.FLAG_NORMAL) > 0; } }
         public bool IsAlphaClip { get { return (flags & Importer.FLAG_ALPHA_CLIP) > 0; } }
         public bool IsHair { get { return (flags & Importer.FLAG_HAIR) > 0; } }
+        public bool IsAlphaData { get { return (flags & Importer.FLAG_ALPHA_DATA) > 0; } }
 
         public ComputeBakeTexture(Vector2Int size, string folder, string name, int flags = 0)
         {
@@ -78,7 +79,7 @@ namespace Reallusion.Import
                 {                    
                     importer.textureType = IsNormal ? TextureImporterType.NormalMap : TextureImporterType.Default;
                     importer.sRGBTexture = IsRGB;
-                    importer.alphaIsTransparency = IsRGB;
+                    importer.alphaIsTransparency = IsRGB && !IsAlphaData;
                     importer.maxTextureSize = 4096;
                     importer.mipmapEnabled = true;
                     importer.mipMapBias = Importer.MIPMAP_BIAS;

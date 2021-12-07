@@ -49,6 +49,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_SKIN = "RL_SkinShaderVariants_HDRP";
         public const string SHADER_HQ_HEAD = "RL_SkinShaderVariants_HDRP";
         public const string SHADER_HQ_CORNEA = "RL_EyeShaderVariants_HDRP";
+        public const string SHADER_HQ_CORNEA_PARALLAX = "RL_CorneaShaderParallax_HDRP";
         public const string SHADER_HQ_EYE = "RL_EyeShaderVariants_HDRP";
         public const string SHADER_HQ_EYE_OCCLUSION = "RL_EyeOcclusionShader_HDRP";
         public const string SHADER_HQ_TEARLINE = "RL_TearlineShader_HDRP";
@@ -60,8 +61,8 @@ namespace Reallusion.Import
         public const string SHADER_HQ_ALPHACLIP = "HDRP/Lit";
         public const string SHADER_HQ_OPAQUE = "HDRP/Lit";
         // 2 pass
-        public const string SHADER_HQ_HAIR_1ST_PASS = "RL_HairShaderVariants_1st_Pass_HDRP";
-        public const string SHADER_HQ_HAIR_2ND_PASS = "RL_HairShaderVariants_2nd_Pass_HDRP";
+        public const string SHADER_HQ_HAIR_1ST_PASS = "RL_HairShaderVariantsMulti_HDRP";
+        public const string SHADER_HQ_HAIR_2ND_PASS = "RL_HairShaderVariantsMulti_HDRP";
 
         // HQ Materials
         //
@@ -105,27 +106,29 @@ namespace Reallusion.Import
         // Baked Materials
         //
         public const string MATERIAL_BAKED_SKIN = "RL_Template_Baked_Skin_HDRP";
-        public const string MATERIAL_BAKED_HEAD = "RL_Temaplte_Baked_Skin_HDRP";              
+        public const string MATERIAL_BAKED_HEAD = "RL_Template_Baked_Skin_HDRP";              
         public const string MATERIAL_BAKED_CORNEA = "RL_Template_Baked_Cornea_HDRP";                
         public const string MATERIAL_BAKED_EYE = "RL_Template_Baked_Eye_HDRP";       
         public const string MATERIAL_BAKED_EYE_OCCLUSION = "RL_Template_Baked_EyeOcclusion_HDRP";
-        public const string MATERIAL_BAKED_TEARLINE = "RL_Template_Tearline_HDRP";
+        public const string MATERIAL_BAKED_TEARLINE = "";
         public const string MATERIAL_BAKED_HAIR = "RL_Template_Baked_Hair_HDRP";        
-        public const string MATERIAL_BAKED_SCALPBASE = "RL_Template_Default_ScalpBase_HDRP";
-        public const string MATERIAL_BAKED_EYELASH = "RL_Template_Default_Eyelash_HDRP";
+        public const string MATERIAL_BAKED_SCALPBASE = "";
+        public const string MATERIAL_BAKED_EYELASH = "";
         public const string MATERIAL_BAKED_TEETH = "RL_Template_Baked_Skin_HDRP";
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_HDRP";
-        public const string MATERIAL_BAKED_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
-        public const string MATERIAL_BAKED_OPAQUE = "RL_Template_Default_Opaque_HDRP";
+        public const string MATERIAL_BAKED_ALPHACLIP = "";
+        public const string MATERIAL_BAKED_OPAQUE = "";
         // variants
-        public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Default_Opaque_HDRP";
+        public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Baked_CorneaCustom_HDRP";
         public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Baked_CorneaRef_HDRP";        
         public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Baked_EyeCustom_HDRP";
         public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_HDRP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_HDRP";
-        // 2 pass
+        // 2 pass        
         public const string MATERIAL_BAKED_HAIR_1ST_PASS = "RL_Template_Baked_Hair_1st_Pass_HDRP";
         public const string MATERIAL_BAKED_HAIR_2ND_PASS = "RL_Template_Baked_Hair_2nd_Pass_HDRP";
+        public const string MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS = "RL_Template_Baked_HairCustom_1st_Pass_HDRP";
+        public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_HDRP";
         // for gamebase single material or actor core...
         public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_HDRP";
 #elif URP_10_5_0_OR_NEWER
@@ -421,15 +424,18 @@ namespace Reallusion.Import
 
             Object skinProfileAsset = Util.FindAsset("RL_Skin_Profile");
             Object teethProfileAsset = Util.FindAsset("RL_Teeth_Profile");
+            Object eyeProfileAsset = Util.FindAsset("RL_Eye_Profile");
 
-            if (!skinProfileAsset || !teethProfileAsset) return;
+            if (!skinProfileAsset || !teethProfileAsset || !eyeProfileAsset) return;
 
             bool addSkinProfile = true;
             bool addTeethProfile = true;
+            bool addEyeProfile = true;
             foreach (SerializedProperty p in list)
             {
                 if (p.objectReferenceValue == skinProfileAsset) addSkinProfile = false;
                 if (p.objectReferenceValue == teethProfileAsset) addTeethProfile = false;
+                if (p.objectReferenceValue == eyeProfileAsset) addEyeProfile = false;
             }
 
             if (addSkinProfile)
@@ -448,7 +454,15 @@ namespace Reallusion.Import
                 item.objectReferenceValue = teethProfileAsset;
             }
 
-            if (addSkinProfile || addTeethProfile)
+            if (addEyeProfile)
+            {
+                index = list.arraySize;
+                list.InsertArrayElementAtIndex(index);
+                item = list.GetArrayElementAtIndex(index);
+                item.objectReferenceValue = eyeProfileAsset;
+            }
+
+            if (addSkinProfile || addTeethProfile || addEyeProfile)
                 hdrp.ApplyModifiedProperties();
 #endif
         }
@@ -475,30 +489,44 @@ namespace Reallusion.Import
             if (info.Generation == BaseGeneration.ActorCore) 
                 return Util.FindMaterial(MATERIAL_DEFAULT_SINGLE_MATERIAL);
 
-            // option based overrides
-            if (isHDRP)
+            if (quality == MaterialQuality.High) // option overrides for high quality materials
             {
-                // SSR is HDRP only...
-                if (materialType == MaterialType.Cornea && quality == MaterialQuality.High && info.qualRefractiveEyes)
-                    return Util.FindMaterial(MATERIAL_HQ_CORNEA_REFRACTIVE);
-
-                if (materialType == MaterialType.Cornea && quality == MaterialQuality.Baked && info.qualRefractiveEyes)
-                    return Util.FindMaterial(MATERIAL_BAKED_CORNEA_REFRACTIVE);
+                if (info.qualRefractiveEyes)
+                {
+                    if (materialType == MaterialType.Cornea)
+                        return Util.FindMaterial(MATERIAL_HQ_CORNEA_REFRACTIVE);
+                }
+                else
+                {
+                    if (materialType == MaterialType.Eye)
+                        return Util.FindMaterial(MATERIAL_DEFAULT_OPAQUE);                    
+                }
             }
-            else
+            else if (quality == MaterialQuality.Baked) // option overrides for baked materials
             {
-                if (materialType == MaterialType.Cornea && quality == MaterialQuality.Baked && info.bakeCustomShaders)
-                    return Util.FindMaterial(MATERIAL_BAKED_CORNEA_CUSTOM);
+                if (info.bakeCustomShaders)
+                {
+                    if (info.qualRefractiveEyes)
+                    {
+                        if (materialType == MaterialType.Cornea)
+                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_REFRACTIVE);
+
+                        if (materialType == MaterialType.Eye)
+                            return Util.FindMaterial(MATERIAL_BAKED_EYE_CUSTOM);
+                    }
+                    else
+                    {
+                        if (materialType == MaterialType.Cornea)
+                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_CUSTOM);                        
+                    }
+
+                    if (materialType == MaterialType.Hair)
+                        return Util.FindMaterial(MATERIAL_BAKED_HAIR_CUSTOM);
+                                        
+                    if (materialType == MaterialType.EyeOcclusion)
+                        return Util.FindMaterial(MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM);
+                }                
             }
-            
-            if (materialType == MaterialType.Hair && quality == MaterialQuality.Baked && info.bakeCustomShaders)
-                return Util.FindMaterial(MATERIAL_BAKED_HAIR_CUSTOM);
-
-            if (materialType == MaterialType.Eye && quality == MaterialQuality.Baked && info.bakeCustomShaders)
-                return Util.FindMaterial(MATERIAL_BAKED_EYE_CUSTOM);
-
-            if (materialType == MaterialType.EyeOcclusion && quality == MaterialQuality.Baked && info.bakeCustomShaders)
-                return Util.FindMaterial(MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM);            
 
             // fetch the material dictionary for this quality setting:
             Dictionary<MaterialType, string> materialDictionary = GetMaterialDictionary(quality);
