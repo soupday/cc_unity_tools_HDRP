@@ -376,28 +376,36 @@ namespace Reallusion.Import
 
             if (root)
             {
-                bool isOpen;
+                bool isOpen = true;
 
                 // find the jaw bone and change it's rotation
-                GameObject jawBone = FindCharacterBone(root, "CC_Base_JawRoot");
+                GameObject jawBone = FindCharacterBone(root, "CC_Base_JawRoot");                
                 if (!jawBone) jawBone = FindCharacterBone(root, "JawRoot");
                 if (jawBone)
                 {
                     Transform jaw = jawBone.transform;
                     Quaternion rotation = jaw.localRotation;
                     Vector3 euler = rotation.eulerAngles;
-                    if (euler.z < 91f || euler.z > 269f)
+                    GameObject sourceJawBone = PrefabUtility.GetCorrespondingObjectFromSource(jawBone);
+                    Vector3 sourceEuler = sourceJawBone.transform.localRotation.eulerAngles;
+                    float difference = Mathf.DeltaAngle(euler.x, sourceEuler.x) +
+                                       Mathf.DeltaAngle(euler.y, sourceEuler.y) +
+                                       Mathf.DeltaAngle(euler.z, sourceEuler.z);
+                    if (difference > 2f) isOpen = true;
+                    else isOpen = false;
+
+                    if (isOpen)
                     {
-                        euler.z = -108f;
-                        isOpen = true;
+                        jaw.localEulerAngles = sourceEuler;
+                        isOpen = false;
                     }
                     else
                     {
-                        euler.z = -90f;
-                        isOpen = false;
+                        euler = sourceEuler;
+                        euler.z -= 35f;
+                        jaw.localEulerAngles = euler;
+                        isOpen = true;
                     }
-                    rotation.eulerAngles = euler;
-                    jaw.localRotation = rotation;
 
                     const string shapeName = "Mouth_Open";
 
@@ -490,13 +498,17 @@ namespace Reallusion.Import
                 {
                     Vector3 euler;
 
-                    if (dirFlags == 0) euler = new Vector3(0, -90f, 180f);
+                    if (dirFlags == 0)
+                    {
+                        GameObject sourceEye = PrefabUtility.GetCorrespondingObjectFromSource(leftEye);
+                        euler = sourceEye.transform.localRotation.eulerAngles;
+                    }
                     else euler = leftEye.transform.localRotation.eulerAngles;
 
-                    if ((dirFlags & EyeLookDir.Left) > 0) euler.z = 168f;
-                    if ((dirFlags & EyeLookDir.Right) > 0) euler.z = 192f;
-                    if ((dirFlags & EyeLookDir.Up) > 0) euler.x = 10f;
-                    if ((dirFlags & EyeLookDir.Down) > 0) euler.x = -10f;
+                    if ((dirFlags & EyeLookDir.Left) > 0) euler.z -= 15f;
+                    if ((dirFlags & EyeLookDir.Right) > 0) euler.z += 15f;
+                    if ((dirFlags & EyeLookDir.Up) > 0) euler.x -= 10f;
+                    if ((dirFlags & EyeLookDir.Down) > 0) euler.x += 10f;
 
                     Quaternion rotation = Quaternion.identity;
                     rotation.eulerAngles = euler;
