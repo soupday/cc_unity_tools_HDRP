@@ -933,7 +933,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3737093066198893668}
   m_Layer: 0
-  m_Name: PreviewScenePrefab
+  m_Name: PreviewScenePrefabOld
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1001,7 +1001,7 @@ Light:
   m_Type: 1
   m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 6000
+  m_Intensity: 5000
   m_Range: 9
   m_SpotAngle: 120
   m_InnerSpotAngle: 1
@@ -1071,7 +1071,7 @@ MonoBehaviour:
   m_PointlightHDType: 0
   m_SpotLightShape: 0
   m_AreaLightShape: 0
-  m_Intensity: 6000
+  m_Intensity: 5000
   m_EnableSpotReflector: 1
   m_LuxAtDistance: 1
   m_InnerSpotPercent: 50
@@ -1198,8 +1198,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2831752391173089184}
-  m_LocalRotation: {x: -0.020497564, y: 0.8903353, z: -0.04039107, w: -0.45304698}
-  m_LocalPosition: {x: 1.537, y: 1.449, z: 1.093}
+  m_LocalRotation: {x: 0.91548073, y: 0.28117004, z: 0.28116998, w: -0.06149787}
+  m_LocalPosition: {x: -0.63999, y: 0.1199, z: 1.36}
   m_LocalScale: {x: 1, y: 1, z: 0.99999994}
   m_Children: []
   m_Father: {fileID: 7745821555454708197}
@@ -1217,7 +1217,7 @@ Light:
   m_Type: 0
   m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 5570.4224
+  m_Intensity: 6366.1973
   m_Range: 9
   m_SpotAngle: 120
   m_InnerSpotAngle: 1
@@ -1287,7 +1287,7 @@ MonoBehaviour:
   m_PointlightHDType: 0
   m_SpotLightShape: 0
   m_AreaLightShape: 0
-  m_Intensity: 17500
+  m_Intensity: 20000
   m_EnableSpotReflector: 1
   m_LuxAtDistance: 1
   m_InnerSpotPercent: 50

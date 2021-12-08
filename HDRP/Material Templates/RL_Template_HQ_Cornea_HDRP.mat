@@ -114,7 +114,7 @@ Material:
     - _LimbusDarkWidth: 0.025
     - _LimbusWidth: 0.055
     - _OpaqueCullMode: 2
-    - _PMod: 6
+    - _PMod: 6.5
     - _PupilScale: 0.8
     - _RayTracing: 0
     - _ReceivesSSR: 1
