@@ -35,7 +35,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RL_Template_Baked_EyeCustom_HDRP
+  m_Name: RL_Template_Baked_EyeRefractiveCustom_HDRP
   m_Shader: {fileID: -6465566751694194690, guid: 1f94846e709e483448feea617906bc23, type: 3}
   m_ShaderKeywords: _DISABLE_SSR_TRANSPARENT
   m_LightmapFlags: 4

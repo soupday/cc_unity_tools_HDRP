@@ -30,7 +30,7 @@
 #pragma kernel RLTongueAO
 #pragma kernel RLCorneaDiffuse
 #pragma kernel RLEyeDiffuse
-#pragma kernel RLCorneaOnlyDiffuse
+#pragma kernel RLCorneaSingleDiffuse
 #pragma kernel RLCorneaMask
 #pragma kernel RLCorneaDetailMask
 #pragma kernel RLCorneaMetallicGloss
@@ -355,7 +355,7 @@ void RLMask(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     float4 packed = float4(metallic, ao, detailMask, smoothness);
 
@@ -558,7 +558,7 @@ void RLHeadMask(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength) * cavityAO;
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, ao, detailMask, smoothness);
@@ -576,7 +576,7 @@ void RLSkinMask(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, ao, detailMask, smoothness);
@@ -595,7 +595,7 @@ void RLHeadMetallicGloss(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength) * cavityAO;
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, metallic, metallic, smoothness);
@@ -613,7 +613,7 @@ void RLSkinMetallicGloss(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, metallic, metallic, smoothness);
@@ -632,7 +632,7 @@ void RLHeadAO(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength) * cavityAO;
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(ao, ao, ao, 1.0);
@@ -650,7 +650,7 @@ void RLSkinAO(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(ao, ao, ao, 1.0);
@@ -718,7 +718,7 @@ void RLTeethMask(uint3 id : SV_DispatchThreadID)
     
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessFront, smoothnessMax, mask.a);
     smoothness = lerp(smoothnessRear, smoothness, cavityMask);
     smoothness = pow(saturate(smoothness), smoothnessPower);
@@ -740,7 +740,7 @@ void RLTeethMetallicGloss(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessFront, smoothnessMax, mask.a);
     smoothness = lerp(smoothnessRear, smoothness, cavityMask);
     smoothness = pow(saturate(smoothness), smoothnessPower);
@@ -762,7 +762,7 @@ void RLTeethAO(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessFront, smoothnessMax, mask.a);
     smoothness = lerp(smoothnessRear, smoothness, cavityMask);
     smoothness = pow(saturate(smoothness), smoothnessPower);
@@ -824,7 +824,7 @@ void RLTongueMask(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessFront, smoothnessMax, mask.a);
     smoothness = lerp(smoothnessRear, smoothness, cavityMask);
     smoothness = pow(saturate(smoothness), smoothnessPower);
@@ -846,7 +846,7 @@ void RLTongueMetallicGloss(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessFront, smoothnessMax, mask.a);
     smoothness = lerp(smoothnessRear, smoothness, cavityMask);
     smoothness = pow(saturate(smoothness), smoothnessPower);
@@ -868,7 +868,7 @@ void RLTongueAO(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * microNormalStrength;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessFront, smoothnessMax, mask.a);
     smoothness = lerp(smoothnessRear, smoothness, cavityMask);
     smoothness = pow(saturate(smoothness), smoothnessPower);
@@ -953,7 +953,7 @@ void RLEyeDiffuse(uint3 id : SV_DispatchThreadID)
 }
 
 [numthreads(1, 1, 1)]
-void RLCorneaOnlyDiffuse(uint3 id : SV_DispatchThreadID)
+void RLCorneaSingleDiffuse(uint3 id : SV_DispatchThreadID)
 {
     float2 uv = GetUV(id.xy);
     float2 touvCornea = TilingOffset(uv, irisScale, float2(0.5, 0.5));
@@ -973,13 +973,14 @@ void RLCorneaOnlyDiffuse(uint3 id : SV_DispatchThreadID)
     float shadowMask = EyeShadowMask(radial);
     float limbusMask = EyeLimbusMask(radial);
     float irisMask = EyeIrisMask(radial);
+    float depthMask = EyeDepthMask(radial);
 
     cornea = lerp(cornea, cornea * sRGBToLinear(limbusColor), limbusMask);
     sclera = lerp(sclera, sclera * sRGBToLinear(cornerShadowColor), shadowMask);
     float4 color = lerp(cornea, sclera, irisMask);
 
     color = BlendMultiply_float4(color, colorBlend, colorBlendStrength);
-    color.a = irisMask;
+    color.a = depthMask;
 
     Result[id.xy] = LinearTosRGB(color);
 }
@@ -995,7 +996,7 @@ void RLCorneaMask(uint3 id : SV_DispatchThreadID)
     float irisMask = EyeIrisMask(radial);    
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = irisMask * microNormalStrength;
+    float detailMask = irisMask;
     float smoothness = lerp(corneaSmoothness, scleraSmoothness, irisMask);    
     float4 packed = float4(metallic, ao, detailMask, smoothness);
 
@@ -1048,7 +1049,7 @@ void RLCorneaMetallicGloss(uint3 id : SV_DispatchThreadID)
     float irisMask = EyeIrisMask(radial);
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = irisMask * microNormalStrength;
+    float detailMask = irisMask;
     float smoothness = lerp(corneaSmoothness, scleraSmoothness, irisMask);
     float4 packed = float4(metallic, metallic, metallic, smoothness);
 
@@ -1066,7 +1067,7 @@ void RLCorneaAO(uint3 id : SV_DispatchThreadID)
     float irisMask = EyeIrisMask(radial);
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = irisMask * microNormalStrength;
+    float detailMask = irisMask;
     float smoothness = lerp(corneaSmoothness, scleraSmoothness, irisMask);
     float4 packed = float4(ao, ao, ao, 1.0);
 

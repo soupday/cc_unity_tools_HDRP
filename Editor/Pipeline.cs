@@ -65,8 +65,8 @@ namespace Reallusion.Import
         public const string SHADER_HQ_CORNEA_REFRACTIVE = "RL_EyeShaderRefractive_Variants_HDRP";
         public const string SHADER_HQ_EYE_REFRACTIVE = "RL_EyeShaderRefractive_Variants_HDRP";
         // 2 pass
-        public const string SHADER_HQ_HAIR_1ST_PASS = "RL_HairShaderVariantsMulti_HDRP";
-        public const string SHADER_HQ_HAIR_2ND_PASS = "RL_HairShaderVariantsMulti_HDRP";
+        public const string SHADER_HQ_HAIR_1ST_PASS = "RL_HairShaderMultiPass_Variants_HDRP";
+        public const string SHADER_HQ_HAIR_2ND_PASS = "RL_HairShaderMultiPass_Variants_HDRP";
 
         // HQ Materials
         //
@@ -109,24 +109,27 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_HDRP";        
 
         // Baked Materials
+        // Note: Non custom materials must bake to HDRP default shaders
+        //       Only "Custom" materials have custom shaders, or have special settings like refraction.
         //
         public const string MATERIAL_BAKED_SKIN = "RL_Template_Baked_Skin_HDRP";
-        public const string MATERIAL_BAKED_HEAD = "RL_Template_Baked_Skin_HDRP";              
-        public const string MATERIAL_BAKED_CORNEA = "RL_Template_Baked_Cornea_HDRP";                
-        public const string MATERIAL_BAKED_EYE = "RL_Template_Baked_Eye_HDRP";       
+        public const string MATERIAL_BAKED_HEAD = "RL_Template_Baked_Skin_HDRP";
+        public const string MATERIAL_BAKED_CORNEA = "RL_Template_Baked_CorneaBasic_HDRP";
+        public const string MATERIAL_BAKED_EYE = "RL_Template_Baked_EyeBasic_HDRP";
         public const string MATERIAL_BAKED_EYE_OCCLUSION = "RL_Template_Baked_EyeOcclusion_HDRP";
         public const string MATERIAL_BAKED_TEARLINE = "";
-        public const string MATERIAL_BAKED_HAIR = "RL_Template_Baked_Hair_HDRP";        
+        public const string MATERIAL_BAKED_HAIR = "RL_Template_Baked_Hair_HDRP";
         public const string MATERIAL_BAKED_SCALPBASE = "";
         public const string MATERIAL_BAKED_EYELASH = "";
         public const string MATERIAL_BAKED_TEETH = "RL_Template_Baked_Skin_HDRP";
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_HDRP";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
-        // variants
-        public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Baked_CorneaCustom_HDRP";
-        public const string MATERIAL_BAKED_CORNEA_REFRACTIVE = "RL_Template_Baked_CorneaRef_HDRP";        
-        public const string MATERIAL_BAKED_EYE_CUSTOM = "RL_Template_Baked_EyeCustom_HDRP";
+        // variants (that differ from the defaults above)
+        public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Baked_CorneaBasicCustom_HDRP";                
+        public const string MATERIAL_BAKED_CORNEA_PARALLAX_CUSTOM = "RL_Template_Baked_CorneaParallaxCustom_HDRP";
+        public const string MATERIAL_BAKED_CORNEA_REFRACTIVE_CUSTOM = "RL_Template_Baked_CorneaRefractiveCustom_HDRP";        
+        public const string MATERIAL_BAKED_EYE_REFRACTIVE_CUSTOM = "RL_Template_Baked_EyeRefractiveCustom_HDRP";
         public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_HDRP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_HDRP";
         // 2 pass        
@@ -521,32 +524,28 @@ namespace Reallusion.Import
                 {
                     if (info.BuiltRefractiveEyes)
                     {
-                        // custom baked refractive eyes need vertex displacement for iris depth
+                        if (materialType == MaterialType.Cornea)
+                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_REFRACTIVE_CUSTOM);
                         if (materialType == MaterialType.Eye)
-                            return Util.FindMaterial(MATERIAL_BAKED_EYE_CUSTOM);
+                            return Util.FindMaterial(MATERIAL_BAKED_EYE_REFRACTIVE_CUSTOM);
+                    }
+                    else if (info.BuiltParallaxEyes)
+                    {
+                        if (materialType == MaterialType.Cornea)
+                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_PARALLAX_CUSTOM);                        
                     }
                     else
                     {
-                        // custom baked parallax eyes use UV parallax effect in cornea
                         if (materialType == MaterialType.Cornea)
-                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_CUSTOM);
+                            return Util.FindMaterial(MATERIAL_BAKED_CORNEA_CUSTOM);                        
                     }
-
-                    // custom baked hair uses vertex color blending
+                    
                     if (materialType == MaterialType.Hair)
                         return Util.FindMaterial(MATERIAL_BAKED_HAIR_CUSTOM);
-                                        
-                    // custom baked eye occlusion for vertex displacement
+                                       
                     if (materialType == MaterialType.EyeOcclusion)
                         return Util.FindMaterial(MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM);
                 }                
-
-                if (info.BuiltRefractiveEyes)
-                {
-                    // custom or not, baked refractive cornea is the same (cornea transparency)
-                    if (materialType == MaterialType.Cornea)
-                        return Util.FindMaterial(MATERIAL_BAKED_CORNEA_REFRACTIVE);
-                }
             }
 
             // fetch the material dictionary for this quality setting:
