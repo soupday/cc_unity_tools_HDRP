@@ -853,21 +853,22 @@ namespace Reallusion.Import
         }
 
         private static void FixHDRP2PassMaterials(Material firstPass, Material secondPass)
-        {
-            string fp = AssetDatabase.GetAssetPath(firstPass);
-            string sp = AssetDatabase.GetAssetPath(secondPass);
-            AssetImporter aif = AssetImporter.GetAtPath(fp);
-            AssetImporter ais = AssetImporter.GetAtPath(sp);
-            // force a save and re-import of the materials
-            // otherwise these settings don't take.
-            aif.SaveAndReimport();
-            ais.SaveAndReimport();
-
+        {            
             if (Pipeline.isHDRP)
             {
+                /*
+                string fp = AssetDatabase.GetAssetPath(firstPass);
+                string sp = AssetDatabase.GetAssetPath(secondPass);
+                AssetImporter aif = AssetImporter.GetAtPath(fp);
+                AssetImporter ais = AssetImporter.GetAtPath(sp);
+                // force a save and re-import of the materials
+                // otherwise these settings don't take.
+                aif.SaveAndReimport();
+                ais.SaveAndReimport();
+                */
+
                 firstPass.SetFloat("_SurfaceType", 0f);
                 firstPass.SetFloat("_ENUMCLIPQUALITY_ON", 0f);                
-                //firstPass.SetFloat("BOOLEAN_SECOND_PASS", 0f);
                 Pipeline.ResetMaterial(firstPass);                
 
                 secondPass.SetFloat("_SurfaceType", 1f);
@@ -878,12 +879,13 @@ namespace Reallusion.Import
                 secondPass.SetFloat("_ZTestDepthEqualForOpaque", 2f);
                 secondPass.SetFloat("_ZTestTransparent", 2f);
                 secondPass.SetFloat("_ENUMCLIPQUALITY_ON", 0f);
-                //secondPass.SetFloat("BOOLEAN_SECOND_PASS", 1f);
                 Pipeline.ResetMaterial(secondPass);
-            }
 
-            aif.SaveAndReimport();
-            ais.SaveAndReimport();
+                /*
+                aif.SaveAndReimport();
+                ais.SaveAndReimport();
+                */
+            }            
         }
 
         public static void Extract2PassHairMeshes(Object obj)
@@ -974,13 +976,13 @@ namespace Reallusion.Import
                             Material firstPassTemplate = Util.FindMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
                             Material secondPassTemplate = Util.FindMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
                             Material firstPass = new Material(firstPassTemplate);
-                            Material secondPass = new Material(secondPassTemplate);
-                            // save the materials to the asset database.
-                            AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
-                            AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));
+                            Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);
                             CopyMaterialParameters(oldMat, secondPass);
                             FixHDRP2PassMaterials(firstPass, secondPass);
+                            // save the materials to the asset database.
+                            AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
+                            AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));
                             sharedMaterials[0] = firstPass;
                             sharedMaterials[1] = secondPass;
                             // add the 1st and 2nd pass materials to the mesh renderer
@@ -1002,13 +1004,13 @@ namespace Reallusion.Import
                             Material firstPassTemplate = Util.FindMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
                             Material secondPassTemplate = Util.FindMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
                             Material firstPass = new Material(firstPassTemplate);
-                            Material secondPass = new Material(secondPassTemplate);
+                            Material secondPass = new Material(secondPassTemplate);                            
+                            CopyMaterialParameters(oldMat, firstPass);
+                            CopyMaterialParameters(oldMat, secondPass);
+                            FixHDRP2PassMaterials(firstPass, secondPass);
                             // save the materials to the asset database.   
                             AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
                             AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));
-                            CopyMaterialParameters(oldMat, firstPass);
-                            CopyMaterialParameters(oldMat, secondPass);
-                            FixHDRP2PassMaterials(firstPass, secondPass);                            
                             sharedMaterials[0] = firstPass;
                             sharedMaterials[1] = secondPass;
                             // add the 1st and 2nd pass materials to the mesh renderer

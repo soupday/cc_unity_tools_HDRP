@@ -33,15 +33,14 @@ namespace Reallusion.Import
         public IList<int> selectedIndices;
         private bool enableMultiPassMaterials;
 
-        public const int NUM_LINKED_INDICES = 8;
+        public const int NUM_LINKED_INDICES = 7;
         public const int LINKED_INDEX_SKIN = 0;
         public const int LINKED_INDEX_CORNEA = 1;
         public const int LINKED_INDEX_EYE_OCCLUSION = 2;
         public const int LINKED_INDEX_TEARLINE = 3;
         public const int LINKED_INDEX_TEETH = 4;
         public const int LINKED_INDEX_HAIR = 5;
-        public const int LINKED_INDEX_EYE_URP = 6;
-        public const int LINKED_INDEX_CORNEA_PARALLAX = 6;
+        public const int LINKED_INDEX_EYE = 6;        
 
         public CharacterTreeView(TreeViewState treeViewState, GameObject obj) : base(treeViewState)
         {

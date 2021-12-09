@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RL_Template_HQ_CorneaRef_HDRP
+  m_Name: RL_Template_HQ_CorneaRefractive_HDRP
   m_Shader: {fileID: -6465566751694194690, guid: 48cccd4fafd06264c9dcce2137ba5738, type: 3}
   m_ShaderKeywords: BOOLEAN_ISCORNEA_ON _DISABLE_SSR_TRANSPARENT _ENABLE_FOG_ON_TRANSPARENT
     _REFRACTION_PLANE _SURFACE_TYPE_TRANSPARENT

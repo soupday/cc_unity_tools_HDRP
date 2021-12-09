@@ -38,7 +38,6 @@ namespace Reallusion.Import
         private readonly List<string> textureFolders;
         private readonly ModelImporter importer;
         private readonly List<string> importAssets = new List<string>();
-        private MaterialQuality quality = MaterialQuality.High;
         private CharacterInfo characterInfo;
         private List<string> processedSourceMaterials;
         private Dictionary<Material, Texture2D> bakedDetailMaps;
@@ -110,11 +109,6 @@ namespace Reallusion.Import
             processedSourceMaterials = new List<string>();
         }        
 
-        public void SetQuality(MaterialQuality qual)
-        {
-            quality = qual;
-        }
-
         public GameObject Import()
         {
             // make sure custom diffusion profiles are installed
@@ -166,7 +160,7 @@ namespace Reallusion.Import
             }
 
             // before we do anything else, if we are connecting default materials we need to bake a few maps first...
-            if (quality == MaterialQuality.Default && Pipeline.isHDRP)
+            if (characterInfo.BuildQuality == MaterialQuality.Default && Pipeline.isHDRP)
             {
                 CacheBakedMaps();
             }
@@ -187,9 +181,15 @@ namespace Reallusion.Import
             // create prefab
             GameObject prefab = RL.CreatePrefabFromFbx(characterInfo, fbx);
 
+            if (characterInfo.DualMaterialHair)
+            {
+                MeshUtil.Extract2PassHairMeshes(prefab);
+                ImporterWindow.TrySetMultiPass(true);
+            }
+
             Util.LogInfo("Done!");
 
-            Selection.activeObject = prefab;            
+            Selection.activeObject = prefab;     
 
             //System.Media.SystemSounds.Asterisk.Play();
 
@@ -350,7 +350,7 @@ namespace Reallusion.Import
         private Material CreateRemapMaterial(MaterialType materialType, Material sharedMaterial, string sourceName)
         {
             // get the template material.
-            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, quality, characterInfo);
+            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, characterInfo.BuildQuality, characterInfo);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -443,9 +443,10 @@ namespace Reallusion.Import
                 ConnectHQTongueMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_EYE) || 
+            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_EYE_REFRACTIVE) || 
                      shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA) ||
-                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA_PARALLAX))
+                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
+                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE))
             {
                 ConnectHQEyeMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
@@ -932,7 +933,7 @@ namespace Reallusion.Import
                 float specularScale = matJson.GetFloatValue("Custom Shader/Variable/Specular Scale");
                 mat.SetColor("_CornerShadowColor", matJson.GetColorValue("Custom Shader/Variable/Eye Corner Darkness Color"));
 
-                if (characterInfo.qualRefractiveEyes)
+                if (characterInfo.RefractiveEyes)
                     mat.SetFloat("_IrisDepth", 0.004f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));
                 else
                     mat.SetFloat("_IrisDepth", 0.1f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));

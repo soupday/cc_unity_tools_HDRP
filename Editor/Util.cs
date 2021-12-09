@@ -32,8 +32,6 @@ namespace Reallusion.Import
         public static bool ImportCharacter(CharacterInfo info, MaterialQuality quality)
         {
             Importer importCharacter = new Importer(info);
-            importCharacter.SetQuality(quality);
-
             return importCharacter.Import();
         }
 
@@ -448,17 +446,15 @@ namespace Reallusion.Import
             if ((shaderName.iContains(Pipeline.SHADER_HQ_HEAD) || 
                  shaderName.iContains(Pipeline.SHADER_HQ_SKIN)) && 
                 !sourceName.iContains("Std_Nails")) return CharacterTreeView.LINKED_INDEX_SKIN;
-            if (Pipeline.GetRenderPipeline() == RenderPipeline.HDRP)
-            {
-                if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) ||
-                    shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;
-                if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX)) return CharacterTreeView.LINKED_INDEX_CORNEA_PARALLAX;
-            }
-            else
-            {
-                // Eye is PBR in URP and Built-in                
-                if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA)) return CharacterTreeView.LINKED_INDEX_CORNEA;
-            }
+
+            if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) ||
+                shaderName.iContains(Pipeline.SHADER_HQ_EYE_PARALLAX)) return CharacterTreeView.LINKED_INDEX_EYE;
+
+            if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA) ||
+                shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
+                shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE) ||
+                shaderName.iContains(Pipeline.SHADER_HQ_EYE_REFRACTIVE)) return CharacterTreeView.LINKED_INDEX_CORNEA;
+
             if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION)) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
             if (shaderName.iContains(Pipeline.SHADER_HQ_TEARLINE)) return CharacterTreeView.LINKED_INDEX_TEARLINE;
             if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH)) return CharacterTreeView.LINKED_INDEX_TEETH;
@@ -470,14 +466,7 @@ namespace Reallusion.Import
                 return CharacterTreeView.LINKED_INDEX_SKIN;            
             if (sourceName.iContains("Std_Eye_Occlusion_")) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
             if (sourceName.iContains("Std_Tearline_")) return CharacterTreeView.LINKED_INDEX_TEARLINE;
-            if (Pipeline.GetRenderPipeline() == RenderPipeline.HDRP)
-            {
-                if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;
-            }
-            else
-            {                
-                if (sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;
-            }
+            if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;            
             if (sourceName.iContains("Std_Upper_Teeth") || sourceName.iContains("Std_Lower_Teeth")) return CharacterTreeView.LINKED_INDEX_TEETH;
 
             return -1;

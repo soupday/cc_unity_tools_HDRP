@@ -56,10 +56,11 @@ namespace Reallusion.Import
         private bool IS_URP => RP == RenderPipeline.URP;
         private bool IS_HDRP => RP == RenderPipeline.HDRP;
 
-        private bool CUSTOM_SHADERS => characterInfo.bakeCustomShaders;
-        private bool BASIC_SHADERS => !characterInfo.bakeCustomShaders;
-        private bool REFRACTIVE_EYES => characterInfo.qualRefractiveEyes;
-        private bool PARALLAX_EYES => !characterInfo.qualRefractiveEyes;
+        private bool CUSTOM_SHADERS => characterInfo.BakeCustomShaders;
+        private bool BASIC_SHADERS => !characterInfo.BakeCustomShaders;        
+        private bool REFRACTIVE_EYES => characterInfo.RefractiveEyes;
+        private bool PARALLAX_EYES => characterInfo.ParallaxEyes;
+        private bool BASIC_EYES => characterInfo.BasicEyes;
 
         public ComputeBake(UnityEngine.Object character, CharacterInfo info)
         {
@@ -286,34 +287,29 @@ namespace Reallusion.Import
                         Material firstPass = null;
                         Material secondPass = null;
 
-                        switch (shaderName)
-                        {
-                            case Pipeline.SHADER_HQ_SKIN:
-                                bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
-                                break;
+                        if (shaderName == Pipeline.SHADER_HQ_SKIN)
+                            bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
 
-                            case Pipeline.SHADER_HQ_TEETH:
-                                bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
-                                break;
+                        else if (shaderName == Pipeline.SHADER_HQ_TEETH)
+                            bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
 
-                            case Pipeline.SHADER_HQ_TONGUE:
-                                bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
-                                break;
+                        else if (shaderName == Pipeline.SHADER_HQ_TONGUE)
+                            bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
 
-                            case Pipeline.SHADER_HQ_HAIR_1ST_PASS:
-                            case Pipeline.SHADER_HQ_HAIR:
-                                bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);
-                                break;
+                        else if (shaderName == Pipeline.SHADER_HQ_HAIR)
+                            bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);
 
-                            case Pipeline.SHADER_HQ_CORNEA:
-                            case Pipeline.SHADER_HQ_CORNEA_PARALLAX:
-                                bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
-                                break;
+                        else if (shaderName == Pipeline.SHADER_HQ_HAIR_1ST_PASS)
+                            bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);
 
-                            case Pipeline.SHADER_HQ_EYE_OCCLUSION:
-                                bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);
-                                break;
-                        }
+                        else if (shaderName == Pipeline.SHADER_HQ_CORNEA)
+                            bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
+
+                        else if (shaderName == Pipeline.SHADER_HQ_CORNEA_PARALLAX)
+                            bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
+
+                        else if (shaderName == Pipeline.SHADER_HQ_EYE_OCCLUSION)
+                            bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);                                               
 
                         if (firstPass && secondPass)
                         {
@@ -373,13 +369,13 @@ namespace Reallusion.Import
                 string lodPrefabPath = Path.Combine(prefabFolder, characterName + "_LODModels.prefab");
                 GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, lodPrefabPath);
                 GameObject.DestroyImmediate(clone);
-                GameObject bakedPrefab = RL.CreateOneLODPrefabFromModel(characterInfo, variant, characterInfo.bakeSeparatePrefab ? "_Baked" : "");
+                GameObject bakedPrefab = RL.CreateOneLODPrefabFromModel(characterInfo, variant, characterInfo.BakeSeparatePrefab ? "_Baked" : "");
                 return bakedPrefab;
             }
             else
             {
                 string prefabPath;
-                if (characterInfo.bakeSeparatePrefab)
+                if (characterInfo.BakeSeparatePrefab)
                     prefabPath = Path.Combine(prefabFolder, characterName + "_Baked.prefab");
                 else
                     prefabPath = Path.Combine(prefabFolder, characterName + ".prefab");
