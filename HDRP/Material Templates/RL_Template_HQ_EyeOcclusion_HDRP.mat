@@ -77,7 +77,7 @@ Material:
     - _ExpandUpper: 0
     - _InnerMax: 0.5
     - _InnerMin: 0.25
-    - _OcclusionPower: 1.5
+    - _OcclusionPower: 2
     - _OcclusionStrength: 0.2
     - _OcclusionStrength2: 0.45
     - _OpaqueCullMode: 2

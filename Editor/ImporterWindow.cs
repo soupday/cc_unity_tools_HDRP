@@ -59,6 +59,7 @@ namespace Reallusion.Import
         private static Texture2D iconBasic;
         private static Texture2D iconHQ;
         private static Texture2D iconBaked;
+        private static Texture2D iconMixed;
         private static Texture2D iconActionBake;
         private static Texture2D iconActionPreview;
         private static Texture2D iconActionRefresh;
@@ -150,6 +151,7 @@ namespace Reallusion.Import
             iconBasic = Util.FindTexture(folders, "RLIcon_BasicChar");
             iconHQ = Util.FindTexture(folders, "RLIcon_HQChar");
             iconBaked = Util.FindTexture(folders, "RLIcon_BakedChar");
+            iconMixed = Util.FindTexture(folders, "RLIcon_MixedChar");
             iconActionBake = Util.FindTexture(folders, "RLIcon_ActionBake");
             iconActionPreview = Util.FindTexture(folders, "RLIcon_ActionPreview");
             iconActionRefresh = Util.FindTexture(folders, "RLIcon_ActionRefresh");
@@ -327,9 +329,16 @@ namespace Reallusion.Import
                     GUILayout.Space(7f);
                     Texture2D iconTexture = iconUnprocessed;
 
-                    if (info.bakeIsBaked) iconTexture = iconBaked;
-                    else if (info.BasicMaterials) iconTexture = iconBasic;
-                    else if (info.HQMaterials) iconTexture = iconHQ;
+                    if (info.bakeIsBaked)
+                    {
+                        if (info.BasicMaterials) iconTexture = iconMixed;
+                        else if (info.HQMaterials) iconTexture = iconBaked;
+                    }
+                    else
+                    {
+                        if (info.BasicMaterials) iconTexture = iconBasic;
+                        else if (info.HQMaterials) iconTexture = iconHQ;
+                    }
 
                     if (GUILayout.Button(iconTexture,                        
                         GUILayout.Width(ICON_SIZE),

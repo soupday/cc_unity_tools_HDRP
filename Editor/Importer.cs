@@ -950,7 +950,8 @@ namespace Reallusion.Import
                 float limbusDarkT = Mathf.InverseLerp(0f, 10f, limbusDarkScale);
                 mat.SetFloat("_LimbusDarkRadius", Mathf.Lerp(0.145f, 0.075f, limbusDarkT));
                 //mat.SetFloat("_LimbusDarkWidth", 0.035f);
-                mat.SetFloat("_ScleraBrightness", 1f * matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"));
+                mat.SetFloat("_ScleraBrightness", Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"), 0.65f));
+                mat.SetFloat("_ScleraSaturation", 0.75f);
                 mat.SetFloat("_ScleraSmoothness", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Roughness"));
                 mat.SetFloat("_ScleraScale", matJson.GetFloatValue("Custom Shader/Variable/Sclera UV Radius"));
                 mat.SetFloat("_ScleraNormalStrength", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Flatten Normal"));
@@ -1083,7 +1084,7 @@ namespace Reallusion.Import
 
                 mat.SetFloat("_OcclusionStrength", Mathf.Pow(os1, 1f / 3f));
                 mat.SetFloat("_OcclusionStrength2", Mathf.Pow(os2, 1f / 3f));
-                mat.SetFloat("_OcclusionPower", 1.75f);
+                mat.SetFloat("_OcclusionPower", 2.0f);
                 //mat.SetFloat("_OcclusionPower", 2f);
 
                 float top = matJson.GetFloatValue("Custom Shader/Variable/Shadow Top");                
