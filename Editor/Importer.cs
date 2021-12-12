@@ -934,13 +934,24 @@ namespace Reallusion.Import
                 mat.SetColor("_CornerShadowColor", matJson.GetColorValue("Custom Shader/Variable/Eye Corner Darkness Color"));
 
                 if (characterInfo.RefractiveEyes)
+                {
                     mat.SetFloat("_IrisDepth", 0.004f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));
+                    mat.SetFloat("_PupilScale", 1f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));
+                }
+                else if (characterInfo.ParallaxEyes)
+                {
+                    float depth = Mathf.Clamp(0.25f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"), 0.1f, 1.0f);
+                    float pupilScale = Mathf.Clamp(1f / Mathf.Pow((depth * 2f + 1f), 2f), 0.1f, 2.0f);                    
+                    mat.SetFloat("_IrisDepth", depth);
+                    mat.SetFloat("_PupilScale", pupilScale);
+                }
                 else
-                    mat.SetFloat("_IrisDepth", 0.1f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));
+                {                    
+                    mat.SetFloat("_PupilScale", 1f);
+                }
 
                 mat.SetFloat("_IrisSmoothness", 0f); // 1f - matJson.GetFloatValue("Custom Shader/Variable/_Iris Roughness"));
-                mat.SetFloat("_IrisBrightness", matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));
-                mat.SetFloat("_PupilScale", 0.8f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));
+                mat.SetFloat("_IrisBrightness", matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));                                
                 mat.SetFloat("_IOR", matJson.GetFloatValue("Custom Shader/Variable/_IoR"));
                 float irisScale = matJson.GetFloatValue("Custom Shader/Variable/Iris UV Radius") / 0.16f;
                 mat.SetFloat("_IrisScale", irisScale);

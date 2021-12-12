@@ -61,6 +61,15 @@ namespace Reallusion.Import
             return false;
         }
 
+        public static Texture GetTextureIf(this Material mat, string shaderRef)
+        {
+            if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
+            {
+                return mat.GetTexture(shaderRef);
+            }
+            return null;
+        }
+
         public static bool SetTextureScaleIf(this Material mat, string shaderRef, Vector2 scale)
         {
             if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
@@ -100,6 +109,15 @@ namespace Reallusion.Import
             return false;
         }
 
+        public static Vector4 GetVectorIf(this Material mat, string shaderRef)
+        {
+            if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
+            {
+                return mat.GetVector(shaderRef);
+            }
+            return Vector4.zero;
+        }
+
         public static bool SetColorIf(this Material mat, string shaderRef, Color value)
         {
             if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
@@ -108,6 +126,15 @@ namespace Reallusion.Import
                 return true;
             }
             return false;
+        }
+
+        public static Color GetColorIf(this Material mat, string shaderRef)
+        {
+            if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
+            {
+                return mat.GetColor(shaderRef);
+            }
+            return Color.magenta;
         }
     }
 }

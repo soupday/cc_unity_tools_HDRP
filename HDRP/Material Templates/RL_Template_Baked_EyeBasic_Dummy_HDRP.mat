@@ -35,58 +35,42 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RL_Template_Baked_CorneaBasicCustom_HDRP
-  m_Shader: {fileID: -6465566751694194690, guid: c1ebe84cd1b59cc4fb98a8e03ae3f7d1, type: 3}
-  m_ShaderKeywords: _DISABLE_SSR_TRANSPARENT
+  m_Name: RL_Template_Baked_EyeBasic_Dummy_HDRP
+  m_Shader: {fileID: 4800000, guid: c4edd00ff2db5b24391a4fcb1762e459, type: 3}
+  m_ShaderKeywords: _DETAIL_MAP _DISABLE_SSR_TRANSPARENT _MASKMAP _MATERIAL_FEATURE_SUBSURFACE_SCATTERING
+    _MATERIAL_FEATURE_TRANSMISSION _NORMALMAP _NORMALMAP_TANGENT_SPACE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2225
+  m_CustomRenderQueue: 2000
   stringTagMap:
     MotionVector: User
   disabledShaderPasses:
-  - TransparentDepthPrepass
-  - TransparentDepthPostpass
-  - TransparentBackface
-  - RayTracingPrepass
+  - DistortionVectors
   - MOTIONVECTORS
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _BaseColorMap:
-        m_Texture: {fileID: 2800000, guid: 2e6930762defd9149a4115ecb5f1a3f8, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _EmissionMap:
+    - _DistortionVectorMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _MaskMap:
-        m_Texture: {fileID: 2800000, guid: fba38fae484e7574a946d1527940b2b2, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _ScleraNormalMap:
+    - _EmissiveColorMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _SubsurfaceMaskMap:
+    - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - unity_Lightmaps:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_LightmapsInd:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_ShadowMasks:
+    - _UnlitColorMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _AddPrecomputedVelocity: 0
+    - _AlbedoAffectEmissive: 0
+    - _AlphaCutoff: 0.5
     - _AlphaCutoffEnable: 0
     - _AlphaDstBlend: 0
     - _AlphaSrcBlend: 1
@@ -94,52 +78,53 @@ Material:
     - _AlphaToMaskInspectorValue: 0
     - _BlendMode: 0
     - _CullMode: 2
-    - _CullModeForward: 2
-    - _DepthOffsetEnable: 0
-    - _DiffusionProfileHash: 3.3750906
+    - _Cutoff: 0.5
+    - _DistortionBlendMode: 0
+    - _DistortionBlurBlendMode: 0
+    - _DistortionBlurDstBlend: 1
+    - _DistortionBlurRemapMax: 1
+    - _DistortionBlurRemapMin: 0
+    - _DistortionBlurScale: 1
+    - _DistortionBlurSrcBlend: 1
+    - _DistortionDepthTest: 1
+    - _DistortionDstBlend: 1
+    - _DistortionEnable: 0
+    - _DistortionOnly: 0
+    - _DistortionScale: 1
+    - _DistortionSrcBlend: 1
+    - _DistortionVectorBias: -1
+    - _DistortionVectorScale: 2
     - _DoubleSidedEnable: 0
-    - _DoubleSidedNormalMode: 1
     - _DstBlend: 0
-    - _EnableBlendModePreserveSpecularLighting: 1
+    - _EmissiveExposureWeight: 1
+    - _EmissiveIntensity: 1
+    - _EmissiveIntensityUnit: 0
     - _EnableFogOnTransparent: 1
+    - _IncludeIndirectLighting: 1
     - _OpaqueCullMode: 2
-    - _PupilScale: 1
-    - _RayTracing: 0
-    - _ReceivesSSR: 1
-    - _ReceivesSSRTransparent: 0
-    - _RefractionModel: 0
-    - _RenderQueueType: 1
-    - _RequireSplitLighting: 1
-    - _ScleraNormalStrength: 0.1
-    - _ScleraNormalTiling: 2
     - _SrcBlend: 1
-    - _StencilRef: 4
-    - _StencilRefDepth: 8
+    - _StencilRef: 0
+    - _StencilRefDepth: 0
     - _StencilRefDistortionVec: 4
-    - _StencilRefGBuffer: 14
-    - _StencilRefMV: 40
+    - _StencilRefMV: 32
     - _StencilWriteMask: 6
     - _StencilWriteMaskDepth: 8
     - _StencilWriteMaskDistortionVec: 4
-    - _StencilWriteMaskGBuffer: 14
     - _StencilWriteMaskMV: 40
-    - _SupportDecals: 1
     - _SurfaceType: 0
-    - _TransparentBackfaceEnable: 0
     - _TransparentCullMode: 2
-    - _TransparentDepthPostpassEnable: 0
-    - _TransparentDepthPrepassEnable: 0
     - _TransparentSortPriority: -4
-    - _TransparentWritingMotionVec: 0
     - _TransparentZWrite: 0
-    - _UseShadowThreshold: 0
+    - _UseEmissiveIntensity: 0
     - _ZTestDepthEqualForOpaque: 3
-    - _ZTestGBuffer: 4
+    - _ZTestModeDistortion: 4
     - _ZTestTransparent: 4
     - _ZWrite: 1
     m_Colors:
-    - _DiffusionProfileAsset: {r: -2.1948957e-10, g: -1.1787802e+22, b: 526403400, a: 5.395903e-11}
-    - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
+    - _Color: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 1}
+    - _EmissiveColorLDR: {r: 0, g: 0, b: 0, a: 1}
+    - _UnlitColor: {r: 0, g: 0, b: 0, a: 1}
+    - _UnlitColorMap_MipInfo: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

@@ -433,12 +433,12 @@ namespace Reallusion.Import
                 if (normalMap) bakedMaterial.SetFloatIf("_NormalScale", normalScale);                
                 bakedMaterial.SetTextureIf("_EmissionColorMap", emissionMap);
                 bakedMaterial.SetColorIf("_EmissionColor", emissiveColor);
+                if (detailMask)
+                    bakedMaterial.SetTextureIf("_DetailMask", detailMask);
                 if (detailMap)
                 {
                     bakedMaterial.SetTextureIf("_DetailMap", detailMap);
-                    bakedMaterial.SetTextureScaleIf("_DetailMap", new Vector2(tiling, tiling));
-                    if (detailMask)
-                        bakedMaterial.SetTextureIf("_DetailMask", detailMask);
+                    bakedMaterial.SetTextureScaleIf("_DetailMap", new Vector2(tiling, tiling));                    
                     bakedMaterial.SetFloatIf("_DetailNormalScale", detailScale);
                 }                
                 bakedMaterial.SetTextureIf("_SubsurfaceMaskMap", subsurfaceMap);
@@ -823,43 +823,44 @@ namespace Reallusion.Import
             Texture2D blend = GetMaterialTexture(mat, "_ColorBlendMap");
             Texture2D mask = GetMaterialTexture(mat, "_MaskMap");
             Texture2D microNormal = GetMaterialTexture(mat, "_ScleraNormalMap", true);
-            float microNormalStrength = mat.GetFloat("_ScleraNormalStrength");
-            float microNormalTiling = mat.GetFloat("_ScleraNormalTiling");
-            float aoStrength = mat.GetFloat("_AOStrength");
-            float colorBlendStrength = mat.GetFloat("_ColorBlendStrength");
-            float scleraSmoothness = mat.GetFloat("_ScleraSmoothness");
-            float irisSmoothness = mat.GetFloat("_IrisSmoothness");
-            float corneaSmoothness = mat.GetFloat("_CorneaSmoothness");
-            float irisHue = mat.GetFloat("_IrisHue");
-            float irisSaturation = mat.GetFloat("_IrisSaturation");
-            float irisBrightness = mat.GetFloat("_IrisBrightness");
-            float scleraHue = mat.GetFloat("_ScleraHue");
-            float scleraSaturation = mat.GetFloat("_ScleraSaturation");
-            float scleraBrightness = mat.GetFloat("_ScleraBrightness");
-            float refractionThickness = mat.GetFloat("_RefractionThickness");
-            float shadowRadius = mat.GetFloat("_ShadowRadius");
-            float shadowHardness = mat.GetFloat("_ShadowHardness");
-            float irisScale = mat.GetFloat("_IrisScale");
-            float scleraScale = mat.GetFloat("_ScleraScale");
-            float limbusDarkRadius = mat.GetFloat("_LimbusDarkRadius");
-            float limbusDarkWidth = mat.GetFloat("_LimbusDarkWidth");
-            float irisRadius = mat.GetFloat("_IrisRadius");
-            float limbusWidth = mat.GetFloat("_LimbusWidth");
-            float ior = mat.GetFloat("_IOR");
-            float depthRadius = mat.GetFloat("_DepthRadius");
-            float irisDepth = mat.GetFloat("_IrisDepth");
-            float pupilScale = mat.GetFloat("_PupilScale");
+            float microNormalStrength = mat.GetFloatIf("_ScleraNormalStrength");
+            float microNormalTiling = mat.GetFloatIf("_ScleraNormalTiling");
+            float aoStrength = mat.GetFloatIf("_AOStrength");
+            float colorBlendStrength = mat.GetFloatIf("_ColorBlendStrength");
+            float scleraSmoothness = mat.GetFloatIf("_ScleraSmoothness");
+            float irisSmoothness = mat.GetFloatIf("_IrisSmoothness");
+            float corneaSmoothness = mat.GetFloatIf("_CorneaSmoothness");
+            float irisHue = mat.GetFloatIf("_IrisHue");
+            float irisSaturation = mat.GetFloatIf("_IrisSaturation");
+            float irisBrightness = mat.GetFloatIf("_IrisBrightness");
+            float scleraHue = mat.GetFloatIf("_ScleraHue");
+            float scleraSaturation = mat.GetFloatIf("_ScleraSaturation");
+            float scleraBrightness = mat.GetFloatIf("_ScleraBrightness");
+            float refractionThickness = mat.GetFloatIf("_RefractionThickness");
+            float shadowRadius = mat.GetFloatIf("_ShadowRadius");
+            float shadowHardness = mat.GetFloatIf("_ShadowHardness");
+            float irisScale = mat.GetFloatIf("_IrisScale");
+            float scleraScale = mat.GetFloatIf("_ScleraScale");
+            float limbusDarkRadius = mat.GetFloatIf("_LimbusDarkRadius");
+            float limbusDarkWidth = mat.GetFloatIf("_LimbusDarkWidth");
+            float irisRadius = mat.GetFloatIf("_IrisRadius");
+            float limbusWidth = mat.GetFloatIf("_LimbusWidth");
+            float ior = mat.GetFloatIf("_IOR");
+            float depthRadius = mat.GetFloatIf("_DepthRadius");
+            float parallaxRadius = mat.GetFloatIf("_ParallaxRadius");
+            float irisDepth = mat.GetFloatIf("_IrisDepth");
+            float pupilScale = mat.GetFloatIf("_PupilScale");
             float parallaxMod = mat.GetFloatIf("_PMod");
             float scleraSubsurfaceScale = mat.GetFloatIf("_ScleraSubsurfaceScale");
             float irisSubsurfaceScale = mat.GetFloatIf("_IrisSubsurfaceScale");
             float subsurfaceThickness = mat.GetFloatIf("_SubsurfaceThickness");            
 
-            Color cornerShadowColor = mat.GetColor("_CornerShadowColor");
-            Color limbusColor = mat.GetColor("_LimbusColor");
-            bool isCornea = mat.GetFloat("BOOLEAN_ISCORNEA") > 0f;
-            bool isLeftEye = mat.GetFloat("_IsLeftEye") > 0f;
+            Color cornerShadowColor = mat.GetColorIf("_CornerShadowColor");
+            Color limbusColor = mat.GetColorIf("_LimbusColor");
+            bool isCornea = mat.GetFloatIf("BOOLEAN_ISCORNEA") > 0f;
+            bool isLeftEye = mat.GetFloatIf("_IsLeftEye") > 0f;
             Texture2D emission = GetMaterialTexture(mat, "_EmissionMap");
-            Color emissiveColor = mat.GetColor("_EmissiveColor");
+            Color emissiveColor = mat.GetColorIf("_EmissiveColor");
 
             Texture2D bakedBaseMap = cornea;
             Texture2D bakedMaskMap = mask;
@@ -904,15 +905,16 @@ namespace Reallusion.Import
                         sourceName + "_Occlusion", "RLCorneaAO");                                       
                 }
 
-                if (IS_HDRP)
+                if (IS_HDRP && !CUSTOM_SHADERS)
                     // HDRP packs the detail micro normal into the YW channels, for better precision.
                     bakedDetailMap = BakeDetailMap(microNormal,
                         sourceName + "_Detail");
-                else
-                    // URP and Built-in uses the micro normal directly, but needs a separate detail mask.
-                    bakedDetailMask = BakeCorneaDetailMaskMap(mask,
-                        irisScale, irisRadius, limbusWidth, depthRadius, microNormalStrength,
-                        sourceName + "_DetailMask");
+                
+                if (CUSTOM_SHADERS && !REFRACTIVE_EYES)
+                // various baked mask maps for the baked shaders
+                bakedDetailMask = BakeCorneaDetailMaskMap(mask,
+                    irisScale, irisRadius, limbusWidth, depthRadius, parallaxRadius, microNormalStrength,
+                    sourceName + "_DetailMask");
 
                 if (REFRACTIVE_EYES)
                 {
@@ -971,7 +973,7 @@ namespace Reallusion.Import
                     result.SetFloatIf("_ScleraNormalTiling", microNormalTiling);
                     result.SetFloatIf("_ScleraNormalStrength", microNormalStrength);                    
                     result.SetFloatIf("_Thickness", subsurfaceThickness);
-                    result.SetFloatIf("_PMod", parallaxMod);
+                    result.SetFloatIf("_PMod", parallaxMod);                    
                 }
             }
             else
@@ -1940,7 +1942,7 @@ namespace Reallusion.Import
         }
 
         private Texture2D BakeCorneaDetailMaskMap(Texture2D mask,            
-            float irisScale, float irisRadius, float limbusWidth, float depthRadius, float microNormalStrength,
+            float irisScale, float irisRadius, float limbusWidth, float depthRadius, float parallaxRadius, float microNormalStrength,
             string name)
         {
             Vector2Int maxSize = GetMaxSize(mask);
@@ -1960,6 +1962,7 @@ namespace Reallusion.Import
                 bakeShader.SetFloat("irisRadius", irisRadius);
                 bakeShader.SetFloat("limbusWidth", limbusWidth);
                 bakeShader.SetFloat("depthRadius", depthRadius);
+                bakeShader.SetFloat("parallaxRadius", parallaxRadius);
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
                 return bakeTarget.SaveAndReimport();
             }
