@@ -160,7 +160,7 @@ namespace Reallusion.Import
             }
 
             // before we do anything else, if we are connecting default materials we need to bake a few maps first...
-            if (characterInfo.BuildQuality == MaterialQuality.Default && Pipeline.isHDRP)
+            if (characterInfo.BasicMaterials && Pipeline.isHDRP)
             {
                 CacheBakedMaps();
             }

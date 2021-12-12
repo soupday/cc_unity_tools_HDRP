@@ -115,7 +115,7 @@ namespace Reallusion.Import
                 else characterTreeView.DisableMultiPass();
 
                 EditorPrefs.SetString("RL_Importer_Context_Path", contextCharacter.path);
-            }
+            }            
         }        
 
         public static ImporterWindow Init(Mode windowMode, UnityEngine.Object characterObject)
@@ -331,13 +331,13 @@ namespace Reallusion.Import
 
                     if (info.bakeIsBaked)
                     {
-                        if (info.BasicMaterials) iconTexture = iconMixed;
-                        else if (info.HQMaterials) iconTexture = iconBaked;
+                        if (info.BuiltBasicMaterials) iconTexture = iconMixed;
+                        else if (info.BuiltHQMaterials) iconTexture = iconBaked;
                     }
                     else
                     {
-                        if (info.BasicMaterials) iconTexture = iconBasic;
-                        else if (info.HQMaterials) iconTexture = iconHQ;
+                        if (info.BuiltBasicMaterials) iconTexture = iconBasic;
+                        else if (info.BuiltHQMaterials) iconTexture = iconHQ;
                     }
 
                     if (GUILayout.Button(iconTexture,                        
@@ -504,6 +504,8 @@ namespace Reallusion.Import
                 GUILayout.Height(BUTTON_HEIGHT)))
             {
                 Util.LogInfo("Doing: Building materials...");
+                if (contextCharacter.BuildQuality == MaterialQuality.None)
+                    contextCharacter.BuildQuality = MaterialQuality.High;
                 GameObject prefab = ImportCharacter(contextCharacter);                
                 contextCharacter.Write();
                 CreateTreeView(true);
@@ -647,7 +649,10 @@ namespace Reallusion.Import
 
         private void MaterialOptionSelected(object sel)
         {
-            contextCharacter.BasicMaterials = (bool)sel;
+            if ((bool)sel)
+                contextCharacter.BuildQuality = MaterialQuality.Default;
+            else
+                contextCharacter.BuildQuality = MaterialQuality.High;
         }
 
         private void BakeShadersOptionSelected(object sel)

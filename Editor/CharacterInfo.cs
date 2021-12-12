@@ -40,49 +40,40 @@ namespace Reallusion.Import
         // these are the settings the character is currently set to build
         private ProcessingType logType = ProcessingType.None;
         private EyeQuality qualEyes = EyeQuality.Parallax;        
-        private bool dualMaterialHair = false;
+        private bool dualMaterialHair = true;
         private bool bakeCustomShaders = true;
         private bool bakeSeparatePrefab = true;
 
-        public bool BasicMaterials 
-        { 
-            get 
+        public ProcessingType BuildType { get { return logType; } set { logType = value; } }
+        public MaterialQuality BuildQuality
+        {
+            get
+            {                
+                if (BuildType == ProcessingType.HighQuality) return MaterialQuality.High;
+                else if (BuildType == ProcessingType.Basic) return MaterialQuality.Default;
+                return MaterialQuality.None;
+            }
+            set
             {
-                if (!CanHaveHighQualityMaterials) return true;
-                else return logType == ProcessingType.Basic;
-            } 
-            set 
-            {
-                if (!CanHaveHighQualityMaterials) logType = ProcessingType.Basic;
-                else logType = value ? ProcessingType.Basic : ProcessingType.HighQuality;
-            } 
+                if (value == MaterialQuality.High) BuildType = ProcessingType.HighQuality;
+                else if (value == MaterialQuality.Default) BuildType = ProcessingType.Basic;
+                else BuildType = ProcessingType.None;
+            }
         }
-        public bool HQMaterials { get { return !BasicMaterials; } set { BasicMaterials = !value; } }
-        public EyeQuality QualEyes 
-        { 
-            get 
-            { 
-                if (!Pipeline.isHDRP && qualEyes == EyeQuality.Refractive) qualEyes = EyeQuality.Parallax; 
-                return qualEyes; 
-            } 
-            set 
-            {
-                qualEyes = value; 
-            } 
-        }        
+        public bool BasicMaterials => logType == ProcessingType.Basic;
+        public bool HQMaterials => logType == ProcessingType.HighQuality;
+        public EyeQuality QualEyes { get { return qualEyes; } set { qualEyes = value; } }        
         public bool RefractiveEyes => QualEyes == EyeQuality.Refractive;
         public bool BasicEyes => QualEyes == EyeQuality.Basic;
         public bool ParallaxEyes => QualEyes == EyeQuality.Parallax;
         public bool DualMaterialHair { get { return dualMaterialHair; } set { dualMaterialHair = value; } }
         public bool BakeCustomShaders { get { return bakeCustomShaders; } set { bakeCustomShaders = value; } }
-        public bool BakeSeparatePrefab { get { return bakeSeparatePrefab; } set { bakeSeparatePrefab = value; } }
-
-        public MaterialQuality BuildQuality => HQMaterials ? MaterialQuality.High : MaterialQuality.Default;
+        public bool BakeSeparatePrefab { get { return bakeSeparatePrefab; } set { bakeSeparatePrefab = value; } }        
 
         // these are the settings the character has been built to.  
         private ProcessingType builtLogType = ProcessingType.None;
         private EyeQuality builtQualEyes = EyeQuality.Parallax;        
-        private bool builtDualMaterialHair = false;
+        private bool builtDualMaterialHair = true;
         private bool builtBakeCustomShaders = true;
         private bool builtBakeSeparatePrefab = true;
 
@@ -101,6 +92,15 @@ namespace Reallusion.Import
         private GameObject fbx;
         private QuickJSON jsonData;
 
+        private void FixCharSettings()
+        {
+            if (logType == ProcessingType.HighQuality && !CanHaveHighQualityMaterials)
+                logType = ProcessingType.Basic;
+
+            if (qualEyes == EyeQuality.Refractive && !Pipeline.isHDRP) 
+                qualEyes = EyeQuality.Parallax;
+        }
+
         public CharacterInfo(string guid)
         {
             this.guid = guid;
@@ -118,9 +118,8 @@ namespace Reallusion.Import
         }
 
         public void ApplySettings()
-        {
-            if (qualEyes == EyeQuality.Refractive && !Pipeline.isHDRP) qualEyes = EyeQuality.Parallax;
-            if (!CanHaveHighQualityMaterials && logType == ProcessingType.HighQuality) logType = ProcessingType.Basic;
+        {            
+            FixCharSettings();
 
             builtLogType = logType;
             builtQualEyes = qualEyes;

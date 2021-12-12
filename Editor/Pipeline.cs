@@ -36,7 +36,7 @@ namespace Reallusion.Import
         Eyelash, Teeth, Tongue, DefaultOpaque, DefaultAlpha
     }
 
-    public enum MaterialQuality { Default, High, Baked }
+    public enum MaterialQuality { None, Default, High, Baked }
 
     public static class Pipeline
     {
