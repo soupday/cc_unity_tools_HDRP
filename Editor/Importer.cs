@@ -940,7 +940,7 @@ namespace Reallusion.Import
                 }
                 else if (characterInfo.ParallaxEyes)
                 {
-                    float depth = Mathf.Clamp(0.25f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"), 0.1f, 1.0f);
+                    float depth = Mathf.Clamp(0.333f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"), 0.1f, 1.0f);
                     float pupilScale = Mathf.Clamp(1f / Mathf.Pow((depth * 2f + 1f), 2f), 0.1f, 2.0f);                    
                     mat.SetFloat("_IrisDepth", depth);
                     mat.SetFloat("_PupilScale", pupilScale);
