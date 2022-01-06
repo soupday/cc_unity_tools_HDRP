@@ -36,7 +36,7 @@ namespace Reallusion.Import
         private static List<CharacterInfo> validCharacters;
         private static string backScenePath;
         private static Mode mode;
-        private static ImporterWindow currentWindow;
+        private static ImporterWindow currentWindow;        
                         
         private Vector2 iconScrollView;
         private bool previewCharacterAfterGUI;
@@ -306,6 +306,7 @@ namespace Reallusion.Import
             {
                 StoreBackScene();
                 Util.PreviewCharacter(contextCharacter.Fbx);
+                if (AnimPlayerIMGUI.visible) AnimPlayerIMGUI.DestroyPlayer();
             }
 
             if (refreshAfterGUI)
@@ -513,7 +514,13 @@ namespace Reallusion.Import
                 else characterTreeView.DisableMultiPass();
 
                 if (prefab)
+                {
                     Util.AddPreviewCharacter(contextCharacter.Fbx, prefab, Vector3.zero, true);
+                    if (AnimPlayerIMGUI.visible)
+                    {
+                        AnimPlayerIMGUI.DestroyPlayer();                        
+                    }
+                }
             }
             
             GUILayout.EndVertical();
@@ -594,6 +601,7 @@ namespace Reallusion.Import
             }
             GUI.enabled = true;
 
+            /*
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
             if (!contextCharacter.BuiltHQMaterials || contextCharacter.BuiltDualMaterialHair) GUI.enabled = false;
@@ -605,7 +613,26 @@ namespace Reallusion.Import
                 contextCharacter.Write();
                 TrySetMultiPass(true);
             }
-            GUI.enabled = true;            
+            GUI.enabled = true;
+            */
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+
+            if (contextCharacter == null) GUI.enabled = false;
+            if (GUILayout.Button(new GUIContent(iconAction2Pass, "Show animation preview player."),
+                GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+            {
+                if (AnimPlayerIMGUI.visible)
+                {                    
+                    AnimPlayerIMGUI.DestroyPlayer();
+                }
+                else
+                {
+                    AnimPlayerIMGUI.SetCharacter(Util.FindPreviewCharacter(contextCharacter.Fbx));
+                    AnimPlayerIMGUI.CreatePlayer();
+                }
+            }
+            GUI.enabled = true;
 
             GUILayout.EndVertical();
             
@@ -634,7 +661,7 @@ namespace Reallusion.Import
             GUILayout.EndVertical();
 
             GUILayout.EndArea();            
-        }
+        }        
 
         private void EyeOptionSelected(object sel)
         {

@@ -572,10 +572,68 @@ namespace Reallusion.Import
                 if (clone)
                 {
                     Selection.activeGameObject = clone;
-                    SceneView.FrameLastActiveSceneView();
+                    SceneView.FrameLastActiveSceneView();                    
                 }
             }
-        }        
+        }
+
+        public static GameObject FindPreviewCharacter(GameObject fbx)
+        {
+            GameObject container = GameObject.Find("Character Container");
+            GameObject found = null;
+            if (container)
+            {                
+                // try to find a matching prefab for the supplied character fbx.
+                for (int i = 0; i < container.transform.childCount; i++)
+                {
+                    GameObject child = container.transform.GetChild(i).gameObject;
+
+                    GameObject source;
+                    if (child.name.iContains("_lod") && child.transform.childCount == 1)
+                        source = GetRootPrefabFromObject(child.transform.GetChild(0).gameObject);
+                    else
+                        source = GetRootPrefabFromObject(child);
+
+                    if (source == fbx) return child;
+
+                    if (source && !found)
+                    {
+                        Animator anim = child.GetComponent<Animator>();
+                        if (anim) found = child;
+                    }
+                }                                                
+            }            
+
+            return found;
+        }
+
+        public static AnimationClip GetFirstAnimationClipFromCharacter(GameObject sceneCharacter)
+        {
+            AnimationClip found = null;
+
+            GameObject sourceFbx;
+            if (sceneCharacter.name.iContains("_lod") && sceneCharacter.transform.childCount == 1)
+                sourceFbx = GetRootPrefabFromObject(sceneCharacter.transform.GetChild(0).gameObject);
+            else
+                sourceFbx = GetRootPrefabFromObject(sceneCharacter);
+
+            if (sourceFbx)
+            {                
+                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(sourceFbx));
+                foreach (Object subObject in data)
+                {
+                    if (subObject.GetType().Equals(typeof(AnimationClip)))
+                    {
+                        found = (AnimationClip)subObject;
+
+                        // try to return the first non T-Pose.
+                        if (!found.name.iContains("T-Pose")) return found;
+                    }
+                }
+            }
+
+            return found;
+        }
 
         public static void AddPreviewCharacter(GameObject fbx, GameObject prefab, Vector3 offset, bool replace)
         {
@@ -616,7 +674,7 @@ namespace Reallusion.Import
                         if (clone)
                         {
                             clone.transform.position += offset;
-                            Selection.activeGameObject = clone;
+                            Selection.activeGameObject = clone;                            
                         }
 
                         return;
