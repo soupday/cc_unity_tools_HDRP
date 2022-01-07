@@ -798,18 +798,33 @@ namespace Reallusion.Import
             }
         }
 
+        double time = 0f;
+        double deltaTime = 0f;
+        double frameTime = 1f;
         void Update()
-        {            
+        {
+            if (time == 0f) time = EditorApplication.timeSinceStartup;
+            deltaTime = EditorApplication.timeSinceStartup - time;
+            time = EditorApplication.timeSinceStartup;
+
             if (!EditorApplication.isPlaying && AnimationMode.InAnimationMode())
             {               
                 if (AnimPlayerIMGUI.animationClip && AnimPlayerIMGUI.animator)
                 {
                     if (AnimPlayerIMGUI.play)
                     {
-                        AnimPlayerIMGUI.time += Time.deltaTime;
+                        double frameDuration = 1.0f / AnimPlayerIMGUI.animationClip.frameRate;
+
+                        AnimPlayerIMGUI.time += (float)deltaTime;
+                        frameTime += deltaTime;
                         if (AnimPlayerIMGUI.time >= AnimPlayerIMGUI.animationClip.length)
                             AnimPlayerIMGUI.time = 0f;
+
+                        if (frameTime < frameDuration) return;
+                        frameTime = 0f;
                     }
+                    else 
+                        frameTime = 1f;
 
                     if (AnimPlayerIMGUI.current == AnimPlayerIMGUI.time) return;
                     
