@@ -36,7 +36,9 @@ namespace Reallusion.Import
         private static List<CharacterInfo> validCharacters;
         private static string backScenePath;
         private static Mode mode;
-        private static ImporterWindow currentWindow;        
+        private static ImporterWindow currentWindow;
+        public static ImporterWindow Current { get { return currentWindow; } }        
+        public CharacterInfo Character { get { return contextCharacter; } }        
                         
         private Vector2 iconScrollView;
         private bool previewCharacterAfterGUI;
@@ -306,7 +308,7 @@ namespace Reallusion.Import
             {
                 StoreBackScene();
                 Util.PreviewCharacter(contextCharacter.Fbx);
-                if (AnimPlayerIMGUI.visible) AnimPlayerIMGUI.DestroyPlayer();
+                ShowAnimationPlayer();
             }
 
             if (refreshAfterGUI)
@@ -516,10 +518,7 @@ namespace Reallusion.Import
                 if (prefab)
                 {
                     Util.AddPreviewCharacter(contextCharacter.Fbx, prefab, Vector3.zero, true);
-                    if (AnimPlayerIMGUI.visible)
-                    {
-                        AnimPlayerIMGUI.DestroyPlayer();                        
-                    }
+                    ShowAnimationPlayer();
                 }
             }
             
@@ -622,14 +621,13 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconAction2Pass, "Show animation preview player."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (AnimPlayerIMGUI.visible)
+                if (AnimPlayerIMGUI.IsPlayerShown())
                 {                    
                     AnimPlayerIMGUI.DestroyPlayer();
                 }
                 else
                 {
-                    AnimPlayerIMGUI.SetCharacter(Util.FindPreviewCharacter(contextCharacter.Fbx));
-                    AnimPlayerIMGUI.CreatePlayer();
+                    ShowAnimationPlayer();
                 }
             }
             GUI.enabled = true;
@@ -743,6 +741,7 @@ namespace Reallusion.Import
         private void OnDestroy()
         {            
             ClearAllData();
+            AnimPlayerIMGUI.DestroyPlayer();
         }        
 
         private static void MakeStyle()
@@ -799,5 +798,41 @@ namespace Reallusion.Import
             }
         }
 
+        void Update()
+        {            
+            if (!EditorApplication.isPlaying && AnimationMode.InAnimationMode())
+            {               
+                if (AnimPlayerIMGUI.animationClip && AnimPlayerIMGUI.animator)
+                {
+                    if (AnimPlayerIMGUI.play)
+                    {
+                        AnimPlayerIMGUI.time += Time.deltaTime;
+                        if (AnimPlayerIMGUI.time >= AnimPlayerIMGUI.animationClip.length)
+                            AnimPlayerIMGUI.time = 0f;
+                    }
+
+                    if (AnimPlayerIMGUI.current == AnimPlayerIMGUI.time) return;
+                    
+                    AnimationMode.BeginSampling();
+                    AnimationMode.SampleAnimationClip(AnimPlayerIMGUI.animator.gameObject, AnimPlayerIMGUI.animationClip, AnimPlayerIMGUI.time);                    
+                    AnimationMode.EndSampling();
+
+                    SceneView.RepaintAll();
+                    AnimPlayerIMGUI.current = AnimPlayerIMGUI.time;
+                }
+            }
+        }
+
+        private void ShowAnimationPlayer()
+        {
+            if (AnimPlayerIMGUI.IsPlayerShown())
+            {
+                AnimPlayerIMGUI.SetCharacter(Util.FindPreviewCharacter(contextCharacter.Fbx));
+            }
+            else
+            {
+                AnimPlayerIMGUI.CreatePlayer(Util.FindPreviewCharacter(contextCharacter.Fbx));
+            }
+        }
     }
 }

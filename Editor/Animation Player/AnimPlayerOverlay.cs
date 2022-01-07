@@ -4,13 +4,13 @@ using UnityEditor.Overlays;
 
 namespace Reallusion.Import
 {
-    [Overlay(typeof(SceneView), id, "Animation Playback")]
+    [Overlay(typeof(SceneView), "Reallusion Import Preview Animaton Player", "Animation Playback")]
     public class AnimPlayerOverlay : IMGUIOverlay, ITransientOverlay
     {
         public static AnimPlayerOverlay createdOverlay { get; private set; }
         public static bool exists { get { return createdOverlay != null; } }
         
-        const string id = "iClone animaton player";
+        //const string id = "Preview animaton player";
         bool isVisible;
 
         public bool visible { get { return isVisible; } }

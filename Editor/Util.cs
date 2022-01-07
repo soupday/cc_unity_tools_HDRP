@@ -581,25 +581,39 @@ namespace Reallusion.Import
         {
             GameObject container = GameObject.Find("Character Container");
             GameObject found = null;
+            Object selected = Selection.activeObject;
+            GameObject selectedRoot = null;
+            if (selected) selectedRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(selected);
+
+            /*
+            // if the selection prefab root has an animator, use this as the target of the animation player.
+            if (selectedRoot)
+            {
+                if (selectedRoot.GetComponent<Animator>())
+                {
+                    return selectedRoot;
+                }
+            }*/
+
             if (container)
-            {                
+            {
                 // try to find a matching prefab for the supplied character fbx.
                 for (int i = 0; i < container.transform.childCount; i++)
                 {
                     GameObject child = container.transform.GetChild(i).gameObject;
-
+                    Animator anim = child.GetComponent<Animator>();
                     GameObject source;
-                    if (child.name.iContains("_lod") && child.transform.childCount == 1)
-                        source = GetRootPrefabFromObject(child.transform.GetChild(0).gameObject);
-                    else
-                        source = GetRootPrefabFromObject(child);
 
-                    if (source == fbx) return child;
+                    if (anim)
+                    {                        
+                        if (child.name.iContains("_lod") && child.transform.childCount == 1)
+                            source = GetRootPrefabFromObject(child.transform.GetChild(0).gameObject);
+                        else
+                            source = GetRootPrefabFromObject(child);                        
 
-                    if (source && !found)
-                    {
-                        Animator anim = child.GetComponent<Animator>();
-                        if (anim) found = child;
+                        if (source == fbx) return child;
+
+                        if (source && !found) found = child;
                     }
                 }                                                
             }            

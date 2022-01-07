@@ -29,6 +29,21 @@ namespace Reallusion.Import
             ImporterWindow.Init(ImporterWindow.Mode.multi, Selection.activeObject);
         }
 
+        [MenuItem("CC3/Animation Player", priority = 2)]
+        public static void ShowAnimationPlayer()
+        {
+            if (ImporterWindow.Current)
+            {
+                if (ImporterWindow.Current.Character != null)
+                {
+                    if (AnimPlayerIMGUI.IsPlayerShown())
+                        AnimPlayerIMGUI.DestroyPlayer();
+                    else
+                        AnimPlayerIMGUI.CreatePlayer(Util.FindPreviewCharacter(ImporterWindow.Current.Character.Fbx));
+                }
+            }
+        }
+
         [MenuItem("Assets/CC3/Import Character", priority = 2000)]
         public static void InitAssetCC3ImportGUI()
         {
