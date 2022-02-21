@@ -1,6 +1,6 @@
 {
   "name": "com.soupday.cc3_unity_tools",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "displayName": "CC3 Unity Tools",
   "description": "Unity importer for Character Creator 3/iClone 7.",
   "unity": "2020.3",

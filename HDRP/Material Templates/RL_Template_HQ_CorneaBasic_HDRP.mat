@@ -108,7 +108,7 @@ Material:
     - _IrisSaturation: 1
     - _IrisScale: 1
     - _IrisSmoothness: 0
-    - _IrisSubsurfaceScale: 0.1
+    - _IrisSubsurfaceScale: 0
     - _IsLeftEye: 0
     - _LimbusDarkRadius: 0.1
     - _LimbusDarkWidth: 0.025

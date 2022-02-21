@@ -144,7 +144,7 @@ Material:
     - _RequireSplitLighting: 1
     - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
-    - _SmoothnessPower: 1
+    - _SmoothnessPower: 1.2
     - _SrcBlend: 1
     - _StencilRef: 4
     - _StencilRefDepth: 8

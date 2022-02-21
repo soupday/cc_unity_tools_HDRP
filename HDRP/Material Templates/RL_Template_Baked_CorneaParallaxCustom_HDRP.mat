@@ -109,7 +109,7 @@ Material:
     - _IOR: 1.4
     - _IrisDepth: 0.004
     - _OpaqueCullMode: 2
-    - _PMod: 5
+    - _PMod: 6.4
     - _PupilScale: 1
     - _RayTracing: 0
     - _ReceivesSSR: 1

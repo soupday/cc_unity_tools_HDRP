@@ -32,14 +32,18 @@ namespace Reallusion.Import
         [MenuItem("CC3/Animation Player", priority = 2)]
         public static void ShowAnimationPlayer()
         {
-            if (ImporterWindow.Current)
+            if (AnimPlayerGUI.IsPlayerShown())
             {
-                if (ImporterWindow.Current.Character != null)
+                AnimPlayerGUI.DestroyPlayer();
+                WindowManager.showTools = false;
+            }
+            else
+            {
+                PreviewScene ps = PreviewScene.GetPreviewScene();
+                if (ps.IsValid)
                 {
-                    if (AnimPlayerIMGUI.IsPlayerShown())
-                        AnimPlayerIMGUI.DestroyPlayer();
-                    else
-                        AnimPlayerIMGUI.CreatePlayer(Util.FindPreviewCharacter(ImporterWindow.Current.Character.Fbx));
+                    AnimPlayerGUI.CreatePlayer(ps, ImporterWindow.Current?.Character?.Fbx);
+                    WindowManager.showTools = true;
                 }
             }
         }
@@ -49,12 +53,30 @@ namespace Reallusion.Import
         {
             ImporterWindow.Init(ImporterWindow.Mode.single, Selection.activeObject);
         }
-
+         
         [MenuItem("Assets/CC3/Import Character", true)]
         public static bool ValidateInitAssetCC3ImportGUI()
         {
             if (Util.IsCC3Character(Selection.activeObject)) return true;
             return false;
-        }        
+        }
+
+        [MenuItem("CC3/Scene Tools/Orbit Scene View", priority = 210)]
+        public static void DoOrbitSceneView()
+        {
+            WindowManager.DoSceneViewOrbit();
+        }
+
+        [MenuItem("CC3/Scene Tools/Orbit Scene View (Tracking)", priority = 211)]
+        public static void DoOrbitSceneViewTracking()
+        {
+            WindowManager.DoSceneViewOrbitTracking();
+        }
+
+        [MenuItem("CC3/Scene Tools/Match Scene Camera", priority = 212)]
+        public static void DoMatchSceneCamera()
+        {
+            WindowManager.DoMatchSceneCamera();
+        }
     }
 }

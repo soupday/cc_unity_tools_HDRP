@@ -108,13 +108,13 @@ Material:
     - _IrisSaturation: 1
     - _IrisScale: 1
     - _IrisSmoothness: 0
-    - _IrisSubsurfaceScale: 0.1
+    - _IrisSubsurfaceScale: 0
     - _IsLeftEye: 0
     - _LimbusDarkRadius: 0.1
     - _LimbusDarkWidth: 0.025
     - _LimbusWidth: 0.055
     - _OpaqueCullMode: 2
-    - _PMod: 6.2717
+    - _PMod: 6.4
     - _ParallaxRadius: 0.1175
     - _PupilScale: 0.8
     - _RayTracing: 0
@@ -145,7 +145,7 @@ Material:
     - _StencilWriteMaskDistortionVec: 4
     - _StencilWriteMaskGBuffer: 14
     - _StencilWriteMaskMV: 40
-    - _SubsurfaceThickness: 0.1
+    - _SubsurfaceThickness: 0.4
     - _SupportDecals: 1
     - _SurfaceType: 0
     - _TransparentBackfaceEnable: 0

@@ -12,6 +12,11 @@ Additionally, more performance focussed characters can be produced using simpler
 
 Progress and additional information can be found in the [Reallusion forum thread](https://forum.reallusion.com/488356/Unity-Auto-Setup).
 
+Links
+=====
+[URP Version](https://github.com/soupday/cc3_unity_tools_URP)
+[3D/Built-in Version](https://github.com/soupday/cc3_unity_tools_3D)
+
 How it works
 ============
 

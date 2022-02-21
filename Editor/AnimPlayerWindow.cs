@@ -3,7 +3,7 @@ using UnityEditor;
 
 namespace Reallusion.Import
 {
-    public class AnimPlayerWindow : EditorWindow
+    public class AnimPlayerWindow
     {
         public static bool isShown = false;
         private static float xpadding = 6f;
@@ -17,51 +17,43 @@ namespace Reallusion.Import
         
         public static void OnSceneGUI(SceneView sceneView)
         {
-            if (AnimPlayerIMGUI.foldOut)
-            {
-                height = 110f;
-            }
-            else
-            {
-                height = 26f;
-            }
+            height = 72f;
+            if (AnimPlayerGUI.animFoldOut) height += 84f;
+            if (AnimPlayerGUI.faceFoldOut) height += 90f;
+            
             float x = sceneView.position.width - width - xpadding;
             float y = sceneView.position.height - height - ypadding;
 
+            sceneView.autoRepaintOnSceneChange = true;            
+
             var windowOverlayRect = new Rect(x, y, width, height);
-            //shenanigans to make the time slider draggable (only in GUILayout.Window seems broken in GUI.Window)
-            //and when the controls arent drawn when folded in GUILayout.Window doesnt respect MinWidth - so use fixed GUI.Window
-            if (AnimPlayerIMGUI.foldOut)
-                GUILayout.Window("Animation Playback".GetHashCode(), windowOverlayRect, DoWindow, "", GUILayout.MinWidth(width));
-            else
-                GUI.Window("Animation Playback".GetHashCode(), windowOverlayRect, DoWindow, "");
+            GUILayout.Window("Animation Playback".GetHashCode(), windowOverlayRect, DoWindow, "Character Preview Tools");
         }
 
-        public static void ShowPlayer()
+        public static void ShowPlayer() 
         {
             if (!isShown)
             {
                 SceneView.duringSceneGui += AnimPlayerWindow.OnSceneGUI;
                 isShown = true;
-            }
-            else            
-                Debug.Log("AnimPlayerWindow already open - no need for new delegate");
+            }            
         }
-
+        
         public static void HidePlayer()
         {
             if (isShown)
             {
                 SceneView.duringSceneGui -= AnimPlayerWindow.OnSceneGUI;
+                AnimPlayerGUI.CleanUp();
+                
                 isShown = false;
-            }
-            else
-                Debug.Log("AnimPlayerWindow not open - no need to remove delegate");
+            }            
         }
-
+        
         public static void DoWindow(int id)
-        {
-            AnimPlayerIMGUI.DrawPlayer();
-        }
+        {            
+            AnimPlayerGUI.DrawPlayer();
+            AnimPlayerGUI.DrawFacialMorph();
+        }        
     }
 }

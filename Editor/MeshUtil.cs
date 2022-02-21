@@ -30,55 +30,78 @@ namespace Reallusion.Import
         public const string PRUNED_FOLDER_NAME = "Pruned Meshes";
         public const string MESH_FOLDER_NAME = "Meshes";
 
-        [MenuItem("CC3/Tools/Reverse Triangle Order", priority = 100)]
+        [MenuItem("CC3/Mesh Tools/Reverse Triangle Order", priority = 100)]
         private static void DoReverse()
         {
-            MeshUtil.ReverseTriangleOrder(Selection.activeObject);
+            if (Selection.gameObjects.Length > 1)
+                foreach (GameObject go in Selection.gameObjects)
+                    MeshUtil.ReverseTriangleOrder(go);
+            else
+                MeshUtil.ReverseTriangleOrder(Selection.activeObject);
         }
 
-        [MenuItem("CC3/Tools/Prune Blend Shapes", priority = 101)]
+        [MenuItem("CC3/Mesh Tools/Prune Blend Shapes", priority = 101)]
         private static void DoPrune()
-        {
-            MeshUtil.PruneBlendShapes(Selection.activeObject);
+        {            
+            if (Selection.gameObjects.Length > 1)
+                foreach (GameObject go in Selection.gameObjects)
+                    MeshUtil.PruneBlendShapes(go);
+            else
+                MeshUtil.PruneBlendShapes(Selection.activeObject);
         }
 
-        [MenuItem("CC3/Tools/Open or Close Character Mouth", priority = 201)]
+        [MenuItem("CC3/Mesh Tools/Auto Smooth Mesh", priority = 102)]
+        private static void DoAutoSmoothMesh()
+        {
+            bool showTools = WindowManager.showTools;
+            if (showTools) ImporterWindow.Current.HideAnimationPlayer();
+
+            if (Selection.gameObjects.Length > 1)
+                foreach (GameObject go in Selection.gameObjects)
+                    MeshUtil.AutoSmoothMesh(go);
+            else
+                MeshUtil.AutoSmoothMesh(Selection.activeObject);
+
+            if (showTools) ImporterWindow.Current.ShowAnimationPlayer();
+        }
+
+        [MenuItem("CC3/Mesh Tools/Open or Close Character Mouth", priority = 201)]
         private static void DoOpenCloseMouth()
         {
             MeshUtil.CharacterOpenCloseMouth(Selection.activeObject);
         }
 
-        [MenuItem("CC3/Tools/Open or Close Character Eyes", priority = 202)]
+        [MenuItem("CC3/Mesh Tools/Open or Close Character Eyes", priority = 202)]
         private static void DoOpenCloseEyes()
         {
             MeshUtil.CharacterOpenCloseEyes(Selection.activeObject);
         }
 
-        [MenuItem("CC3/Tools/Eye/Look Left", priority = 203)]
+        [MenuItem("CC3/Mesh Tools/Eye/Look Left", priority = 203)]
         private static void DoLookLeft()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Left);
         }
 
-        [MenuItem("CC3/Tools/Eye/Look Right", priority = 204)]
+        [MenuItem("CC3/Mesh Tools/Eye/Look Right", priority = 204)]
         private static void DoLookRight()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Right);
         }
 
-        [MenuItem("CC3/Tools/Eye/Look Up", priority = 205)]
+        [MenuItem("CC3/Mesh Tools/Eye/Look Up", priority = 205)]
         private static void DoLookUp()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Up);
         }
 
-        [MenuItem("CC3/Tools/Eye/Look Down", priority = 206)]
+        [MenuItem("CC3/Mesh Tools/Eye/Look Down", priority = 206)]
         private static void DoLookDown()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Down);
         }
 
-        [MenuItem("CC3/Tools/Eye/Look Forward", priority = 207)]
+        [MenuItem("CC3/Mesh Tools/Eye/Look Forward", priority = 207)]
         private static void DoLookForward()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.None);
@@ -127,6 +150,12 @@ namespace Reallusion.Import
 
         public static bool ReplaceMesh(Object obj, Mesh mesh)
         {
+            bool animationMode = AnimationMode.InAnimationMode();
+            if (animationMode) AnimationMode.StopAnimationMode();
+
+            bool replaced = false;
+            Object o = null;
+
             if (obj.GetType() == typeof(GameObject))
             {
                 GameObject go = (GameObject)obj;
@@ -134,21 +163,37 @@ namespace Reallusion.Import
                 {
                     MeshFilter mf = go.GetComponent<MeshFilter>();
                     if (mf)
-                    {
+                    {                        
                         mf.mesh = mesh;
-                        return true;
+                        o = mf;
+                        replaced = true;                        
                     }
 
                     SkinnedMeshRenderer smr = go.GetComponent<SkinnedMeshRenderer>();
                     if (smr)
                     {
                         smr.sharedMesh = mesh;
-                        return true;
+                        o = smr;
+                        replaced = true;
                     }
                 }
             }
 
-            return false;
+            if (replaced) 
+            {                
+                GameObject prefabAsset = Util.FindPrefabAssetFromSceneObject(obj);
+                GameObject sceneRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+                string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);
+                Debug.Log(prefabPath);
+                // this doesn't work...
+                //PrefabUtility.ApplyObjectOverride(obj, prefabPath, InteractionMode.UserAction);
+                // only this works:
+                PrefabUtility.ApplyPrefabInstance(sceneRoot, InteractionMode.UserAction);
+            }
+
+            if (animationMode) AnimationMode.StartAnimationMode();
+
+            return replaced;
         }
 
         public static void PruneBlendShapes(Object obj)
@@ -243,20 +288,68 @@ namespace Reallusion.Import
             }
         }
 
+        public static Mesh CopyMesh(Mesh srcMesh)
+        {
+            Mesh dstMesh = new Mesh();
+            dstMesh.vertices = srcMesh.vertices;
+            dstMesh.uv = srcMesh.uv;
+            dstMesh.uv2 = srcMesh.uv2;
+            dstMesh.normals = srcMesh.normals;
+            dstMesh.colors = srcMesh.colors;
+            dstMesh.boneWeights = srcMesh.boneWeights;
+            dstMesh.bindposes = srcMesh.bindposes;
+            dstMesh.bounds = srcMesh.bounds;
+            dstMesh.tangents = srcMesh.tangents;
+            dstMesh.triangles = srcMesh.triangles;
+
+            dstMesh.subMeshCount = srcMesh.subMeshCount;
+            for (int s = 0; s < srcMesh.subMeshCount; s++)
+            {
+                SubMeshDescriptor submesh = srcMesh.GetSubMesh(s);
+                dstMesh.SetSubMesh(s, submesh);
+            }
+            
+            if (srcMesh.blendShapeCount > 0)
+            {
+                Vector3[] bufVerts = new Vector3[srcMesh.vertexCount];
+                Vector3[] bufNormals = new Vector3[srcMesh.vertexCount];
+                Vector3[] bufTangents = new Vector3[srcMesh.vertexCount];
+
+                for (int i = 0; i < srcMesh.blendShapeCount; i++)
+                {
+                    string name = srcMesh.GetBlendShapeName(i);
+
+                    int frameCount = srcMesh.GetBlendShapeFrameCount(i);
+                    for (int f = 0; f < frameCount; f++)
+                    {
+                        float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
+                        srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
+                        dstMesh.AddBlendShapeFrame(name, frameWeight, bufVerts, bufNormals, bufTangents);
+                    }
+                }
+            }
+
+            return dstMesh;
+        }
+
         public static void ReverseTriangleOrder(Object obj)
         {
             if (!obj) return;
-
-            GameObject sceneRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-            GameObject asset = PrefabUtility.GetCorrespondingObjectFromSource(sceneRoot);
+            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(obj);
+            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
+            string characterName = Path.GetFileNameWithoutExtension(fbxPath);
+            string fbxFolder = Path.GetDirectoryName(fbxPath);
+            string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, characterName);
+            // fetch the mesh from the prefab
             Object srcObj = PrefabUtility.GetCorrespondingObjectFromSource(obj);
             Mesh srcMesh = GetMeshFrom(srcObj);
-            string path = AssetDatabase.GetAssetPath(asset);
 
-            if (string.IsNullOrEmpty(path))
+            if (!srcMesh) return;
+
+            if (string.IsNullOrEmpty(fbxPath))
             {
                 Debug.LogWarning("Object: " + obj.name + " has no source Prefab Asset.");
-                path = Path.Combine("Assets", "dummy.prefab");
+                fbxPath = Path.Combine("Assets", "dummy.prefab");
             }
 
             if (!srcMesh)
@@ -264,10 +357,7 @@ namespace Reallusion.Import
                 Debug.LogError("No mesh found in selected object.");
                 return;
             }
-
-            string folder = Path.GetDirectoryName(path);
-            string meshFolder = Path.Combine(folder, INVERTED_FOLDER_NAME);
-
+                        
             Mesh dstMesh = new Mesh();
             dstMesh.vertices = srcMesh.vertices;
             dstMesh.uv = srcMesh.uv;
@@ -328,23 +418,24 @@ namespace Reallusion.Import
                     }
                 }
             }
-
+            
             // Save the mesh asset.
-            if (!AssetDatabase.IsValidFolder(meshFolder))
-                AssetDatabase.CreateFolder(folder, INVERTED_FOLDER_NAME);
-            string meshPath = Path.Combine(meshFolder, srcObj.name + ".mesh");
-            AssetDatabase.CreateAsset(dstMesh, meshPath);
-
-            if (obj.GetType() == typeof(GameObject))
+            if (Util.EnsureAssetsFolderExists(meshFolder))
             {
-                GameObject go = (GameObject)obj;
-                if (go)
-                {
-                    Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+                string meshPath = Path.Combine(meshFolder, srcObj.name + "_Inverted.mesh");
+                AssetDatabase.CreateAsset(dstMesh, meshPath);
 
-                    if (!ReplaceMesh(obj, createdMesh))
+                if (obj.GetType() == typeof(GameObject))
+                {
+                    GameObject go = (GameObject)obj;
+                    if (go)
                     {
-                        Debug.LogError("Unable to set mesh in selected object!");
+                        Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+
+                        if (!ReplaceMesh(obj, createdMesh))
+                        {
+                            Debug.LogError("Unable to set mesh in selected object!");
+                        }
                     }
                 }
             }
@@ -528,7 +619,7 @@ namespace Reallusion.Import
 
         public static Mesh ExtractSubMesh(Mesh srcMesh, int index)
         {
-            SubMeshDescriptor extractMeshDesc = srcMesh.GetSubMesh(index);
+            SubMeshDescriptor extractMeshDesc = srcMesh.GetSubMesh(index);            
 
             // operate on a local copy of the source mesh data (much faster)
             Vector3[] srcVertices = srcMesh.vertices;
@@ -675,10 +766,12 @@ namespace Reallusion.Import
             newMeshDesc.indexStart = 0;
             newMeshDesc.indexCount = extractMeshDesc.indexCount;
             newMeshDesc.vertexCount = numNewVerts;            
-            newMesh.SetSubMesh(0, newMeshDesc);
+            newMesh.SetSubMesh(0, newMeshDesc);            
 
             return newMesh;
         }
+
+
 
         public static Mesh RemoveSubMeshes(Mesh srcMesh, List<int> indices)
         {            
@@ -888,13 +981,11 @@ namespace Reallusion.Import
             }            
         }
 
-        public static void Extract2PassHairMeshes(Object obj)
+        public static void Extract2PassHairMeshes(Object prefabAsset)
         {
-            if (!obj) return;            
-            GameObject sceneRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-            if (!sceneRoot) sceneRoot = (GameObject)obj;
-            GameObject fbxAsset = Util.GetRootPrefabFromObject(sceneRoot);
-            GameObject prefab = Util.GetCharacterPrefab(fbxAsset);
+            if (!prefabAsset) return;
+            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(prefabAsset);
+            GameObject prefab = Util.FindCharacterPrefabAsset(fbxAsset);
             string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
             string name = Path.GetFileNameWithoutExtension(fbxPath);
             string fbxFolder = Path.GetDirectoryName(fbxPath);
@@ -948,7 +1039,7 @@ namespace Reallusion.Import
 
                             // extract mesh into two new meshes, the old mesh without the extracted submesh
                             // and just the extracted submesh
-                            Mesh newMesh = ExtractSubMesh(oldMesh, index);
+                            Mesh newMesh = ExtractSubMesh(oldMesh, index);                            
                             // Save the mesh asset.
                             Util.EnsureAssetsFolderExists(meshFolder);
                             string meshPath = Path.Combine(meshFolder, oldObj.name + "_ExtractedHairMesh" + index.ToString() + ".mesh");
@@ -973,8 +1064,8 @@ namespace Reallusion.Import
                             Material[] sharedMaterials = new Material[2];
                             // - add first pass hair shader material
                             // - add second pass hair shader material
-                            Material firstPassTemplate = Util.FindMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
-                            Material secondPassTemplate = Util.FindMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
+                            Material firstPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
+                            Material secondPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
                             Material firstPass = new Material(firstPassTemplate);
                             Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);
@@ -1001,8 +1092,9 @@ namespace Reallusion.Import
                             Material[] sharedMaterials = new Material[2];
                             // - add first pass hair shader material
                             // - add second pass hair shader material
-                            Material firstPassTemplate = Util.FindMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
-                            Material secondPassTemplate = Util.FindMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
+                            
+                            Material firstPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
+                            Material secondPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
                             Material firstPass = new Material(firstPassTemplate);
                             Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);
@@ -1066,5 +1158,219 @@ namespace Reallusion.Import
 
             if (clone) UnityEngine.Object.DestroyImmediate(clone);
         }
+
+        public struct SmoothVertData
+        {
+            public int index;
+            public Vector3 normal;
+
+            public SmoothVertData(int i, Vector3 n)
+            {
+                index = i;
+                normal = n;                
+            }
+        }
+
+        public static void SmoothNormals2(Mesh mesh, float angle)
+        {            
+            Vector3[] vertices = mesh.vertices;
+            Vector3[] normals = mesh.normals;
+            int[] triangles = mesh.triangles;
+            int numTriangles = triangles.Length / 3;
+            float threshold = Mathf.Cos(angle * Mathf.PI / 180f);
+
+            Dictionary<long, List<SmoothVertData>> uniqueVerts = new Dictionary<long, List<SmoothVertData>>();
+                    
+            for (int t = 0; t < numTriangles; t++)
+            {
+                int t0 = t * 3 + 0;
+                int t1 = t * 3 + 1;
+                int t2 = t * 3 + 2;
+
+                Vector3 p0 = vertices[triangles[t0]];
+                Vector3 p1 = vertices[triangles[t1]];
+                Vector3 p2 = vertices[triangles[t2]];
+
+                Vector3 edge01 = p1 - p0;
+                Vector3 edge02 = p2 - p0;
+                Vector3 normal1 = Vector3.Cross(edge01, edge02);
+                Vector3 edge12 = p2 - p1;
+                Vector3 edge10 = p0 - p1;
+                Vector3 normal2 = Vector3.Cross(edge12, edge10);
+                Vector3 edge20 = p0 - p2;
+                Vector3 edge21 = p1 - p2;
+                Vector3 normal3 = Vector3.Cross(edge20, edge21);
+                Vector3 normal = (normal1 + normal2 + normal3).normalized;
+                                
+                for (int i = 0; i < 3; i++)
+                {
+                    int index = triangles[t * 3 + i];
+                    SmoothVertData vertData = new SmoothVertData(index, normal);
+                    long hash = SpatialHash(vertices[index]);
+                    if (uniqueVerts.TryGetValue(hash, out List<SmoothVertData> verts)) verts.Add(vertData);
+                    else uniqueVerts[hash] = new List<SmoothVertData> { vertData };
+                }
+            }            
+
+            foreach (KeyValuePair<long, List<SmoothVertData>> pair in uniqueVerts)
+            {
+                List<SmoothVertData> vertData = pair.Value;
+
+                for (int i = 0; i < vertData.Count; i++)                
+                {
+                    SmoothVertData svdTest = vertData[i];                    
+                    Vector3 smoothedNormal = Vector3.zero;                    
+
+                    for (int j = 0; j < vertData.Count; j++)
+                    {
+                        SmoothVertData svdCompare = vertData[j];                        
+                        if (i == j) 
+                            smoothedNormal += svdTest.normal;                        
+                        else                        
+                            if (Vector3.Dot(svdTest.normal, svdCompare.normal) > threshold)
+                                smoothedNormal += svdCompare.normal;
+                    }
+
+                    normals[svdTest.index] = smoothedNormal.normalized;
+                }                
+            }
+
+            mesh.normals = normals;
+        }
+
+        public static void SmoothNormals(Mesh mesh, float angle)
+        {
+            Vector3[] vertices = mesh.vertices;
+            Vector3[] normals = mesh.normals;
+            int[] triangles = mesh.triangles;
+            int numTriangles = triangles.Length / 3;
+            int numVertices = vertices.Length;
+
+            List<Vector3> uniqueVerts = new List<Vector3>(numVertices);
+            int[] uniqueIndices = new int[numVertices];            
+
+            for (int i = 0; i < numVertices; i++)
+            {                
+                bool foundUnique = false;
+
+                for (int m = 0; m < uniqueVerts.Count; m++)
+                {
+                    if (vertices[i] == uniqueVerts[m])
+                    {
+                        uniqueIndices[i] = m;
+                        foundUnique = true;
+                    }                    
+                }
+
+                if (!foundUnique)
+                {
+                    uniqueIndices[i] = uniqueVerts.Count;
+                    uniqueVerts.Add(vertices[i]);
+                }
+            }         
+            
+            Vector3[] uniqueNormals = new Vector3[uniqueVerts.Count];
+
+            for (int t = 0; t < numTriangles; t++)
+            {
+                int t0 = t * 3 + 0;
+                int t1 = t * 3 + 1;
+                int t2 = t * 3 + 2;
+
+                Vector3 p0 = vertices[triangles[t0]];
+                Vector3 p1 = vertices[triangles[t1]];
+                Vector3 p2 = vertices[triangles[t2]];
+
+                Vector3 edge01 = p1 - p0;
+                Vector3 edge02 = p2 - p0;
+                Vector3 normal = Vector3.Cross(edge01, edge02).normalized;
+
+                int unique0 = uniqueIndices[triangles[t0]];
+                int unique1 = uniqueIndices[triangles[t1]];
+                int unique2 = uniqueIndices[triangles[t2]];
+
+                uniqueNormals[unique0] += normal;
+                uniqueNormals[unique1] += normal;
+                uniqueNormals[unique2] += normal;                
+            }
+
+            for (int i = 0; i < uniqueVerts.Count; i++)
+            {
+                uniqueNormals[i] = uniqueNormals[i].normalized;
+            }
+
+            for (int i = 0; i < numVertices; i++)
+            {
+                int uniqueIndex = uniqueIndices[i];
+                normals[i] = uniqueNormals[uniqueIndex];
+            }
+
+            mesh.normals = normals;
+        }
+
+        // http://www.beosil.com/download/CollisionDetectionHashing_VMV03.pdf
+        public static long SpatialHash(Vector3 v)
+        {
+            const long p1 = 73868489;
+            const long p2 = 23875351;
+            const long p3 = 53885459;
+            const long discrete = 1000;
+
+            long x = (long)(v.x * discrete);
+            long y = (long)(v.y * discrete);
+            long z = (long)(v.z * discrete);
+
+            return (x * p1) ^ (y * p2) ^ (z * p3);            
+        }
+
+        public static void AutoSmoothMesh(Object obj)
+        {
+            if (!obj) return;            
+            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(obj);
+            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
+            string characterName = Path.GetFileNameWithoutExtension(fbxPath);
+            string fbxFolder = Path.GetDirectoryName(fbxPath);
+            string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, characterName);            
+            Object srcObj = PrefabUtility.GetCorrespondingObjectFromSource(obj);
+
+            if (srcObj)
+            {
+                Mesh srcMesh = GetMeshFrom(srcObj);
+
+                if (srcMesh)
+                {
+                    if (srcMesh.name.iEndsWith("_Smoothed"))
+                    {
+                        Debug.LogWarning("Mesh is already smoothed!");
+                        return;
+                    }
+
+                    Mesh dstMesh = CopyMesh(srcMesh);
+                    SmoothNormals2(dstMesh, 120f);
+
+                    // Save the mesh asset.
+                    if (Util.EnsureAssetsFolderExists(meshFolder))
+                    {
+                        string meshPath = Path.Combine(meshFolder, srcObj.name + "_Smoothed.mesh");
+                        AssetDatabase.CreateAsset(dstMesh, meshPath);
+
+                        if (obj.GetType() == typeof(GameObject))
+                        {
+                            GameObject go = (GameObject)obj;
+                            if (go)
+                            {
+                                Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+
+                                if (ReplaceMesh(obj, createdMesh))
+                                    Debug.Log("Auto Smooth Mesh Complete!");
+                                else
+                                    Debug.LogError("Unable to set mesh in selected object!");                                
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }
