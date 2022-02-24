@@ -1068,7 +1068,7 @@ namespace Reallusion.Import
                     //mat.SetFloatIf("_SecondarySmoothness", 0.5f);
                     mat.SetFloatIf("_SpecularMultiplier", specMapStrength * specStrength);
                     mat.SetFloatIf("_SecondarySpecularMultiplier", 0.65f * specMapStrength * specStrength2);
-                    mat.SetFloatIf("_RimTransmissionIntensity", 0.2f * rimTransmission);
+                    mat.SetFloatIf("_RimTransmissionIntensity", 2f * rimTransmission);
                 }
                 else
                 {                    

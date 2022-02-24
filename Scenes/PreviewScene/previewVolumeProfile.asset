@@ -262,7 +262,7 @@ MonoBehaviour:
     m_Value: 0
   top:
     m_OverrideState: 1
-    m_Value: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+    m_Value: {r: 0.46453363, g: 0.56259733, b: 0.6886792, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
@@ -274,13 +274,13 @@ MonoBehaviour:
     showEyeDropper: 1
   bottom:
     m_OverrideState: 1
-    m_Value: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+    m_Value: {r: 0.46207705, g: 0.5647117, b: 0.68668544, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
   gradientDiffusion:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 4
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -324,7 +324,7 @@ MonoBehaviour:
     m_Value: {x: 1, y: 1, z: 1, w: 0}
   gamma:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 1, w: -0.16143498}
+    m_Value: {x: 1, y: 1, z: 1, w: -0.15}
   gain:
     m_OverrideState: 0
     m_Value: {x: 1, y: 1, z: 1, w: 0}
