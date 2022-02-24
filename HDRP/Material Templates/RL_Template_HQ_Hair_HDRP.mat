@@ -119,13 +119,13 @@ Material:
     - _RequireSplitLighting: 0
     - _RimTransmissionIntensity: 0.05
     - _RootColorStrength: 1
-    - _SecondarySmoothness: 0.625
+    - _SecondarySmoothness: 0.5
     - _SecondarySpecularMultiplier: 0.05
-    - _SecondarySpecularShift: 0.25
+    - _SecondarySpecularShift: 0.15
     - _ShadowClip: 0.15
-    - _SmoothnessMax: 0.897
+    - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
-    - _SmoothnessPower: 1.2
+    - _SmoothnessPower: 1
     - _SpecularMultiplier: 0.5
     - _SpecularShiftMax: 0
     - _SpecularShiftMin: 0

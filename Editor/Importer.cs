@@ -353,7 +353,7 @@ namespace Reallusion.Import
         private Material CreateRemapMaterial(MaterialType materialType, Material sharedMaterial, string sourceName)
         {
             // get the template material.
-            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, characterInfo.BuildQuality, characterInfo);
+            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, characterInfo.BuildQuality, characterInfo, USE_AMPLIFY_SHADER);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -1055,18 +1055,19 @@ namespace Reallusion.Import
                 // Transmission Strength = Custom Shader/Variable/Transmission Strength
                 // == Rim lighting/rim translucency strength
 
-                float specMapStrength = matJson.GetFloatValue("Custom Shader/Variable/Hair Specular Map Strength");
+                float specMapStrength = matJson.GetFloatValue("Custom Shader/Variable/Hair Specular Map Strength");                
                 float specStrength = matJson.GetFloatValue("Custom Shader/Variable/Specular Strength");
+                float specStrength2 = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");
                 float rimTransmission = matJson.GetFloatValue("Custom Shader/Variable/Transmission Strength");
                 float smoothnessStrength = 1f - matJson.GetFloatValue("Custom Shader/Variable/Hair Roughness Map Strength");
                 if (RP == RenderPipeline.HDRP)
                 {
                     float secondarySpecStrength = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");                    
                     mat.SetFloatIf("_SmoothnessMin", smoothnessStrength);
-                    mat.SetFloatIf("_SecondarySmoothness", Mathf.Pow(smoothnessStrength, 0.5f));
+                    // set by template
+                    //mat.SetFloatIf("_SecondarySmoothness", 0.5f);
                     mat.SetFloatIf("_SpecularMultiplier", specMapStrength * specStrength);
-                    mat.SetFloatIf("_SecondarySpecularMultiplier", 
-                        specMapStrength * specStrength * 0.1f);
+                    mat.SetFloatIf("_SecondarySpecularMultiplier", 0.65f * specMapStrength * specStrength2);
                     mat.SetFloatIf("_RimTransmissionIntensity", 0.2f * rimTransmission);
                 }
                 else
@@ -1079,8 +1080,7 @@ namespace Reallusion.Import
                     }
                     else
                     {                        
-                        mat.SetFloatIf("_SmoothnessMin", 0.5f * 
-                            Util.CombineSpecularToSmoothness(specMapStrength * specStrength, smoothnessStrength));
+                        mat.SetFloatIf("_SmoothnessMin", Util.CombineSpecularToSmoothness(specMapStrength * specStrength, smoothnessStrength));
                     }
                 }
                 mat.SetFloatIf("_FlowMapFlipGreen", 1f - 
@@ -1119,6 +1119,11 @@ namespace Reallusion.Import
                 mat.SetVectorIf("_HighlightBDistribution", (1f / 255f) * matJson.GetVector3Value("Custom Shader/Variable/_2nd Dye Distribution from Grayscale"));
                 mat.SetFloatIf("_HighlightBOverlapEnd", matJson.GetFloatValue("Custom Shader/Variable/Mask 2nd Dye by RootMap"));
                 mat.SetFloatIf("_HighlightBOverlapInvert", matJson.GetFloatValue("Custom Shader/Variable/Invert 2nd Dye RootMap Mask"));                
+            }
+
+            if (mat.GetTexture("_NormalMap") == null)
+            {
+                BakeHairFlowToNormalMap(mat, sourceName, matJson);
             }
         }
 
@@ -1276,6 +1281,32 @@ namespace Reallusion.Import
                         bakedDetailMaps.Add(sharedMat, bakedTex);
                         break;
                 }
+            }
+        }
+
+        private void BakeHairFlowToNormalMap(Material mat, string sourceName, QuickJSON matJson)
+        {
+            ComputeBake baker = new ComputeBake(fbx, characterInfo);
+            
+            Vector3 tangentVector = new Vector3(1, 0, 0);
+            bool flipY = false;
+
+            string jsonFlowTexturePath = null;
+            string jsonNormalTexturePath = null;
+            if (matJson != null)
+            {
+                jsonFlowTexturePath = matJson.GetStringValue("Custom Shader/Image/Hair Flow Map/Texture Path");
+                jsonNormalTexturePath = matJson.GetStringValue("Textures/Normal/Texture Path");
+                tangentVector = (1f / 255f) * matJson.GetVector3Value("Custom Shader/Variable/TangentVectorColor");
+                flipY = matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen") > 0f ? true : false;
+            }
+            Texture2D flowMap = GetTextureFrom(jsonFlowTexturePath, sourceName, "Hair Flow Map", out string name);
+            Texture2D normalMap = GetTextureFrom(jsonNormalTexturePath, sourceName, "Normal", out name);
+
+            if (flowMap && !normalMap)
+            {
+                normalMap = baker.BakeFlowMapToNormalMap(flowMap, tangentVector, flipY, sourceName + "_Normal");                
+                mat.SetTextureIf("_NormalMap", normalMap);
             }
         }
 

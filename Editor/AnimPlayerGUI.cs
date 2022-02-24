@@ -348,8 +348,7 @@ namespace Reallusion.Import
         static float blinkVal;
         static float blinkRef;
         static double resetClickTimer;
-
-        static bool snapView = false;
+        
         static Quaternion camDir;
 
         const float ICON_FACE_SIZE = 48f;

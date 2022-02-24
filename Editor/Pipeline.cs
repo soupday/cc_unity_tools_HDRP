@@ -635,11 +635,11 @@ namespace Reallusion.Import
             return templateName;
         }        
 
-        public static Material GetTemplateMaterial(MaterialType materialType, MaterialQuality quality, CharacterInfo info)
+        public static Material GetTemplateMaterial(MaterialType materialType, MaterialQuality quality, CharacterInfo info, bool useAmplify = false)
         {
             string templateName = GetTemplateMaterialName(materialType, quality, info);
             
-            if (Importer.USE_AMPLIFY_SHADER)
+            if (useAmplify)
             {
                 Material amplifyTemplate = Util.FindMaterial(templateName + "_Amplify");
                 if (amplifyTemplate)
@@ -654,9 +654,9 @@ namespace Reallusion.Import
             return GetDefaultMaterial(quality);
         }
 
-        public static Material GetCustomTemplateMaterial(string templateName, MaterialQuality quality)
+        public static Material GetCustomTemplateMaterial(string templateName, MaterialQuality quality, bool useAmplify)
         {
-            if (Importer.USE_AMPLIFY_SHADER)
+            if (useAmplify)
             {
                 Material amplifyTemplate = Util.FindMaterial(templateName + "_Amplify");
                 if (amplifyTemplate)

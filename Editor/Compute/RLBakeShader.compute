@@ -46,6 +46,7 @@
 #pragma kernel RLHairMetallicGloss
 #pragma kernel RLHairAO
 #pragma kernel RLEyeOcclusionDiffuse
+#pragma kernel RLFlowToNormal
 
 // Defines
 //
@@ -164,6 +165,8 @@ float highlightAStrength, highlightAOverlapEnd, highlightAOverlapInvert;
 float highlightBStrength, highlightBOverlapEnd, highlightBOverlapInvert;
 float4 rootColor, endColor, highlightAColor, highlightBColor;
 float aoOccludeAll;
+float3 tangentVector;
+float tangentFlipY;
 
 float eoInnerMin, eoInnerMax, eoOuterMin, eoOuterMax;
 float eoTopMin, eoTopMax, eoTopCurve, eoBottomMin, eoBottomMax, eoBottomCurve;
@@ -1275,12 +1278,12 @@ void RLHairDiffuse(uint3 id : SV_DispatchThreadID)
     float4 mask = SAMPLE(Mask, uv);    
     
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float alpha = pow(saturate((diffuse.a / alphaRemap)), alphaPower);
+    float alpha = saturate(pow(saturate((diffuse.a / alphaRemap)), alphaPower));
     
     float4 color = diffuse * diffuseStrength;
-    color = lerp(color, color * depthBlend, colorBlendStrength);
+    color = lerp(color, color * depthBlend, colorBlendStrength);   
     color = lerp(color, color * ao, aoOccludeAll * 0.5);
-
+    
     color = LinearTosRGB(color);
     color.a = alpha;
 
@@ -1299,6 +1302,7 @@ void RLHairMask(uint3 id : SV_DispatchThreadID)
     float ao = INVERTED_SCALE(mask.g, aoStrength);
     float detailMask = (specular.r + specular.g + specular.b) / 3.0;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
+    smoothness = lerp(smoothness, smoothness * ao, aoOccludeAll);
     float4 packed = float4(metallic, ao, detailMask, smoothness);
 
     Result[id.xy] = packed;
@@ -1310,12 +1314,11 @@ void RLHairMetallicGloss(uint3 id : SV_DispatchThreadID)
     float2 uv = GetUV(id.xy);
 
     float4 mask = SAMPLE(Mask, uv);
-    float4 specular = SAMPLE(Specular, uv);
-
+    
     float metallic = mask.r;
-    float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = (specular.r + specular.g + specular.b) / 3.0;
+    float ao = INVERTED_SCALE(mask.g, aoStrength);    
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
+    smoothness = lerp(smoothness, smoothness * ao, aoOccludeAll);
     float4 packed = float4(metallic, metallic, metallic, smoothness);
 
     Result[id.xy] = packed;
@@ -1328,12 +1331,10 @@ void RLHairAO(uint3 id : SV_DispatchThreadID)
 
     float4 mask = SAMPLE(Mask, uv);
     float4 specular = SAMPLE(Specular, uv);
-
-    float metallic = mask.r;
+    
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = (specular.r + specular.g + specular.b) / 3.0;
-    float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
-    float4 packed = float4(ao, ao, ao, 1.0);
+    float detailMask = (specular.r + specular.g + specular.b) / 3.0;    
+    float4 packed = float4(ao, ao, ao, detailMask);
 
     Result[id.xy] = packed;
 }
@@ -1365,5 +1366,24 @@ void RLEyeOcclusionDiffuse(uint3 id : SV_DispatchThreadID)
 
     Result[id.xy] = color;
 }
+
+[numthreads(1, 1, 1)]
+void RLFlowToNormal(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float4 flow = SAMPLE(Flow, uv);    
+
+    float3 flowVector = normalize(flow.rgb * 2.0 - 1.0);
+    flow.y = lerp(flow.y, -flow.y, tangentFlipY);
+    float3 tangentPlane = normalize(float3(-flowVector.y, flowVector.x, 0.0));
+    float3 normal = cross(flowVector, tangentPlane);
+    float3 modified = normalize(float3(normal.xy * 0.35, normal.z));
+    float4 color = float4(saturate(modified.xyz * 0.5 + 0.5), 1.0);
+
+    Result[id.xy] = color;
+}
+
+
 
 

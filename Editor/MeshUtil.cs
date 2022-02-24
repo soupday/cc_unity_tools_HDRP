@@ -942,7 +942,9 @@ namespace Reallusion.Import
 
         public static void CopyMaterialParameters(Material from, Material to)
         {
+            int renderQueue = to.renderQueue;
             to.CopyPropertiesFromMaterial(from);
+            to.renderQueue = renderQueue;
         }
 
         private static void FixHDRP2PassMaterials(Material firstPass, Material secondPass)

@@ -262,25 +262,25 @@ MonoBehaviour:
     m_Value: 0
   top:
     m_OverrideState: 1
-    m_Value: {r: 0.16037738, g: 0.16037738, b: 0.16037738, a: 1}
+    m_Value: {r: 0.75, g: 0.75, b: 0.75, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
   middle:
     m_OverrideState: 1
-    m_Value: {r: 0.5372549, g: 0.5372549, b: 0.5372549, a: 1}
+    m_Value: {r: 0, g: 0, b: 0, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
   bottom:
     m_OverrideState: 1
-    m_Value: {r: 0.31132078, g: 0.31132078, b: 0.31132078, a: 1}
+    m_Value: {r: 0.75, g: 0.75, b: 0.75, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
   gradientDiffusion:
     m_OverrideState: 1
-    m_Value: 4
+    m_Value: 2
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -304,6 +304,30 @@ MonoBehaviour:
   - {fileID: -1355376055549233226}
   - {fileID: 7677725660589811616}
   - {fileID: 5392279529193720464}
+  - {fileID: 1527168349641851545}
+--- !u!114 &1527168349641851545
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da5ab44aadfb1804db5fd470983ac1b8, type: 3}
+  m_Name: LiftGammaGain
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  lift:
+    m_OverrideState: 0
+    m_Value: {x: 1, y: 1, z: 1, w: 0}
+  gamma:
+    m_OverrideState: 1
+    m_Value: {x: 1, y: 1, z: 1, w: -0.16143498}
+  gain:
+    m_OverrideState: 0
+    m_Value: {x: 1, y: 1, z: 1, w: 0}
 --- !u!114 &4745465664678062571
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -331,8 +355,8 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 10
   compensation:
-    m_OverrideState: 1
-    m_Value: 0
+    m_OverrideState: 0
+    m_Value: 0.5
   limitMin:
     m_OverrideState: 1
     m_Value: 0.41981167
@@ -552,9 +576,9 @@ MonoBehaviour:
   m_AdvancedMode: 0
   postExposure:
     m_OverrideState: 0
-    m_Value: 0.2
+    m_Value: 0.25
   contrast:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 10
     min: -100
     max: 100
@@ -570,7 +594,7 @@ MonoBehaviour:
     min: -180
     max: 180
   saturation:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 10
     min: -100
     max: 100
