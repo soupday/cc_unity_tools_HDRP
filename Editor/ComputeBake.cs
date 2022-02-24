@@ -994,16 +994,16 @@ namespace Reallusion.Import
                         sourceName + "_Occlusion", "RLCorneaAO");                                       
                 }
 
-                if (IS_HDRP && !CUSTOM_SHADERS)
+                if (IS_HDRP && (!CUSTOM_SHADERS || characterInfo.RefractiveEyes))
                     // HDRP packs the detail micro normal into the YW channels, for better precision.
                     bakedDetailMap = BakeDetailMap(microNormal,
                         sourceName + "_Detail");
                 
                 if (CUSTOM_SHADERS && !REFRACTIVE_EYES)
-                // various baked mask maps for the baked shaders
-                bakedDetailMask = BakeCorneaDetailMaskMap(mask,
-                    irisScale, irisRadius, limbusWidth, depthRadius, parallaxRadius, microNormalStrength,
-                    sourceName + "_DetailMask");
+                    // various baked mask maps for the baked shaders
+                    bakedDetailMask = BakeCorneaDetailMaskMap(mask,
+                        irisScale, irisRadius, limbusWidth, depthRadius, parallaxRadius, microNormalStrength,
+                        sourceName + "_DetailMask");
 
                 if (REFRACTIVE_EYES)
                 {
@@ -1031,7 +1031,7 @@ namespace Reallusion.Import
                 bakedMaskMap = BakeEyeMaskMap(mask, aoStrength, irisSmoothness,
                     scleraSmoothness, irisScale,
                     limbusDarkRadius, limbusDarkWidth, irisRadius, depthRadius,
-                    sourceName + "_Mask");
+                    sourceName + "_Mask");                
             }
 
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
