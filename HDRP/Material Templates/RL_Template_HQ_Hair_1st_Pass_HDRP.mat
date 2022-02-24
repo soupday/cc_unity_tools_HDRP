@@ -77,8 +77,6 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - BOOLEAN_ENABLECOLOR: 0
-    - Boolean_1d33e7b4aec4456d9b39ec1f2b1f31ef: 0
-    - Boolean_FlowMapFlipGreen: 0
     - _AOOccludeAll: 0
     - _AOStrength: 1
     - _AddPrecomputedVelocity: 0
@@ -107,7 +105,6 @@ Material:
     - _EnableFogOnTransparent: 1
     - _EndColorStrength: 1
     - _FlowMapFlipGreen: 0
-    - _FlowMapFlipGreenOn: 0
     - _GlobalStrength: 1
     - _HighlightAOverlapEnd: 1
     - _HighlightAOverlapInvert: 1

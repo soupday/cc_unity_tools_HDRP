@@ -50,10 +50,6 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _IrisNormalMap:
-        m_Texture: {fileID: 2800000, guid: 33d3677584e324246a330be6816b45f7, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _MaskMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -100,27 +96,22 @@ Material:
     - _DstBlend: 0
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
-    - _IOR: 1.4
     - _IrisBrightness: 1
-    - _IrisDepth: 0.1
     - _IrisHue: 0.5
     - _IrisRadius: 0.15
     - _IrisSaturation: 1
     - _IrisScale: 1
-    - _IrisSmoothness: 0
     - _IrisSubsurfaceScale: 0
     - _IsLeftEye: 0
     - _LimbusDarkRadius: 0.1
     - _LimbusDarkWidth: 0.025
     - _LimbusWidth: 0.055
     - _OpaqueCullMode: 2
-    - _PMod: 5
     - _PupilScale: 0.8
     - _RayTracing: 0
     - _ReceivesSSR: 1
     - _ReceivesSSRTransparent: 0
     - _RefractionModel: 0
-    - _RefractionThickness: 0.01
     - _RenderQueueType: 1
     - _RequireSplitLighting: 1
     - _ScleraBrightness: 0.65
