@@ -43,6 +43,8 @@ namespace Reallusion.Import
         private Vector2 iconScrollView;
         private bool previewCharacterAfterGUI;
         private bool refreshAfterGUI;
+        public enum ImporterWindowMode { Build, Bake, Settings }
+        private ImporterWindowMode windowMode = ImporterWindowMode.Build;
 
         const float ICON_SIZE = 64f;
         const float WINDOW_MARGIN = 4f;
@@ -55,6 +57,8 @@ namespace Reallusion.Import
         const float ACTION_HEIGHT = 76f;
         const float ICON_WIDTH = 100f;
         const float ACTION_WIDTH = ACTION_BUTTON_SIZE + 12f;
+        const float TITLE_SPACE = 12f;
+        const float ROW_SPACE = 4f;
 
         private static GUIStyle logStyle, mainStyle, buttonStyle, labelStyle, boldStyle, iconStyle;
         private static Texture2D iconUnprocessed;
@@ -69,6 +73,7 @@ namespace Reallusion.Import
         private static Texture2D iconAction2Pass;
         private static Texture2D iconActionAnimPlayer;
         private static Texture2D iconActionAvatarAlign;
+        private static Texture2D iconSettings;        
 
         // SerializeField is used to ensure the view state is written to the window 
         // layout file. This means that the state survives restarting Unity as long as the window
@@ -162,6 +167,7 @@ namespace Reallusion.Import
             iconActionAnims = Util.FindTexture(folders, "RLIcon_ActionAnims");
             iconActionAnimPlayer = Util.FindTexture(folders, "RLIcon_AnimPlayer");
             iconActionAvatarAlign = Util.FindTexture(folders, "RLIcon_AvatarAlign");
+            iconSettings = Util.FindTexture(folders, "RLIcon_Settings");
             currentWindow = this;
 
             RefreshCharacterList();
@@ -293,6 +299,7 @@ namespace Reallusion.Import
             Rect optionBlock = new Rect(iconBlock.xMax, infoBlock.yMax, infoBlock.width, OPTION_HEIGHT);
             Rect actionBlock = new Rect(iconBlock.xMax + infoBlock.width, TOP_PADDING, ACTION_WIDTH, innerHeight);            
             Rect treeviewBlock = new Rect(iconBlock.xMax, optionBlock.yMax, infoBlock.width, height - optionBlock.yMax);
+            Rect settingsBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, innerHeight);
 
             previewCharacterAfterGUI = false;
             refreshAfterGUI = false;
@@ -301,13 +308,19 @@ namespace Reallusion.Import
 
             OnGUIIconArea(iconBlock);            
 
-            OnGUIInfoArea(infoBlock);
+            if (windowMode == ImporterWindowMode.Build)
+                OnGUIInfoArea(infoBlock);
 
-            OnGUIOptionArea(optionBlock);
+            if (windowMode == ImporterWindowMode.Build)
+                OnGUIOptionArea(optionBlock);
+
+            if (windowMode == ImporterWindowMode.Settings)
+                OnGUISettingsArea(settingsBlock);
 
             OnGUIActionArea(actionBlock);
 
-            OnGUITreeViewArea(treeviewBlock);
+            if (windowMode == ImporterWindowMode.Build)
+                OnGUITreeViewArea(treeviewBlock);
 
             // creating a new preview scene in between GUI Layouts causes errors...
             if (previewCharacterAfterGUI)
@@ -701,6 +714,22 @@ namespace Reallusion.Import
             GUI.enabled = true;
             */
 
+            GUILayout.FlexibleSpace();
+
+            GUIContent settingsIconGC;
+            if (windowMode != ImporterWindowMode.Settings)
+                settingsIconGC = new GUIContent(iconSettings, "Settings.");
+            else
+                settingsIconGC = EditorGUIUtility.IconContent("back@2x");
+            if (GUILayout.Button(settingsIconGC, 
+                GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+            {
+                if (windowMode != ImporterWindowMode.Settings)
+                    windowMode = ImporterWindowMode.Settings;
+                else
+                    windowMode = ImporterWindowMode.Build;
+            }
+
             GUILayout.EndVertical();
 
             GUILayout.FlexibleSpace();
@@ -725,16 +754,60 @@ namespace Reallusion.Import
             GUILayout.FlexibleSpace();
 
             GUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
             characterTreeView.selectLinked = GUILayout.Toggle(characterTreeView.selectLinked, "Select Linked");
             GUILayout.FlexibleSpace();
-            Importer.USE_AMPLIFY_SHADER = GUILayout.Toggle(Importer.USE_AMPLIFY_SHADER, "AMP");
 
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
 
             GUILayout.EndArea();            
-        }        
+        }
+
+
+
+
+        private void OnGUISettingsArea(Rect settingsBlock)
+        {
+            GUILayout.BeginArea(settingsBlock);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            GUILayout.BeginVertical();
+
+            GUILayout.BeginHorizontal();            
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Settings", boldStyle);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(TITLE_SPACE);
+
+            if (!Pipeline.isHDRP)
+            {
+                Importer.USE_AMPLIFY_SHADER = GUILayout.Toggle(Importer.USE_AMPLIFY_SHADER,
+                    new GUIContent("Use Amplify Shaders", "Use the more advanced Amplify shaders where possible. " +
+                    "Amplify shaders are capable of subsurface scattering effects, and anisotropic hair lighting in the URP and Build-in 3D pipelines."));
+                GUILayout.Space(ROW_SPACE);
+            }
+
+            Importer.RECONSTRUCT_FLOW_NORMALS = GUILayout.Toggle(Importer.RECONSTRUCT_FLOW_NORMALS,
+                new GUIContent("Reconstruct Flow Map Normals", "Rebuild missing Normal maps from Flow Maps in hair materials. " +
+                "Reconstructed Normals add extra detail to the lighting models."));
+            GUILayout.Space(ROW_SPACE);
+
+            GUILayout.EndVertical();
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndArea();
+        }
+
+
+
 
         private void EyeOptionSelected(object sel)
         {            

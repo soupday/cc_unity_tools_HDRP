@@ -59,7 +59,35 @@ namespace Reallusion.Import
         public const int FLAG_ALPHA_DATA = 32;
         public const int FLAG_WRAP_CLAMP = 1024;
 
-        public static bool USE_AMPLIFY_SHADER = true;
+        public static bool USE_AMPLIFY_SHADER
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Use_Amplify_Shaders"))
+                    return EditorPrefs.GetBool("RL_Importer_Use_Amplify_Shaders");                
+                return true;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_Use_Amplify_Shaders", value);
+            }
+        }
+        public static bool RECONSTRUCT_FLOW_NORMALS
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Reconstruct_Flow_Normals"))
+                    return EditorPrefs.GetBool("RL_Importer_Reconstruct_Flow_Normals");                
+                return true;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_Reconstruct_Flow_Normals", value);
+            }
+        }
+
 
         private RenderPipeline RP => Pipeline.GetRenderPipeline();
 
