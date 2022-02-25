@@ -61,25 +61,26 @@ namespace Reallusion.Import
             return false;
         }
 
-        [MenuItem("CC3/Scene Tools/Orbit Scene View", priority = 210)]
+        [MenuItem("CC3/Preview Scene Tools/Orbit Scene View (Toggle)", priority = 210)]
         public static void DoOrbitSceneView()
         {
             WindowManager.DoSceneViewOrbit();
         }
 
+        /*
         [MenuItem("CC3/Scene Tools/Orbit Scene View (Tracking)", priority = 211)]
         public static void DoOrbitSceneViewTracking()
         {
             WindowManager.DoSceneViewOrbitTracking();
-        }
+        }*/
 
-        [MenuItem("CC3/Scene Tools/Match Scene Camera", priority = 212)]
+        [MenuItem("CC3/Preview Scene Tools/Match Scene Camera (Toggle)", priority = 212)]
         public static void DoMatchSceneCamera()
         {
             WindowManager.DoMatchSceneCamera();
         }
 
-        [MenuItem("CC3/Scene Tools/Screenshot", priority = 213)]
+        [MenuItem("CC3/Preview Scene Tools/Screenshot", priority = 213)]
         public static void DoScreenShot()
         {
             WindowManager.TakeScreenShot();
