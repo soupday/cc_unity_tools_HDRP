@@ -1097,6 +1097,12 @@ namespace Reallusion.Import
                     mat.SetFloatIf("_SpecularMultiplier", specMapStrength * specStrength);
                     mat.SetFloatIf("_SecondarySpecularMultiplier", 0.65f * specMapStrength * specStrength2);
                     mat.SetFloatIf("_RimTransmissionIntensity", 2f * rimTransmission);
+                    mat.SetFloatIf("_FlowMapFlipGreen", 1f -
+                        matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
+                    mat.SetFloatIf("_SpecularShiftMin", 
+                        matJson.GetFloatValue("Custom Shader/Variable/BlackColor Reflection Offset Z"));
+                    mat.SetFloatIf("_SpecularShiftMax",
+                        matJson.GetFloatValue("Custom Shader/Variable/WhiteColor Reflection Offset Z"));
                 }
                 else
                 {                    
@@ -1104,19 +1110,19 @@ namespace Reallusion.Import
                     {
                         mat.SetFloatIf("_SmoothnessMin", smoothnessStrength);                        
                         mat.SetFloatIf("_SpecularMultiplier", Mathf.Pow(0.18f * specMapStrength * specStrength, 0.333f));
-                        mat.SetFloatIf("_RimTransmissionIntensity", 50f * rimTransmission);                        
+                        mat.SetFloatIf("_RimTransmissionIntensity", 50f * rimTransmission);
+                        mat.SetFloatIf("_FlowMapFlipGreen", 1f -
+                            matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
+                        mat.SetFloatIf("_SpecularShiftMin", -0.25f +
+                            matJson.GetFloatValue("Custom Shader/Variable/BlackColor Reflection Offset Z"));
+                        mat.SetFloatIf("_SpecularShiftMax", -0.25f +
+                            matJson.GetFloatValue("Custom Shader/Variable/WhiteColor Reflection Offset Z"));
                     }
                     else
                     {                        
                         mat.SetFloatIf("_SmoothnessMin", Util.CombineSpecularToSmoothness(specMapStrength * specStrength, smoothnessStrength));
                     }
-                }
-                mat.SetFloatIf("_FlowMapFlipGreen", 1f - 
-                    matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
-                mat.SetFloatIf("_SpecularShiftMin", -0.25f + 
-                    matJson.GetFloatValue("Custom Shader/Variable/BlackColor Reflection Offset Z"));
-                mat.SetFloatIf("_SpecularShiftMax", -0.25f + 
-                    matJson.GetFloatValue("Custom Shader/Variable/WhiteColor Reflection Offset Z"));
+                }                
 
                 mat.SetColorIf("_RootColor", Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/RootColor")));
                 mat.SetColorIf("_EndColor", Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/TipColor")));

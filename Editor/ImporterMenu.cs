@@ -78,5 +78,11 @@ namespace Reallusion.Import
         {
             WindowManager.DoMatchSceneCamera();
         }
+
+        [MenuItem("CC3/Scene Tools/Screenshot", priority = 213)]
+        public static void DoScreenShot()
+        {
+            WindowManager.TakeScreenShot();
+        }
     }
 }

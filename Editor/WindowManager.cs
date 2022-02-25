@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using System;
 
 namespace Reallusion.Import
 {
@@ -166,6 +167,15 @@ namespace Reallusion.Import
                     camera.fieldOfView = fov;
                 }
             }
+        }
+
+        public static void TakeScreenShot()
+        {
+
+            string dateStamp = DateTime.Now.ToString("yyMMdd-hhmmss");
+            string fileName = "Screenshot-" + dateStamp + ".png";
+            Debug.Log("Saving screenshot to: " + fileName);
+            ScreenCapture.CaptureScreenshot(fileName);
         }
     }
 }
