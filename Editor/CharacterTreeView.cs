@@ -40,7 +40,7 @@ namespace Reallusion.Import
         public const int LINKED_INDEX_TEARLINE = 3;
         public const int LINKED_INDEX_TEETH = 4;
         public const int LINKED_INDEX_HAIR = 5;
-        public const int LINKED_INDEX_EYE_URP = 6;
+        public const int LINKED_INDEX_EYE = 6;        
 
         public CharacterTreeView(TreeViewState treeViewState, GameObject obj) : base(treeViewState)
         {

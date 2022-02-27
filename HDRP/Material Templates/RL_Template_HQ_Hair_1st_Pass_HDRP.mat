@@ -104,6 +104,7 @@ Material:
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
     - _EndColorStrength: 1
+    - _FlowMapFlipGreen: 0
     - _GlobalStrength: 1
     - _HighlightAOverlapEnd: 1
     - _HighlightAOverlapInvert: 1
@@ -128,7 +129,8 @@ Material:
     - _SmoothnessMin: 0
     - _SmoothnessPower: 1
     - _SpecularMultiplier: 0.5
-    - _SpecularShift: 0.15
+    - _SpecularShiftMax: 0
+    - _SpecularShiftMin: 0
     - _SrcBlend: 1
     - _StencilRef: 0
     - _StencilRefDepth: 8

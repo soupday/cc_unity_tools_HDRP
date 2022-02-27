@@ -78,7 +78,7 @@ Material:
     - _AOOccludeAll: 0
     - _AOStrength: 1
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.2
+    - _AlphaClip: 0.15
     - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 10
     - _AlphaPower: 1
@@ -93,15 +93,16 @@ Material:
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
     - _DepthPostpass: 0.2
-    - _DepthPrepass: 0.95
+    - _DepthPrepass: 0.514
     - _DiffuseStrength: 1
     - _DoubleSidedEnable: 1
     - _DoubleSidedNormalMode: 0
     - _DstBlend: 10
     - _ENUMCLIPQUALITY_ON: 0
-    - _EnableBlendModePreserveSpecularLighting: 1
+    - _EnableBlendModePreserveSpecularLighting: 0
     - _EnableFogOnTransparent: 1
     - _EndColorStrength: 1
+    - _FlowMapFlipGreen: 0
     - _GlobalStrength: 1
     - _HighlightAOverlapEnd: 1
     - _HighlightAOverlapInvert: 1
@@ -118,15 +119,16 @@ Material:
     - _RequireSplitLighting: 0
     - _RimTransmissionIntensity: 0.05
     - _RootColorStrength: 1
-    - _SecondarySmoothness: 0.625
+    - _SecondarySmoothness: 0.5
     - _SecondarySpecularMultiplier: 0.05
     - _SecondarySpecularShift: 0.15
-    - _ShadowClip: 0.2
+    - _ShadowClip: 0.15
     - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
     - _SmoothnessPower: 1
     - _SpecularMultiplier: 0.5
-    - _SpecularShift: 0.15
+    - _SpecularShiftMax: 0
+    - _SpecularShiftMin: 0
     - _SrcBlend: 1
     - _StencilRef: 0
     - _StencilRefDepth: 0

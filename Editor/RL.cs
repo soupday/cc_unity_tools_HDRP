@@ -111,6 +111,7 @@ namespace Reallusion.Import
         public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, string characterName, BaseGeneration generation, QuickJSON jsonData)
         {
             importer.importNormals = ModelImporterNormals.Calculate;
+            //importer.importNormals = ModelImporterNormals.Import;
             importer.importTangents = ModelImporterTangents.CalculateMikk;
             importer.importBlendShapes = true;
             importer.importBlendShapeNormals = ModelImporterNormals.Calculate;
@@ -535,8 +536,7 @@ namespace Reallusion.Import
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
             //string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
             string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
-            string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");
-            GameObject prefab = null;
+            string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");            
 
             // Apply to the scene:
             GameObject clone = PrefabUtility.InstantiatePrefab(fbx) as GameObject;            
@@ -552,8 +552,7 @@ namespace Reallusion.Import
                 clone.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;                
             }
 
-            if (!prefab)
-                prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);            
 
             UnityEngine.Object.DestroyImmediate(clone);
 
@@ -657,6 +656,6 @@ namespace Reallusion.Import
             UnityEngine.Object.DestroyImmediate(lodObject);
 
             return prefab;
-        }
+        }        
     }
 }

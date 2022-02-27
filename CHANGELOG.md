@@ -1,5 +1,27 @@
 Changelog
 =========
+### v 1.1.1
+- Amplify Shaders added.
+- Amplify Baked material shaders added.
+- Inclusion of MSAA coverage alpha blending hair shaders. (Amplify - URP/3D only)
+- Bake Flow-To-Normal Converter for hair materials.
+- Basic/Default material pass.
+- Eye subsurface mask bake fix.
+- HDRP thickness bake fix.
+- Cornea detail mask bake fix.
+- Reworked "AO Occlude All" in non-amplify hair shaders.
+- Template Clean up.
+
+### v 1.0.0
+- Animation & Expression preview system.
+- Eye Brightness, Saturation, Occlusion sharpness changes.
+- Eye Occlusion colour changed to lit multiply blend. (Should no longer glow in the dark.)
+- Parallax eyes shaders updated.
+- Bake shaders updated.
+
+### v 0.3.0
+- Parallax eye shader + baking shaders.
+- Fix to open/close mouth and eyes for gamebase and LOD characters.
 
 ### v 0.2.2
 - Skin subsurface scattering fix for Unity 2021.1
