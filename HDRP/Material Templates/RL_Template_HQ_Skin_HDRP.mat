@@ -174,7 +174,7 @@ Material:
     - _SubsurfaceScale: 1
     - _SupportDecals: 1
     - _SurfaceType: 0
-    - _ThicknessScale: 0.4
+    - _ThicknessScale: 0.75
     - _TransparentBackfaceEnable: 0
     - _TransparentCullMode: 2
     - _TransparentDepthPostpassEnable: 0
