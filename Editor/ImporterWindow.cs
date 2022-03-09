@@ -43,6 +43,8 @@ namespace Reallusion.Import
         private Vector2 iconScrollView;
         private bool previewCharacterAfterGUI;
         private bool refreshAfterGUI;
+        private bool buildAfterGUI;
+        private bool bakeAfterGUI;
         public enum ImporterWindowMode { Build, Bake, Settings }
         private ImporterWindowMode windowMode = ImporterWindowMode.Build;
 
@@ -303,6 +305,8 @@ namespace Reallusion.Import
 
             previewCharacterAfterGUI = false;
             refreshAfterGUI = false;
+            buildAfterGUI = false;
+            bakeAfterGUI = false;
 
             CheckDragAndDrop();
 
@@ -322,7 +326,8 @@ namespace Reallusion.Import
             if (windowMode == ImporterWindowMode.Build)
                 OnGUITreeViewArea(treeviewBlock);
 
-            // creating a new preview scene in between GUI Layouts causes errors...
+            // functions to run after the GUI has finished...
+
             if (previewCharacterAfterGUI)
             {
                 StoreBackScene();
@@ -332,10 +337,17 @@ namespace Reallusion.Import
                 if (WindowManager.showTools) ShowAnimationPlayer();
                 ResetAllSceneViewCamera();
             }
-
-            if (refreshAfterGUI)
+            else if (refreshAfterGUI)
             {
                 RefreshCharacterList();
+            }
+            else if (buildAfterGUI)
+            {
+                BuildCharacter();
+            }
+            else if (bakeAfterGUI)
+            {
+                BakeCharacter();
             }
         }
 
@@ -551,25 +563,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(buildContent,                
                 GUILayout.Height(BUTTON_HEIGHT)))
             {
-                Util.LogInfo("Doing: Building materials...");
-                if (contextCharacter.BuildQuality == MaterialQuality.None)
-                    contextCharacter.BuildQuality = MaterialQuality.High;
-                GameObject prefabAsset = ImportCharacter(contextCharacter);                
-                contextCharacter.Write();
-                CreateTreeView(true);
-                if (Pipeline.isHDRP && contextCharacter.HQMaterials && contextCharacter.BuiltDualMaterialHair) characterTreeView.EnableMultiPass();
-                else characterTreeView.DisableMultiPass();
-
-                if (prefabAsset)
-                {
-                    if (UpdatePreviewCharacter(prefabAsset))
-                    { 
-                        if (WindowManager.showTools)
-                        {
-                            ShowAnimationPlayer();                            
-                        }
-                    }
-                }
+                buildAfterGUI = true;
             }
             
             GUILayout.EndVertical();
@@ -625,19 +619,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionBake, "Bake high quality materials down to compatible textures for the default shaders. i.e. HDRP/Lit, URP/Lut or Standard shader."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (contextCharacter.HQMaterials)
-                {     
-                    ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
-                    GameObject bakedAsset = baker.BakeHQ();
-
-                    contextCharacter.bakeIsBaked = true;
-                    contextCharacter.Write();
-
-                    if (bakedAsset)
-                    {
-                        ShowBakedCharacter(bakedAsset);
-                    }
-                }
+                bakeAfterGUI = true;
             }
             GUI.enabled = true;
 
@@ -988,6 +970,58 @@ namespace Reallusion.Import
             }            
 
             return ps.IsValid;
+        }
+
+        private void BuildCharacter()
+        {
+            Util.LogInfo("Doing: Building materials...");
+
+            // refresh the character info for any Json changes
+            contextCharacter.Refresh();
+
+            // default to high quality if never set before
+            if (contextCharacter.BuildQuality == MaterialQuality.None)
+                contextCharacter.BuildQuality = MaterialQuality.High;
+
+            // import and build the materials from the Json data
+            GameObject prefabAsset = ImportCharacter(contextCharacter);
+            contextCharacter.Write();
+
+            // refresh the tree view with the new data
+            CreateTreeView(true);
+
+            // enable / disable multipass material selection (HDRP only)
+            if (Pipeline.isHDRP && contextCharacter.HQMaterials && contextCharacter.BuiltDualMaterialHair) characterTreeView.EnableMultiPass();
+            else characterTreeView.DisableMultiPass();
+
+            // update the character in the preview scene with the new prefab asset
+            if (prefabAsset)
+            {
+                if (UpdatePreviewCharacter(prefabAsset))
+                {
+                    if (WindowManager.showTools)
+                    {
+                        ShowAnimationPlayer();
+                    }
+                }
+            }
+        }
+
+        private void BakeCharacter()
+        {
+            if (contextCharacter.HQMaterials)
+            {
+                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
+                GameObject bakedAsset = baker.BakeHQ();
+
+                contextCharacter.bakeIsBaked = true;
+                contextCharacter.Write();
+
+                if (bakedAsset)
+                {
+                    ShowBakedCharacter(bakedAsset);
+                }
+            }
         }
 
         bool ShowBakedCharacter(GameObject bakedAsset)
