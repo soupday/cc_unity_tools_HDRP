@@ -1005,6 +1005,8 @@ namespace Reallusion.Import
                     }
                 }
             }
+
+            Repaint();            
         }
 
         private void BakeCharacter()
