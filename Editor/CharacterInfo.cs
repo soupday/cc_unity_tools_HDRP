@@ -178,7 +178,7 @@ namespace Reallusion.Import
 
                 return generation;
             } 
-        }        
+        }            
 
         public void Release()
         {

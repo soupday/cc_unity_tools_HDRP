@@ -798,6 +798,11 @@ namespace Reallusion.Import
                 "Reconstructed Normals add extra detail to the lighting models."));
             GUILayout.Space(ROW_SPACE);
 
+            Importer.REBAKE_BLENDER_UNITY_MAPS = GUILayout.Toggle(Importer.REBAKE_BLENDER_UNITY_MAPS,
+                new GUIContent("Rebake Blender Unity Maps", "Always re-bake the blender to unity Diffuse+Alpha, HDRP Mask and Metallic+Gloss maps. " +
+                "Otherwise subsequent material rebuilds will try to re-use existing bakes. Only needed if the source textures are changed."));
+            GUILayout.Space(ROW_SPACE);
+
             GUILayout.EndVertical();
 
             GUILayout.FlexibleSpace();
