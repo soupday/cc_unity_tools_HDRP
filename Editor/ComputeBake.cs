@@ -1399,6 +1399,7 @@ namespace Reallusion.Import
             float expandLower = mat.GetFloatIf("_ExpandLower");
             float expandInner = mat.GetFloatIf("_ExpandInner");
             float expandOuter = mat.GetFloatIf("_ExpandOuter");
+            float expandScale = mat.GetFloatIf("_ExpandScale");
 
             Texture2D bakedBaseMap = null;
             Texture2D bakedMaskMap = null;
@@ -1423,11 +1424,12 @@ namespace Reallusion.Import
                 sourceName, Pipeline.GetTemplateMaterial(MaterialType.EyeOcclusion,
                                             MaterialQuality.Baked, characterInfo));
 
-            result.SetFloat("_ExpandOut", expandOut);
-            result.SetFloat("_ExpandUpper", expandUpper);
-            result.SetFloat("_ExpandLower", expandLower);
-            result.SetFloat("_ExpandInner", expandInner);
-            result.SetFloat("_ExpandOuter", expandOuter);
+            result.SetFloatIf("_ExpandOut", expandOut);
+            result.SetFloatIf("_ExpandUpper", expandUpper);
+            result.SetFloatIf("_ExpandLower", expandLower);
+            result.SetFloatIf("_ExpandInner", expandInner);
+            result.SetFloatIf("_ExpandOuter", expandOuter);
+            result.SetFloatIf("_ExpandScale", expandScale);
 
             return result;
         }

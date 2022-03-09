@@ -681,7 +681,7 @@ namespace Reallusion.Import
 
                 if (!diffuseAlpha)
                 {
-                    if (diffuse && opacity)
+                    if (diffuse && opacity && diffuse != opacity)
                     {
                         Debug.Log("Baking DiffuseAlpha texture for " + sourceName);
                         folder = Util.GetAssetFolder(diffuse, opacity);
@@ -742,7 +742,9 @@ namespace Reallusion.Import
             Texture2D occlusion = GetTexture(sourceName, "ao", matJson, "Textures/AO", true);
             Texture2D microNormalMask = GetTexture(sourceName, "MicroNMask", matJson, "Custom Shader/Image/MicroNormalMask", true);            
             SetTextureImport(diffuse, "", FLAG_FOR_BAKE + FLAG_SRGB);
-            SetTextureImport(opacity, "", FLAG_FOR_BAKE);                
+            // sometimes the opacity texture is the alpha channel of the diffuse...
+            if (opacity != diffuse)
+                SetTextureImport(opacity, "", FLAG_FOR_BAKE);
             SetTextureImport(metallic, "", FLAG_FOR_BAKE);
             SetTextureImport(roughness, "", FLAG_FOR_BAKE);
             SetTextureImport(occlusion, "", FLAG_FOR_BAKE);
@@ -1504,7 +1506,7 @@ namespace Reallusion.Import
 
         private void ConnectHQTearlineMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
             MaterialType materialType, QuickJSON matJson)
-        {
+        {            
             if (matJson != null)
             {
                 mat.SetFloatIf("_DepthOffset", 0.005f * matJson.GetFloatValue("Custom Shader/Variable/Depth Offset"));                
