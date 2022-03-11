@@ -125,13 +125,23 @@ namespace Reallusion.Import
 
         private static Vector2Int GetMaxSize(Texture2D a, Texture2D b, Texture2D c, Texture2D d)
         {
-            Vector2Int max = new Vector2Int(a.width, a.height);
-            if (b.width > max.x) max.x = b.width;
-            if (b.height > max.y) max.y = b.height;
-            if (c.width > max.x) max.x = c.width;
-            if (c.height > max.y) max.y = c.height;
-            if (d.width > max.x) max.x = d.width;
-            if (d.height > max.y) max.y = d.height;
+            Vector2Int max = new Vector2Int(MIN_SIZE, MIN_SIZE);
+            if (a) max = new Vector2Int(a.width, a.height);
+            if (b)
+            {
+                if (b.width > max.x) max.x = b.width;
+                if (b.height > max.y) max.y = b.height;
+            }
+            if (c)
+            {
+                if (c.width > max.x) max.x = c.width;
+                if (c.height > max.y) max.y = c.height;
+            }
+            if (d)
+            {
+                if (d.width > max.x) max.x = d.width;
+                if (d.height > max.y) max.y = d.height;
+            }
             if (max.x > MAX_SIZE) max.x = MAX_SIZE;
             if (max.y > MAX_SIZE) max.y = MAX_SIZE;
             return max;
@@ -228,6 +238,15 @@ namespace Reallusion.Import
         {
             if (tex) return tex;
             return Texture2D.whiteTexture;
+        }
+
+        /// <summary>
+        /// Checks that the texture exists, if not returns a gray texture.
+        /// </summary>
+        private Texture2D CheckGray(Texture2D tex)
+        {
+            if (tex) return tex;
+            return Texture2D.grayTexture;
         }
 
         /// <summary>
@@ -1380,6 +1399,7 @@ namespace Reallusion.Import
             float expandLower = mat.GetFloatIf("_ExpandLower");
             float expandInner = mat.GetFloatIf("_ExpandInner");
             float expandOuter = mat.GetFloatIf("_ExpandOuter");
+            float expandScale = mat.GetFloatIf("_ExpandScale");
 
             Texture2D bakedBaseMap = null;
             Texture2D bakedMaskMap = null;
@@ -1404,15 +1424,115 @@ namespace Reallusion.Import
                 sourceName, Pipeline.GetTemplateMaterial(MaterialType.EyeOcclusion,
                                             MaterialQuality.Baked, characterInfo));
 
-            result.SetFloat("_ExpandOut", expandOut);
-            result.SetFloat("_ExpandUpper", expandUpper);
-            result.SetFloat("_ExpandLower", expandLower);
-            result.SetFloat("_ExpandInner", expandInner);
-            result.SetFloat("_ExpandOuter", expandOuter);
+            result.SetFloatIf("_ExpandOut", expandOut);
+            result.SetFloatIf("_ExpandUpper", expandUpper);
+            result.SetFloatIf("_ExpandLower", expandLower);
+            result.SetFloatIf("_ExpandInner", expandInner);
+            result.SetFloatIf("_ExpandOuter", expandOuter);
+            result.SetFloatIf("_ExpandScale", expandScale);
 
             return result;
         }
 
+        //
+
+        public Texture2D BakeGradientMap(string folder, string name)
+        {
+            Vector2Int maxSize = new Vector2Int(256, 256);
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(maxSize, folder, name, Importer.FLAG_ALPHA_DATA);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                int kernel = bakeShader.FindKernel("RLGradient");
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
+
+        public Texture2D BakeBlenderDiffuseAlphaMap(Texture2D diffuse, Texture2D alpha, string folder, string name)
+        {
+            Vector2Int maxSize = GetMaxSize(diffuse, alpha);
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(maxSize, folder, name, Importer.FLAG_SRGB);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                diffuse = CheckDiffuse(diffuse);
+                alpha = CheckMask(alpha);
+
+                int kernel = bakeShader.FindKernel("RLDiffuseAlpha");
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.SetTexture(kernel, "Diffuse", diffuse);
+                bakeShader.SetTexture(kernel, "Alpha", alpha);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
+
+        public Texture2D BakeBlenderHDRPMaskMap(Texture2D metallic, Texture2D ao, 
+            Texture2D microNormalMask, Texture2D roughness, 
+            Texture2D smoothnessLUT, 
+            string folder, string name)
+        {
+            Vector2Int maxSize = GetMaxSize(metallic, ao, roughness, microNormalMask);
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(maxSize, folder, name, Importer.FLAG_ALPHA_DATA);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                metallic = CheckBlank(metallic);
+                ao = CheckMask(ao);
+                roughness = CheckGray(roughness);
+                microNormalMask = CheckMask(microNormalMask);
+
+                int kernel = bakeShader.FindKernel("RLHDRPMask");
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.SetTexture(kernel, "Metallic", metallic);
+                bakeShader.SetTexture(kernel, "AO", ao);
+                bakeShader.SetTexture(kernel, "Roughness", roughness);
+                bakeShader.SetTexture(kernel, "MicroNormalMask", microNormalMask);
+                bakeShader.SetTexture(kernel, "SmoothnessLUT", smoothnessLUT);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
+
+        public Texture2D BakeBlenderMetallicGlossMap(Texture2D metallic, Texture2D roughness, 
+            Texture2D smoothnessLUT, 
+            string folder, string name)
+        {
+            Vector2Int maxSize = GetMaxSize(metallic, roughness);
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(maxSize, folder, name, Importer.FLAG_ALPHA_DATA);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                metallic = CheckBlank(metallic);                
+                roughness = CheckGray(roughness);                
+
+                int kernel = bakeShader.FindKernel("RLURPMetallicGloss");
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.SetTexture(kernel, "Metallic", metallic);                
+                bakeShader.SetTexture(kernel, "Roughness", roughness);
+                bakeShader.SetTexture(kernel, "SmoothnessLUT", smoothnessLUT);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
 
         // Bake Maps
 

@@ -57,6 +57,16 @@ namespace Reallusion.Import
                     }
                 }
             }
+            else if (assetPath.iEndsWith(".blend"))
+            {
+                string assetFolder = Path.GetDirectoryName(assetPath);
+                string assetName = Path.GetFileNameWithoutExtension(assetPath);
+                if (HasJSONAsset(assetFolder, assetName))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }        
 
@@ -249,6 +259,20 @@ namespace Reallusion.Import
             relativePath += fullSplit[fullSplit.Length - 1];
 
             return relativePath;
+        }
+
+        public static string GetAssetFolder(params Object[] assets)
+        {
+            foreach (Object o in assets)            
+            {
+                if (o)
+                {
+                    string assetPath = AssetDatabase.GetAssetPath(o);
+                    return Path.GetDirectoryName(assetPath);
+                }
+            }
+
+            return null;
         }
 
         public static ComputeShader FindComputeShader(string name)

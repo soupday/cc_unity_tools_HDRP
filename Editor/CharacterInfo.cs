@@ -163,6 +163,11 @@ namespace Reallusion.Import
                 return jsonData;
             }
         }
+
+        public void Refresh()
+        {
+            if (jsonData != null) jsonData = Util.GetJsonData(jsonPath);
+        }
         
         public BaseGeneration Generation
         { 
@@ -178,7 +183,7 @@ namespace Reallusion.Import
 
                 return generation;
             } 
-        }        
+        }            
 
         public void Release()
         {

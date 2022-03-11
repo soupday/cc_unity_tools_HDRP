@@ -74,6 +74,7 @@ Material:
     - _ExpandLower: 0
     - _ExpandOut: 0
     - _ExpandOuter: 0.0007
+    - _ExpandScale: 1
     - _ExpandUpper: 0
     - _InnerMax: 0.5
     - _InnerMin: 0.25

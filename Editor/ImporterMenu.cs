@@ -85,5 +85,13 @@ namespace Reallusion.Import
         {
             WindowManager.TakeScreenShot();
         }
+
+        [MenuItem("CC3/Test/Bake Gradient", priority = 220)]
+        public static void DoTest()
+        {
+            CharacterInfo ci = ImporterWindow.Current.Character;
+            ComputeBake baker = new ComputeBake(ci.Fbx, ci);
+            Texture2D gradient = baker.BakeGradientMap("Assets\\Test", "Gradient");
+        }
     }
 }

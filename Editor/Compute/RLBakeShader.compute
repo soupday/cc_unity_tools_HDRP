@@ -2,6 +2,11 @@
 
 // Kernels
 //
+#pragma kernel RLDiffuseAlpha
+#pragma kernel RLHDRPMask
+#pragma kernel RLURPMetallicGloss
+#pragma kernel RLGradient
+//
 #pragma kernel RLDiffuseBlend
 #pragma kernel RLMask
 #pragma kernel RLDetailMask
@@ -80,6 +85,11 @@ float sssNormalSoften;
 TEX2D(Mask);
 TEX2D(MetallicGloss);
 TEX2D(AO);
+TEX2D(Metallic);
+TEX2D(Roughness);
+TEX2D(Alpha);
+TEX2D(MicroNormalMask);
+TEX2D(SmoothnessLUT);
 
 TEX2D(CavityAO);
 float smoothnessMin, smoothnessMax, smoothnessPower;
@@ -346,6 +356,17 @@ float invLerp(float a, float b, float v)
     return (v - a) / (b - a);
 }
 
+[numthreads(1, 1, 1)]
+void RLGradient(uint3 id : SV_DispatchThreadID)
+{
+    int w, h;
+    Result.GetDimensions(w, h);
+    //float v = (id.x / float(w - 1)) + (id.y / float(h - 1));
+    float v = (id.x / float(w - 1));
+
+    Result[id.xy] = float4(v, v, v, 1);
+}
+
 // Generic Bake kernels
 //
 [numthreads(1, 1, 1)]
@@ -373,6 +394,48 @@ void RLMask(uint3 id : SV_DispatchThreadID)
     float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     float4 packed = float4(metallic, ao, detailMask, smoothness);
+
+    Result[id.xy] = packed;
+}
+
+[numthreads(1, 1, 1)]
+void RLDiffuseAlpha(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float4 diffuse = SAMPLE(Diffuse, uv);
+    float alpha = SAMPLE(Alpha, uv).g;
+    float4 packed = float4(diffuse.rgb, alpha);
+
+    Result[id.xy] = LinearTosRGB(packed);
+}
+
+[numthreads(1, 1, 1)]
+void RLHDRPMask(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float metallic = SAMPLE(Metallic, uv).g;
+    float ao = SAMPLE(AO, uv).g;
+    float roughness = SAMPLE(Roughness, uv).g;
+    roughness = (roughness * 255.0 / 256.0) + (0.5 / 256.0);
+    float smoothness = SAMPLE(SmoothnessLUT, float2(roughness, roughness)).g;
+    float detailMask = SAMPLE(MicroNormalMask, uv).g;    
+    float4 packed = float4(metallic, ao, detailMask, smoothness);
+
+    Result[id.xy] = packed;
+}
+
+[numthreads(1, 1, 1)]
+void RLURPMetallicGloss(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float metallic = SAMPLE(Metallic, uv).g;
+    float roughness = SAMPLE(Roughness, uv).g;
+    roughness = (roughness * 255.0 / 256.0) + (0.5 / 256.0);
+    float smoothness = SAMPLE(SmoothnessLUT, float2(roughness, roughness)).g;
+    float4 packed = float4(metallic, metallic, metallic, smoothness);
 
     Result[id.xy] = packed;
 }
