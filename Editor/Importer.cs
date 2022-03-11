@@ -806,24 +806,44 @@ namespace Reallusion.Import
             else if (RP == RenderPipeline.URP)
                 ConnectBlenderTextures(sourceName, mat, matJson, "_BaseMap", "", "_MetallicGlossMap");
             else
-                ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");
+                ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");            
 
             // override smoothness for basic material skin
             if (RP != RenderPipeline.HDRP && mat.GetTexture("_MetallicGlossMap"))
             {
                 if (customShader == "RLHead" || customShader == "RLSkin")
-                    mat.SetFloat("_Smoothness", 0.7f);
+                {
+                    mat.SetFloatIf("_Smoothness", 0.7f);
+                    mat.SetFloatIf("_GlossMapScale", 0.7f);
+                }
                 else
-                    mat.SetFloat("_Smoothness", 0.897f);
+                {
+                    mat.SetFloatIf("_Smoothness", 0.897f);
+                    mat.SetFloatIf("_GlossMapScale", 0.897f);
+                }
             }
 
             // All
             if (matJson != null)
             {
+                if (matJson.PathExists("Roughness_Value"))
+                {
+                    if (RP == RenderPipeline.Builtin)
+                        mat.SetFloatIf("_Glossiness", 1f - matJson.GetFloatValue("Roughness_Value"));
+                    else
+                        mat.SetFloatIf("_Smoothness", 1f - matJson.GetFloatValue("Roughness_Value"));
+                    
+                }
+
+                if (matJson.PathExists("Metallic_Value"))
+                {
+                    mat.SetFloatIf("_Metallic", matJson.GetFloatValue("Metallic_Value"));
+                }
+
                 if (RP != RenderPipeline.Builtin)
-                    mat.SetColor("_BaseColor", matJson.GetColorValue("Diffuse Color"));
+                    mat.SetColor("_BaseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
                 else
-                    mat.SetColor("_Color", matJson.GetColorValue("Diffuse Color"));
+                    mat.SetColor("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
 
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
                 {
@@ -894,7 +914,7 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 float diffuseStrength = matJson.GetFloatValue("Custom Shader/Variable/Diffuse Strength");
-                mat.SetColor("_BaseColor", matJson.GetColorValue("Diffuse Color").ScaleRGB(diffuseStrength));
+                mat.SetColor("_BaseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")).ScaleRGB(diffuseStrength));
 
                 if (matJson.PathExists("Textures/Normal/Strength"))
                     mat.SetFloat("_NormalScale", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
