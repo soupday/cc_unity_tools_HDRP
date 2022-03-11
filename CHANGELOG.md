@@ -1,5 +1,12 @@
 Changelog
 =========
+
+### v 1.2.0
+- Blender Tools to Unity pipeline implemented.
+    - Using compute shaders for baking Unity packed textures from base Blender textures.
+    - Eye Occlusion and Tearline shaders updated for Blender model space.
+- Diffuse Color modifier correctly converted from linear to sRGB color space.
+
 ### v 1.1.1
 - Amplify Shaders added.
 - Amplify Baked material shaders added.
