@@ -31,7 +31,7 @@ namespace Reallusion.Import
     {
         public enum Mode { none, single, multi }
 
-        private static string windowTitle = "CC/iC Importer HDRP";
+        private static readonly string windowTitle = "CC/iC Importer HDRP 1.2.1";
         private static CharacterInfo contextCharacter;
         private static List<CharacterInfo> validCharacters;
         private static string backScenePath;
@@ -288,7 +288,7 @@ namespace Reallusion.Import
 
             if (validCharacters == null || validCharacters.Count == 0)
             {
-                GUILayout.Label("No CC-iC/iClone Characters detected!");
+                GUILayout.Label("No CC/iClone Characters detected!");
                 return;
             }            
 
