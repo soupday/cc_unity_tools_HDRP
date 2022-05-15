@@ -1258,51 +1258,53 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 // both the cornea and the eye materials need the same settings:
-                mat.SetFloat("_AOStrength", 0.5f * Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
+                mat.SetFloatIf("_AOStrength", 0.5f * Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
-                    mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
-                mat.SetFloat("_ColorBlendStrength", 0.5f * matJson.GetFloatValue("Custom Shader/Variable/BlendMap2 Strength"));
-                mat.SetFloat("_ShadowRadius", matJson.GetFloatValue("Custom Shader/Variable/Shadow Radius"));
-                mat.SetFloat("_ShadowHardness", matJson.GetFloatValue("Custom Shader/Variable/Shadow Hardness"));
+                    mat.SetColorIf("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
+                mat.SetFloatIf("_ColorBlendStrength", 0.5f * matJson.GetFloatValue("Custom Shader/Variable/BlendMap2 Strength"));
+                mat.SetFloatIf("_ShadowRadius", matJson.GetFloatValue("Custom Shader/Variable/Shadow Radius"));
+                mat.SetFloatIf("_ShadowHardness", matJson.GetFloatValue("Custom Shader/Variable/Shadow Hardness"));
                 float specularScale = matJson.GetFloatValue("Custom Shader/Variable/Specular Scale");
-                mat.SetColor("_CornerShadowColor", matJson.GetColorValue("Custom Shader/Variable/Eye Corner Darkness Color"));
+                mat.SetColorIf("_CornerShadowColor", matJson.GetColorValue("Custom Shader/Variable/Eye Corner Darkness Color"));
+                mat.SetColorIf("_IrisColor", matJson.GetColorValue("Custom Shader/Variable/Iris Color"));
+                mat.SetColorIf("_IrisCloudyColor", matJson.GetColorValue("Custom Shader/Variable/Iris Cloudy Color"));
 
                 if (characterInfo.RefractiveEyes)
                 {
-                    mat.SetFloat("_IrisDepth", 0.004f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));
-                    mat.SetFloat("_PupilScale", 1f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));
+                    mat.SetFloatIf("_IrisDepth", 0.004f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"));
+                    mat.SetFloatIf("_PupilScale", 1f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));
                 }
                 else if (characterInfo.ParallaxEyes)
                 {
                     float depth = Mathf.Clamp(0.333f * matJson.GetFloatValue("Custom Shader/Variable/Iris Depth Scale"), 0.1f, 1.0f);                    
                     //float pupilScale = Mathf.Clamp(1f / Mathf.Pow((depth * 2f + 1f), 2f), 0.1f, 2.0f);                    
-                    mat.SetFloat("_IrisDepth", depth);
+                    mat.SetFloatIf("_IrisDepth", depth);
                     //mat.SetFloat("_PupilScale", pupilScale);
-                    mat.SetFloat("_PupilScale", 1f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));
+                    mat.SetFloatIf("_PupilScale", 1f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));
                 }
                 else
                 {                    
-                    mat.SetFloat("_PupilScale", 1f);
+                    mat.SetFloatIf("_PupilScale", 1f);
                 }
 
-                mat.SetFloat("_IrisSmoothness", 0f); // 1f - matJson.GetFloatValue("Custom Shader/Variable/_Iris Roughness"));
-                mat.SetFloat("_IrisBrightness", matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));                                
-                mat.SetFloat("_IOR", matJson.GetFloatValue("Custom Shader/Variable/_IoR"));
+                mat.SetFloatIf("_IrisSmoothness", 0f); // 1f - matJson.GetFloatValue("Custom Shader/Variable/_Iris Roughness"));
+                mat.SetFloatIf("_IrisBrightness", matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));                                
+                mat.SetFloatIf("_IOR", matJson.GetFloatValue("Custom Shader/Variable/_IoR"));
                 float irisScale = matJson.GetFloatValue("Custom Shader/Variable/Iris UV Radius") / 0.16f;
-                mat.SetFloat("_IrisScale", irisScale);
-                mat.SetFloat("_IrisRadius", 0.15f * irisScale);                
-                mat.SetFloat("_LimbusWidth", matJson.GetFloatValue("Custom Shader/Variable/Limbus UV Width Color"));                
+                mat.SetFloatIf("_IrisScale", irisScale);
+                mat.SetFloatIf("_IrisRadius", 0.15f * irisScale);                
+                mat.SetFloatIf("_LimbusWidth", matJson.GetFloatValue("Custom Shader/Variable/Limbus UV Width Color"));                
                 float limbusDarkScale = matJson.GetFloatValue("Custom Shader/Variable/Limbus Dark Scale");
                 float limbusDarkT = Mathf.InverseLerp(0f, 10f, limbusDarkScale);
-                mat.SetFloat("_LimbusDarkRadius", Mathf.Lerp(0.145f, 0.075f, limbusDarkT));
-                //mat.SetFloat("_LimbusDarkWidth", 0.035f);
-                mat.SetFloat("_ScleraBrightness", Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"), 0.65f));
-                mat.SetFloat("_ScleraSaturation", 0.75f);
-                mat.SetFloat("_ScleraSmoothness", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Roughness"));
-                mat.SetFloat("_ScleraScale", matJson.GetFloatValue("Custom Shader/Variable/Sclera UV Radius"));
-                mat.SetFloat("_ScleraNormalStrength", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Flatten Normal"));
-                mat.SetFloat("_ScleraNormalTiling", Mathf.Clamp(1f / matJson.GetFloatValue("Custom Shader/Variable/Sclera Normal UV Scale"), 0.1f, 10f));
-                mat.SetFloat("_IsLeftEye", isLeftEye ? 1f : 0f);
+                mat.SetFloatIf("_LimbusDarkRadius", Mathf.Lerp(0.145f, 0.075f, limbusDarkT));
+                //mat.SetFloatIf("_LimbusDarkWidth", 0.035f);
+                mat.SetFloatIf("_ScleraBrightness", Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"), 0.65f));
+                mat.SetFloatIf("_ScleraSaturation", 0.75f);
+                mat.SetFloatIf("_ScleraSmoothness", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Roughness"));
+                mat.SetFloatIf("_ScleraScale", matJson.GetFloatValue("Custom Shader/Variable/Sclera UV Radius"));
+                mat.SetFloatIf("_ScleraNormalStrength", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Flatten Normal"));
+                mat.SetFloatIf("_ScleraNormalTiling", Mathf.Clamp(1f / matJson.GetFloatValue("Custom Shader/Variable/Sclera Normal UV Scale"), 0.1f, 10f));
+                mat.SetFloatIf("_IsLeftEye", isLeftEye ? 1f : 0f);
             }
         }
 
