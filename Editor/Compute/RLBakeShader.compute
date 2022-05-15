@@ -157,7 +157,7 @@ float pupilScale;
 float irisRadius, limbusWidth;
 float limbusDarkRadius, limbusDarkWidth;
 float shadowRadius, shadowHardness;
-float4 cornerShadowColor, limbusColor;
+float4 cornerShadowColor, limbusColor, irisColor, irisCloudyColor;
 float depthRadius;
 float corneaSmoothness, scleraSmoothness, irisSmoothness;
 float scleraSubsurfaceScale, irisSubsurfaceScale;
@@ -650,6 +650,7 @@ void RLHeadMask(uint3 id : SV_DispatchThreadID)
     float smoothnessMod = HeadSmoothnessMod(uv);
     float microScatteringMultiplier = HeadScatterMask(uv) * subsurfaceScale;
     float subsurface = SAMPLE(Subsurface, uv).y * microScatteringMultiplier;
+    subsurface = saturate(subsurface * microScatteringMultiplier);
     float subsurfaceFlattenNormals = saturate(1.0 - (subsurface * subsurface * sssNormalSoften));
 
     float metallic = mask.r;
@@ -671,6 +672,7 @@ void RLSkinMask(uint3 id : SV_DispatchThreadID)
     float smoothnessMod = SkinSmoothnessMod(uv);
     float microScatteringMultiplier = SkinScatterMask(uv) * subsurfaceScale;
     float subsurface = SAMPLE(Subsurface, uv).y * microScatteringMultiplier;
+    subsurface = saturate(subsurface * microScatteringMultiplier);
     float subsurfaceFlattenNormals = saturate(1.0 - (subsurface * subsurface * sssNormalSoften));
 
     float metallic = mask.r;
@@ -693,6 +695,7 @@ void RLHeadMetallicGloss(uint3 id : SV_DispatchThreadID)
     float smoothnessMod = HeadSmoothnessMod(uv);
     float microScatteringMultiplier = HeadScatterMask(uv) * subsurfaceScale;
     float subsurface = SAMPLE(Subsurface, uv).y * microScatteringMultiplier;
+    subsurface = saturate(subsurface * microScatteringMultiplier);
     float subsurfaceFlattenNormals = saturate(1.0 - (subsurface * subsurface * sssNormalSoften));
 
     float metallic = mask.r;
@@ -714,6 +717,7 @@ void RLSkinMetallicGloss(uint3 id : SV_DispatchThreadID)
     float smoothnessMod = SkinSmoothnessMod(uv);
     float microScatteringMultiplier = SkinScatterMask(uv) * subsurfaceScale;
     float subsurface = SAMPLE(Subsurface, uv).y * microScatteringMultiplier;
+    subsurface = saturate(subsurface * microScatteringMultiplier);
     float subsurfaceFlattenNormals = saturate(1.0 - (subsurface * subsurface * sssNormalSoften));
 
     float metallic = mask.r;
@@ -769,7 +773,7 @@ void RLHeadSubsurface(uint3 id : SV_DispatchThreadID)
     float2 uv = GetUV(id.xy);
     float scatterMask = HeadScatterMask(uv);
 
-    float4 subsurface = (scatterMask * subsurfaceScale) * SAMPLE(Subsurface, uv) * subsurfaceFalloff * SAMPLE(BaseMap, uv);
+    float4 subsurface = saturate(scatterMask * subsurfaceScale) * SAMPLE(Subsurface, uv) * subsurfaceFalloff * SAMPLE(BaseMap, uv);
 
     subsurface.a = 1.0;
 
@@ -782,7 +786,7 @@ void RLSkinSubsurface(uint3 id : SV_DispatchThreadID)
     float2 uv = GetUV(id.xy);
     float scatterMask = SkinScatterMask(uv);
 
-    float4 subsurface = (scatterMask * subsurfaceScale) * SAMPLE(Subsurface, uv) * subsurfaceFalloff * SAMPLE(BaseMap, uv);
+    float4 subsurface = saturate(scatterMask * subsurfaceScale) * SAMPLE(Subsurface, uv) * subsurfaceFalloff * SAMPLE(BaseMap, uv);
 
     subsurface.a = 1.0;
 
@@ -819,7 +823,7 @@ void RLSkinNormal(uint3 id : SV_DispatchThreadID)
     float subsurface = SAMPLE(Subsurface, uv).y * microScatteringMultiplier;
     float subsurfaceFlattenNormals = saturate(1.0 - (subsurface * subsurface * sssNormalSoften));
 
-    float3 ns;
+    float3 ns; 
     NormalStrength_float3(normal, normalStrength * subsurfaceFlattenNormals, ns);
 
     Result[id.xy] = PackNormal(ns);
@@ -1117,10 +1121,11 @@ void RLEyeDiffuse(uint3 id : SV_DispatchThreadID)
     float3 hsv = HSV(color, irisHue, irisSaturation, irisBrightness);
     color = float4(hsv, 1.0);
     float4 colorBlend = SAMPLE(ColorBlend, uv);
-
+    
     float radial = RADIAL(uv);
     float limbusMask = EyeLimbusMask(radial);
-    color = BlendMultiply_float4(color, limbusColor, limbusMask);
+    color = (color * sRGBToLinear(irisColor)) + (sRGBToLinear(irisCloudyColor) * 0.5);
+    color = lerp(color, color * sRGBToLinear(limbusColor), limbusMask);    
 
     color = BlendMultiply_float4(color, colorBlend, colorBlendStrength);
     color.a = 1.0;
@@ -1150,6 +1155,7 @@ void RLCorneaSingleDiffuse(uint3 id : SV_DispatchThreadID)
     float limbusMask = EyeLimbusMask(radial);
     float irisMask = EyeIrisMask(radial);
 
+    cornea = (cornea * sRGBToLinear(irisColor)) + (sRGBToLinear(irisCloudyColor) * 0.5);
     cornea = lerp(cornea, cornea * sRGBToLinear(limbusColor), limbusMask);
     sclera = lerp(sclera, sclera * sRGBToLinear(cornerShadowColor), shadowMask);
     float4 color = lerp(cornea, sclera, irisMask);

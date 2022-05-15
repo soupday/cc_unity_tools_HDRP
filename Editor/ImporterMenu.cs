@@ -23,13 +23,13 @@ namespace Reallusion.Import
 {
     public class ImporterMenu : Editor
     {        
-        [MenuItem("CC3/Import Characters", priority = 1)]
+        [MenuItem("Reallusion/Import Characters", priority = 1)]
         public static void InitCC3ImportGUI()
         {
             ImporterWindow.Init(ImporterWindow.Mode.multi, Selection.activeObject);
         }
 
-        [MenuItem("CC3/Animation Player", priority = 2)]
+        [MenuItem("Reallusion/Animation Player", priority = 2)]
         public static void ShowAnimationPlayer()
         {
             if (AnimPlayerGUI.IsPlayerShown())
@@ -48,50 +48,52 @@ namespace Reallusion.Import
             }
         }
 
-        [MenuItem("Assets/CC3/Import Character", priority = 2000)]
+        [MenuItem("Assets/Reallusion/Import Character", priority = 2000)]
         public static void InitAssetCC3ImportGUI()
         {
             ImporterWindow.Init(ImporterWindow.Mode.single, Selection.activeObject);
         }
          
-        [MenuItem("Assets/CC3/Import Character", true)]
+        [MenuItem("Assets/Reallusion/Import Character", true)]
         public static bool ValidateInitAssetCC3ImportGUI()
         {
             if (Util.IsCC3Character(Selection.activeObject)) return true;
             return false;
         }
 
-        [MenuItem("CC3/Preview Scene Tools/Orbit Scene View (Toggle)", priority = 210)]
+        [MenuItem("Reallusion/Preview Scene Tools/Orbit Scene View (Toggle)", priority = 210)]
         public static void DoOrbitSceneView()
         {
             WindowManager.DoSceneViewOrbit();
         }
 
         /*
-        [MenuItem("CC3/Scene Tools/Orbit Scene View (Tracking)", priority = 211)]
+        [MenuItem("Reallusion/Scene Tools/Orbit Scene View (Tracking)", priority = 211)]
         public static void DoOrbitSceneViewTracking()
         {
             WindowManager.DoSceneViewOrbitTracking();
         }*/
 
-        [MenuItem("CC3/Preview Scene Tools/Match Scene Camera (Toggle)", priority = 212)]
+        [MenuItem("Reallusion/Preview Scene Tools/Match Scene Camera (Toggle)", priority = 212)]
         public static void DoMatchSceneCamera()
         {
             WindowManager.DoMatchSceneCamera();
         }
 
-        [MenuItem("CC3/Preview Scene Tools/Screenshot", priority = 213)]
+        [MenuItem("Reallusion/Preview Scene Tools/Screenshot", priority = 213)]
         public static void DoScreenShot()
         {
             WindowManager.TakeScreenShot();
         }
 
-        [MenuItem("CC3/Test/Bake Gradient", priority = 220)]
+        /*
+        [MenuItem("Reallusion/Test/Bake Gradient", priority = 220)]
         public static void DoTest()
         {
             CharacterInfo ci = ImporterWindow.Current.Character;
             ComputeBake baker = new ComputeBake(ci.Fbx, ci);
             Texture2D gradient = baker.BakeGradientMap("Assets\\Test", "Gradient");
         }
+        */
     }
 }

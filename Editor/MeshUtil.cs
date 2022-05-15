@@ -30,7 +30,7 @@ namespace Reallusion.Import
         public const string PRUNED_FOLDER_NAME = "Pruned Meshes";
         public const string MESH_FOLDER_NAME = "Meshes";
 
-        [MenuItem("CC3/Mesh Tools/Reverse Triangle Order", priority = 100)]
+        [MenuItem("Reallusion/Mesh Tools/Reverse Triangle Order", priority = 100)]
         private static void DoReverse()
         {
             if (Selection.gameObjects.Length > 1)
@@ -40,7 +40,7 @@ namespace Reallusion.Import
                 MeshUtil.ReverseTriangleOrder(Selection.activeObject);
         }
 
-        [MenuItem("CC3/Mesh Tools/Prune Blend Shapes", priority = 101)]
+        [MenuItem("Reallusion/Mesh Tools/Prune Blend Shapes", priority = 101)]
         private static void DoPrune()
         {            
             if (Selection.gameObjects.Length > 1)
@@ -50,7 +50,7 @@ namespace Reallusion.Import
                 MeshUtil.PruneBlendShapes(Selection.activeObject);
         }
 
-        [MenuItem("CC3/Mesh Tools/Auto Smooth Mesh", priority = 102)]
+        [MenuItem("Reallusion/Mesh Tools/Auto Smooth Mesh", priority = 102)]
         private static void DoAutoSmoothMesh()
         {
             bool showTools = WindowManager.showTools;
@@ -65,50 +65,50 @@ namespace Reallusion.Import
             if (showTools) ImporterWindow.Current.ShowAnimationPlayer();
         }
 
-        [MenuItem("CC3/Mesh Tools/Open or Close Character Mouth", priority = 201)]
+        [MenuItem("Reallusion/Mesh Tools/Open or Close Character Mouth", priority = 201)]
         private static void DoOpenCloseMouth()
         {
             MeshUtil.CharacterOpenCloseMouth(Selection.activeObject);
         }
 
-        [MenuItem("CC3/Mesh Tools/Open or Close Character Eyes", priority = 202)]
+        [MenuItem("Reallusion/Mesh Tools/Open or Close Character Eyes", priority = 202)]
         private static void DoOpenCloseEyes()
         {
             MeshUtil.CharacterOpenCloseEyes(Selection.activeObject);
         }
 
-        [MenuItem("CC3/Mesh Tools/Eye/Look Left", priority = 203)]
+        [MenuItem("Reallusion/Mesh Tools/Eye/Look Left", priority = 203)]
         private static void DoLookLeft()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Left);
         }
 
-        [MenuItem("CC3/Mesh Tools/Eye/Look Right", priority = 204)]
+        [MenuItem("Reallusion/Mesh Tools/Eye/Look Right", priority = 204)]
         private static void DoLookRight()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Right);
         }
 
-        [MenuItem("CC3/Mesh Tools/Eye/Look Up", priority = 205)]
+        [MenuItem("Reallusion/Mesh Tools/Eye/Look Up", priority = 205)]
         private static void DoLookUp()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Up);
         }
 
-        [MenuItem("CC3/Mesh Tools/Eye/Look Down", priority = 206)]
+        [MenuItem("Reallusion/Mesh Tools/Eye/Look Down", priority = 206)]
         private static void DoLookDown()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Down);
         }
 
-        [MenuItem("CC3/Mesh Tools/Eye/Look Forward", priority = 207)]
+        [MenuItem("Reallusion/Mesh Tools/Eye/Look Forward", priority = 207)]
         private static void DoLookForward()
         {
             MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.None);
         }
 
 #if HDRP_10_5_0_OR_NEWER
-        [MenuItem("CC3/Tools/Add HDRP Diffusion Profiles", priority = 180)]
+        [MenuItem("Reallusion/Tools/Add HDRP Diffusion Profiles", priority = 180)]
         private static void DoAddDiffusionProfiles()
         {
             Pipeline.AddDiffusionProfilesHDRP();
@@ -610,7 +610,7 @@ namespace Reallusion.Import
         }
 
         /*
-        [MenuItem("CC3/Tools/Setup Dual Material Hair", priority = 700)]
+        [MenuItem("Reallusion/Tools/Setup Dual Material Hair", priority = 700)]
         private static void DoEHM()
         {
             MeshUtil.Extract2PassHairMeshes(Selection.activeObject);

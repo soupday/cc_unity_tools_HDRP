@@ -1,6 +1,11 @@
 Changelog
 =========
 
+### v 1.2.1
+- Fix to Subsurface modifiers.
+- Iris Color and Iris Cloudy Color added to eye parameters.
+- Moved menu name from **CC3** to **Reallusion**.
+
 ### v 1.2.0
 - Blender Tools to Unity pipeline implemented.
     - Using compute shaders for baking Unity packed textures from base Blender textures.

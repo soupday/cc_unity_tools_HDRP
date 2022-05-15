@@ -961,6 +961,8 @@ namespace Reallusion.Import
             float subsurfaceThickness = mat.GetFloatIf("_SubsurfaceThickness");            
 
             Color cornerShadowColor = mat.GetColorIf("_CornerShadowColor");
+            Color irisColor = mat.GetColorIf("_IrisColor");
+            Color irisCloudyColor = mat.GetColorIf("_IrisCloudyColor");
             Color limbusColor = mat.GetColorIf("_LimbusColor");
             bool isCornea = mat.GetFloatIf("BOOLEAN_ISCORNEA") > 0f;
             bool isLeftEye = mat.GetFloatIf("_IsLeftEye") > 0f;
@@ -985,9 +987,9 @@ namespace Reallusion.Import
             {
                 bakedBaseMap = BakeCorneaDiffuseMap(cornea, sclera, blend,
                     scleraScale, scleraHue, scleraSaturation, scleraBrightness,                    
-                    irisScale, irisHue, irisSaturation, irisBrightness, 
-                    irisRadius, limbusWidth, limbusDarkRadius, limbusDarkWidth, limbusColor, depthRadius,
-                    shadowRadius, shadowHardness, cornerShadowColor,
+                    irisScale, irisHue, irisSaturation, irisBrightness, irisRadius, irisColor, irisCloudyColor,
+                    limbusWidth, limbusDarkRadius, limbusDarkWidth, limbusColor, depthRadius,
+                    shadowRadius, shadowHardness, cornerShadowColor, 
                     colorBlendStrength,
                     sourceName + "_BaseMap", (CUSTOM_SHADERS && REFRACTIVE_EYES) ? "RLCorneaDiffuse" : "RLCorneaSingleDiffuse");
 
@@ -1043,8 +1045,9 @@ namespace Reallusion.Import
             else
             {
                 bakedBaseMap = BakeEyeDiffuseMap(cornea, blend,
-                    irisScale, irisHue, irisSaturation, irisBrightness,
+                    irisScale, irisHue, irisSaturation, irisBrightness, irisColor, irisCloudyColor,
                     limbusDarkRadius, limbusDarkWidth, limbusColor, colorBlendStrength,
+
                     sourceName + "_BaseMap");
 
                 bakedMaskMap = BakeEyeMaskMap(mask, aoStrength, irisSmoothness,
@@ -2245,8 +2248,9 @@ namespace Reallusion.Import
 
         private Texture2D BakeCorneaDiffuseMap(Texture2D cornea, Texture2D sclera, Texture2D colorBlend,
             float scleraScale, float scleraHue, float scleraSaturation, float scleraBrightness,
-            float irisScale, float irisHue, float irisSaturation, float irisBrightness,
-            float irisRadius, float limbusWidth, float limbusDarkRadius, float limbusDarkWidth, Color limbusColor, 
+            float irisScale, float irisHue, float irisSaturation, float irisBrightness, float irisRadius,
+            Color irisColor, Color irisCloudyColor,
+            float limbusWidth, float limbusDarkRadius, float limbusDarkWidth, Color limbusColor, 
             float depthRadius, float shadowRadius, float shadowHardness,
             Color cornerShadowColor, float colorBlendStrength,
             string name, string kernelName = "RLCorneaDiffuse")
@@ -2275,6 +2279,8 @@ namespace Reallusion.Import
                 bakeShader.SetFloat("irisHue", irisHue);
                 bakeShader.SetFloat("irisSaturation", irisSaturation);
                 bakeShader.SetFloat("irisBrightness", irisBrightness);
+                bakeShader.SetVector("irisColor", irisColor);
+                bakeShader.SetVector("irisCloudyColor", irisCloudyColor);
                 bakeShader.SetFloat("limbusDarkRadius", limbusDarkRadius);
                 bakeShader.SetFloat("limbusDarkWidth", limbusDarkWidth);
                 bakeShader.SetFloat("limbusWidth", limbusWidth);
@@ -2292,7 +2298,7 @@ namespace Reallusion.Import
         }
 
         private Texture2D BakeEyeDiffuseMap(Texture2D cornea, Texture2D colorBlend,
-            float irisScale, float irisHue, float irisSaturation, float irisBrightness,
+            float irisScale, float irisHue, float irisSaturation, float irisBrightness, Color irisColor, Color irisCloudyColor,
             float limbusDarkRadius, float limbusDarkWidth, Color limbusColor,
             float colorBlendStrength,
             string name)
@@ -2315,6 +2321,8 @@ namespace Reallusion.Import
                 bakeShader.SetFloat("irisHue", irisHue);
                 bakeShader.SetFloat("irisSaturation", irisSaturation);
                 bakeShader.SetFloat("irisBrightness", irisBrightness);
+                bakeShader.SetVector("irisColor", irisColor);
+                bakeShader.SetVector("irisCloudyColor", irisCloudyColor);
                 bakeShader.SetFloat("limbusDarkRadius", limbusDarkRadius);
                 bakeShader.SetFloat("limbusDarkWidth", limbusDarkWidth);
                 bakeShader.SetFloat("colorBlendStrength", colorBlendStrength);
