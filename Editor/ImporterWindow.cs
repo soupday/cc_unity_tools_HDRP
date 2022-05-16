@@ -31,7 +31,7 @@ namespace Reallusion.Import
     {
         public enum Mode { none, single, multi }
 
-        private static readonly string windowTitle = "CC/iC Importer HDRP 1.2.1";
+        private static readonly string windowTitle = "CC/iC Importer " + Pipeline.FULL_VERSION;
         private static CharacterInfo contextCharacter;
         private static List<CharacterInfo> validCharacters;
         private static string backScenePath;

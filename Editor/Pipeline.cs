@@ -40,7 +40,11 @@ namespace Reallusion.Import
 
     public static class Pipeline
     {
+        public const string VERSION = "1.2.1";
+
 #if HDRP_10_5_0_OR_NEWER
+        // version
+        public const string FULL_VERSION = "HDRP " + VERSION;
         // Shaders
         //
         public const string SHADER_DEFAULT = "HDRP/Lit";
@@ -143,6 +147,8 @@ namespace Reallusion.Import
         // for gamebase single material or actor core...
         public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_HDRP";
 #elif URP_10_5_0_OR_NEWER
+        // version
+        public const string FULL_VERSION = "URP " + VERSION;
         // Shaders
         //
         public const string SHADER_DEFAULT = "Universal Render Pipeline/Lit";
@@ -245,6 +251,8 @@ namespace Reallusion.Import
         // for gamebase single material or actor core...
         public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_URP";
 #else
+        // version
+        public const string FULL_VERSION = "3D " + VERSION;
         // Shaders
         //
         public const string SHADER_DEFAULT = "Standard";

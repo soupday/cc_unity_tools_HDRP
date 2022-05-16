@@ -73,6 +73,7 @@ RWTexture2D<float4> Result;
 // Compute Shader Inputs
 //
 TEX2D(Diffuse);
+float4 diffuseColor;
 TEX2D(ColorBlend);
 float colorBlendStrength;
 

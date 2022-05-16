@@ -991,62 +991,63 @@ namespace Reallusion.Import
 
             if (matJson != null)
             {
-                mat.SetFloat("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
+                mat.SetFloatIf("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
-                    mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
+                    mat.SetColorIf("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 if (matJson.PathExists("Textures/Normal/Strength"))
-                    mat.SetFloat("_NormalStrength", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
-                mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
-                mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));                
+                    mat.SetFloatIf("_NormalStrength", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
+                mat.SetFloatIf("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
+                mat.SetFloatIf("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));                
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
                 float smoothnessMax = Util.CombineSpecularToSmoothness(specular, 1f);
-                mat.SetFloat("_SmoothnessMax", smoothnessMax);                
-                mat.SetFloat("_SubsurfaceScale", matJson.GetFloatValue("Subsurface Scatter/Lerp"));                
-                mat.SetFloat("_MicroSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale"));
-                mat.SetFloat("_UnmaskedSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Unmasked Roughness Scale"));
-                mat.SetFloat("_UnmaskedScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Unmasked Scatter Scale"));
+                mat.SetFloatIf("_SmoothnessMax", smoothnessMax);                
+                mat.SetFloatIf("_SubsurfaceScale", matJson.GetFloatValue("Subsurface Scatter/Lerp"));                
+                mat.SetFloatIf("_MicroSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale"));
+                mat.SetFloatIf("_UnmaskedSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Unmasked Roughness Scale"));
+                mat.SetFloatIf("_UnmaskedScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Unmasked Scatter Scale"));
+                mat.SetColorIf("_DiffuseColor", matJson.GetColorValue("Diffuse Color"));
 
                 if (materialType == MaterialType.Head)
                 {
-                    mat.SetFloat("_ColorBlendStrength", matJson.GetFloatValue("Custom Shader/Variable/BaseColor Blend2 Strength"));
-                    mat.SetFloat("_NormalBlendStrength", matJson.GetFloatValue("Custom Shader/Variable/NormalMap Blend Strength"));
-                    mat.SetFloat("_MouthCavityAO", matJson.GetFloatValue("Custom Shader/Variable/Inner Mouth Ao"));
-                    mat.SetFloat("_NostrilCavityAO", matJson.GetFloatValue("Custom Shader/Variable/Nostril Ao"));
-                    mat.SetFloat("_LipsCavityAO", matJson.GetFloatValue("Custom Shader/Variable/Lips Gap Ao"));
+                    mat.SetFloatIf("_ColorBlendStrength", matJson.GetFloatValue("Custom Shader/Variable/BaseColor Blend2 Strength"));
+                    mat.SetFloatIf("_NormalBlendStrength", matJson.GetFloatValue("Custom Shader/Variable/NormalMap Blend Strength"));
+                    mat.SetFloatIf("_MouthCavityAO", matJson.GetFloatValue("Custom Shader/Variable/Inner Mouth Ao"));
+                    mat.SetFloatIf("_NostrilCavityAO", matJson.GetFloatValue("Custom Shader/Variable/Nostril Ao"));
+                    mat.SetFloatIf("_LipsCavityAO", matJson.GetFloatValue("Custom Shader/Variable/Lips Gap Ao"));
 
-                    mat.SetFloat("_RSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Nose Roughness Scale"));
-                    mat.SetFloat("_GSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Mouth Roughness Scale"));
-                    mat.SetFloat("_BSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/UpperLid Roughness Scale"));
-                    mat.SetFloat("_ASmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/InnerLid Roughness Scale"));
-                    mat.SetFloat("_EarSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Ear Roughness Scale"));
-                    mat.SetFloat("_NeckSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Neck Roughness Scale"));
-                    mat.SetFloat("_CheekSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Cheek Roughness Scale"));
-                    mat.SetFloat("_ForeheadSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Forehead Roughness Scale"));
-                    mat.SetFloat("_UpperLipSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/UpperLip Roughness Scale"));
-                    mat.SetFloat("_ChinSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Chin Roughness Scale"));
+                    mat.SetFloatIf("_RSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Nose Roughness Scale"));
+                    mat.SetFloatIf("_GSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Mouth Roughness Scale"));
+                    mat.SetFloatIf("_BSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/UpperLid Roughness Scale"));
+                    mat.SetFloatIf("_ASmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/InnerLid Roughness Scale"));
+                    mat.SetFloatIf("_EarSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Ear Roughness Scale"));
+                    mat.SetFloatIf("_NeckSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Neck Roughness Scale"));
+                    mat.SetFloatIf("_CheekSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Cheek Roughness Scale"));
+                    mat.SetFloatIf("_ForeheadSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Forehead Roughness Scale"));
+                    mat.SetFloatIf("_UpperLipSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/UpperLip Roughness Scale"));
+                    mat.SetFloatIf("_ChinSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Chin Roughness Scale"));
 
-                    mat.SetFloat("_RScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Nose Scatter Scale"));
-                    mat.SetFloat("_GScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Mouth Scatter Scale"));
-                    mat.SetFloat("_BScatterScale", matJson.GetFloatValue("Custom Shader/Variable/UpperLid Scatter Scale"));
-                    mat.SetFloat("_AScatterScale", matJson.GetFloatValue("Custom Shader/Variable/InnerLid Scatter Scale"));
-                    mat.SetFloat("_EarScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Ear Scatter Scale"));
-                    mat.SetFloat("_NeckScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Neck Scatter Scale"));
-                    mat.SetFloat("_CheekScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Cheek Scatter Scale"));
-                    mat.SetFloat("_ForeheadScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Forehead Scatter Scale"));
-                    mat.SetFloat("_UpperLipScatterScale", matJson.GetFloatValue("Custom Shader/Variable/UpperLip Scatter Scale"));
-                    mat.SetFloat("_ChinScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Chin Scatter Scale"));
+                    mat.SetFloatIf("_RScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Nose Scatter Scale"));
+                    mat.SetFloatIf("_GScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Mouth Scatter Scale"));
+                    mat.SetFloatIf("_BScatterScale", matJson.GetFloatValue("Custom Shader/Variable/UpperLid Scatter Scale"));
+                    mat.SetFloatIf("_AScatterScale", matJson.GetFloatValue("Custom Shader/Variable/InnerLid Scatter Scale"));
+                    mat.SetFloatIf("_EarScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Ear Scatter Scale"));
+                    mat.SetFloatIf("_NeckScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Neck Scatter Scale"));
+                    mat.SetFloatIf("_CheekScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Cheek Scatter Scale"));
+                    mat.SetFloatIf("_ForeheadScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Forehead Scatter Scale"));
+                    mat.SetFloatIf("_UpperLipScatterScale", matJson.GetFloatValue("Custom Shader/Variable/UpperLip Scatter Scale"));
+                    mat.SetFloatIf("_ChinScatterScale", matJson.GetFloatValue("Custom Shader/Variable/Chin Scatter Scale"));
                 }
                 else
                 {
-                    mat.SetFloat("_RSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/R Channel Roughness Scale"));
-                    mat.SetFloat("_GSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/G Channel Roughness Scale"));
-                    mat.SetFloat("_BSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/B Channel Roughness Scale"));
-                    mat.SetFloat("_ASmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/A Channel Roughness Scale"));
+                    mat.SetFloatIf("_RSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/R Channel Roughness Scale"));
+                    mat.SetFloatIf("_GSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/G Channel Roughness Scale"));
+                    mat.SetFloatIf("_BSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/B Channel Roughness Scale"));
+                    mat.SetFloatIf("_ASmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/A Channel Roughness Scale"));
 
-                    mat.SetFloat("_RScatterScale", matJson.GetFloatValue("Custom Shader/Variable/R Channel Scatter Scale"));
-                    mat.SetFloat("_GScatterScale", matJson.GetFloatValue("Custom Shader/Variable/G Channel Scatter Scale"));
-                    mat.SetFloat("_BScatterScale", matJson.GetFloatValue("Custom Shader/Variable/B Channel Scatter Scale"));
-                    mat.SetFloat("_AScatterScale", matJson.GetFloatValue("Custom Shader/Variable/A Channel Scatter Scale"));
+                    mat.SetFloatIf("_RScatterScale", matJson.GetFloatValue("Custom Shader/Variable/R Channel Scatter Scale"));
+                    mat.SetFloatIf("_GScatterScale", matJson.GetFloatValue("Custom Shader/Variable/G Channel Scatter Scale"));
+                    mat.SetFloatIf("_BScatterScale", matJson.GetFloatValue("Custom Shader/Variable/B Channel Scatter Scale"));
+                    mat.SetFloatIf("_AScatterScale", matJson.GetFloatValue("Custom Shader/Variable/A Channel Scatter Scale"));
                 }
             }
         }
