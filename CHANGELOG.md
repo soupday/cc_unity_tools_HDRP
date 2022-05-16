@@ -1,6 +1,10 @@
 Changelog
 =========
 
+### v 1.2.2
+- Skin Diffuse Color modifier added.
+- Built-in pipeline version reduced minimum version to 2019.4.11f1.
+
 ### v 1.2.1
 - Fix to Subsurface modifiers.
 - Iris Color and Iris Cloudy Color added to eye parameters.

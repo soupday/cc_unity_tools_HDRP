@@ -579,6 +579,7 @@ namespace Reallusion.Import
             float unmaskedSS = mat.GetFloatIf("_UnmaskedScatterScale");
             float sssNormalSoften = mat.GetFloatIf("_SubsurfaceNormalSoften");
             Texture2D emission = GetMaterialTexture(mat, "_EmissionMap");
+            Color diffuseColor = mat.GetColorIf("_DiffuseColor");            
             Color emissiveColor = mat.GetColorIf("_EmissiveColor");
             Color subsurfaceFalloff = mat.GetColorIf("_SubsurfaceFalloff");
             if (IS_HDRP) subsurfaceFalloff = Color.white;
@@ -714,6 +715,8 @@ namespace Reallusion.Import
 
             CopyAMPSubsurface(mat, result);
 
+            result.SetColorIf("_BaseColor", diffuseColor);
+            result.SetColorIf("_Color", diffuseColor);
             result.SetFloatIf("_SubsurfaceMask", 1.0f);
             result.SetFloatIf("_Thickness", thicknessScale);
             result.SetRemapRange("_ThicknessRemap", 0f, thicknessScale);
