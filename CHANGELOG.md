@@ -3,6 +3,7 @@ Changelog
 
 ### v 1.2.3
 - Skin diffuse Color modifier color-space correction.
+- Hair diffuse Color modifier added.
 - ActorBuild and ActorScan characters from CC4 correctly detected and set to Humanoid Rig.
 
 ### v 1.2.2
