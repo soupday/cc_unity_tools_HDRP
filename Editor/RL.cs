@@ -52,7 +52,9 @@ namespace Reallusion.Import
             { "RL_CharacterCreator_Base_Game_G1_One_UV", BaseGeneration.GameBase },
             { "RL_CharacterCreator_Base_Std_G3", BaseGeneration.G3 },
             { "RL_G6_Standard_Series", BaseGeneration.G1 },
-            { "NonStdLookAtDataCopyFromCCBase", BaseGeneration.ActorCore }
+            { "NonStdLookAtDataCopyFromCCBase", BaseGeneration.ActorCore },
+            { "ActorBuild", BaseGeneration.ActorCore },
+            { "ActorScan", BaseGeneration.ActorCore }
         };
 
         public static BaseGeneration GetCharacterGeneration(GameObject fbx, string generationString)

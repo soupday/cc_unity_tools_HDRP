@@ -1043,7 +1043,7 @@ namespace Reallusion.Import
             return ps.IsValid;
         }
 
-        public void HideAnimationPlayer()
+        public void HideAnimationPlayer() 
         {            
             if (AnimPlayerGUI.IsPlayerShown())
             {
