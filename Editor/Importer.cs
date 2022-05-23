@@ -1391,6 +1391,7 @@ namespace Reallusion.Import
                 mat.SetFloatIf("_VertexColorStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/VertexColorStrength"));
                 mat.SetFloatIf("_BaseColorStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/BaseColorMapStrength"));
                 mat.SetFloatIf("_DiffuseStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/Diffuse Strength"));
+                mat.SetColorIf("_DiffuseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
 
                 // Hair Specular Map Strength = Custom Shader/Variable/Hair Specular Map Strength
                 // == Overall specular multiplier

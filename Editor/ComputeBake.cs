@@ -579,7 +579,7 @@ namespace Reallusion.Import
             float unmaskedSS = mat.GetFloatIf("_UnmaskedScatterScale");
             float sssNormalSoften = mat.GetFloatIf("_SubsurfaceNormalSoften");
             Texture2D emission = GetMaterialTexture(mat, "_EmissionMap");
-            Color diffuseColor = mat.GetColorIf("_DiffuseColor");            
+            Color diffuseColor = mat.GetColorIf("_DiffuseColor");
             Color emissiveColor = mat.GetColorIf("_EmissiveColor");
             Color subsurfaceFalloff = mat.GetColorIf("_SubsurfaceFalloff");
             if (IS_HDRP) subsurfaceFalloff = Color.white;
@@ -1160,6 +1160,7 @@ namespace Reallusion.Import
             Color highlightAColor = mat.GetColorIf("_HighlightAColor");
             Color highlightBColor = mat.GetColorIf("_HighlightBColor");
             Color specularTint = mat.GetColorIf("_SpecularTint");
+            Color diffuseColor = mat.GetColorIf("_DiffuseColor");
             bool enableColor = mat.GetFloatIf("BOOLEAN_ENABLECOLOR") > 0f;
             float clipQuality = 0f;
             if (mat.HasProperty("_ENUMCLIPQUALITY_ON"))
@@ -1249,6 +1250,8 @@ namespace Reallusion.Import
                     bakeMat.SetFloatIf("_SecondarySpecularMultiplier", secondarySpecularMultiplier);
                     bakeMat.SetFloatIf("_SecondarySpecularShiftMin", secondarySpecularShift);
                     bakeMat.SetFloatIf("_SecondarySmoothness", secondarySmoothness);
+                    bakeMat.SetColorIf("_BaseColor", diffuseColor);
+                    bakeMat.SetColorIf("_Color", diffuseColor);
                     if (bakeMat.SetFloatIf("_ENUMCLIPQUALITY_ON", clipQuality))
                     {
                         // Shader Graph clip quality:
@@ -1344,6 +1347,8 @@ namespace Reallusion.Import
                     bakeMat.SetFloatIf("_SecondarySpecularShift", secondarySpecularShift);
                     bakeMat.SetFloatIf("_SmoothnessMin", smoothnessMin);
                     bakeMat.SetFloatIf("_SmoothnessMax", smoothnessMax);
+                    bakeMat.SetColorIf("_BaseColor", diffuseColor);
+                    bakeMat.SetColorIf("_Color", diffuseColor);
                 };
 
                 if (mat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
