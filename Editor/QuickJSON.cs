@@ -210,10 +210,10 @@ namespace Reallusion.Import
             index = text.IndexOf("{", index) + 1;
         }
 
-        public MultiValue GetValue(string name)
+        public MultiValue GetValue(string name, bool spaceFix = false)
         {
             foreach (MultiValue mv in values)
-                if (mv.Key.iEquals(name)) return mv;            
+                if (mv.Key.iEquals(name)) return mv;                        
 
             return new MultiValue("None");
         }
