@@ -38,7 +38,7 @@ namespace Reallusion.Import
         }
 
         public static void UpdatePlayerTargets(Animator setAnimator, AnimationClip setClip)
-        {                        
+        {            
             if (setAnimator)
             {
                 WindowManager.SetSceneAnimator(setAnimator);
@@ -64,7 +64,7 @@ namespace Reallusion.Import
                         play = false;
                         doneInitFace = false;
                     }
-                }                 
+                } 
 
                 // intitialise the face refs if needed
                 if (!doneInitFace) InitFace();
@@ -82,17 +82,26 @@ namespace Reallusion.Import
 
         static AnimationClip CloneClip(AnimationClip clip)
         {
-            var clone = Object.Instantiate(clip);
-            clone.name = clip.name;
-            AnimationClip clonedClip = clone as AnimationClip;
-            WindowManager.SetSelectedAnimation(clip);
-            WindowManager.SetWorkingAnimation(clonedClip);
+            if (clip)
+            {
+                var clone = Object.Instantiate(clip);
+                clone.name = clip.name;
+                AnimationClip clonedClip = clone as AnimationClip;
+                WindowManager.SetSelectedAnimation(clip);
+                WindowManager.SetWorkingAnimation(clonedClip);
 
-            return clonedClip;
+                return clonedClip;
+            }
+            else
+            {
+                WindowManager.SetSelectedAnimation(null);
+                WindowManager.SetWorkingAnimation(null);
+                return null;
+            }
         }
 
         public static void UpdatePlayerClip(AnimationClip setClip)
-        {
+        {            
             if (animator && setClip && animationClip != setClip)
             {
                 if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
@@ -108,7 +117,7 @@ namespace Reallusion.Import
         }
 
         public static void RefreshPlayerClip()
-        {
+        {            
             if (animator && selectedClip)
             {
                 if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
@@ -139,7 +148,8 @@ namespace Reallusion.Import
                 selectedClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation", "Animation to play and manipulate"), selectedClip, typeof(AnimationClip), false);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    animationClip = CloneClip(selectedClip);
+                    animationClip = CloneClip(selectedClip);                    
+
                     WindowManager.SetSceneAnimator(animator);
 
                     if (animationClip && animator)
@@ -160,6 +170,8 @@ namespace Reallusion.Import
                             AnimationMode.StopAnimationMode();
                     }
                 }
+
+                GUI.enabled = animationClip && animator;
 
                 EditorGUI.BeginDisabledGroup(!AnimationMode.InAnimationMode());
 
@@ -228,19 +240,24 @@ namespace Reallusion.Import
                 GUILayout.EndHorizontal();
 
                 EditorGUI.EndDisabledGroup();
+
+                GUI.enabled = true;
             }
             GUILayout.EndVertical();
         }
 
         public static void SampleOnce()
         {
-            AnimationMode.BeginSampling();
-            AnimationMode.SampleAnimationClip(animator.gameObject, animationClip, time);
-            AnimationMode.EndSampling();
+            if (animator && animationClip)
+            {
+                AnimationMode.BeginSampling();
+                AnimationMode.SampleAnimationClip(animator.gameObject, animationClip, time);
+                AnimationMode.EndSampling();
+            }
         }
 
         public static void CreatePlayer(PreviewScene ps, GameObject fbx)
-        {
+        {            
             if (ps.IsValid)
             {
                 SetCharacter(ps, fbx);
@@ -576,6 +593,8 @@ namespace Reallusion.Import
 
             if (faceFoldOut)
             {
+                GUI.enabled = animationClip && animator;
+
                 //Directly positioned controls
                 float xPadding = 6f;
                 float yPadding = 3f;

@@ -233,7 +233,7 @@ namespace Reallusion.Import
             {
                 if (AnimPlayerGUI.IsPlayerShown() && !AnimRetargetGUI.IsPlayerShown())
                 {
-                    AnimRetargetGUI.CreateRetargeter(GetWorkingAnimation(), GetSceneAnimator().gameObject);
+                    AnimRetargetGUI.CreateRetargeter(GetWorkingAnimation(), GetSceneAnimator()?.gameObject);
                 }
 
                 showRetarget = true;
@@ -258,10 +258,7 @@ namespace Reallusion.Import
 
         public static AnimationClip GetSelectedAnimation()
         {
-            if (selectedAnimation != null)
-                return selectedAnimation;
-
-            return null;
+            return selectedAnimation;
         }
 
         public static void SetWorkingAnimation(AnimationClip clip)
@@ -275,10 +272,7 @@ namespace Reallusion.Import
 
         public static AnimationClip GetWorkingAnimation()
         {
-            if (workingAnimation != null)
-                return workingAnimation;
-
-            return new AnimationClip();
+            return workingAnimation;
         }
 
         public static void SetSceneAnimator(Animator anim)
@@ -288,10 +282,7 @@ namespace Reallusion.Import
 
         public static Animator GetSceneAnimator()
         {
-            if (sceneAnimator != null)
-                return sceneAnimator;
-
-            return new Animator();
+            return sceneAnimator;
         }
     }
 }

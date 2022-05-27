@@ -66,11 +66,10 @@ namespace Reallusion.Import
         public static void CreateRetargeter(AnimationClip clip, GameObject model)//(PreviewScene ps, GameObject fbx)
         {            
             originalClip = clip;
-            animator = model.GetComponent<Animator>();
-            //if (ps.IsValid)
-            //{
-            //SetCharacter(ps, fbx);
-            //}
+            if (model)
+                animator = model.GetComponent<Animator>();
+            else
+                animator = null;            
 
 #if SCENEVIEW_OVERLAY_COMPATIBLE
             //2021.2.0a17+  When GUI.Window is called from a static SceneView delegate, it is broken in 2021.2.0f1 - 2021.2.1f1
@@ -139,10 +138,7 @@ namespace Reallusion.Import
         {
             originalClip = WindowManager.GetSelectedAnimation();
             workingClip = WindowManager.GetWorkingAnimation();
-            animator = WindowManager.GetSceneAnimator();
-
-            Debug.Log("RESELECTING: " + originalClip.name + " " + workingClip.name + " " + animator.name);
-
+            animator = WindowManager.GetSceneAnimator();            
             Reset();
         }
 
@@ -153,7 +149,7 @@ namespace Reallusion.Import
 
         // Return all values to start - re-create working clip - rebuild all bindings dicts
         static void Reset()
-        {
+        { 
             handPose = 0;
             closeMouth = false;
             shoulderOffset = 0f;
@@ -166,7 +162,7 @@ namespace Reallusion.Import
             //var clone = Object.Instantiate(originalClip);            
             //workingClip = clone as AnimationClip;
 
-            if (CanClipLoop(workingClip))
+            if (workingClip && CanClipLoop(workingClip))
             {
                 AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(workingClip);
                 if (!clipSettings.loopTime)
@@ -175,61 +171,69 @@ namespace Reallusion.Import
                     AnimationUtility.SetAnimationClipSettings(workingClip, clipSettings);
                 }
             }
-            EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(originalClip);
-            
-            shoulderBindings = new Dictionary<string, EditorCurveBinding>();
-            
-            for (int i = 0; i < curveBindings.Length; i++)
+
+            if (originalClip)
             {
-                if (shoulderCurveNames.Contains(curveBindings[i].propertyName))
+                EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(originalClip);
+
+                shoulderBindings = new Dictionary<string, EditorCurveBinding>();
+
+                for (int i = 0; i < curveBindings.Length; i++)
                 {
-                    shoulderBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    if (shoulderCurveNames.Contains(curveBindings[i].propertyName))
+                    {
+                        shoulderBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    }
                 }
-            }
-                        
-            armBindings = new Dictionary<string, EditorCurveBinding>();
-            
-            for (int i = 0; i < curveBindings.Length; i++)
-            {
-                if (armCurveNames.Contains(curveBindings[i].propertyName))
+
+                armBindings = new Dictionary<string, EditorCurveBinding>();
+
+                for (int i = 0; i < curveBindings.Length; i++)
                 {
-                    armBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    if (armCurveNames.Contains(curveBindings[i].propertyName))
+                    {
+                        armBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    }
                 }
-            }
-                        
-            legBindings = new Dictionary<string, EditorCurveBinding>();
-            
-            for (int i = 0; i < curveBindings.Length; i++)
-            {
-                if (legCurveNames.Contains(curveBindings[i].propertyName))
+
+                legBindings = new Dictionary<string, EditorCurveBinding>();
+
+                for (int i = 0; i < curveBindings.Length; i++)
                 {
-                    legBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    if (legCurveNames.Contains(curveBindings[i].propertyName))
+                    {
+                        legBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    }
                 }
-            }
-                        
-            heelBindings = new Dictionary<string, EditorCurveBinding>();
-            
-            for (int i = 0; i < curveBindings.Length; i++)
-            {
-                if (heelCurveNames.Contains(curveBindings[i].propertyName))
+
+                heelBindings = new Dictionary<string, EditorCurveBinding>();
+
+                for (int i = 0; i < curveBindings.Length; i++)
                 {
-                    heelBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    if (heelCurveNames.Contains(curveBindings[i].propertyName))
+                    {
+                        heelBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    }
                 }
-            }
-                        
-            heightBindings = new Dictionary<string, EditorCurveBinding>();
-            
-            for (int i = 0; i < curveBindings.Length; i++)
-            {
-                if (heightCurveNames.Contains(curveBindings[i].propertyName))
+
+                heightBindings = new Dictionary<string, EditorCurveBinding>();
+
+                for (int i = 0; i < curveBindings.Length; i++)
                 {
-                    heightBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    if (heightCurveNames.Contains(curveBindings[i].propertyName))
+                    {
+                        heightBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    }
                 }
             }
         }
 
         public static void DrawRetargeter()
         {
+            if (!(originalClip && workingClip)) GUI.enabled = false;
+            else if (!AnimPlayerGUI.animator) GUI.enabled = false;
+            else GUI.enabled = true;
+
             // All retarget controls
             GUILayout.BeginVertical();
             // Horizontal Group of 3 controls `Hand` `Jaw` and `Blendshapes`
@@ -250,9 +254,9 @@ namespace Reallusion.Import
             radioSelectionStyle.padding = new RectOffset(24, 0, 0, 0);
             GUIContent[] contents = new GUIContent[]
             {
-            new GUIContent("Original", "Use the hand pose/animation from the original animation clip."),
-            new GUIContent("Open", "Use a static neutral open hand pose for the full animation clip."),
-            new GUIContent("Closed", "Use a static neutral closed hand pose for the full animation clip.")
+                new GUIContent("Original", "Use the hand pose/animation from the original animation clip."),
+                new GUIContent("Open", "Use a static neutral open hand pose for the full animation clip."),
+                new GUIContent("Closed", "Use a static neutral closed hand pose for the full animation clip.")
             };
             EditorGUI.BeginChangeCheck();
             handPose = GUILayout.SelectionGrid(handPose, contents, 1, radioSelectionStyle);
@@ -404,6 +408,8 @@ namespace Reallusion.Import
 
         static void CloseMouthToggle(bool close)
         {
+            if (!(originalClip && workingClip)) return;
+
             bool found = false;
             EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(originalClip);
             EditorCurveBinding targetBinding = new EditorCurveBinding();
@@ -449,6 +455,8 @@ namespace Reallusion.Import
 
         static void ApplyPose(int mode)
         {
+            if (!(originalClip && workingClip)) return;
+
             switch (mode)
             {
                 case 0:
@@ -472,6 +480,8 @@ namespace Reallusion.Import
 
         static void SetPose(Dictionary<string, float> pose)
         {
+            if (!(originalClip && workingClip)) return;
+
             EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(originalClip);
             foreach (EditorCurveBinding binding in curveBindings)
             {
@@ -494,6 +504,8 @@ namespace Reallusion.Import
 
         static void ResetPose()
         {
+            if (!(originalClip && workingClip)) return;
+
             EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(originalClip);
             foreach (EditorCurveBinding binding in curveBindings)
             {
@@ -508,6 +520,8 @@ namespace Reallusion.Import
 
         static void OffsetShoulders()
         {
+            if (!(originalClip && workingClip)) return;
+
             foreach (KeyValuePair<string, EditorCurveBinding> bind in shoulderBindings)
             {
                 float scale = 0f;
@@ -591,6 +605,8 @@ namespace Reallusion.Import
 
         static void OffsetArms()
         {
+            if (!(originalClip && workingClip)) return;
+
             foreach (KeyValuePair<string, EditorCurveBinding> bind in armBindings)
             {
                 float scale = 0f;
@@ -656,6 +672,8 @@ namespace Reallusion.Import
 
         static void OffsetLegs()
         {
+            if (!(originalClip && workingClip)) return;
+
             foreach (KeyValuePair<string, EditorCurveBinding> bind in legBindings)
             {
                 float scale = 0f;
@@ -715,6 +733,8 @@ namespace Reallusion.Import
 
         static void OffsetHeel()
         {
+            if (!(originalClip && workingClip)) return;
+
             foreach (KeyValuePair<string, EditorCurveBinding> bind in heelBindings)
             {
                 float scale = 0f;
@@ -774,6 +794,8 @@ namespace Reallusion.Import
 
         static void OffsetHeight()
         {
+            if (!(originalClip && workingClip)) return;
+
             foreach (KeyValuePair<string, EditorCurveBinding> bind in heightBindings)
             {
                 AnimationCurve curve = AnimationUtility.GetEditorCurve(originalClip, bind.Value);
@@ -839,6 +861,8 @@ namespace Reallusion.Import
 
         static void RetargetBlendShapes()
         {
+            if (!(originalClip && workingClip)) return;
+
             string blendShape = "blendShape.";
             string baseBody = "CC_Base_Body";
 
@@ -940,7 +964,26 @@ namespace Reallusion.Import
 
         static void WriteAnimationToAssetDatabase()
         {
-            string fbxPath = AnimPlayerGUI.sourceFbxPath;
+            if (!(originalClip && workingClip)) return;
+            if (!AnimPlayerGUI.animator) return;
+
+            GameObject scenePrefab = AnimPlayerGUI.animator.gameObject;
+            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(scenePrefab);
+
+            if (!fbxAsset)
+            {
+                Debug.LogError("Unable to locate source character asset from scene model: " + scenePrefab.name);
+                return;
+            }
+
+            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
+
+            if (string.IsNullOrEmpty(fbxPath))
+            {
+                Debug.LogError("Unable to locate source character path from model: " + fbxAsset.name);
+                return;
+            }
+
             string characterName = Path.GetFileNameWithoutExtension(fbxPath);
             string fbxFolder = Path.GetDirectoryName(fbxPath);
             string animFolder = Path.Combine(fbxFolder, ANIM_FOLDER_NAME, characterName, RETARGET_FOLDER_NAME);
@@ -963,6 +1006,9 @@ namespace Reallusion.Import
             var output = Object.Instantiate(workingClip);  // clone so that workingClip isn't locked to an on-disk asset
             AnimationClip outputClip = output as AnimationClip;
             AssetDatabase.CreateAsset(outputClip, assetPath);
+
+            Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
+            Selection.objects = new Object[] { asset };
         }
 
         static string NameAnimation(string characterName)
