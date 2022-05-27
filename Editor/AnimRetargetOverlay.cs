@@ -23,8 +23,12 @@ namespace Reallusion.Import
         public void Show()
         {
             isVisible = true;
-            if (createdOverlay.isInToolbar)
-                createdOverlay.Undock();
+
+            createdOverlay.Undock();
+            createdOverlay.Undock();
+
+            //if (createdOverlay.isInToolbar)
+            //    createdOverlay.Undock();
 
             createdOverlay.collapsed = false;            
             createdOverlay.floatingPosition = new Vector2(
