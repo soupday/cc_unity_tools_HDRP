@@ -334,7 +334,7 @@ namespace Reallusion.Import
 
                 PreviewScene.OpenPreviewScene(contextCharacter.Fbx);
 
-                if (WindowManager.showTools) ShowAnimationPlayer();
+                if (WindowManager.showPlayer) WindowManager.ShowAnimationPlayer();
                 ResetAllSceneViewCamera();
             }
             else if (refreshAfterGUI)
@@ -657,44 +657,35 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAnimPlayer, "Show animation preview player."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (WindowManager.showTools)
+                if (WindowManager.showPlayer)
                 {
-                    /*
-                    AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(contextCharacter.Fbx);
-                    if (AnimPlayerIMGUI.animationClip != firstClip)
-                    {
-                        AnimPlayerIMGUI.UpdatePlayerClip(firstClip);
-                    }
-                    else
-                    {
-                        showAnimPlayer = false;
-                        HideAnimationPlayer();
-                        ResetAllSceneViewCamera();
-                    }*/
-                    WindowManager.showTools = false;
-                    HideAnimationPlayer();
+                    WindowManager.HideAnimationPlayer(true);                                        
                     ResetAllSceneViewCamera();
                 }
                 else
                 {
-                    WindowManager.showTools = true;
-                    ShowAnimationPlayer();
+                    WindowManager.ShowAnimationPlayer();                                        
                     ResetAllSceneViewCamera();
                 }
             }
             GUI.enabled = true;
-
-            /* Not just yet...
+            
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
             if (contextCharacter == null) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(iconActionAvatarAlign, "Avatar Alignment."),
+            if (GUILayout.Button(new GUIContent(iconActionAvatarAlign, "Animation Adjustment & Retargeting."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                
+                if (WindowManager.showRetarget)
+                {
+                    WindowManager.HideAnimationRetargeter(true);                    
+                }
+                else
+                {
+                    WindowManager.ShowAnimationRetargeter();                    
+                }
             }
             GUI.enabled = true;
-            */
 
             GUILayout.FlexibleSpace();
 
@@ -999,9 +990,9 @@ namespace Reallusion.Import
             {
                 if (UpdatePreviewCharacter(prefabAsset))
                 {
-                    if (WindowManager.showTools)
+                    if (WindowManager.showPlayer)
                     {
-                        ShowAnimationPlayer();
+                        WindowManager.ShowAnimationPlayer();
                     }
                 }
             }
@@ -1041,37 +1032,7 @@ namespace Reallusion.Import
             }            
 
             return ps.IsValid;
-        }
-
-        public void HideAnimationPlayer() 
-        {            
-            if (AnimPlayerGUI.IsPlayerShown())
-            {
-                AnimPlayerGUI.ResetFace();
-                AnimPlayerGUI.DestroyPlayer();
-            }
-
-            WindowManager.showTools = false;
-        }
-
-        public void ShowAnimationPlayer() 
-        {            
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-
-            if (ps.IsValid)
-            {
-                if (AnimPlayerGUI.IsPlayerShown())
-                {
-                    AnimPlayerGUI.SetCharacter(ps, contextCharacter.Fbx);
-                }
-                else
-                {
-                    AnimPlayerGUI.CreatePlayer(ps, contextCharacter.Fbx);
-                }
-
-                WindowManager.showTools = true;
-            }
-        }
+        }                
 
         public static void ResetAllSceneViewCamera()
         {

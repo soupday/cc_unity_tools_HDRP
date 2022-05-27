@@ -275,6 +275,25 @@ namespace Reallusion.Import
             return null;
         }
 
+        public static string GetCharacterFolder(string fbxPath, out string characterName)
+        {            
+            characterName = Path.GetFileNameWithoutExtension(fbxPath);
+            return Path.GetDirectoryName(fbxPath);            
+        }
+
+        public static string GetCharacterFolder(GameObject prefabAsset, out string characterName)
+        {
+            if (!prefabAsset)
+            {
+                characterName = "";
+                return "";
+            }
+            GameObject fbxAsset = FindRootPrefabAssetFromSceneObject(prefabAsset);            
+            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
+            characterName = Path.GetFileNameWithoutExtension(fbxPath);
+            return Path.GetDirectoryName(fbxPath);
+        }
+
         public static ComputeShader FindComputeShader(string name)
         {
             string[] shaderGuids = AssetDatabase.FindAssets("t:computeshader");

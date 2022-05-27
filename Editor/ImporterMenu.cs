@@ -32,20 +32,39 @@ namespace Reallusion.Import
         [MenuItem("Reallusion/Animation Player", priority = 2)]
         public static void ShowAnimationPlayer()
         {
-            if (AnimPlayerGUI.IsPlayerShown())
+            if (WindowManager.showPlayer)
             {
-                AnimPlayerGUI.DestroyPlayer();
-                WindowManager.showTools = false;
+                WindowManager.HideAnimationPlayer(true);                
             }
             else
             {
-                PreviewScene ps = PreviewScene.GetPreviewScene();
-                if (ps.IsValid)
-                {
-                    AnimPlayerGUI.CreatePlayer(ps, ImporterWindow.Current?.Character?.Fbx);
-                    WindowManager.showTools = true;
-                }
+                WindowManager.ShowAnimationPlayer();
             }
+        }
+
+        [MenuItem("Reallusion/Animation Player", true)]
+        public static bool ValidateShowAnimationPlayer()
+        {
+            return PreviewScene.GetPreviewScene().IsValid && AnimPlayerGUI.IsPlayerShown();
+        }
+
+        [MenuItem("Reallusion/Animation Retargeter", priority = 3)]
+        public static void ShowAnimationRetargeter()
+        {
+            if (WindowManager.showRetarget)
+            {
+                WindowManager.HideAnimationRetargeter(true);
+            }
+            else
+            {
+                WindowManager.ShowAnimationRetargeter();
+            }
+        }
+
+        [MenuItem("Reallusion/Animation Retargeter", true)]
+        public static bool ValidateShowAnimationRetargeter()
+        {
+            return PreviewScene.GetPreviewScene().IsValid && AnimPlayerGUI.IsPlayerShown();
         }
 
         [MenuItem("Assets/Reallusion/Import Character", priority = 2000)]
@@ -67,6 +86,13 @@ namespace Reallusion.Import
             WindowManager.DoSceneViewOrbit();
         }
 
+        [MenuItem("Reallusion/Preview Scene Tools/Orbit Scene View (Toggle)", true)]
+        private static bool ValudidateDoOrbitSceneView()
+        {
+            PreviewScene ps = PreviewScene.GetPreviewScene();
+            return ps.IsValid;
+        }
+
         /*
         [MenuItem("Reallusion/Scene Tools/Orbit Scene View (Tracking)", priority = 211)]
         public static void DoOrbitSceneViewTracking()
@@ -78,6 +104,13 @@ namespace Reallusion.Import
         public static void DoMatchSceneCamera()
         {
             WindowManager.DoMatchSceneCamera();
+        }
+
+        [MenuItem("Reallusion/Preview Scene Tools/Match Scene Camera (Toggle)", true)]
+        private static bool ValudidateDoMatchSceneCamera()
+        {
+            PreviewScene ps = PreviewScene.GetPreviewScene();
+            return ps.IsValid;
         }
 
         [MenuItem("Reallusion/Preview Scene Tools/Screenshot", priority = 213)]

@@ -13,13 +13,15 @@ namespace Reallusion.Import
     {
         public static Scene currentScene;
         public static PreviewScene previewScene;
-        public static bool showTools = true;
+        public static bool showPlayer = true;
+        public static bool showRetarget = false;
+        
         static WindowManager()
         {
             // Even if update is not the most elegant. Using hierarchyWindowChanged for CPU sake will not work in all cases, because when hierarchyWindowChanged is called, Time's values might be all higher than current values. Why? Because current values are set at the first frame. If you keep reloading the same scene, this case happens.
             EditorApplication.update += WindowManager.MonitorScene;             
         }        
-
+                
         private static void MonitorScene()
         {
             Scene activeScene = EditorSceneManager.GetActiveScene();
@@ -34,11 +36,11 @@ namespace Reallusion.Import
 
             if (validPreviewScene) 
             {                
-                if (showTools && !isPlayerShown)
+                if (showPlayer && !isPlayerShown)
                 {                    
                     AnimPlayerGUI.CreatePlayer(previewScene, ImporterWindow.Current?.Character?.Fbx);
                 }
-                else if (!showTools && isPlayerShown)
+                else if (!showPlayer && isPlayerShown)
                 {                    
                     AnimPlayerGUI.DestroyPlayer();
                 }
@@ -171,11 +173,125 @@ namespace Reallusion.Import
 
         public static void TakeScreenShot()
         {
-
             string dateStamp = DateTime.Now.ToString("yyMMdd-hhmmss");
             string fileName = "Screenshot-" + dateStamp + ".png";
             Debug.Log("Saving screenshot to: " + fileName);
             ScreenCapture.CaptureScreenshot(fileName);
+        }
+
+        private static AnimationClip selectedAnimation;
+        private static AnimationClip workingAnimation;
+        private static Animator sceneAnimator;
+
+        public static void ShowAnimationPlayer()
+        {
+            PreviewScene ps = PreviewScene.GetPreviewScene();
+
+            if (ps.IsValid)
+            {
+                GameObject currentCharacterFbx = null;
+                if (ImporterWindow.Current)
+                    currentCharacterFbx = ImporterWindow.Current.Character?.Fbx;
+
+                if (AnimPlayerGUI.IsPlayerShown())
+                {
+                    AnimPlayerGUI.SetCharacter(ps, currentCharacterFbx);
+                }
+                else
+                {
+                    AnimPlayerGUI.CreatePlayer(ps, currentCharacterFbx);
+                }
+
+                if (showRetarget && !AnimRetargetGUI.IsPlayerShown())
+                {
+                    ShowAnimationRetargeter();
+                }
+
+                showPlayer = true;
+            }
+        }
+
+        public static void HideAnimationPlayer(bool updateShowPlayer)
+        {
+            if (AnimPlayerGUI.IsPlayerShown())
+            {
+                AnimPlayerGUI.ResetFace();
+                AnimPlayerGUI.DestroyPlayer();
+            }
+
+            HideAnimationRetargeter(false);
+
+            if (updateShowPlayer)
+                showPlayer = false;
+        }
+
+        public static void ShowAnimationRetargeter()
+        {
+            PreviewScene ps = PreviewScene.GetPreviewScene();
+
+            if (ps.IsValid)
+            {
+                if (AnimPlayerGUI.IsPlayerShown() && !AnimRetargetGUI.IsPlayerShown())
+                {
+                    AnimRetargetGUI.CreateRetargeter(GetWorkingAnimation(), GetSceneAnimator().gameObject);
+                }
+
+                showRetarget = true;
+            }
+        }
+
+        public static void HideAnimationRetargeter(bool updateShowRetarget)
+        {
+            if (AnimRetargetGUI.IsPlayerShown())
+            {
+                AnimRetargetGUI.DestroyRetargeter();
+            }
+
+            if (updateShowRetarget)
+                showRetarget = false;
+        }
+
+        public static void SetSelectedAnimation(AnimationClip clip)
+        {
+            selectedAnimation = clip;           
+        }
+
+        public static AnimationClip GetSelectedAnimation()
+        {
+            if (selectedAnimation != null)
+                return selectedAnimation;
+
+            return null;
+        }
+
+        public static void SetWorkingAnimation(AnimationClip clip)
+        {
+            workingAnimation = clip;            
+            if (AnimRetargetGUI.IsPlayerShown())
+            {
+                AnimRetargetGUI.Reselect();
+            }
+        }
+
+        public static AnimationClip GetWorkingAnimation()
+        {
+            if (workingAnimation != null)
+                return workingAnimation;
+
+            return new AnimationClip();
+        }
+
+        public static void SetSceneAnimator(Animator anim)
+        {
+            sceneAnimator = anim;            
+        }
+
+        public static Animator GetSceneAnimator()
+        {
+            if (sceneAnimator != null)
+                return sceneAnimator;
+
+            return new Animator();
         }
     }
 }

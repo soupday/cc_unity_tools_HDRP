@@ -7,14 +7,16 @@ namespace Reallusion.Import
 {
     public class AnimPlayerGUI
     {
-        #region AnimPlayer
+        #region AnimPlayer  
 
+        public static AnimationClip selectedClip;
         public static AnimationClip animationClip;
         public static Animator animator;
         public static bool play = false;
         public static bool clipManuallySet = false;
         public static float time, prev, current = 0f;
         public static bool animFoldOut = true;
+        public static string sourceFbxPath;
         public static bool AnimFoldOut { get { return animFoldOut; } set { animFoldOut = value; } }
 
         public static void SetCharacter(PreviewScene ps, GameObject fbx)
@@ -26,6 +28,7 @@ namespace Reallusion.Import
                 if (scenePrefab)
                 {
                     GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
+                    sourceFbxPath = AssetDatabase.GetAssetPath(sceneFbx);
                     Animator anim = scenePrefab.GetComponent<Animator>();
                     AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
 
@@ -38,6 +41,8 @@ namespace Reallusion.Import
         {                        
             if (setAnimator)
             {
+                WindowManager.SetSceneAnimator(setAnimator);
+
                 // stop animation mode
                 if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
 
@@ -46,12 +51,15 @@ namespace Reallusion.Import
                 
                 if (setClip)
                 {
-                    // replace animation clip 
+                    //displayeed clip is the clip to be set
+                    selectedClip = setClip;
+
+                    // replace animation clip with a working clone
                     // if: there is no current clip.
                     // or: the current clip was not set manually by the user.
                     if (!animationClip || !clipManuallySet)
                     {
-                        animationClip = setClip;
+                        animationClip = CloneClip(setClip);
                         time = 0f;
                         play = false;
                         doneInitFace = false;
@@ -72,6 +80,17 @@ namespace Reallusion.Import
             }
         }
 
+        static AnimationClip CloneClip(AnimationClip clip)
+        {
+            var clone = Object.Instantiate(clip);
+            clone.name = clip.name;
+            AnimationClip clonedClip = clone as AnimationClip;
+            WindowManager.SetSelectedAnimation(clip);
+            WindowManager.SetWorkingAnimation(clonedClip);
+
+            return clonedClip;
+        }
+
         public static void UpdatePlayerClip(AnimationClip setClip)
         {
             if (animator && setClip && animationClip != setClip)
@@ -81,6 +100,20 @@ namespace Reallusion.Import
                 animationClip = setClip;
                 time = 0f;
                 play = false;
+
+                if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
+
+                SampleOnce();
+            }
+        }
+
+        public static void RefreshPlayerClip()
+        {
+            if (animator && selectedClip)
+            {
+                if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+
+                animationClip = CloneClip(selectedClip);                
 
                 if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
 
@@ -103,9 +136,12 @@ namespace Reallusion.Import
             {
                 EditorGUI.BeginChangeCheck();
                 animator = (Animator)EditorGUILayout.ObjectField(new GUIContent("Scene Model", "Animated model in scene"), animator, typeof(Animator), true);
-                animationClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation", "Animation to play and manipulate"), animationClip, typeof(AnimationClip), false);
+                selectedClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation", "Animation to play and manipulate"), selectedClip, typeof(AnimationClip), false);
                 if (EditorGUI.EndChangeCheck())
                 {
+                    animationClip = CloneClip(selectedClip);
+                    WindowManager.SetSceneAnimator(animator);
+
                     if (animationClip && animator)
                     {
                         time = 0f;
@@ -244,7 +280,7 @@ namespace Reallusion.Import
             AnimPlayerGUI.play = false;
             AnimPlayerGUI.time = 0f;
             AnimPlayerGUI.animator = null;
-            AnimPlayerGUI.animationClip = null;
+            AnimPlayerGUI.animationClip = null;            
 
             SceneView.RepaintAll();
         }
@@ -362,9 +398,9 @@ namespace Reallusion.Import
             outlineColor = mouseOverColor;
 
             string[] folders = new string[] { "Assets", "Packages" };
-            eyeControlImage = Util.FindTexture(folders, useLightIcons ? "eye_1280_gry" : "eye_1280_blk");
-            jawIconImage = Util.FindTexture(folders, useLightIcons ? "mouth_1024_gry" : "mouth_1024_blk");
-            blinkIconImage = Util.FindTexture(folders, useLightIcons ? "blink_1024_gry" : "blink_1024_blk");
+            eyeControlImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Eye_Gry" : "RLIcon_Eye_Blk");
+            jawIconImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Mouth_Gry" : "RLIcon_Mouth_Blk");
+            blinkIconImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Blink_Gry" : "RLIcon_Blink_Blk");
             faceDefault = Util.FindTexture(folders, "RLIcon_FaceDefault");
             faceAngryImage = Util.FindTexture(folders, "RLIcon_FaceAngry");
             faceDisgust = Util.FindTexture(folders, "RLIcon_FaceDisgust");
@@ -1774,8 +1810,6 @@ namespace Reallusion.Import
             {"A51_Mouth_Stretch_Right", 0f },
         };
 
-        
-
-        #endregion FaceMorph
+        #endregion FaceMorph        
     }
 }
