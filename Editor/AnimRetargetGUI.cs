@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -26,12 +27,12 @@ namespace Reallusion.Import
         static float largeIconDim = 60f;
         static float smallIconDim = 30f;
 
-        static float shRange = 45f; // Angular Ranges in degrees
-        static float aRange = 45f;
-        static float lRange = 45f;
-        static float hRange = 45f;
+        static float shRange = 30f; // Angular Ranges in degrees
+        static float aRange = 30f;
+        static float lRange = 30f;
+        static float hRange = 30f;
 
-        static float yRange = 0.5f; //Raw y input range
+        static float yRange = 0.2f; //Raw y input range
 
         // GUI Control variables (Reset to this state)
         
@@ -1013,7 +1014,10 @@ namespace Reallusion.Import
 
         static string NameAnimation(string characterName)
         {
-            return characterName + "_" + originalClip.name;
+            string animName = characterName + "_" + originalClip.name;
+            string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            Regex r = new Regex(string.Format("[{0}]", Regex.Escape(invalid)));
+            return r.Replace(animName, "_");
         }
 
         // Curve Master Data
