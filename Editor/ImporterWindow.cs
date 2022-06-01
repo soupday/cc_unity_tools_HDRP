@@ -73,6 +73,7 @@ namespace Reallusion.Import
         private static Texture2D iconActionRefresh;
         private static Texture2D iconActionAnims;
         private static Texture2D iconAction2Pass;
+        private static Texture2D iconAlembic;
         private static Texture2D iconActionAnimPlayer;
         private static Texture2D iconActionAvatarAlign;
         private static Texture2D iconSettings;        
@@ -166,6 +167,7 @@ namespace Reallusion.Import
             iconActionPreview = Util.FindTexture(folders, "RLIcon_ActionPreview");
             iconActionRefresh = Util.FindTexture(folders, "RLIcon_ActionRefresh");
             iconAction2Pass = Util.FindTexture(folders, "RLIcon_Action2Pass");
+            iconAlembic = Util.FindTexture(folders, "RLIcon_Alembic");
             iconActionAnims = Util.FindTexture(folders, "RLIcon_ActionAnims");
             iconActionAnimPlayer = Util.FindTexture(folders, "RLIcon_AnimPlayer");
             iconActionAvatarAlign = Util.FindTexture(folders, "RLIcon_AvatarAlign");
@@ -175,6 +177,8 @@ namespace Reallusion.Import
             RefreshCharacterList();
 
             MakeStyle();
+
+            if (titleContent.text != windowTitle) titleContent.text = windowTitle;
         }
 
         private void RefreshCharacterList()
@@ -632,7 +636,16 @@ namespace Reallusion.Import
                 RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);
             }
             GUI.enabled = true;
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
             
+            if (GUILayout.Button(new GUIContent(iconAlembic, "Process alembic animations with this character's materials."),
+                GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+            {
+                Alembic.ProcessAlembics(contextCharacter.Fbx, contextCharacter.name, contextCharacter.folder);
+            }
+            GUI.enabled = true;
+
             /*
             GUILayout.Space(ACTION_BUTTON_SPACE);
 

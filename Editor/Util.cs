@@ -652,7 +652,29 @@ namespace Reallusion.Import
             if (File.Exists(prefabPath))
                 return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             return null;
-        }        
+        }
+
+        public static bool FindCharacterPrefabs(GameObject fbxAsset, out GameObject mainPrefab, out GameObject bakedPrefab)
+        {
+            string path = AssetDatabase.GetAssetPath(fbxAsset);
+            string folder = Path.GetDirectoryName(path);
+            string name = Path.GetFileNameWithoutExtension(path);
+            string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + ".prefab");
+            string bakedPrefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + "_Baked.prefab");
+
+            mainPrefab = null;
+            bakedPrefab = null;
+
+            if (File.Exists(prefabPath))
+                mainPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            else
+                mainPrefab = fbxAsset;
+
+            if (File.Exists(bakedPrefabPath))
+                bakedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(bakedPrefabPath);
+
+            return (mainPrefab || bakedPrefab);
+        }
 
         public static GameObject FindPrefabAssetFromSceneObject(Object sceneObject)
         {
