@@ -987,7 +987,7 @@ namespace Reallusion.Import
 
             string characterName = Path.GetFileNameWithoutExtension(fbxPath);
             string fbxFolder = Path.GetDirectoryName(fbxPath);
-            string animFolder = Path.Combine(fbxFolder, ANIM_FOLDER_NAME, characterName, RETARGET_FOLDER_NAME);
+            string animFolder = Path.Combine(fbxFolder, ANIM_FOLDER_NAME, characterName);
             Util.EnsureAssetsFolderExists(animFolder);
 
             string animName = NameAnimation(characterName);

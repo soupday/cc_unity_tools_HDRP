@@ -72,7 +72,7 @@ namespace Reallusion.Import
 
                 foreach (GameObject sourcePrefab in sourcePrefabs)
                 {
-                    string suffix = (sourcePrefab.name.Contains("_Baked")) ? "_Baked_Alembic" : "_Alembic";
+                    string suffix = (sourcePrefab.name.Contains("_Baked")) ? "_Alembic_Baked" : "_Alembic";
                     List<MaterialMeshPair> materialMeshes;
                     Dictionary<string, Material> sourceMaterials = GetSourceMaterials(sourcePrefab, out materialMeshes);
 
@@ -82,7 +82,7 @@ namespace Reallusion.Import
                         string folder = Path.GetDirectoryName(path);
                         string fileName = Path.GetFileNameWithoutExtension(path);
                         string extention = Path.GetExtension(path);
-                        string prefabSaveFolder = Path.Combine(folder, Importer.PREFABS_FOLDER, characterName + "_Alembic");
+                        string prefabSaveFolder = Path.Combine(folder, Importer.PREFABS_FOLDER);
                         string prefabSavePath = Path.Combine(prefabSaveFolder, fileName + suffix + ".prefab");
                         Util.EnsureAssetsFolderExists(prefabSaveFolder);
                         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
