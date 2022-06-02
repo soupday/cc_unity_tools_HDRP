@@ -860,15 +860,37 @@ namespace Reallusion.Import
             return 3f;  // go wrong spectacularly
         }
 
+        static float logtime = 0f;
+
+        static void CopyCurve(string goName, string targetPropertyName, EditorCurveBinding sourceCurveBinding)
+        {
+            float time = Time.realtimeSinceStartup;
+
+            EditorCurveBinding workingBinding = new EditorCurveBinding()
+            {
+                path = goName,
+                type = typeof(SkinnedMeshRenderer),
+                propertyName = targetPropertyName
+            };
+
+            if (AnimationUtility.GetEditorCurve(workingClip, workingBinding) == null)
+            {
+                AnimationCurve workingCurve = AnimationUtility.GetEditorCurve(originalClip, sourceCurveBinding);
+                AnimationUtility.SetEditorCurve(workingClip, workingBinding, workingCurve);
+            }
+
+            logtime += Time.realtimeSinceStartup - time;
+        }
+
         static void RetargetBlendShapes()
         {
             if (!(originalClip && workingClip)) return;
 
             string blendShape = "blendShape.";
-            string baseBody = "CC_Base_Body";
 
             GameObject targetGameObject = animator.gameObject;
             Transform[] targetAssetData = targetGameObject.GetComponentsInChildren<Transform>();
+            FacialProfile facialProfile = FacialProfileMapper.GetFacialProfile(targetGameObject);
 
             EditorCurveBinding[] sourceCurveBindings = AnimationUtility.GetCurveBindings(workingClip);
 
@@ -905,40 +927,73 @@ namespace Reallusion.Import
                 }
             }
 
+            logtime = 0f;
+
+            // build a cache of the blend shape names and their curve bindings:
+            Dictionary<string, EditorCurveBinding> cache = new Dictionary<string, EditorCurveBinding>();
+            List<KeyValuePair<string, EditorCurveBinding>> multiCache = new List<KeyValuePair<string, EditorCurveBinding>>();
             for (int i = 0; i < sourceCurveBindings.Length; i++)
             {
-                if (sourceCurveBindings[i].propertyName.StartsWith(blendShape) && sourceCurveBindings[i].path.Equals(baseBody))
+                if (sourceCurveBindings[i].propertyName.StartsWith(blendShape))
                 {
-                    foreach (Transform t in targetAssetData)
+                    string blendShapeName = sourceCurveBindings[i].propertyName.Substring(blendShape.Length);
+                    string profileBlendShapeName = FacialProfileMapper.GetFacialProfileMapping(blendShapeName, facialProfile);
+                    List<string> multiProfileName = FacialProfileMapper.GetMultiShapeNames(profileBlendShapeName);
+                    if (multiProfileName.Count == 1)
                     {
-                        GameObject go = t.gameObject;
-                        if (go.GetComponent<SkinnedMeshRenderer>())
+                        if (!cache.ContainsKey(profileBlendShapeName))
+                            cache.Add(profileBlendShapeName, sourceCurveBindings[i]);
+                    }
+                    else
+                    {
+                        foreach (string multiShapeName in multiProfileName)
                         {
-                            if (go.GetComponent<SkinnedMeshRenderer>().sharedMesh.blendShapeCount > 0)
-                            {
-                                for (int j = 0; j < go.GetComponent<SkinnedMeshRenderer>().sharedMesh.blendShapeCount; j++)
-                                {
-                                    string targetPropertyName = blendShape + go.GetComponent<SkinnedMeshRenderer>().sharedMesh.GetBlendShapeName(j);
-                                    string sourcePropertyName = GetValidPropertyName(sourceCurveBindings[i].propertyName, targetPropertyName);
+                            if (!cache.ContainsKey(multiShapeName))
+                                cache.Add(multiShapeName, sourceCurveBindings[i]);
+                        }
+                    }                    
+                }
+            }
 
-                                    if (targetPropertyName == sourcePropertyName)
-                                    {                                        
-                                        EditorCurveBinding workingBinding = new EditorCurveBinding()
-                                        {
-                                            path = go.name,
-                                            type = typeof(SkinnedMeshRenderer),
-                                            propertyName = sourcePropertyName
-                                        };
-                                        AnimationCurve workingCurve = new AnimationCurve();
-                                        workingCurve = AnimationUtility.GetEditorCurve(originalClip, sourceCurveBindings[i]);
-                                        AnimationUtility.SetEditorCurve(workingClip, workingBinding, workingCurve);
-                                    }
+            // apply the curves to the target animation
+            foreach (Transform t in targetAssetData)
+            {
+                GameObject go = t.gameObject;
+                SkinnedMeshRenderer smr = go.GetComponent<SkinnedMeshRenderer>();
+                if (smr && smr.sharedMesh && smr.sharedMesh.blendShapeCount > 0)
+                {
+                    for (int j = 0; j < smr.sharedMesh.blendShapeCount; j++)
+                    {
+                        string blendShapeName = smr.sharedMesh.GetBlendShapeName(j);
+                        string targetPropertyName = blendShape + blendShapeName;
+                        bool cached = false;
+
+                        if (cache.TryGetValue(blendShapeName, out EditorCurveBinding sourceCurveBinding))
+                        {
+                            CopyCurve(go.name, targetPropertyName, sourceCurveBinding);
+                            cached = true;
+                        }
+                        else
+                        {
+                            foreach (KeyValuePair<string, EditorCurveBinding> pair in multiCache)
+                            {
+                                if (pair.Key == blendShapeName)
+                                {
+                                    CopyCurve(go.name, targetPropertyName, pair.Value);
+                                    cached = true;
                                 }
                             }
                         }
+
+                        //if (!cached)
+                        //    Debug.LogWarning("Could not map blendshape: " + blendShapeName + 
+                        //                     " in object: " + go.name);
                     }
                 }
             }
+
+            Debug.Log(logtime);
+        
             bool PURGE = true;
             // Purge all curves from the animation that dont have a valid path in the target object                    
             if (PURGE)
@@ -947,20 +1002,29 @@ namespace Reallusion.Import
                 for (int k = 0; k < targetCurveBindings.Length; k++)
                 {
                     if (pathsToPurge.Contains(targetCurveBindings[k].path))
+                    {
                         AnimationUtility.SetEditorCurve(workingClip, targetCurveBindings[k], null);
-                }
+                    }
+                    else
+                    {
+                        // purge all extra blend shape animations
+                        if (targetCurveBindings[k].propertyName.StartsWith(blendShape))
+                        {
+                            string blendShapeName = targetCurveBindings[k].propertyName.Substring(blendShape.Length);
+                            if (!cache.ContainsKey(blendShapeName))
+                            {
+                                bool found = false;
+                                foreach (KeyValuePair<string, EditorCurveBinding> pair in multiCache)
+                                    if (pair.Key == blendShapeName) found = true;
+                                if (!found)
+                                {
+                                    AnimationUtility.SetEditorCurve(workingClip, targetCurveBindings[k], null);
+                                }
+                            }
+                        }
+                    }
+                }                
             }
-        }
-
-        // Deal with naming mismatches in variaous character generations as they crop up (i.e. rename the mismatched source data to the name required by the target model) 
-        private static string GetValidPropertyName(string sourcePropertyName, string targetPropertyName)
-        {
-            string propertyName = sourcePropertyName;
-
-            if (targetPropertyName == "blendShape.Eyes_Blink" && sourcePropertyName == "blendShape.Eye_Blink") { propertyName = targetPropertyName; }
-            if (targetPropertyName == "blendShape.Eye_Blink" && sourcePropertyName == "blendShape.Eyes_Blink") { propertyName = targetPropertyName; }
-
-            return propertyName;
         }
 
         static void WriteAnimationToAssetDatabase()
