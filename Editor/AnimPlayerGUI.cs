@@ -12,6 +12,7 @@ namespace Reallusion.Import
         public static AnimationClip selectedClip;
         public static AnimationClip animationClip;
         public static Animator animator;
+        public static FacialProfile facialProfile;
         public static bool play = false;
         public static bool clipManuallySet = false;
         public static float time, prev, current = 0f;
@@ -31,6 +32,7 @@ namespace Reallusion.Import
                     sourceFbxPath = AssetDatabase.GetAssetPath(sceneFbx);
                     Animator anim = scenePrefab.GetComponent<Animator>();
                     AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
+                    facialProfile = FacialProfileMapper.GetFacialProfile(scenePrefab);
 
                     UpdatePlayerTargets(anim, firstClip);
                 }
@@ -388,8 +390,7 @@ namespace Reallusion.Import
         static Texture2D faceHappy;
         static Texture2D faceSad;
         static Texture2D faceSurprise;
-        static GUIStyle transparentBoxStyle;
-        static bool hasExtPlusBlendShapes = false;
+        static GUIStyle transparentBoxStyle;        
         static Color outlineColor = Color.gray;
         static Color selectedColor = Color.gray;
         static Color mouseOverColor = Color.gray;
@@ -449,12 +450,9 @@ namespace Reallusion.Import
 
             if (root)
             {
-                GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye");
-                if (!leftEye) leftEye = MeshUtil.FindCharacterBone(root, "L_Eye");
-                GameObject rightEye = MeshUtil.FindCharacterBone(root, "CC_Base_R_Eye");
-                if (!rightEye) rightEye = MeshUtil.FindCharacterBone(root, "R_Eye");
-                GameObject jawBone = MeshUtil.FindCharacterBone(root, "CC_Base_JawRoot");
-                if (!jawBone) jawBone = MeshUtil.FindCharacterBone(root, "JawRoot");
+                GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye", "L_Eye");
+                GameObject rightEye = MeshUtil.FindCharacterBone(root, "CC_Base_R_Eye", "R_Eye");
+                GameObject jawBone = MeshUtil.FindCharacterBone(root, "CC_Base_JawRoot", "JawRoot");
 
                 if (leftEye && rightEye)
                 {
@@ -474,28 +472,11 @@ namespace Reallusion.Import
                     jawVal = jawRef;
                 }
 
-                const string shapeNameSingle = "Eye_Blink";
-                for (int i = 0; i < root.transform.childCount; i++)
+                if (!FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink", facialProfile, out blinkRef))
                 {
-                    GameObject child = root.transform.GetChild(i).gameObject;
-                    SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
-                    if (renderer)
-                    {
-                        Mesh mesh = renderer.sharedMesh;
-                        if (mesh.blendShapeCount > 0)
-                        {
-                            int shapeIndexS = mesh.GetBlendShapeIndex(shapeNameSingle);
-
-                            if (shapeIndexS > 0)
-                            {
-                                blinkRef = renderer.GetBlendShapeWeight(shapeIndexS);
-                                blinkVal = blinkRef;
-                            }
-                        }
-                    }
+                    FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink_L", facialProfile, out blinkRef);
                 }
-
-                hasExtPlusBlendShapes = HasExtPlusBlendShapes();
+                blinkVal = blinkRef;                            
             }
 
             doneInitFace = true;
@@ -537,12 +518,9 @@ namespace Reallusion.Import
             {
                 Vector3 lookAt = Vector3.zero;
 
-                GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head");
-                if (!head) head = MeshUtil.FindCharacterBone(root, "head");
-                GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye");
-                if (!leftEye) leftEye = MeshUtil.FindCharacterBone(root, "L_Eye");
-                GameObject rightEye = MeshUtil.FindCharacterBone(root, "CC_Base_R_Eye");
-                if (!rightEye) rightEye = MeshUtil.FindCharacterBone(root, "R_Eye");
+                GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head", "Head");
+                GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye", "L_Eye");
+                GameObject rightEye = MeshUtil.FindCharacterBone(root, "CC_Base_R_Eye", "R_Eye");
 
                 if (head && leftEye && rightEye)
                     lookAt = (head.transform.position + leftEye.transform.position + rightEye.transform.position) / 3f;
@@ -667,56 +645,38 @@ namespace Reallusion.Import
                 if (GUILayout.Button(new GUIContent(faceAngryImage, "Angry Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace();
-                    if (hasExtPlusBlendShapes)
-                        SetFacialExpression(FACE_ANGRY_EXT);
-                    else
-                        SetFacialExpression(FACE_ANGRY);
+                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_ANGRY : FACE_ANGRY_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceDisgust, "Disgusted Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace();
-                    if (hasExtPlusBlendShapes)
-                        SetFacialExpression(FACE_DISGUST_EXT);
-                    else
-                        SetFacialExpression(FACE_DISGUST);
+                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_DISGUST : FACE_DISGUST_EXT);
 
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceFear, "Fearful Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace();
-                    if (hasExtPlusBlendShapes)
-                        SetFacialExpression(FACE_FEAR_EXT);
-                    else
-                        SetFacialExpression(FACE_FEAR);
+                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_FEAR : FACE_FEAR_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceHappy, "Happy Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace();
-                    if (hasExtPlusBlendShapes)
-                        SetFacialExpression(FACE_HAPPY_EXT);
-                    else
-                        SetFacialExpression(FACE_HAPPY);
+                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_HAPPY : FACE_HAPPY_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceSad, "Sad Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace();
-                    if (hasExtPlusBlendShapes)
-                        SetFacialExpression(FACE_SAD_EXT);
-                    else
-                        SetFacialExpression(FACE_SAD);
+                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_SAD : FACE_SAD_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceSurprise, "Surprised Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace();
-                    if (hasExtPlusBlendShapes)
-                        SetFacialExpression(FACE_SURPRISE_EXT);
-                    else
-                        SetFacialExpression(FACE_SURPRISE);
+                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_SURPRISE : FACE_SURPRISE_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
@@ -820,8 +780,8 @@ namespace Reallusion.Import
 
             Vector2 output = new Vector2(referenceVector2.x + relX, referenceVector2.y + relY);
             return output;
-        }
-
+        }        
+        
         public static void AdjustEyes()
         {
             if (!eyeChanged) return;
@@ -841,16 +801,14 @@ namespace Reallusion.Import
 
             if (root)
             {
-                GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye");
-                if (!leftEye) leftEye = MeshUtil.FindCharacterBone(root, "L_Eye");
-                GameObject rightEye = MeshUtil.FindCharacterBone(root, "CC_Base_R_Eye");
-                if (!rightEye) rightEye = MeshUtil.FindCharacterBone(root, "R_Eye");
+                GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye", "L_Eye");
+                GameObject rightEye = MeshUtil.FindCharacterBone(root, "CC_Base_R_Eye", "R_Eye");
 
                 if (leftEye && rightEye)
                 {
                     Vector3 euler = leftEye.transform.localRotation.eulerAngles;
                     float leftRight = Mathf.DeltaAngle(eyeVal.x, eyeRef.x) / 45f;
-                    float upDown = Mathf.DeltaAngle(eyeVal.y, eyeRef.y) / 20f;
+                    float upDown = Mathf.DeltaAngle(eyeVal.y, eyeRef.y) / 24f;
                     float lookUpValue = upDown < 0f ? -upDown * 100f: 0;
                     float lookDownValue = upDown >= 0f ? upDown * 100f: 0;
                     float lookLeftValue = leftRight >= 0f ? leftRight * 100f : 0;
@@ -862,7 +820,7 @@ namespace Reallusion.Import
                     SetIndividualBlendShape("A10_Eye_Look_Out_Left", lookLeftValue);
                     SetIndividualBlendShape("A11_Eye_Look_In_Left", lookRightValue);
                     SetIndividualBlendShape("A12_Eye_Look_In_Right", lookLeftValue);
-                    SetIndividualBlendShape("A13_Eye_Look_Out_Right", lookRightValue);                    
+                    SetIndividualBlendShape("A13_Eye_Look_Out_Right", lookRightValue);
                     euler.z = input.x;
                     euler.x = input.y;
 
@@ -885,8 +843,7 @@ namespace Reallusion.Import
 
             if (root)
             {
-                GameObject jawBone = MeshUtil.FindCharacterBone(root, "CC_Base_JawRoot");
-                if (!jawBone) jawBone = MeshUtil.FindCharacterBone(root, "JawRoot");
+                GameObject jawBone = MeshUtil.FindCharacterBone(root, "CC_Base_JawRoot", "JawRoot");
                 if (jawBone)
                 {
                     Transform jaw = jawBone.transform;
@@ -903,31 +860,19 @@ namespace Reallusion.Import
             if (AnimPlayerGUI.animator == null) return;
             Object obj = AnimPlayerGUI.animator.gameObject;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);            
 
-            if (root)
+            if (!SetCharacterBlendShape(root, "Eye_Blink", input))
             {
-                const string shapeNameSingle = "Eye_Blink";
-                for (int i = 0; i < root.transform.childCount; i++)
-                {
-                    GameObject child = root.transform.GetChild(i).gameObject;
-                    SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
-                    if (renderer)
-                    {
-                        Mesh mesh = renderer.sharedMesh;
-                        if (mesh.blendShapeCount > 0)
-                        {
-                            int shapeIndexS = mesh.GetBlendShapeIndex(shapeNameSingle);
-
-                            if (shapeIndexS >= 0)
-                            {
-                                renderer.SetBlendShapeWeight(shapeIndexS, input);
-                            }
-                        }
-                    }
-                }
+                SetCharacterBlendShape(root, "Eye_Blink_L", input);
+                SetCharacterBlendShape(root, "Eye_Blink_R", input);
             }
         }
+
+        private static bool SetCharacterBlendShape(GameObject characterRoot, string blendShapeName, float weight)
+        {
+            return FacialProfileMapper.SetCharacterBlendShape(characterRoot, blendShapeName, facialProfile, weight);
+        }        
 
         static void SetFacialExpression(Dictionary<string, float> dict, bool restore = false)
         {
@@ -959,35 +904,20 @@ namespace Reallusion.Import
             {
                 foreach (KeyValuePair<string, float> entry in dict)
                 {
-                    string shapeName = entry.Key;
+                    string shapeName = entry.Key;                    
 
                     if (shapeName.iEquals("Turn_Jaw") || shapeName.iEquals("A25_Jaw_Open"))
                     {
                         if (!restore)
-                        {                            
-                            jawVal = jawRef - (entry.Value * 0.15f * EXPRESSIVENESS);
+                        {
+                            float mod = 1f;
+                            if (shapeName.iEquals("A25_Jaw_Open")) mod = 0.25f;
+                            jawVal = jawRef - (entry.Value * mod * EXPRESSIVENESS);
                             AdjustMouth(jawVal);
                         }
                     }
 
-                    for (int i = 0; i < root.transform.childCount; i++)
-                    {
-                        GameObject child = root.transform.GetChild(i).gameObject;
-                        SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
-                        if (renderer)
-                        {
-                            Mesh mesh = renderer.sharedMesh;
-                            if (mesh.blendShapeCount > 0)
-                            {
-                                int shapeIndexS = mesh.GetBlendShapeIndex(shapeName);
-
-                                if (shapeIndexS >= 0)
-                                {
-                                    renderer.SetBlendShapeWeight(shapeIndexS, entry.Value * EXPRESSIVENESS * (hasExtPlusBlendShapes ? 0.5f : 1f));
-                                }
-                            }
-                        }
-                    }                    
+                    SetCharacterBlendShape(root, shapeName, entry.Value * EXPRESSIVENESS);                    
                 }
             }
         }
@@ -999,66 +929,11 @@ namespace Reallusion.Import
 
         static void SetIndividualBlendShape(string individualShapeName, float value)
         {
-            if (AnimPlayerGUI.animator == null) return;
-            Object obj = AnimPlayerGUI.animator.gameObject;
-
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-
-            if (root)
-            {
-                for (int i = 0; i < root.transform.childCount; i++)
-                {
-                    GameObject child = root.transform.GetChild(i).gameObject;
-                    SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
-                    if (renderer)
-                    {
-                        Mesh mesh = renderer.sharedMesh;
-                        if (mesh.blendShapeCount > 0)
-                        {
-                            int shapeIndexS = mesh.GetBlendShapeIndex(individualShapeName);
-
-                            if (shapeIndexS >= 0)
-                            {
-                                renderer.SetBlendShapeWeight(shapeIndexS, value);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        static bool HasExtPlusBlendShapes()
-        {
-            if (animator == null) return false;
+            if (animator == null) return;
             Object obj = animator.gameObject;
             GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-
-            if (root)
-            {
-                for (int i = 0; i < root.transform.childCount; i++)
-                {
-                    GameObject child = root.transform.GetChild(i).gameObject;
-                    SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
-                    if (renderer)
-                    {
-                        Mesh mesh = renderer.sharedMesh;
-                        if (mesh.blendShapeCount > 0)
-                        {
-                            int shapeIndexJaw = mesh.GetBlendShapeIndex("A25_Jaw_Open");
-                            int shapeIndexBrow = mesh.GetBlendShapeIndex("A01_Brow_Inner_Up");
-                            int shapeIndexEye = mesh.GetBlendShapeIndex("A14_Eye_Blink_Left");
-                            int shapeIndexCheek = mesh.GetBlendShapeIndex("A20_Cheek_Puff");
-
-                            if (shapeIndexJaw >= 0 || shapeIndexBrow >= 0 || 
-                                shapeIndexEye >= 0 || shapeIndexCheek >= 0)
-                                return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
+            SetCharacterBlendShape(root, individualShapeName, value);
+        }        
 
         static void SnapViewToHead()
         {
@@ -1071,12 +946,9 @@ namespace Reallusion.Import
             {
                 Vector3 snapLookAt = Vector3.zero;
 
-                GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head");
-                if (!head) head = MeshUtil.FindCharacterBone(root, "head");
-                GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye");
-                if (!leftEye) leftEye = MeshUtil.FindCharacterBone(root, "L_Eye");
-                GameObject rightEye = MeshUtil.FindCharacterBone(root, "CC_Base_R_Eye");
-                if (!rightEye) rightEye = MeshUtil.FindCharacterBone(root, "R_Eye");
+                GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head", "Head");
+                GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye", "L_Eye");
+                GameObject rightEye = MeshUtil.FindCharacterBone(root, "CC_Base_R_Eye", "R_Eye");
 
                 if (head && leftEye && rightEye)
                     snapLookAt = (head.transform.position + leftEye.transform.position + rightEye.transform.position) / 3f;

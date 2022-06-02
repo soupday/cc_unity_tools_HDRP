@@ -527,6 +527,24 @@ namespace Reallusion.Import
             return null;
         }
 
+        public static GameObject FindCharacterBone(GameObject gameObject, string name1, string name2)
+        {
+            if (gameObject)
+            {                
+                if (gameObject.name.iEndsWith(name1) || gameObject.name.iEndsWith(name2))
+                    return gameObject;
+
+                int children = gameObject.transform.childCount;
+                for (int i = 0; i < children; i++)
+                {
+                    GameObject found = FindCharacterBone(gameObject.transform.GetChild(i).gameObject, name1, name2);
+                    if (found) return found;
+                }
+            }
+
+            return null;
+        }
+
         public static void CharacterOpenCloseMouth(Object obj)
         {
             if (!obj) return;
@@ -538,8 +556,7 @@ namespace Reallusion.Import
                 bool isOpen = true;
 
                 // find the jaw bone and change it's rotation
-                GameObject jawBone = FindCharacterBone(root, "CC_Base_JawRoot");                
-                if (!jawBone) jawBone = FindCharacterBone(root, "JawRoot");
+                GameObject jawBone = FindCharacterBone(root, "CC_Base_JawRoot", "JawRoot");                
                 if (jawBone)
                 {
                     Transform jaw = jawBone.transform;
@@ -648,10 +665,8 @@ namespace Reallusion.Import
 
             if (root)
             {
-                GameObject leftEye = FindCharacterBone(root, "CC_Base_L_Eye");
-                if (!leftEye) leftEye = FindCharacterBone(root, "L_Eye");
-                GameObject rightEye = FindCharacterBone(root, "CC_Base_R_Eye");
-                if (!rightEye) rightEye = FindCharacterBone(root, "R_Eye");
+                GameObject leftEye = FindCharacterBone(root, "CC_Base_L_Eye", "L_Eye");
+                GameObject rightEye = FindCharacterBone(root, "CC_Base_R_Eye", "R_Eye");
 
                 if (leftEye && rightEye)
                 {

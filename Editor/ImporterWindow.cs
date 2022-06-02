@@ -1058,10 +1058,8 @@ namespace Reallusion.Import
 
                 if (root)
                 {
-                    GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_Spine02");
-                    if (!hips) hips = MeshUtil.FindCharacterBone(root, "Spine02");
-                    GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head");
-                    if (!head) head = MeshUtil.FindCharacterBone(root, "head");
+                    GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_Spine02", "Spine02");
+                    GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head", "Head");
                     if (hips && head)
                     {
                         Vector3 lookAt = (hips.transform.position + head.transform.position) / 2f;
