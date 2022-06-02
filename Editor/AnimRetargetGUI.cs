@@ -930,8 +930,7 @@ namespace Reallusion.Import
             logtime = 0f;
 
             // build a cache of the blend shape names and their curve bindings:
-            Dictionary<string, EditorCurveBinding> cache = new Dictionary<string, EditorCurveBinding>();
-            List<KeyValuePair<string, EditorCurveBinding>> multiCache = new List<KeyValuePair<string, EditorCurveBinding>>();
+            Dictionary<string, EditorCurveBinding> cache = new Dictionary<string, EditorCurveBinding>();            
             for (int i = 0; i < sourceCurveBindings.Length; i++)
             {
                 if (sourceCurveBindings[i].propertyName.StartsWith(blendShape))
@@ -965,29 +964,17 @@ namespace Reallusion.Import
                     for (int j = 0; j < smr.sharedMesh.blendShapeCount; j++)
                     {
                         string blendShapeName = smr.sharedMesh.GetBlendShapeName(j);
-                        string targetPropertyName = blendShape + blendShapeName;
-                        bool cached = false;
+                        string targetPropertyName = blendShape + blendShapeName;                        
 
                         if (cache.TryGetValue(blendShapeName, out EditorCurveBinding sourceCurveBinding))
                         {
-                            CopyCurve(go.name, targetPropertyName, sourceCurveBinding);
-                            cached = true;
+                            CopyCurve(go.name, targetPropertyName, sourceCurveBinding);                            
                         }
                         else
                         {
-                            foreach (KeyValuePair<string, EditorCurveBinding> pair in multiCache)
-                            {
-                                if (pair.Key == blendShapeName)
-                                {
-                                    CopyCurve(go.name, targetPropertyName, pair.Value);
-                                    cached = true;
-                                }
-                            }
+                            //    Debug.LogWarning("Could not map blendshape: " + blendShapeName + 
+                            //                     " in object: " + go.name);    
                         }
-
-                        //if (!cached)
-                        //    Debug.LogWarning("Could not map blendshape: " + blendShapeName + 
-                        //                     " in object: " + go.name);
                     }
                 }
             }
@@ -1013,13 +1000,7 @@ namespace Reallusion.Import
                             string blendShapeName = targetCurveBindings[k].propertyName.Substring(blendShape.Length);
                             if (!cache.ContainsKey(blendShapeName))
                             {
-                                bool found = false;
-                                foreach (KeyValuePair<string, EditorCurveBinding> pair in multiCache)
-                                    if (pair.Key == blendShapeName) found = true;
-                                if (!found)
-                                {
-                                    AnimationUtility.SetEditorCurve(workingClip, targetCurveBindings[k], null);
-                                }
+                                AnimationUtility.SetEditorCurve(workingClip, targetCurveBindings[k], null);
                             }
                         }
                     }

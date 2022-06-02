@@ -1054,23 +1054,26 @@ namespace Reallusion.Import
             if (ps.IsValid)
             {
                 GameObject obj = ps.GetPreviewCharacter();
-                GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-
-                if (root)
+                if (obj)
                 {
-                    GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_Spine02", "Spine02");
-                    GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head", "Head");
-                    if (hips && head)
-                    {
-                        Vector3 lookAt = (hips.transform.position + head.transform.position) / 2f;
-                        Quaternion lookBackRot = new Quaternion();
-                        Vector3 euler = lookBackRot.eulerAngles;
-                        euler.y = -180f;
-                        lookBackRot.eulerAngles = euler;                        
+                    GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
 
-                        foreach (SceneView sv in SceneView.sceneViews)
+                    if (root)
+                    {
+                        GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_Spine02", "Spine02");
+                        GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head", "Head");
+                        if (hips && head)
                         {
-                            sv.LookAt(lookAt, lookBackRot, 0.5f);
+                            Vector3 lookAt = (hips.transform.position + head.transform.position) / 2f;
+                            Quaternion lookBackRot = new Quaternion();
+                            Vector3 euler = lookBackRot.eulerAngles;
+                            euler.y = -180f;
+                            lookBackRot.eulerAngles = euler;
+
+                            foreach (SceneView sv in SceneView.sceneViews)
+                            {
+                                sv.LookAt(lookAt, lookBackRot, 0.5f);
+                            }
                         }
                     }
                 }
