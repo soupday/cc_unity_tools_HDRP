@@ -804,6 +804,7 @@ namespace Reallusion.Import
             else
             {
                 if (RP == RenderPipeline.URP)
+                {
                     if (!ConnectTextureTo(sourceName, mat, "_BaseMap", "Diffuse",
                         matJson, "Textures/Base Color",
                         FLAG_SRGB))
@@ -812,7 +813,9 @@ namespace Reallusion.Import
                             matJson, "Textures/Opacity",
                             FLAG_SRGB);
                     }
+                }
                 else
+                {
                     if (!ConnectTextureTo(sourceName, mat, "_MainTex", "Diffuse",
                         matJson, "Textures/Base Color",
                         FLAG_SRGB))
@@ -821,6 +824,7 @@ namespace Reallusion.Import
                             matJson, "Textures/Opacity",
                             FLAG_SRGB);
                     }
+                }
 
                 ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
                     matJson, "Textures/MetallicAlpha");              
