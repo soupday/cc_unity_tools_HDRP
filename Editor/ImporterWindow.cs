@@ -73,6 +73,7 @@ namespace Reallusion.Import
         private static Texture2D iconActionRefresh;
         private static Texture2D iconActionAnims;
         private static Texture2D iconAction2Pass;
+        private static Texture2D iconAlembic;
         private static Texture2D iconActionAnimPlayer;
         private static Texture2D iconActionAvatarAlign;
         private static Texture2D iconSettings;        
@@ -166,6 +167,7 @@ namespace Reallusion.Import
             iconActionPreview = Util.FindTexture(folders, "RLIcon_ActionPreview");
             iconActionRefresh = Util.FindTexture(folders, "RLIcon_ActionRefresh");
             iconAction2Pass = Util.FindTexture(folders, "RLIcon_Action2Pass");
+            iconAlembic = Util.FindTexture(folders, "RLIcon_Alembic");
             iconActionAnims = Util.FindTexture(folders, "RLIcon_ActionAnims");
             iconActionAnimPlayer = Util.FindTexture(folders, "RLIcon_AnimPlayer");
             iconActionAvatarAlign = Util.FindTexture(folders, "RLIcon_AvatarAlign");
@@ -175,6 +177,8 @@ namespace Reallusion.Import
             RefreshCharacterList();
 
             MakeStyle();
+
+            if (titleContent.text != windowTitle) titleContent.text = windowTitle;
         }
 
         private void RefreshCharacterList()
@@ -334,7 +338,7 @@ namespace Reallusion.Import
 
                 PreviewScene.OpenPreviewScene(contextCharacter.Fbx);
 
-                if (WindowManager.showTools) ShowAnimationPlayer();
+                if (WindowManager.showPlayer) WindowManager.ShowAnimationPlayer();
                 ResetAllSceneViewCamera();
             }
             else if (refreshAfterGUI)
@@ -632,7 +636,18 @@ namespace Reallusion.Import
                 RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);
             }
             GUI.enabled = true;
+
+#if UNITY_ALEMBIC_1_0_7
+            GUILayout.Space(ACTION_BUTTON_SPACE);
             
+            if (GUILayout.Button(new GUIContent(iconAlembic, "Process alembic animations with this character's materials."),
+                GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+            {
+                Alembic.ProcessAlembics(contextCharacter.Fbx, contextCharacter.name, contextCharacter.folder);
+            }
+            GUI.enabled = true;
+#endif
+
             /*
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
@@ -657,44 +672,35 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAnimPlayer, "Show animation preview player."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (WindowManager.showTools)
+                if (WindowManager.showPlayer)
                 {
-                    /*
-                    AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(contextCharacter.Fbx);
-                    if (AnimPlayerIMGUI.animationClip != firstClip)
-                    {
-                        AnimPlayerIMGUI.UpdatePlayerClip(firstClip);
-                    }
-                    else
-                    {
-                        showAnimPlayer = false;
-                        HideAnimationPlayer();
-                        ResetAllSceneViewCamera();
-                    }*/
-                    WindowManager.showTools = false;
-                    HideAnimationPlayer();
+                    WindowManager.HideAnimationPlayer(true);                                        
                     ResetAllSceneViewCamera();
                 }
                 else
                 {
-                    WindowManager.showTools = true;
-                    ShowAnimationPlayer();
+                    WindowManager.ShowAnimationPlayer();                                        
                     ResetAllSceneViewCamera();
                 }
             }
             GUI.enabled = true;
-
-            /* Not just yet...
+            
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
             if (contextCharacter == null) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(iconActionAvatarAlign, "Avatar Alignment."),
+            if (GUILayout.Button(new GUIContent(iconActionAvatarAlign, "Animation Adjustment & Retargeting."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                
+                if (WindowManager.showRetarget)
+                {
+                    WindowManager.HideAnimationRetargeter(true);                    
+                }
+                else
+                {
+                    WindowManager.ShowAnimationRetargeter();                    
+                }
             }
             GUI.enabled = true;
-            */
 
             GUILayout.FlexibleSpace();
 
@@ -999,9 +1005,9 @@ namespace Reallusion.Import
             {
                 if (UpdatePreviewCharacter(prefabAsset))
                 {
-                    if (WindowManager.showTools)
+                    if (WindowManager.showPlayer)
                     {
-                        ShowAnimationPlayer();
+                        WindowManager.ShowAnimationPlayer();
                     }
                 }
             }
@@ -1041,37 +1047,7 @@ namespace Reallusion.Import
             }            
 
             return ps.IsValid;
-        }
-
-        public void HideAnimationPlayer() 
-        {            
-            if (AnimPlayerGUI.IsPlayerShown())
-            {
-                AnimPlayerGUI.ResetFace();
-                AnimPlayerGUI.DestroyPlayer();
-            }
-
-            WindowManager.showTools = false;
-        }
-
-        public void ShowAnimationPlayer() 
-        {            
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-
-            if (ps.IsValid)
-            {
-                if (AnimPlayerGUI.IsPlayerShown())
-                {
-                    AnimPlayerGUI.SetCharacter(ps, contextCharacter.Fbx);
-                }
-                else
-                {
-                    AnimPlayerGUI.CreatePlayer(ps, contextCharacter.Fbx);
-                }
-
-                WindowManager.showTools = true;
-            }
-        }
+        }                
 
         public static void ResetAllSceneViewCamera()
         {
@@ -1080,25 +1056,26 @@ namespace Reallusion.Import
             if (ps.IsValid)
             {
                 GameObject obj = ps.GetPreviewCharacter();
-                GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-
-                if (root)
+                if (obj)
                 {
-                    GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_Spine02");
-                    if (!hips) hips = MeshUtil.FindCharacterBone(root, "Spine02");
-                    GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head");
-                    if (!head) head = MeshUtil.FindCharacterBone(root, "head");
-                    if (hips && head)
-                    {
-                        Vector3 lookAt = (hips.transform.position + head.transform.position) / 2f;
-                        Quaternion lookBackRot = new Quaternion();
-                        Vector3 euler = lookBackRot.eulerAngles;
-                        euler.y = -180f;
-                        lookBackRot.eulerAngles = euler;                        
+                    GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
 
-                        foreach (SceneView sv in SceneView.sceneViews)
+                    if (root)
+                    {
+                        GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_Spine02", "Spine02");
+                        GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head", "Head");
+                        if (hips && head)
                         {
-                            sv.LookAt(lookAt, lookBackRot, 0.5f);
+                            Vector3 lookAt = (hips.transform.position + head.transform.position) / 2f;
+                            Quaternion lookBackRot = new Quaternion();
+                            Vector3 euler = lookBackRot.eulerAngles;
+                            euler.y = -180f;
+                            lookBackRot.eulerAngles = euler;
+
+                            foreach (SceneView sv in SceneView.sceneViews)
+                            {
+                                sv.LookAt(lookAt, lookBackRot, 0.5f);
+                            }
                         }
                     }
                 }

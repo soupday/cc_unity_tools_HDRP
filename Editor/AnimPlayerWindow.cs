@@ -36,7 +36,7 @@ namespace Reallusion.Import
             {
                 SceneView.duringSceneGui += AnimPlayerWindow.OnSceneGUI;
                 isShown = true;
-            }            
+            }
         }
         
         public static void HidePlayer()

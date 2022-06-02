@@ -782,9 +782,14 @@ namespace Reallusion.Import
 
             if (RP == RenderPipeline.HDRP)
             {
-                ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Diffuse",
+                if (!ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Diffuse",
                     matJson, "Textures/Base Color",
-                    FLAG_SRGB);
+                    FLAG_SRGB))
+                {
+                    ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Opacity",
+                        matJson, "Textures/Opacity",
+                        FLAG_SRGB);
+                }
 
                 ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
                     matJson, "Textures/HDRP");
@@ -799,13 +804,27 @@ namespace Reallusion.Import
             else
             {
                 if (RP == RenderPipeline.URP)
-                    ConnectTextureTo(sourceName, mat, "_BaseMap", "Diffuse",
+                {
+                    if (!ConnectTextureTo(sourceName, mat, "_BaseMap", "Diffuse",
                         matJson, "Textures/Base Color",
-                        FLAG_SRGB);
+                        FLAG_SRGB))
+                    {
+                        ConnectTextureTo(sourceName, mat, "_BaseMap", "Opacity",
+                            matJson, "Textures/Opacity",
+                            FLAG_SRGB);
+                    }
+                }
                 else
-                    ConnectTextureTo(sourceName, mat, "_MainTex", "Diffuse",
+                {
+                    if (!ConnectTextureTo(sourceName, mat, "_MainTex", "Diffuse",
                         matJson, "Textures/Base Color",
-                        FLAG_SRGB);
+                        FLAG_SRGB))
+                    {
+                        ConnectTextureTo(sourceName, mat, "_MainTex", "Opacity",
+                            matJson, "Textures/Opacity",
+                            FLAG_SRGB);
+                    }
+                }
 
                 ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
                     matJson, "Textures/MetallicAlpha");              
@@ -917,9 +936,14 @@ namespace Reallusion.Import
         {
             bool isHair = sourceName.iContains("hair");
 
-            ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Diffuse",
+            if (!ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Diffuse",
                     matJson, "Textures/Base Color",
+                    FLAG_SRGB + (isHair ? FLAG_HAIR : FLAG_ALPHA_CLIP)))
+            {
+                ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Opacity",
+                    matJson, "Textures/Opacity",
                     FLAG_SRGB + (isHair ? FLAG_HAIR : FLAG_ALPHA_CLIP));
+            }
 
             ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
                 matJson, "Textures/Normal",
@@ -1335,9 +1359,14 @@ namespace Reallusion.Import
         {
             bool isHair = sourceName.iContains("Hair");
 
-            ConnectTextureTo(sourceName, mat, "_DiffuseMap", "Diffuse",
+            if (!ConnectTextureTo(sourceName, mat, "_DiffuseMap", "Diffuse",
                     matJson, "Textures/Base Color",
+                    FLAG_SRGB + (isHair ? FLAG_HAIR : FLAG_ALPHA_CLIP)))
+            {
+                ConnectTextureTo(sourceName, mat, "_DiffuseMap", "Opacity",
+                    matJson, "Textures/Opacity",
                     FLAG_SRGB + (isHair ? FLAG_HAIR : FLAG_ALPHA_CLIP));
+            }
 
             ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
                 matJson, "Textures/HDRP");

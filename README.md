@@ -14,24 +14,26 @@ Progress and additional information can be found in the [Reallusion forum thread
 
 Links
 =====
-[URP Version](https://github.com/soupday/cc3_unity_tools_URP)
+[HDRP Version](https://github.com/soupday/cc_unity_tools_HDRP)
 
-[3D/Built-in Version](https://github.com/soupday/cc3_unity_tools_3D)
+[URP Version](https://github.com/soupday/cc_unity_tools_URP)
+
+[3D/Built-in Version](https://github.com/soupday/cc_unity_tools_3D)
 
 How it works
 ============
 
 Character exports from Character Creator and iClone can be dragged into Unity, the import tool can then be opened and the character processed with a single click.
 
-For full details of the workflow, see the [documentation](https://soupday.github.io/cc3_unity_tools/).
+For full details of the workflow, see the [documentation](https://soupday.github.io/cc_unity_tools/).
 
 
 Obtaining the Tool
 ==================
 
-The tool can be installed using Unity's internal package manager from either the Stable branch of this [git repository](https://github.com/soupday/cc3_unity_tools_HDRP) or via download of the 'Source code.zip' of the [latest release](https://github.com/soupday/cc3_unity_tools_HDRP/releases).
+The tool can be installed using Unity's internal package manager from either the Stable branch of this [git repository](https://github.com/soupday/cc_unity_tools_HDRP) or via download of the 'Source code.zip' of the [latest release](https://github.com/soupday/cc_unity_tools_HDRP/releases).
 
-This process is discussed in detail in the [installation documentation](https://soupday.github.io/cc3_unity_tools/installation.html).
+This process is discussed in detail in the [installation documentation](https://soupday.github.io/cc_unity_tools/installation.html).
 
 **Removal**
 
