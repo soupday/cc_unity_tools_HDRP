@@ -637,6 +637,7 @@ namespace Reallusion.Import
             }
             GUI.enabled = true;
 
+#if UNITY_ALEMBIC_1_0_7
             GUILayout.Space(ACTION_BUTTON_SPACE);
             
             if (GUILayout.Button(new GUIContent(iconAlembic, "Process alembic animations with this character's materials."),
@@ -645,6 +646,7 @@ namespace Reallusion.Import
                 Alembic.ProcessAlembics(contextCharacter.Fbx, contextCharacter.name, contextCharacter.folder);
             }
             GUI.enabled = true;
+#endif
 
             /*
             GUILayout.Space(ACTION_BUTTON_SPACE);

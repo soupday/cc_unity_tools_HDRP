@@ -1,6 +1,13 @@
 Changelog
 =========
 
+### v 1.3.0
+- Animation correction and facial expression retargeting system added.
+    - Correction sliders for shoulders, arms, legs, heels and height.
+    - Fix open mouth in 3rd party animations for target CC3/4 character.
+    - Retarget facial expression animation tracks to target CC3/4 character.
+- Alembic material setup feature added. (Unity Alembic package must be installed)
+
 ### v 1.2.3
 - Skin diffuse Color modifier color-space correction.
 - Hair diffuse Color modifier added.
