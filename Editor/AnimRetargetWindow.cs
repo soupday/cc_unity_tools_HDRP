@@ -11,7 +11,7 @@ namespace Reallusion.Import
         {
             float ypadding = 1f;
             float width = 320f;
-            float height = 253f;
+            float height = 269f;
 
             float x = 3f;
             float y = sceneView.position.height - height - ypadding;

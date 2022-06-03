@@ -40,6 +40,7 @@ namespace Reallusion.Import
         static bool closeMouth = false;
         static float shoulderOffset = 0f;
         static float armOffset = 0f;
+        static float armFBOffset = 0f;
         static float backgroundArmOffset = 0f;
         static float legOffset = 0f;
         static float heelOffset = 0f;
@@ -60,6 +61,7 @@ namespace Reallusion.Import
 
         static Dictionary<string, EditorCurveBinding> shoulderBindings;
         static Dictionary<string, EditorCurveBinding> armBindings;
+        static Dictionary<string, EditorCurveBinding> armFBBindings;
         static Dictionary<string, EditorCurveBinding> legBindings;
         static Dictionary<string, EditorCurveBinding> heelBindings;
         static Dictionary<string, EditorCurveBinding> heightBindings;
@@ -155,6 +157,7 @@ namespace Reallusion.Import
             closeMouth = false;
             shoulderOffset = 0f;
             armOffset = 0f;
+            armFBOffset = 0f;
             backgroundArmOffset = 0f;
             legOffset = 0f;
             heelOffset = 0f;
@@ -194,6 +197,16 @@ namespace Reallusion.Import
                     if (armCurveNames.Contains(curveBindings[i].propertyName))
                     {
                         armBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
+                    }
+                }
+
+                armFBBindings = new Dictionary<string, EditorCurveBinding>();
+
+                for (int i = 0; i < curveBindings.Length; i++)
+                {
+                    if (armFBCurveNames.Contains(curveBindings[i].propertyName))
+                    {
+                        armFBBindings.Add(curveBindings[i].propertyName, curveBindings[i]);
                     }
                 }
 
@@ -313,6 +326,19 @@ namespace Reallusion.Import
             if (EditorGUI.EndChangeCheck())
             {
                 OffsetArms();
+                animator.gameObject.transform.position = animatorPosition;
+                animator.gameObject.transform.rotation = animatorRotation;
+                AnimPlayerGUI.SampleOnce();
+            }
+
+            EditorGUI.BeginChangeCheck();
+            GUILayout.BeginHorizontal(GUILayout.Width(sliderWidth));
+            GUILayout.Label(new GUIContent("(Flexion)", "Adjust the Upper Arm Front-Back rotation. Controls the 'Flexion' or 'Extension' of the arms."), GUILayout.Width(textWidth), GUILayout.Height(textHeight));
+            armFBOffset = EditorGUILayout.Slider(armFBOffset, -aRange, aRange);
+            GUILayout.EndHorizontal();
+            if (EditorGUI.EndChangeCheck())
+            {
+                OffsetArmsFB();
                 animator.gameObject.transform.position = animatorPosition;
                 animator.gameObject.transform.rotation = animatorRotation;
                 AnimPlayerGUI.SampleOnce();
@@ -549,6 +575,7 @@ namespace Reallusion.Import
                         }
                         break;
                     case lArm:
+                    case lArmFB:
                         {
                             scale = arScale;
                             eval = true;
@@ -557,6 +584,7 @@ namespace Reallusion.Import
                         }
                         break;
                     case rArm:
+                    case rArmFB:
                         {
                             scale = arScale;
                             eval = true;
@@ -619,7 +647,7 @@ namespace Reallusion.Import
 
                 switch (bind.Key)
                 {
-                    case lArm:
+                    case lArm:                    
                         {
                             scale = arScale;
                             eval = true;
@@ -627,7 +655,7 @@ namespace Reallusion.Import
                             includeBackgroundVal = true;
                         }
                         break;
-                    case rArm:
+                    case rArm:                    
                         {
                             scale = arScale;
                             eval = true;
@@ -655,6 +683,59 @@ namespace Reallusion.Import
                 if (includeBackgroundVal)
                 {
                     diff = (backgroundArmOffset + armOffset) * scale;
+                }
+
+                for (int a = 0; a < keys.Length; a++)
+                {
+
+                    keys[a].value = eval ? EvaluateValue(keys[a].value, subtract ? -diff : diff) : keys[a].value + (subtract ? -diff : diff);
+                }
+                curve.keys = keys;
+                for (int b = 0; b < keys.Length; b++)
+                {
+                    curve.SmoothTangents(b, 0.0f);
+                }
+                AnimationUtility.SetEditorCurve(workingClip, bind.Value, curve);
+            }
+        }
+
+        static void OffsetArmsFB()
+        {
+            if (!(originalClip && workingClip)) return;
+
+            foreach (KeyValuePair<string, EditorCurveBinding> bind in armFBBindings)
+            {
+                float scale = 0f;
+                bool eval = false;
+                bool subtract = true;
+                bool includeBackgroundVal = false;
+                AnimationCurve curve = AnimationUtility.GetEditorCurve(originalClip, bind.Value);
+                Keyframe[] keys = curve.keys;
+
+                switch (bind.Key)
+                {                    
+                    case lArmFB:
+                        {
+                            scale = arScale;
+                            eval = true;
+                            subtract = false;
+                            includeBackgroundVal = false;
+                        }
+                        break;
+                    case rArmFB:
+                        {
+                            scale = arScale;
+                            eval = true;
+                            subtract = false;
+                            includeBackgroundVal = false;
+                        }
+                        break;                    
+                }
+
+                float diff = armFBOffset * scale;
+                if (includeBackgroundVal)
+                {
+                    diff = (backgroundArmOffset + armFBOffset) * scale;
                 }
 
                 for (int a = 0; a < keys.Length; a++)
@@ -1073,10 +1154,12 @@ namespace Reallusion.Import
         // Shoulder, Six curves to consider
         const string lShoulder = "Left Shoulder Down-Up";
         const string lArm = "Left Arm Down-Up";
+        const string lArmFB = "Left Arm Front-Back";
         const string lArmTwist = "Left Arm Twist In-Out";
 
         const string rShoulder = "Right Shoulder Down-Up";
         const string rArm = "Right Arm Down-Up";
+        const string rArmFB = "Right Arm Front-Back";
         const string rArmTwist = "Right Arm Twist In-Out";
 
         // Arm, Four Curves to consider
@@ -1115,6 +1198,12 @@ namespace Reallusion.Import
                     lArmTwist,
                     rArm,
                     rArmTwist
+                };
+
+        static string[] armFBCurveNames = new string[]
+                {
+                    lArmFB,                    
+                    rArmFB,                    
                 };
 
         static string[] legCurveNames = new string[]
