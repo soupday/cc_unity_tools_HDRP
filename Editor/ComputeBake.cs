@@ -549,6 +549,7 @@ namespace Reallusion.Import
             float smoothnessPower = mat.GetFloatIf("_SmoothnessPower");
             float subsurfaceScale = mat.GetFloatIf("_SubsurfaceScale");
             float thicknessScale = mat.GetFloatIf("_ThicknessScale");
+            float thicknessScaleMin = mat.GetFloatIf("_ThicknessScaleMin");
             float colorBlendStrength = mat.GetFloatIf("_ColorBlendStrength");
             float normalBlendStrength = mat.GetFloatIf("_NormalBlendStrength");
             float mouthAOPower = mat.GetFloatIf("_MouthCavityAO");
@@ -701,7 +702,7 @@ namespace Reallusion.Import
                     sourceName + "_DetailMask");
 
             bakedThicknessMap = BakeThicknessMap(thickness,
-                1.0f, subsurfaceFalloff, 
+                0f, 1.0f, subsurfaceFalloff, 
                 IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap, 
                 IS_HDRP ? true : false,
                 sourceName + "_Thickness");
@@ -719,7 +720,7 @@ namespace Reallusion.Import
             result.SetColorIf("_Color", diffuseColor);
             result.SetFloatIf("_SubsurfaceMask", 1.0f);
             result.SetFloatIf("_Thickness", thicknessScale);
-            result.SetRemapRange("_ThicknessRemap", 0f, thicknessScale);
+            result.SetRemapRange("_ThicknessRemap", thicknessScaleMin, thicknessScale);
 
             return result;
         }
@@ -905,7 +906,7 @@ namespace Reallusion.Import
                     IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap,
                     sourceName + "_SSSMap");
 
-                bakedThicknessMap = BakeThicknessMap(Texture2D.whiteTexture, 1.0f, subsurfaceFalloff,
+                bakedThicknessMap = BakeThicknessMap(Texture2D.whiteTexture, 0f, 1.0f, subsurfaceFalloff,
                     IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap, false, 
                     sourceName + "_Thickness");
             }
@@ -2039,7 +2040,7 @@ namespace Reallusion.Import
         }
 
         private Texture2D BakeThicknessMap(Texture2D thickness,
-            float thicknessScale, Color subsurfaceFalloff, Texture2D baseMap, bool invertMap,
+            float thicknessScaleMin, float thicknessScale, Color subsurfaceFalloff, Texture2D baseMap, bool invertMap,
             string name, string kernelName = "RLThickness")
         {
             Vector2Int maxSize = GetMaxSize(thickness);
@@ -2061,6 +2062,7 @@ namespace Reallusion.Import
                 bakeShader.SetTexture(kernel, "Thickness", thickness);
                 bakeShader.SetTexture(kernel, "BaseMap", baseMap);
                 bakeShader.SetFloat("thicknessScale", thicknessScale);
+                bakeShader.SetFloat("thicknessScaleMin", thicknessScaleMin);
                 bakeShader.SetFloat("invertMap", invertMap ? 1.0f : 0.0f);
                 bakeShader.SetVector("subsurfaceFalloff", subsurfaceFalloff);
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
@@ -2667,7 +2669,7 @@ namespace Reallusion.Import
 
         public Texture2D BakeDefaultSkinThicknessMap(Texture2D thickness, string name)
         {
-            Texture2D bakedThickness = BakeThicknessMap(thickness, 1.0f, Color.white, Texture2D.whiteTexture, true, name);
+            Texture2D bakedThickness = BakeThicknessMap(thickness, 0f, 1.0f, Color.white, Texture2D.whiteTexture, true, name);
             return bakedThickness;
         }
 

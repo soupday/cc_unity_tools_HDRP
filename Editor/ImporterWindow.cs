@@ -672,7 +672,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAnimPlayer, "Show animation preview player."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (WindowManager.showPlayer)
+                if (WindowManager.showPlayer && AnimPlayerGUI.IsPlayerShown())
                 {
                     WindowManager.HideAnimationPlayer(true);                                        
                     ResetAllSceneViewCamera();
@@ -691,7 +691,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAvatarAlign, "Animation Adjustment & Retargeting."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (WindowManager.showRetarget)
+                if (WindowManager.showRetarget && AnimRetargetGUI.IsPlayerShown())
                 {
                     WindowManager.HideAnimationRetargeter(true);                    
                 }
@@ -1053,7 +1053,7 @@ namespace Reallusion.Import
         {
             PreviewScene ps = PreviewScene.GetPreviewScene();
 
-            if (ps.IsValid)
+            if (ps.IsValid) 
             {
                 GameObject obj = ps.GetPreviewCharacter();
                 if (obj)

@@ -710,15 +710,24 @@ namespace Reallusion.Import
 
         public static GameObject FindRootPrefabAssetFromSceneObject(Object sceneObject)
         {
-            Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
-            if (instanceRoot)
+            if (sceneObject)
             {
-                Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(instanceRoot);
-                if (source)
+                Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
+
+                if (!instanceRoot && 
+                    sceneObject.GetType() == typeof(GameObject) &&
+                    PrefabUtility.IsPartOfPrefabAsset(sceneObject)) 
+                    instanceRoot = sceneObject;
+
+                if (instanceRoot)
                 {
-                    if (source.GetType() == typeof(GameObject))
+                    Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(instanceRoot);
+                    if (source)
                     {
-                        return (GameObject)source;
+                        if (source.GetType() == typeof(GameObject))
+                        {
+                            return (GameObject)source;
+                        }
                     }
                 }
             }

@@ -45,7 +45,8 @@ namespace Reallusion.Import
         [MenuItem("Reallusion/Animation Player", true)]
         public static bool ValidateShowAnimationPlayer()
         {
-            return PreviewScene.GetPreviewScene().IsValid && AnimPlayerGUI.IsPlayerShown();
+            //return PreviewScene.GetPreviewScene().IsValid && AnimPlayerGUI.IsPlayerShown();
+            return true;
         }
 
         [MenuItem("Reallusion/Animation Retargeter", priority = 3)]
@@ -99,6 +100,12 @@ namespace Reallusion.Import
         {
             WindowManager.DoSceneViewOrbitTracking();
         }*/
+
+        [MenuItem("Reallusion/Preview Scene Tools/Match Scene Camera", priority = 212)]
+        public static void DoMatchSceneCameraOnce()
+        {
+            WindowManager.DoMatchSceneCameraOnce();
+        }
 
         [MenuItem("Reallusion/Preview Scene Tools/Match Scene Camera (Toggle)", priority = 212)]
         public static void DoMatchSceneCamera()

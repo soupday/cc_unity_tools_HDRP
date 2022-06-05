@@ -64,9 +64,13 @@ namespace Reallusion.Import
 
         [MenuItem("Reallusion/Mesh Tools/Auto Smooth Mesh", priority = 102)]
         private static void DoAutoSmoothMesh()
-        {            
-            if (WindowManager.showPlayer && ImporterWindow.Current) 
+        {
+            bool playerOpen = false;
+            if (WindowManager.showPlayer && AnimPlayerGUI.IsPlayerShown())
+            {
                 WindowManager.HideAnimationPlayer(false);
+                playerOpen = true;
+            }
 
             if (Selection.gameObjects.Length > 1)
                 foreach (GameObject go in Selection.gameObjects)
@@ -74,7 +78,7 @@ namespace Reallusion.Import
             else
                 MeshUtil.AutoSmoothMesh(Selection.activeObject);
 
-            if (WindowManager.showPlayer && ImporterWindow.Current) 
+            if (playerOpen) 
                 WindowManager.ShowAnimationPlayer();
         }
 
