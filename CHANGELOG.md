@@ -3,6 +3,7 @@ Changelog
 
 ### v 1.3.2
 - HDRP12 Single pass hair shader fixes.
+- Skin SSS transmission thickness min-max remap parameters.
 
 ### v 1.3.1
 - Arm Flexion correction added.
