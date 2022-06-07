@@ -1,6 +1,9 @@
 Changelog
 =========
 
+### v 1.3.2
+- HDRP12 Single pass hair shader fixes.
+
 ### v 1.3.1
 - Arm Flexion correction added.
 
