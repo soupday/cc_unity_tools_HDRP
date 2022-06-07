@@ -56,7 +56,11 @@ namespace Reallusion.Import
         public const string SHADER_HQ_EYE = "RL_EyeShaderBasic_Dummy_HDRP"; // Dummy shader (unlit no textures)
         public const string SHADER_HQ_EYE_OCCLUSION = "RL_EyeOcclusionShader_HDRP";
         public const string SHADER_HQ_TEARLINE = "RL_TearlineShader_HDRP";
-        public const string SHADER_HQ_HAIR = "RL_HairShader_Variants_HDRP";        
+#if HDRP_12_0_0_OR_NEWER
+        public const string SHADER_HQ_HAIR = "RL_HairShader_Variants_HDRP12";
+#else
+        public const string SHADER_HQ_HAIR = "RL_HairShader_Variants_HDRP";
+#endif
         public const string SHADER_HQ_SCALPBASE = "HDRP/Lit";
         public const string SHADER_HQ_EYELASH = "HDRP/Lit";
         public const string SHADER_HQ_TEETH = "RL_TeethShader_HDRP";
@@ -81,7 +85,11 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_EYE = "RL_Template_HQ_EyeBasic_Dummy_HDRP";        
         public const string MATERIAL_HQ_EYE_OCCLUSION = "RL_Template_HQ_EyeOcclusion_HDRP";
         public const string MATERIAL_HQ_TEARLINE = "RL_Template_HQ_Tearline_HDRP";
+#if HDRP_12_0_0_OR_NEWER
+        public const string MATERIAL_HQ_HAIR = "RL_Template_HQ_Hair_HDRP12";
+#else
         public const string MATERIAL_HQ_HAIR = "RL_Template_HQ_Hair_HDRP";
+#endif
         public const string MATERIAL_HQ_SCALPBASE = "RL_Template_Default_ScalpBase_HDRP";
         public const string MATERIAL_HQ_EYELASH = "RL_Template_Default_Eyelash_HDRP";
         public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_HDRP";
@@ -137,7 +145,11 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_CORNEA_REFRACTIVE_CUSTOM = "RL_Template_Baked_CorneaRefractiveCustom_HDRP";        
         public const string MATERIAL_BAKED_EYE_REFRACTIVE_CUSTOM = "RL_Template_Baked_EyeRefractiveCustom_HDRP";
         public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_HDRP";
+#if HDRP_12_0_0_OR_NEWER
+        public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_HDRP12";
+#else
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_HDRP";
+#endif        
         public const string MATERIAL_BAKED_HAIR_COVERAGE_CUSTOM = "RL_Template_Baked_HairCustom_HDRP";
         // 2 pass        
         public const string MATERIAL_BAKED_HAIR_1ST_PASS = "RL_Template_Baked_Hair_1st_Pass_HDRP";

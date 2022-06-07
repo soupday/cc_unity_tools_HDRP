@@ -135,6 +135,7 @@ TEX2D(Subsurface);
 float subsurfaceScale;
 TEX2D(Thickness);
 float thicknessScale;
+float thicknessScaleMin;
 float4 subsurfaceFalloff;
 float invertMap;
 
@@ -516,8 +517,9 @@ void RLThickness(uint3 id : SV_DispatchThreadID)
     float2 uv = GetUV(id.xy);
 
     float4 thickness = SAMPLE(Thickness, uv);
-    thickness = lerp(thickness, 1.0 - thickness, invertMap);
-    thickness *= thicknessScale * subsurfaceFalloff * SAMPLE(BaseMap, uv);
+    thickness = lerp(thickness, 1.0 - thickness, invertMap);    
+    thickness = saturate(lerp(thicknessScaleMin, thicknessScale, thickness));
+    thickness *= subsurfaceFalloff * SAMPLE(BaseMap, uv);
     thickness.a = 1.0;
 
     Result[id.xy] = thickness;

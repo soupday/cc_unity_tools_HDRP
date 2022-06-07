@@ -13,6 +13,7 @@ namespace Reallusion.Import
     {
         public static Scene currentScene;
         public static PreviewScene previewScene;
+        public static bool openedInPreviewScene;
         public static bool showPlayer = true;
         public static bool showRetarget = false;
         
@@ -45,7 +46,7 @@ namespace Reallusion.Import
                     AnimPlayerGUI.DestroyPlayer();
                 }
             }
-            else 
+            else if (openedInPreviewScene)
             {
                 if (isPlayerShown)
                 {                    
@@ -127,6 +128,11 @@ namespace Reallusion.Import
             }
         }
 
+        public static void DoMatchSceneCameraOnce()
+        {
+            MatchSceneCameraUpdate();
+        }
+
         public static void DoMatchSceneCamera()
         {
             if (!isMatchSceneViewCamera)
@@ -200,6 +206,28 @@ namespace Reallusion.Import
                 else
                 {
                     AnimPlayerGUI.CreatePlayer(ps, currentCharacterFbx);
+                    openedInPreviewScene = true;
+                }
+
+                if (showRetarget && !AnimRetargetGUI.IsPlayerShown())
+                {
+                    ShowAnimationRetargeter();
+                }
+
+                showPlayer = true;                
+            }
+            else
+            {
+                GameObject currentCharacterFbx = Selection.activeGameObject;                
+
+                if (AnimPlayerGUI.IsPlayerShown())
+                {
+                    AnimPlayerGUI.SetCharacter(ps, currentCharacterFbx);
+                }
+                else
+                {
+                    AnimPlayerGUI.CreatePlayer(ps, currentCharacterFbx);
+                    openedInPreviewScene = false;
                 }
 
                 if (showRetarget && !AnimRetargetGUI.IsPlayerShown())
@@ -226,18 +254,13 @@ namespace Reallusion.Import
         }
 
         public static void ShowAnimationRetargeter()
-        {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-
-            if (ps.IsValid)
+        {            
+            if (AnimPlayerGUI.IsPlayerShown() && !AnimRetargetGUI.IsPlayerShown())
             {
-                if (AnimPlayerGUI.IsPlayerShown() && !AnimRetargetGUI.IsPlayerShown())
-                {
-                    AnimRetargetGUI.CreateRetargeter(GetWorkingAnimation(), GetSceneAnimator()?.gameObject);
-                }
-
-                showRetarget = true;
+                AnimRetargetGUI.CreateRetargeter(GetWorkingAnimation(), GetSceneAnimator()?.gameObject);
             }
+
+            showRetarget = true;
         }
 
         public static void HideAnimationRetargeter(bool updateShowRetarget)

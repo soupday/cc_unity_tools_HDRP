@@ -20,23 +20,21 @@ namespace Reallusion.Import
         public static string sourceFbxPath;
         public static bool AnimFoldOut { get { return animFoldOut; } set { animFoldOut = value; } }
 
-        public static void SetCharacter(PreviewScene ps, GameObject fbx)
-        {            
-            if (ps.IsValid)
+        public static void SetCharacter(PreviewScene ps, GameObject scenePrefab)
+        {
+            if (ps.IsValid && !scenePrefab)
+                scenePrefab = ps.GetPreviewCharacter();        
+
+            if (scenePrefab)
             {
-                GameObject scenePrefab = ps.GetPreviewCharacter();
+                GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
+                sourceFbxPath = AssetDatabase.GetAssetPath(sceneFbx);
+                Animator anim = scenePrefab.GetComponent<Animator>();
+                AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
+                facialProfile = FacialProfileMapper.GetFacialProfile(scenePrefab);
 
-                if (scenePrefab)
-                {
-                    GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
-                    sourceFbxPath = AssetDatabase.GetAssetPath(sceneFbx);
-                    Animator anim = scenePrefab.GetComponent<Animator>();
-                    AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
-                    facialProfile = FacialProfileMapper.GetFacialProfile(scenePrefab);
-
-                    UpdatePlayerTargets(anim, firstClip);
-                }
-            }
+                UpdatePlayerTargets(anim, firstClip);
+            }            
         }
 
         public static void UpdatePlayerTargets(Animator setAnimator, AnimationClip setClip)
@@ -260,7 +258,7 @@ namespace Reallusion.Import
 
         public static void CreatePlayer(PreviewScene ps, GameObject fbx)
         {            
-            if (ps.IsValid)
+            if (fbx)
             {
                 SetCharacter(ps, fbx);
             }
@@ -278,6 +276,7 @@ namespace Reallusion.Import
             SceneView.RepaintAll();
 
             EditorApplication.update += UpdateDelegate;
+            System.Delegate[] list = EditorApplication.update.GetInvocationList();
         }
 
         public static void DestroyPlayer()
