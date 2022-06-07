@@ -22,11 +22,11 @@ namespace Reallusion.Import
 
         public static void SetCharacter(PreviewScene ps, GameObject scenePrefab)
         {
-            if (ps.IsValid && !scenePrefab)
+            if (ps.IsValid)
                 scenePrefab = ps.GetPreviewCharacter();        
 
             if (scenePrefab)
-            {
+            {                
                 GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
                 sourceFbxPath = AssetDatabase.GetAssetPath(sceneFbx);
                 Animator anim = scenePrefab.GetComponent<Animator>();
