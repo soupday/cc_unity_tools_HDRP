@@ -130,7 +130,11 @@ namespace Reallusion.Import
 
         public static void DoMatchSceneCameraOnce()
         {
+            if (isMatchSceneViewCamera) StopMatchSceneCamera();
+
+            isMatchSceneViewCamera = true;
             MatchSceneCameraUpdate();
+            isMatchSceneViewCamera = false;
         }
 
         public static void DoMatchSceneCamera()
