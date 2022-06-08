@@ -7,12 +7,10 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RL_Template_HQ_Hair_HDRP12
-  m_Shader: {fileID: -6465566751694194690, guid: 606401c20e4e4954f9be9608e91cae30,
+  m_Name: RL_Template_HQ_Hair_2nd_Pass_HDRP12
+  m_Shader: {fileID: -6465566751694194690, guid: 2a445bf2b029ab74ebeb883085b60b80,
     type: 3}
   m_ValidKeywords:
-  - _ALPHATEST_ON
-  - _ALPHATOMASK_ON
   - _DISABLE_SSR_TRANSPARENT
   - _DOUBLESIDED_ON
   - _ENABLE_FOG_ON_TRANSPARENT
@@ -24,13 +22,15 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 3000
+  m_CustomRenderQueue: 3001
   stringTagMap:
     MotionVector: User
     RenderType: Transparent
   disabledShaderPasses:
   - RayTracingPrepass
   - MOTIONVECTORS
+  - TransparentDepthPrepass
+  - TransparentDepthPostpass
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -88,13 +88,13 @@ Material:
     - _AOOccludeAll: 0
     - _AOStrength: 1
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.15
-    - _AlphaCutoffEnable: 1
+    - _AlphaClip: 0.05
+    - _AlphaCutoffEnable: 0
     - _AlphaDstBlend: 10
     - _AlphaPower: 1
     - _AlphaRemap: 1
     - _AlphaSrcBlend: 1
-    - _AlphaToMask: 1
+    - _AlphaToMask: 0
     - _AlphaToMaskInspectorValue: 1
     - _BaseColorStrength: 1
     - _BlendMode: 0
@@ -103,15 +103,15 @@ Material:
     - _CullMode: 0
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
-    - _DepthPostpass: 0.2
-    - _DepthPrepass: 0.514
+    - _DepthPostpass: 0
+    - _DepthPrepass: 1
     - _DiffuseStrength: 1
     - _DoubleSidedEnable: 1
     - _DoubleSidedGIMode: 0
     - _DoubleSidedNormalMode: 0
     - _DstBlend: 10
     - _ENUMCLIPQUALITY_ON: 0
-    - _EnableBlendModePreserveSpecularLighting: 0
+    - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
     - _EndColorStrength: 1
     - _FlowMapFlipGreen: 0
@@ -123,7 +123,7 @@ Material:
     - _HighlightBOverlapInvert: 1
     - _HighlightBStrength: 0
     - _InvertRootMap: 0
-    - _NormalStrength: 1
+    - _NormalStrength: 0.013
     - _OpaqueCullMode: 2
     - _ReceivesSSR: 1
     - _ReceivesSSRTransparent: 0
@@ -131,10 +131,10 @@ Material:
     - _RequireSplitLighting: 0
     - _RimTransmissionIntensity: 0.05
     - _RootColorStrength: 1
-    - _SecondarySmoothness: 0.5
+    - _SecondarySmoothness: 0.625
     - _SecondarySpecularMultiplier: 0.05
     - _SecondarySpecularShift: 0.15
-    - _ShadowClip: 0.15
+    - _ShadowClip: 0.5
     - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
     - _SmoothnessPower: 1
@@ -164,16 +164,16 @@ Material:
     - _TessellationShapeFactor: 0.75
     - _TransparentBackfaceEnable: 1
     - _TransparentCullMode: 2
-    - _TransparentDepthPostpassEnable: 1
-    - _TransparentDepthPrepassEnable: 1
-    - _TransparentSortPriority: 0
+    - _TransparentDepthPostpassEnable: 0
+    - _TransparentDepthPrepassEnable: 0
+    - _TransparentSortPriority: 1
     - _TransparentWritingMotionVec: 1
     - _TransparentZWrite: 0
     - _UseShadowThreshold: 1
     - _VertexColorStrength: 0.5
-    - _ZTestDepthEqualForOpaque: 4
-    - _ZTestGBuffer: 3
-    - _ZTestTransparent: 4
+    - _ZTestDepthEqualForOpaque: 2
+    - _ZTestGBuffer: 4
+    - _ZTestTransparent: 2
     - _ZWrite: 0
     m_Colors:
     - _DiffuseColor: {r: 1, g: 1, b: 1, a: 0}

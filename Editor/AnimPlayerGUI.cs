@@ -266,8 +266,7 @@ namespace Reallusion.Import
 #if SCENEVIEW_OVERLAY_COMPATIBLE
             //2021.2.0a17+  When GUI.Window is called from a static SceneView delegate, it is broken in 2021.2.0f1 - 2021.2.1f1
             //so we switch to overlays starting from an earlier version
-            if (AnimPlayerOverlay.exists)
-                AnimPlayerOverlay.createdOverlay.Show();
+            AnimPlayerOverlay.ShowAll();
 #else 
             //2020 LTS            
             AnimPlayerWindow.ShowPlayer();
@@ -284,12 +283,11 @@ namespace Reallusion.Import
             EditorApplication.update -= UpdateDelegate;
 
             if (AnimationMode.InAnimationMode())
-                AnimationMode.StopAnimationMode();            
+                AnimationMode.StopAnimationMode();
 
 #if SCENEVIEW_OVERLAY_COMPATIBLE
             //2021.2.0a17+          
-            if (AnimPlayerOverlay.exists)
-                AnimPlayerOverlay.createdOverlay.Hide();
+            AnimPlayerOverlay.HideAll();
 #else
             //2020 LTS            
             AnimPlayerWindow.HidePlayer();
@@ -307,7 +305,7 @@ namespace Reallusion.Import
         {
 #if SCENEVIEW_OVERLAY_COMPATIBLE
             //2021.2.0a17+
-            return AnimPlayerOverlay.createdOverlay.visible;
+            return AnimPlayerOverlay.Visibility;
 #else
             //2020 LTS            
             return AnimPlayerWindow.isShown;
@@ -759,9 +757,8 @@ namespace Reallusion.Import
 
                     case EventType.MouseUp:
                         {
-                            outlineColor = mouseOverColor;
-                            if (GUIUtility.hotControl == buttonId)
-                                GUIUtility.hotControl = 0;
+                            outlineColor = mouseOverColor;                            
+                            GUIUtility.hotControl = 0;
                         }
                         break;
 

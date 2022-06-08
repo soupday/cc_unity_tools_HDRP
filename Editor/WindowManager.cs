@@ -38,19 +38,19 @@ namespace Reallusion.Import
             if (validPreviewScene) 
             {                
                 if (showPlayer && !isPlayerShown)
-                {                    
-                    AnimPlayerGUI.CreatePlayer(previewScene, ImporterWindow.Current?.Character?.Fbx);
+                {
+                    ShowAnimationPlayer();                    
                 }
                 else if (!showPlayer && isPlayerShown)
-                {                    
-                    AnimPlayerGUI.DestroyPlayer();
+                {
+                    HideAnimationPlayer(false);
                 }
             }
             else if (openedInPreviewScene)
             {
                 if (isPlayerShown)
-                {                    
-                    AnimPlayerGUI.DestroyPlayer();
+                {
+                    HideAnimationPlayer(false);                    
                 }
             }
         }
@@ -130,7 +130,11 @@ namespace Reallusion.Import
 
         public static void DoMatchSceneCameraOnce()
         {
+            if (isMatchSceneViewCamera) StopMatchSceneCamera();
+
+            isMatchSceneViewCamera = true;
             MatchSceneCameraUpdate();
+            isMatchSceneViewCamera = false;
         }
 
         public static void DoMatchSceneCamera()
@@ -257,7 +261,11 @@ namespace Reallusion.Import
         {            
             if (AnimPlayerGUI.IsPlayerShown() && !AnimRetargetGUI.IsPlayerShown())
             {
-                AnimRetargetGUI.CreateRetargeter(GetWorkingAnimation(), GetSceneAnimator()?.gameObject);
+                AnimationClip clip = GetWorkingAnimation();
+                Animator animator = GetSceneAnimator();
+                GameObject model = null;
+                if (animator) model = animator.gameObject;
+                AnimRetargetGUI.CreateRetargeter(clip, model);
             }
 
             showRetarget = true;

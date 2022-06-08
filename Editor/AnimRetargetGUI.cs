@@ -72,13 +72,12 @@ namespace Reallusion.Import
             if (model)
                 animator = model.GetComponent<Animator>();
             else
-                animator = null;            
+                animator = null;
 
 #if SCENEVIEW_OVERLAY_COMPATIBLE
             //2021.2.0a17+  When GUI.Window is called from a static SceneView delegate, it is broken in 2021.2.0f1 - 2021.2.1f1
             //so we switch to overlays starting from an earlier version
-            if (AnimRetargetOverlay.exists)
-                AnimRetargetOverlay.createdOverlay.Show();
+            AnimRetargetOverlay.ShowAll();
 #else
             //2020 LTS            
             AnimRetargetWindow.ShowPlayer();
@@ -99,8 +98,7 @@ namespace Reallusion.Import
 
 #if SCENEVIEW_OVERLAY_COMPATIBLE
             //2021.2.0a17+          
-            if (AnimRetargetOverlay.exists)
-                AnimRetargetOverlay.createdOverlay.Hide();
+            AnimRetargetOverlay.HideAll();
 #else
             //2020 LTS            
             AnimRetargetWindow.HidePlayer();            
@@ -116,7 +114,7 @@ namespace Reallusion.Import
         {
 #if SCENEVIEW_OVERLAY_COMPATIBLE
             //2021.2.0a17+
-            return AnimRetargetOverlay.createdOverlay.visible;
+            return AnimRetargetOverlay.Visibility;
 #else
             //2020 LTS            
             return AnimRetargetWindow.isShown;
