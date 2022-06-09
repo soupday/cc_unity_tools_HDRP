@@ -68,14 +68,12 @@ namespace Reallusion.Import
         }
 
         public override void OnCreated()
-        {
-            Debug.Log("AnimRetargetOverlay::OnCreated()");
+        {            
             createdOverlays.Add(this);
         }
 
         public override void OnWillBeDestroyed()
-        {
-            Debug.Log("AnimRetargetOverlay::OnWillBeDestroyed()");
+        {            
             if (createdOverlays.Contains(this))
             {
                 Hide();

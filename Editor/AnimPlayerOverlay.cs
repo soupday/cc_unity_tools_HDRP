@@ -30,8 +30,7 @@ namespace Reallusion.Import
         
         public static void ShowAll()
         {
-            visibility = true;
-            Debug.Log("AnimPlayerOverlay::ShowAll()");
+            visibility = true;            
             foreach (AnimPlayerOverlay apo in createdOverlays)
             {
                 apo.Show();
@@ -40,8 +39,7 @@ namespace Reallusion.Import
 
         public static void HideAll()
         {
-            visibility = false;
-            Debug.Log("AnimPlayerOverlay::HideAll()");
+            visibility = false;            
             foreach (AnimPlayerOverlay apo in createdOverlays)
             {
                 apo.Hide();
@@ -54,8 +52,7 @@ namespace Reallusion.Import
         }
 
         public void Show()
-        {
-            Debug.Log("AnimPlayerOverlay::Show()");
+        {            
             isVisible = true;
             if (isInToolbar) Undock();
             collapsed = false;            
@@ -66,20 +63,17 @@ namespace Reallusion.Import
         }
 
         public void Hide()
-        {
-            Debug.Log("AnimPlayerOverlay::Hide()");
+        {            
             isVisible = false;
         }
 
         public override void OnCreated()
-        {
-            Debug.Log("AnimPlayerOverlay::OnCreated()");
+        {            
             createdOverlays.Add(this);            
         }
 
         public override void OnWillBeDestroyed()
-        {
-            Debug.Log("AnimPlayerOverlay::OnWillBeDestroyed()");
+        {            
             if (createdOverlays.Contains(this))
             {
                 Hide();
