@@ -116,20 +116,6 @@ namespace Reallusion.Import
             }
         }
 
-        public static void RefreshPlayerClip()
-        {            
-            if (animator && selectedClip)
-            {
-                if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
-
-                animationClip = CloneClip(selectedClip);                
-
-                if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
-
-                SampleOnce();
-            }
-        }
-
         public static void DrawPlayer()
         {            
             GUILayout.BeginVertical();

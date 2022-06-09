@@ -19,6 +19,8 @@ namespace Reallusion.Import
         static Texture2D blendshapeImage;
         static Texture2D saveImage;
         static Texture2D resetImage;
+        static Texture2D unlockedImage;
+        static Texture2D lockedImage;
 
         static float baseControlWidth = 173f;
         static float sliderWidth = 303f;
@@ -35,7 +37,9 @@ namespace Reallusion.Import
         static float yRange = 0.2f; //Raw y input range
 
         // GUI Control variables (Reset to this state)
-        
+
+        static bool holdValues = false;
+
         static int handPose = 0;
         static bool closeMouth = false;
         static float shoulderOffset = 0f;
@@ -130,6 +134,8 @@ namespace Reallusion.Import
             blendshapeImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Masks");
             saveImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Save");
             resetImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Refresh");
+            lockedImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Locked");
+            unlockedImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Unlocked");
 
             Reselect();
             Reset();
@@ -151,19 +157,6 @@ namespace Reallusion.Import
         // Return all values to start - re-create working clip - rebuild all bindings dicts
         static void Reset()
         { 
-            handPose = 0;
-            closeMouth = false;
-            shoulderOffset = 0f;
-            armOffset = 0f;
-            armFBOffset = 0f;
-            backgroundArmOffset = 0f;
-            legOffset = 0f;
-            heelOffset = 0f;
-            heightOffset = 0f;
-
-            //var clone = Object.Instantiate(originalClip);            
-            //workingClip = clone as AnimationClip;
-
             if (workingClip && CanClipLoop(workingClip))
             {
                 AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(workingClip);
@@ -238,6 +231,21 @@ namespace Reallusion.Import
                     }
                 }
             }
+
+            if (!holdValues)
+            {
+                handPose = 0;
+                closeMouth = false;
+                shoulderOffset = 0f;
+                armOffset = 0f;
+                armFBOffset = 0f;
+                backgroundArmOffset = 0f;
+                legOffset = 0f;
+                heelOffset = 0f;
+                heightOffset = 0f;
+            }
+                      
+            OffsetALL();
         }
 
         public static void DrawRetargeter()
@@ -391,14 +399,20 @@ namespace Reallusion.Import
             }
             GUILayout.EndVertical();
             GUILayout.FlexibleSpace();
+            GUILayout.BeginVertical("box");  // hold button
+            if (GUILayout.Button(new GUIContent(holdValues ? lockedImage : unlockedImage, string.Format("STATUS: " + (holdValues ? "LOCKED VALUES : slider settings are retained when animation is changed." : "UNLOCKED VALUES : slider settings are reset when animation is changed."))), GUILayout.Width(smallIconDim), GUILayout.Height(smallIconDim)))
+            {
+                holdValues = !holdValues;
+            }
+            GUILayout.EndVertical();
             GUILayout.BeginVertical("box");  // reset button
             if (GUILayout.Button(new GUIContent(resetImage, "Reset all slider settings and applied modifications."), GUILayout.Width(smallIconDim), GUILayout.Height(smallIconDim)))
             {
-                AnimPlayerGUI.RefreshPlayerClip();
+                holdValues = false;  // reselect will perform a reset - we must force it to reset the values if they are held
                 Reselect();                
                 animator.gameObject.transform.position = animatorPosition;
                 animator.gameObject.transform.rotation = animatorRotation;
-                
+                AnimPlayerGUI.SampleOnce();
             }
             GUILayout.EndVertical();
             GUILayout.BeginVertical("box"); // save button
@@ -542,7 +556,17 @@ namespace Reallusion.Import
             }
         }
 
-
+        static void OffsetALL()
+        {
+            OffsetShoulders();
+            OffsetArms();
+            OffsetArmsFB();
+            OffsetLegs();
+            OffsetHeel();
+            OffsetHeight();
+            CloseMouthToggle(closeMouth);
+            ApplyPose(handPose);            
+        }
         static void OffsetShoulders()
         {
             if (!(originalClip && workingClip)) return;
