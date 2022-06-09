@@ -18,9 +18,9 @@ Material:
   - _ENABLE_FOG_ON_TRANSPARENT
   - _ENUMCLIPQUALITY_ON_STANDARD
   - _SURFACE_TYPE_TRANSPARENT
-  - _TESSELLATION_PHONG
   - _TRANSPARENT_WRITES_MOTION_VEC
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _TESSELLATION_PHONG
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
@@ -154,14 +154,6 @@ Material:
     - _StencilWriteMaskMV: 40
     - _SupportDecals: 1
     - _SurfaceType: 1
-    - _TessellationBackFaceCullEpsilon: -0.25
-    - _TessellationFactor: 0
-    - _TessellationFactorMaxDistance: 50
-    - _TessellationFactorMinDistance: 20
-    - _TessellationFactorTriangleSize: 100
-    - _TessellationMaxDisplacement: 0.01
-    - _TessellationMode: 1
-    - _TessellationShapeFactor: 0.75
     - _TransparentBackfaceEnable: 1
     - _TransparentCullMode: 2
     - _TransparentDepthPostpassEnable: 1

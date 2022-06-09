@@ -36,7 +36,7 @@ namespace Reallusion.Import
         public string folder;                
           
         public bool isLOD = false;
-        public bool bakeIsBaked = false;
+        public bool bakeIsBaked = false;        
 
         // these are the settings the character is currently set to build
         private ProcessingType logType = ProcessingType.None;
@@ -44,6 +44,7 @@ namespace Reallusion.Import
         private HairQuality qualHair = HairQuality.TwoPass;
         private bool bakeCustomShaders = true;
         private bool bakeSeparatePrefab = true;
+        private bool useTessellation = false;
 
         public ProcessingType BuildType { get { return logType; } set { logType = value; } }
         public MaterialQuality BuildQuality
@@ -73,6 +74,7 @@ namespace Reallusion.Import
         public bool DefaultHair { get { return qualHair == HairQuality.Default; } }
         public bool BakeCustomShaders { get { return bakeCustomShaders; } set { bakeCustomShaders = value; } }
         public bool BakeSeparatePrefab { get { return bakeSeparatePrefab; } set { bakeSeparatePrefab = value; } }        
+        public bool UseTessellation { get { return useTessellation; } set { useTessellation = value; } }
 
         // these are the settings the character has been built to.  
         private ProcessingType builtLogType = ProcessingType.None;
@@ -80,6 +82,7 @@ namespace Reallusion.Import
         private HairQuality builtQualHair = HairQuality.TwoPass;
         private bool builtBakeCustomShaders = true;
         private bool builtBakeSeparatePrefab = true;
+        private bool builtTessellation = false;
 
         public bool BuiltBasicMaterials => builtLogType == ProcessingType.Basic;
         public bool BuiltHQMaterials => builtLogType == ProcessingType.HighQuality;
@@ -91,6 +94,7 @@ namespace Reallusion.Import
         public bool BuiltRefractiveEyes => BuiltQualEyes == EyeQuality.Refractive;
         public bool BuiltBasicEyes => BuiltQualEyes == EyeQuality.Basic;
         public bool BuiltParallaxEyes => BuiltQualEyes == EyeQuality.Parallax;
+        public bool BuiltTessellation { get { return builtTessellation; } set { builtTessellation = value; } }
 
         public MaterialQuality BuiltQuality => BuiltHQMaterials ? MaterialQuality.High : MaterialQuality.Default;
         public bool Unprocessed => builtLogType == ProcessingType.None;
@@ -136,6 +140,7 @@ namespace Reallusion.Import
             builtQualHair = qualHair;
             builtBakeCustomShaders = bakeCustomShaders;
             builtBakeSeparatePrefab = bakeSeparatePrefab;
+            builtTessellation = useTessellation;
         }        
 
         public GameObject Fbx

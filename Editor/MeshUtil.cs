@@ -1153,8 +1153,8 @@ namespace Reallusion.Import
                             Material[] sharedMaterials = new Material[2];
                             // - add first pass hair shader material
                             // - add second pass hair shader material
-                            Material firstPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
-                            Material secondPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
+                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
+                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
                             Material firstPass = new Material(firstPassTemplate);
                             Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);
@@ -1182,8 +1182,8 @@ namespace Reallusion.Import
                             // - add first pass hair shader material
                             // - add second pass hair shader material
                             
-                            Material firstPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
-                            Material secondPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
+                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
+                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
                             Material firstPass = new Material(firstPassTemplate);
                             Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);

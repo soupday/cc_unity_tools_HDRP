@@ -336,16 +336,64 @@ namespace Reallusion.Import
             return null;
         }
 
-        public static Material FindAmplifyMaterial(string name, string[] folders = null)
+        public static Material FindCustomMaterial(string name, string[] folders = null)
         {
-            if (Importer.USE_AMPLIFY_SHADER)
+            Material template = null;
+            Material foundTemplate = null;
+            bool foundHDRP12 = false;
+
+            if (Pipeline.isHDRP12)
             {
-                Material amplifyTemplate = FindMaterial(name + "_Amplify", folders);
-                if (amplifyTemplate)
+                string templateName = name + "12";
+                foundTemplate = FindMaterial(templateName, folders);
+                if (foundTemplate)
                 {
-                    return amplifyTemplate;
+                    name = templateName;
+                    template = foundTemplate;
+                    foundHDRP12 = true;
                 }
             }
+
+            if (Importer.USE_AMPLIFY_SHADER)
+            {
+                string templateName = name + "_Amplify";
+                foundTemplate = FindMaterial(templateName, folders);
+                if (foundTemplate)
+                {
+                    name = templateName;
+                    template = foundTemplate;
+                }
+            }
+
+            if (Importer.USE_TESSELLATION_SHADER)
+            {
+                foundTemplate = null;
+
+                if (Pipeline.isHDRP12 && !foundHDRP12)
+                {
+                    string templateName = name + "12_T";
+                    foundTemplate = FindMaterial(templateName, folders);
+                    if (foundTemplate)
+                    {
+                        name = templateName;
+                        template = foundTemplate;
+                        foundHDRP12 = true;
+                    }
+                }
+                
+                if (!foundTemplate)
+                {
+                    string templateName = name + "_T";
+                    foundTemplate = FindMaterial(templateName, folders);
+                    if (foundTemplate)
+                    {
+                        name = templateName;
+                        template = foundTemplate;
+                    }
+                }
+            }
+
+            if (template) return template;
 
             return FindMaterial(name, folders);
         }

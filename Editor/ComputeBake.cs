@@ -583,12 +583,13 @@ namespace Reallusion.Import
             Color diffuseColor = mat.GetColorIf("_DiffuseColor");
             Color emissiveColor = mat.GetColorIf("_EmissiveColor");
             Color subsurfaceFalloff = mat.GetColorIf("_SubsurfaceFalloff");
-            if (IS_HDRP) subsurfaceFalloff = Color.white;
-            if (!IS_HDRP && !Importer.USE_AMPLIFY_SHADER)
-                sssNormalSoften = 0f;
+            if (IS_HDRP) subsurfaceFalloff = Color.white;            
 
             bool isHead = mat.GetFloatIf("BOOLEAN_IS_HEAD") > 0f;
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
+            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
+
+            if (!IS_HDRP && !useAmplify) sssNormalSoften = 0f;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -712,7 +713,7 @@ namespace Reallusion.Import
                 1.0f, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName,
                 Pipeline.GetTemplateMaterial(MaterialType.Skin,
-                            MaterialQuality.Baked, characterInfo, useAmplify));
+                            MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
 
@@ -758,6 +759,7 @@ namespace Reallusion.Import
             if (IS_HDRP) subsurfaceFalloff = Color.white;
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
+            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -819,7 +821,7 @@ namespace Reallusion.Import
                 normalStrength, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName,
                 Pipeline.GetTemplateMaterial(MaterialType.Teeth,
-                            MaterialQuality.Baked, characterInfo, useAmplify));
+                            MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
 
@@ -853,6 +855,7 @@ namespace Reallusion.Import
             if (IS_HDRP) subsurfaceFalloff = Color.white;
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
+            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -916,7 +919,7 @@ namespace Reallusion.Import
                 normalStrength, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName, 
                 Pipeline.GetTemplateMaterial(MaterialType.Tongue, 
-                            MaterialQuality.Baked, characterInfo, useAmplify));
+                            MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
 
@@ -975,6 +978,7 @@ namespace Reallusion.Import
             Color subsurfaceFalloff = mat.GetColorIf("_SubsurfaceFalloff");
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
+            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
 
             Texture2D bakedBaseMap = cornea;
             Texture2D bakedMaskMap = mask;
@@ -1064,7 +1068,7 @@ namespace Reallusion.Import
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 1f, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName, isCornea ? Pipeline.GetTemplateMaterial(MaterialType.Cornea, 
-                                            MaterialQuality.Baked, characterInfo, useAmplify) 
+                                            MaterialQuality.Baked, characterInfo, useAmplify, useTessellation) 
                                      : Pipeline.GetTemplateMaterial(MaterialType.Eye, 
                                             MaterialQuality.Baked, characterInfo));
 
@@ -1174,7 +1178,8 @@ namespace Reallusion.Import
             firstPass = null;
             secondPass = null;
 
-            bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");            
+            bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
+            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -1305,14 +1310,14 @@ namespace Reallusion.Import
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
                         Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS, 
-                            MaterialQuality.Baked, useAmplify));
+                            MaterialQuality.Baked, useAmplify, useTessellation));
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName.Replace("_1st_Pass", "_2nd_Pass"),
                         Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS, 
-                            MaterialQuality.Baked, useAmplify));
+                            MaterialQuality.Baked, useAmplify, useTessellation));
 
                     // multi material pass hair is custom baked shader only:
                     SetCustom(firstPass);
@@ -1326,7 +1331,7 @@ namespace Reallusion.Import
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
                         Pipeline.GetTemplateMaterial(MaterialType.Hair,
-                                    MaterialQuality.Baked, characterInfo, useAmplify));
+                                    MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
                     SetCustom(result);
                     return result;
@@ -1358,13 +1363,13 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify));
+                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName.Replace("_1st_Pass", "_2nd_Pass"),
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify));
+                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
 
                     SetBasic(firstPass);
                     SetBasic(secondPass);
@@ -1413,6 +1418,8 @@ namespace Reallusion.Import
             float expandOuter = mat.GetFloatIf("_ExpandOuter");
             float expandScale = mat.GetFloatIf("_ExpandScale");
 
+            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
+
             Texture2D bakedBaseMap = null;
             Texture2D bakedMaskMap = null;
             Texture2D bakedMetallicGlossMap = null;
@@ -1434,7 +1441,7 @@ namespace Reallusion.Import
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap, 
                 1f, 1f, 1f, Color.black,
                 sourceName, Pipeline.GetTemplateMaterial(MaterialType.EyeOcclusion,
-                                            MaterialQuality.Baked, characterInfo));
+                                            MaterialQuality.Baked, characterInfo, false, useTessellation));
 
             result.SetFloatIf("_ExpandOut", expandOut);
             result.SetFloatIf("_ExpandUpper", expandUpper);

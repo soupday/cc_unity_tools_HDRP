@@ -52,6 +52,18 @@ namespace Reallusion.Import
             ps.lighting = GameObject.Find("Lighting")?.transform;
             ps.scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             ps.camera = GameObject.Find("Main Camera")?.transform;
+            if (!ps.camera)
+            {
+                Camera[] cams = GameObject.FindObjectsOfType<Camera>();
+                foreach (Camera cam in cams)
+                {
+                    if (cam.isActiveAndEnabled)
+                    {
+                        ps.camera = cam.transform;
+                        break;
+                    }                        
+                }
+            }
             return ps;
         }
 

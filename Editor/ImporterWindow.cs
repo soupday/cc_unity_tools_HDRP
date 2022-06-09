@@ -791,6 +791,11 @@ namespace Reallusion.Import
                 "Otherwise subsequent material rebuilds will try to re-use existing bakes. Only needed if the source textures are changed."));
             GUILayout.Space(ROW_SPACE);
 
+            Importer.USE_TESSELLATION_SHADER = GUILayout.Toggle(Importer.USE_TESSELLATION_SHADER,
+                new GUIContent("Use Tessellation in Shaders", "Use tessellation enabled shaders where possible. " +
+                "For HDRP 10 & 11 this means default shaders only (HDRP/LitTessellation). For HDRP 12 (Unity 2021.2+) all shader graph shaders can have tessellation enabled."));
+            GUILayout.Space(ROW_SPACE);            
+
             GUILayout.EndVertical();
 
             GUILayout.FlexibleSpace();
@@ -798,9 +803,6 @@ namespace Reallusion.Import
 
             GUILayout.EndArea();
         }
-
-
-
 
         private void EyeOptionSelected(object sel)
         {            

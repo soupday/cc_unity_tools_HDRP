@@ -74,6 +74,20 @@ namespace Reallusion.Import
                 EditorPrefs.SetBool("RL_Importer_Use_Amplify_Shaders", value);
             }
         }
+        public static bool USE_TESSELLATION_SHADER
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Use_Tessellation_Shaders"))
+                    return EditorPrefs.GetBool("RL_Importer_Use_Tessellation_Shaders");
+                return false;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_Use_Tessellation_Shaders", value);
+            }
+        }
         public static bool RECONSTRUCT_FLOW_NORMALS
         {
             get
@@ -549,7 +563,7 @@ namespace Reallusion.Import
         private Material CreateRemapMaterial(MaterialType materialType, Material sharedMaterial, string sourceName)
         {
             // get the template material.
-            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, characterInfo.BuildQuality, characterInfo, USE_AMPLIFY_SHADER);
+            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, characterInfo.BuildQuality, characterInfo, USE_AMPLIFY_SHADER, USE_TESSELLATION_SHADER);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -616,52 +630,52 @@ namespace Reallusion.Import
         {
             string shaderName = mat.shader.name;            
 
-            if (shaderName.iEndsWith(Pipeline.SHADER_DEFAULT))
+            if (shaderName.iContains(Pipeline.SHADER_DEFAULT))
             {
                 ConnectDefaultMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
             
-            else if (shaderName.iEndsWith(Pipeline.SHADER_DEFAULT_HAIR))
+            else if (shaderName.iContains(Pipeline.SHADER_DEFAULT_HAIR))
             {
                 ConnectDefaultHairMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_SKIN) || 
-                     shaderName.EndsWith(Pipeline.SHADER_HQ_HEAD))
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_SKIN) || 
+                     shaderName.iContains(Pipeline.SHADER_HQ_HEAD))
             {
                 ConnectHQSkinMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_TEETH))
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH))
             {
                 ConnectHQTeethMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_TONGUE))
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_TONGUE))
             {
                 ConnectHQTongueMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_EYE_REFRACTIVE) || 
-                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA) ||
-                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
-                     shaderName.EndsWith(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE))
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_REFRACTIVE) || 
+                     shaderName.iContains(Pipeline.SHADER_HQ_CORNEA) ||
+                     shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
+                     shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE))
             {
                 ConnectHQEyeMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_HAIR) ||
-                     shaderName.EndsWith(Pipeline.SHADER_HQ_HAIR_COVERAGE))
-            {
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR) ||
+                     shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
+            { 
                 ConnectHQHairMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_EYE_OCCLUSION))
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION))
             {
                 ConnectHQEyeOcclusionMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.EndsWith(Pipeline.SHADER_HQ_TEARLINE))
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_TEARLINE))
             {
                 ConnectHQTearlineMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }            
@@ -1573,8 +1587,7 @@ namespace Reallusion.Import
 
             float modelScale = (obj.transform.localScale.x +
                                 obj.transform.localScale.y +
-                                obj.transform.localScale.z) / 3.0f;
-            Debug.Log(modelScale);
+                                obj.transform.localScale.z) / 3.0f;            
             mat.SetFloatIf("_ExpandScale", 1.0f / modelScale);
         }
 
