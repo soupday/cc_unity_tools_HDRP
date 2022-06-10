@@ -20,54 +20,40 @@ namespace Reallusion.Import
         Transform baked;
         Transform camera;
 
+        public bool IsValid { get { return scene.IsValid(); } }                
 
-        public static PreviewScene OpenPreviewScene(GameObject fbx)
-        {
-            if (!fbx) return new PreviewScene();
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return new PreviewScene();
-
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-            GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
-
-            PreviewScene previewScene = GetPreviewScene();
-
-            previewScene.PostProcessingAndLighting();
-
-            previewScene.ShowPreviewCharacter(fbx);            
-
-            return previewScene;
-        }
         public Transform GetCamera()
         {
-            return camera;
-        }
+            if (!camera) camera = GameObject.Find("Main Camera")?.transform;
 
-        public static PreviewScene GetPreviewScene()
-        {
-            PreviewScene ps = new PreviewScene();
-            ps.container = GameObject.Find("Preview Scene Container")?.transform;
-            ps.character = GameObject.Find("Character Container")?.transform;
-            ps.baked = GameObject.Find("Baked Character Container")?.transform;
-            ps.stage = GameObject.Find("Stage")?.transform;
-            ps.lighting = GameObject.Find("Lighting")?.transform;
-            ps.scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-            ps.camera = GameObject.Find("Main Camera")?.transform;
-            if (!ps.camera)
+            if (!camera)
             {
                 Camera[] cams = GameObject.FindObjectsOfType<Camera>();
                 foreach (Camera cam in cams)
                 {
                     if (cam.isActiveAndEnabled)
                     {
-                        ps.camera = cam.transform;
-                        break;
-                    }                        
+                        return cam.transform;
+                    }
                 }
             }
-            return ps;
-        }
 
-        public bool IsValid { get { return scene.IsValid() && container && character && baked && stage && lighting; } }
+            return camera;
+        }        
+
+        public static PreviewScene FetchPreviewScene(Scene scene)
+        {
+            if (!scene.IsValid()) scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            PreviewScene ps = new PreviewScene();
+            ps.scene = scene;
+            ps.container = GameObject.Find("Preview Scene Container")?.transform;
+            ps.character = GameObject.Find("Character Container")?.transform;
+            ps.baked = GameObject.Find("Baked Character Container")?.transform;
+            ps.stage = GameObject.Find("Stage")?.transform;
+            ps.lighting = GameObject.Find("Lighting")?.transform;            
+            ps.camera = GameObject.Find("Main Camera")?.transform;            
+            return ps;
+        }        
 
         public GameObject GetPreviewCharacter()
         {

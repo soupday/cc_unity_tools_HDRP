@@ -20,10 +20,10 @@ namespace Reallusion.Import
         public static string sourceFbxPath;
         public static bool AnimFoldOut { get { return animFoldOut; } set { animFoldOut = value; } }
 
-        public static void SetCharacter(PreviewScene ps, GameObject scenePrefab)
+        public static void SetCharacter(GameObject scenePrefab)
         {
-            if (ps.IsValid)
-                scenePrefab = ps.GetPreviewCharacter();        
+            if (WindowManager.IsPreviewScene)
+                scenePrefab = WindowManager.GetPreviewScene().GetPreviewCharacter();        
 
             if (scenePrefab)
             {                
@@ -243,11 +243,11 @@ namespace Reallusion.Import
             }
         }
 
-        public static void CreatePlayer(PreviewScene ps, GameObject fbx)
+        public static void CreatePlayer(GameObject fbx)
         {
             if (fbx)
             {
-                SetCharacter(ps, fbx);
+                SetCharacter(fbx);
             }
 
 #if SCENEVIEW_OVERLAY_COMPATIBLE

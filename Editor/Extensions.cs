@@ -90,13 +90,13 @@ namespace Reallusion.Import
             return false;
         }
 
-        public static float GetFloatIf(this Material mat, string shaderRef)
+        public static float GetFloatIf(this Material mat, string shaderRef, float defaultValue = 0)
         {
             if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
             {
                 return mat.GetFloat(shaderRef);                
             }
-            return 0f;
+            return defaultValue;
         }
 
         public static bool SetVectorIf(this Material mat, string shaderRef, Vector4 value)
@@ -109,13 +109,13 @@ namespace Reallusion.Import
             return false;
         }
 
-        public static Vector4 GetVectorIf(this Material mat, string shaderRef)
+        public static Vector4 GetVectorIf(this Material mat, string shaderRef, Vector4 defaultValue = default(Vector4))
         {
             if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
             {
                 return mat.GetVector(shaderRef);
             }
-            return Vector4.zero;
+            return defaultValue;
         }
 
         public static bool SetColorIf(this Material mat, string shaderRef, Color value)
@@ -128,13 +128,13 @@ namespace Reallusion.Import
             return false;
         }
 
-        public static Color GetColorIf(this Material mat, string shaderRef)
+        public static Color GetColorIf(this Material mat, string shaderRef, Color defaultValue = default(Color))
         {
             if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
             {
                 return mat.GetColor(shaderRef);
             }
-            return Color.magenta;
+            return defaultValue;
         }
     }
 }

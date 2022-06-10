@@ -12,16 +12,49 @@ namespace Reallusion.Import
     public static class WindowManager
     {
         public static Scene currentScene;
+        public static Scene previewSceneHandle;
         public static PreviewScene previewScene;
         public static bool openedInPreviewScene;
         public static bool showPlayer = true;
-        public static bool showRetarget = false;
+        public static bool showRetarget = false;        
         
         static WindowManager()
         {
             // Even if update is not the most elegant. Using hierarchyWindowChanged for CPU sake will not work in all cases, because when hierarchyWindowChanged is called, Time's values might be all higher than current values. Why? Because current values are set at the first frame. If you keep reloading the same scene, this case happens.
             EditorApplication.update += WindowManager.MonitorScene;             
         }        
+
+        public static PreviewScene OpenPreviewScene(GameObject prefab)
+        {
+            if (!prefab) return default;
+            if (!IsPreviewScene && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return default;
+
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+            GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
+
+            previewSceneHandle = scene;
+            previewScene = PreviewScene.FetchPreviewScene(scene);
+
+            previewScene.PostProcessingAndLighting();
+            previewScene.ShowPreviewCharacter(prefab);
+            
+            return previewScene;
+        }        
+
+        public static bool IsPreviewScene
+        {
+            get { return (EditorSceneManager.GetActiveScene() == previewSceneHandle && previewScene.IsValid); }
+        }
+
+        public static PreviewScene GetPreviewScene()
+        {
+            if (IsPreviewScene)
+            {
+                return previewScene;
+            }
+
+            return default;
+        }
                 
         private static void MonitorScene()
         {
@@ -29,13 +62,12 @@ namespace Reallusion.Import
             if (currentScene != activeScene)
             {
                 currentScene = activeScene;
-                previewScene = PreviewScene.GetPreviewScene();
+                previewScene = GetPreviewScene();
             }
 
-            bool isPlayerShown = AnimPlayerGUI.IsPlayerShown();
-            bool validPreviewScene = previewScene.IsValid;
+            bool isPlayerShown = AnimPlayerGUI.IsPlayerShown();            
 
-            if (validPreviewScene) 
+            if (IsPreviewScene) 
             {                
                 if (showPlayer && !isPlayerShown)
                 {
@@ -151,6 +183,22 @@ namespace Reallusion.Import
             }
         }
 
+        public static void DoSceneToggleOffAll()
+        {
+            if (isMatchSceneViewCamera)
+            {
+                EditorApplication.update -= MatchSceneCameraUpdate;
+                isMatchSceneViewCamera = false;
+            }
+
+            if (isSceneViewOrbit)
+            {                
+                EditorApplication.update -= SceneViewOrbitUpdate;
+                isSceneViewOrbit = false;
+                trackTarget = null;
+            }
+        }
+
         public static void StopMatchSceneCamera()
         {
             if (isSceneViewOrbit)
@@ -194,20 +242,18 @@ namespace Reallusion.Import
         private static Animator sceneAnimator;
          
         public static void ShowAnimationPlayer()
-        {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-
-            if (ps.IsValid)
+        {            
+            if (IsPreviewScene)
             {
-                GameObject currentCharacterFbx = ps.GetPreviewCharacter();
+                GameObject currentCharacterFbx = GetPreviewScene().GetPreviewCharacter();
                 
                 if (AnimPlayerGUI.IsPlayerShown())
                 {
-                    AnimPlayerGUI.SetCharacter(ps, currentCharacterFbx);
+                    AnimPlayerGUI.SetCharacter(currentCharacterFbx);
                 }
                 else 
                 {
-                    AnimPlayerGUI.CreatePlayer(ps, currentCharacterFbx);
+                    AnimPlayerGUI.CreatePlayer(currentCharacterFbx);
                     openedInPreviewScene = true;
                 }
 
@@ -224,11 +270,11 @@ namespace Reallusion.Import
 
                 if (AnimPlayerGUI.IsPlayerShown())
                 {
-                    AnimPlayerGUI.SetCharacter(ps, currentCharacterFbx);
+                    AnimPlayerGUI.SetCharacter(currentCharacterFbx);
                 }
                 else
                 {
-                    AnimPlayerGUI.CreatePlayer(ps, currentCharacterFbx);
+                    AnimPlayerGUI.CreatePlayer(currentCharacterFbx);
                     openedInPreviewScene = false;
                 }
 
