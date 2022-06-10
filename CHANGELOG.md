@@ -3,7 +3,10 @@ Changelog
 
 ### v 1.3.2
 - HDRP12 Single pass hair shader fixes.
+- HDRP12 Tessellation shaders and material templates added.
+- Use Tessellation option added to import settings.
 - Skin SSS transmission thickness min-max remap parameters.
+- Fixes to facial expression retargeter targeting wrong blendshapes in same profile.
 
 ### v 1.3.1
 - Arm Flexion correction added.

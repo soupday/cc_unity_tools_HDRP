@@ -133,10 +133,10 @@ namespace Reallusion.Import
                 animator = (Animator)EditorGUILayout.ObjectField(new GUIContent("Scene Model", "Animated model in scene"), animator, typeof(Animator), true);
                 selectedClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation", "Animation to play and manipulate"), selectedClip, typeof(AnimationClip), false);
                 if (EditorGUI.EndChangeCheck())
-                {
-                    animationClip = CloneClip(selectedClip);                    
-
+                {                    
+                    // set animator first
                     WindowManager.SetSceneAnimator(animator);
+                    animationClip = CloneClip(selectedClip);
 
                     if (animationClip && animator)
                     {
@@ -236,6 +236,7 @@ namespace Reallusion.Import
         {
             if (animator && animationClip)
             {
+                if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
                 AnimationMode.BeginSampling();
                 AnimationMode.SampleAnimationClip(animator.gameObject, animationClip, time);
                 AnimationMode.EndSampling();
@@ -257,7 +258,7 @@ namespace Reallusion.Import
             //2020 LTS            
             AnimPlayerWindow.ShowPlayer();
 #endif
-            //Common
+            //Common            
             SceneView.RepaintAll();
 
             EditorApplication.update += UpdateDelegate;

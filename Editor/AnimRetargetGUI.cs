@@ -137,8 +137,7 @@ namespace Reallusion.Import
             lockedImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Locked");
             unlockedImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Unlocked");
 
-            Reselect();
-            Reset();
+            Reselect();            
         }
 
         public static void Reselect()
