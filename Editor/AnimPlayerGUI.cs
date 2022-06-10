@@ -31,7 +31,7 @@ namespace Reallusion.Import
                 sourceFbxPath = AssetDatabase.GetAssetPath(sceneFbx);
                 Animator anim = scenePrefab.GetComponent<Animator>();
                 AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
-                facialProfile = FacialProfileMapper.GetFacialProfile(scenePrefab);
+                facialProfile = FacialProfileMapper.GetMeshFacialProfile(scenePrefab);
 
                 UpdatePlayerTargets(anim, firstClip);
             }            
@@ -243,7 +243,7 @@ namespace Reallusion.Import
         }
 
         public static void CreatePlayer(PreviewScene ps, GameObject fbx)
-        {            
+        {
             if (fbx)
             {
                 SetCharacter(ps, fbx);
@@ -265,7 +265,7 @@ namespace Reallusion.Import
         }
 
         public static void DestroyPlayer()
-        {            
+        {
             EditorApplication.update -= UpdateDelegate;
 
             if (AnimationMode.InAnimationMode())
@@ -455,9 +455,9 @@ namespace Reallusion.Import
                     jawVal = jawRef;
                 }
 
-                if (!FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink", facialProfile, out blinkRef))
+                if (!FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink", FacialProfile.CC3, facialProfile, out blinkRef))
                 {
-                    FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink_L", facialProfile, out blinkRef);
+                    FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink_L", FacialProfile.CC3, facialProfile, out blinkRef);
                 }
                 blinkVal = blinkRef;                            
             }
@@ -593,7 +593,7 @@ namespace Reallusion.Import
 
                 GUI.DrawTexture(rightSecRowIcon, blinkIconImage);
                 EditorGUI.BeginChangeCheck();
-                blinkVal = GUI.HorizontalSlider(rightSecRowSlider, blinkVal, -30f, 120f);
+                blinkVal = GUI.HorizontalSlider(rightSecRowSlider, blinkVal, -30f, 100f);
                 if (EditorGUI.EndChangeCheck())
                 {
                     AdjustBlink(blinkVal);
@@ -844,16 +844,13 @@ namespace Reallusion.Import
 
             GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);            
 
-            if (!SetCharacterBlendShape(root, "Eye_Blink", input))
-            {
-                SetCharacterBlendShape(root, "Eye_Blink_L", input);
-                SetCharacterBlendShape(root, "Eye_Blink_R", input);
-            }
+            SetCharacterBlendShape(root, "A14_Eye_Blink_Left", input);
+            SetCharacterBlendShape(root, "A15_Eye_Blink_Right", input);            
         }
 
         private static bool SetCharacterBlendShape(GameObject characterRoot, string blendShapeName, float weight)
         {
-            return FacialProfileMapper.SetCharacterBlendShape(characterRoot, blendShapeName, facialProfile, weight);
+            return FacialProfileMapper.SetCharacterBlendShape(characterRoot, blendShapeName, FacialProfile.CC3Ex, facialProfile, weight);
         }        
 
         static void SetFacialExpression(Dictionary<string, float> dict, bool restore = false)

@@ -192,22 +192,20 @@ namespace Reallusion.Import
         private static AnimationClip selectedAnimation;
         private static AnimationClip workingAnimation;
         private static Animator sceneAnimator;
-
+         
         public static void ShowAnimationPlayer()
         {
             PreviewScene ps = PreviewScene.GetPreviewScene();
 
             if (ps.IsValid)
             {
-                GameObject currentCharacterFbx = null;
-                if (ImporterWindow.Current)
-                    currentCharacterFbx = ImporterWindow.Current.Character?.Fbx;
-
+                GameObject currentCharacterFbx = ps.GetPreviewCharacter();
+                
                 if (AnimPlayerGUI.IsPlayerShown())
                 {
                     AnimPlayerGUI.SetCharacter(ps, currentCharacterFbx);
                 }
-                else
+                else 
                 {
                     AnimPlayerGUI.CreatePlayer(ps, currentCharacterFbx);
                     openedInPreviewScene = true;

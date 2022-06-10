@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 namespace Reallusion.Import
 {
     public enum FacialProfile { CC3, CC3Ex, CC4 }
 
     public struct FacialProfileMapping
-    {
+    {        
         public string CC3;
         public string CC3Ex;
         public string CC4;
@@ -49,18 +50,17 @@ namespace Reallusion.Import
             if (to == FacialProfile.CC4) return CC4;
             return null;
         }
-
     }
     
     public static class FacialProfileMapper
     {
         public static List<FacialProfileMapping> facialProfileMaps = new List<FacialProfileMapping>() {
-            //new FacialProfileMapping("", "", ""),
+            //new FacialProfileMapping("", "", ""),            
             new FacialProfileMapping("Brow_Raise_Inner_L/R", "A01_Brow_Inner_Up", "Brow_Raise_Inner_L/R"), // Brow_Raise_Inner_L/R
             new FacialProfileMapping("Brow_Drop_L", "A02_Brow_Down_Left", "Brow_Drop_L"),
             new FacialProfileMapping("Brow_Drop_R", "A03_Brow_Down_Right", "Brow_Drop_R"),
             new FacialProfileMapping("Brow_Raise_Outer_L", "A04_Brow_Outer_Up_Left", "Brow_Raise_Outer_L"),
-            new FacialProfileMapping("Brow_Raise_Outer_R", "A05_Brow_Outer_Up_Right", "Brow_Raise_Outer_R"),            
+            new FacialProfileMapping("Brow_Raise_Outer_R", "A05_Brow_Outer_Up_Right", "Brow_Raise_Outer_R"),
             new FacialProfileMapping("", "A06_Eye_Look_Up_Left", "Eye_L_Look_Up"),
             new FacialProfileMapping("", "A07_Eye_Look_Up_Right", "Eye_R_Look_Up"),
             new FacialProfileMapping("", "A08_Eye_Look_Down_Left", "Eye_L_Look_Down"),
@@ -120,14 +120,57 @@ namespace Reallusion.Import
             new FacialProfileMapping("Lip_Open", "Lip_Open", "V_Lip_Open"),            
         };
 
-        public static Dictionary<string, FacialProfileMapping> cache = new Dictionary<string, FacialProfileMapping>();
-        
+        public static Dictionary<string, FacialProfileMapping> cacheCC3 = new Dictionary<string, FacialProfileMapping>();
+        public static Dictionary<string, FacialProfileMapping> cacheCC3Ex = new Dictionary<string, FacialProfileMapping>();
+        public static Dictionary<string, FacialProfileMapping> cacheCC4 = new Dictionary<string, FacialProfileMapping>();
+
+        public static Dictionary<string, FacialProfileMapping> GetCache(FacialProfile profile)
+        {
+            switch(profile)
+            {
+                case FacialProfile.CC3Ex: return cacheCC3Ex;
+                case FacialProfile.CC4: return cacheCC4;
+                default: return cacheCC3;
+            }
+        }
+
         public static bool HasShape(this Mesh m, string s)
         {
             return (m.GetBlendShapeIndex(s) >= 0);
         }
 
-        public static FacialProfile GetFacialProfile(GameObject prefab)
+        public static FacialProfile GetAnimationClipFacialProfile(AnimationClip clip)
+        {
+            const string blendShapePrefix = "blendShape.";
+            EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
+
+            foreach (EditorCurveBinding binding in curveBindings)
+            {
+                if (binding.propertyName.StartsWith(blendShapePrefix))
+                {
+                    string blendShapeName = binding.propertyName.Substring(blendShapePrefix.Length);
+
+                    switch (blendShapeName)
+                    {
+                        case "A01_Brow_Inner_Up":
+                        case "A06_Eye_Look_Up_Left":
+                        case "A15_Eye_Blink_Right":
+                        case "A25_Jaw_Open":
+                        case "A37_Mouth_Close":
+                            return FacialProfile.CC3Ex;
+                        case "V_Open":
+                        case "V_Wide":
+                        case "Eye_L_Look_L":
+                        case "Eye_R_Look_R":
+                            return FacialProfile.CC4;
+                    }
+                }
+            }
+
+            return FacialProfile.CC3;
+        }
+
+        public static FacialProfile GetMeshFacialProfile(GameObject prefab)
         {
             Mesh mesh = null;           
 
@@ -150,8 +193,6 @@ namespace Reallusion.Import
                             mesh.HasShape("V_Wide") ||
                             mesh.HasShape("Eye_L_Look_L") ||
                             mesh.HasShape("Eye_R_Look_R")) return FacialProfile.CC4;
-
-                        return FacialProfile.CC3;
                     }
                 }
             }
@@ -159,14 +200,16 @@ namespace Reallusion.Import
             return FacialProfile.CC3;
         }
 
-        public static string GetFacialProfileMapping(string blendShapeName, FacialProfile to)
+        public static string GetFacialProfileMapping(string blendShapeName, FacialProfile from, FacialProfile to)
         {
+            Dictionary<string, FacialProfileMapping> cache = GetCache(from);
+
             if (cache.TryGetValue(blendShapeName, out FacialProfileMapping fpm))
                 return fpm.GetMapping(to);
 
             foreach (FacialProfileMapping fpmSearch in facialProfileMaps)
             {
-                if (fpmSearch.HasMapping(blendShapeName))
+                if (fpmSearch.HasMapping(blendShapeName, from))
                 {
                     cache.Add(blendShapeName, fpmSearch);
                     return fpmSearch.GetMapping(to);
@@ -219,13 +262,13 @@ namespace Reallusion.Import
             return multiShapeNames;
         }
 
-        public static bool SetCharacterBlendShape(GameObject root, string shapeName, FacialProfile profile, float weight)
+        public static bool SetCharacterBlendShape(GameObject root, string shapeName, FacialProfile fromProfile, FacialProfile toProfile, float weight)
         {
             bool res = false;
 
             if (root)
             {               
-                string profileShapeName = GetFacialProfileMapping(shapeName, profile);
+                string profileShapeName = GetFacialProfileMapping(shapeName, fromProfile, toProfile);
                 GetMultiShapeNames(profileShapeName);
 
                 for (int i = 0; i < root.transform.childCount; i++)
@@ -254,14 +297,14 @@ namespace Reallusion.Import
             return res;
         }
 
-        public static bool GetCharacterBlendShapeWeight(GameObject root, string shapeName, FacialProfile profile, out float weight)
+        public static bool GetCharacterBlendShapeWeight(GameObject root, string shapeName, FacialProfile fromProfile, FacialProfile toProfile, out float weight)
         {
             weight = 0f;
             int numWeights = 0;
 
             if (root)
             {
-                string profileShapeName = GetFacialProfileMapping(shapeName, profile);
+                string profileShapeName = GetFacialProfileMapping(shapeName, fromProfile, toProfile);
 
                 for (int i = 0; i < root.transform.childCount; i++)
                 {

@@ -989,11 +989,18 @@ namespace Reallusion.Import
         {
             if (!(originalClip && workingClip)) return;
 
-            string blendShape = "blendShape.";
+            const string blendShapePrefix = "blendShape."; 
 
             GameObject targetGameObject = animator.gameObject;
             Transform[] targetAssetData = targetGameObject.GetComponentsInChildren<Transform>();
-            FacialProfile facialProfile = FacialProfileMapper.GetFacialProfile(targetGameObject);
+            FacialProfile meshProfile = FacialProfileMapper.GetMeshFacialProfile(targetGameObject);
+            FacialProfile animProfile = FacialProfileMapper.GetAnimationClipFacialProfile(workingClip);
+            Debug.Log("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile);
+            if (meshProfile != animProfile)
+            {
+                Debug.LogWarning("Warning: Character mesh facial profile does not match the animation facial profile.\n" +
+                                 "Facial expression retargeting may not have the expected or desired results.");
+            }
 
             EditorCurveBinding[] sourceCurveBindings = AnimationUtility.GetCurveBindings(workingClip);
 
@@ -1001,7 +1008,7 @@ namespace Reallusion.Import
             List<string> uniqueSourcePaths = new List<string>();
             foreach (EditorCurveBinding binding in sourceCurveBindings)
             {
-                if (binding.propertyName.StartsWith(blendShape))
+                if (binding.propertyName.StartsWith(blendShapePrefix))
                 {
                     if (!uniqueSourcePaths.Contains(binding.path))
                         uniqueSourcePaths.Add(binding.path);
@@ -1036,22 +1043,28 @@ namespace Reallusion.Import
             Dictionary<string, EditorCurveBinding> cache = new Dictionary<string, EditorCurveBinding>();            
             for (int i = 0; i < sourceCurveBindings.Length; i++)
             {
-                if (sourceCurveBindings[i].propertyName.StartsWith(blendShape))
+                if (sourceCurveBindings[i].propertyName.StartsWith(blendShapePrefix))
                 {
-                    string blendShapeName = sourceCurveBindings[i].propertyName.Substring(blendShape.Length);
-                    string profileBlendShapeName = FacialProfileMapper.GetFacialProfileMapping(blendShapeName, facialProfile);
+                    string blendShapeName = sourceCurveBindings[i].propertyName.Substring(blendShapePrefix.Length);
+                    string profileBlendShapeName = FacialProfileMapper.GetFacialProfileMapping(blendShapeName, animProfile, meshProfile);
                     List<string> multiProfileName = FacialProfileMapper.GetMultiShapeNames(profileBlendShapeName);
                     if (multiProfileName.Count == 1)
                     {
                         if (!cache.ContainsKey(profileBlendShapeName))
+                        {
                             cache.Add(profileBlendShapeName, sourceCurveBindings[i]);
+                            //Debug.Log("Mapping: " + profileBlendShapeName + " to " + blendShapeName);
+                        }
                     }
                     else
                     {
                         foreach (string multiShapeName in multiProfileName)
                         {
                             if (!cache.ContainsKey(multiShapeName))
+                            {
                                 cache.Add(multiShapeName, sourceCurveBindings[i]);
+                                //Debug.Log("Mapping (multi): " + multiShapeName + " to " + blendShapeName);
+                            }
                         }
                     }                    
                 }
@@ -1067,7 +1080,7 @@ namespace Reallusion.Import
                     for (int j = 0; j < smr.sharedMesh.blendShapeCount; j++)
                     {
                         string blendShapeName = smr.sharedMesh.GetBlendShapeName(j);
-                        string targetPropertyName = blendShape + blendShapeName;                        
+                        string targetPropertyName = blendShapePrefix + blendShapeName;                        
 
                         if (cache.TryGetValue(blendShapeName, out EditorCurveBinding sourceCurveBinding))
                         {
@@ -1080,9 +1093,7 @@ namespace Reallusion.Import
                         }
                     }
                 }
-            }
-
-            Debug.Log(logtime);
+            }            
         
             bool PURGE = true;
             // Purge all curves from the animation that dont have a valid path in the target object                    
@@ -1098,9 +1109,9 @@ namespace Reallusion.Import
                     else
                     {
                         // purge all extra blend shape animations
-                        if (targetCurveBindings[k].propertyName.StartsWith(blendShape))
+                        if (targetCurveBindings[k].propertyName.StartsWith(blendShapePrefix))
                         {
-                            string blendShapeName = targetCurveBindings[k].propertyName.Substring(blendShape.Length);
+                            string blendShapeName = targetCurveBindings[k].propertyName.Substring(blendShapePrefix.Length);
                             if (!cache.ContainsKey(blendShapeName))
                             {
                                 AnimationUtility.SetEditorCurve(workingClip, targetCurveBindings[k], null);
