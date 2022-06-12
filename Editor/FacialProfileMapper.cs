@@ -5,7 +5,7 @@ using UnityEditor;
 
 namespace Reallusion.Import
 {
-    public enum FacialProfile { CC3, CC3Ex, CC4 }
+    public enum FacialProfile { None, CC3, CC3Ex, CC4 }
 
     public struct FacialProfileMapping
     {        
@@ -198,6 +198,41 @@ namespace Reallusion.Import
             }
 
             return FacialProfile.CC3;
+        }
+
+        public static FacialProfile MeshHasFacialBlendShapes(GameObject prefab)
+        {
+            bool possibleCC3Profile = false;
+
+            SkinnedMeshRenderer[] renderers = prefab.GetComponentsInChildren<SkinnedMeshRenderer>();
+            foreach (SkinnedMeshRenderer r in renderers)
+            {
+                if (r.sharedMesh)
+                {
+                    Mesh mesh = r.sharedMesh;
+
+                    if (mesh.blendShapeCount > 0)
+                    {
+                        if (mesh.HasShape("A01_Brow_Inner_Up") ||
+                            mesh.HasShape("A06_Eye_Look_Up_Left") ||
+                            mesh.HasShape("A15_Eye_Blink_Right") ||
+                            mesh.HasShape("A25_Jaw_Open") ||
+                            mesh.HasShape("A37_Mouth_Close")) return FacialProfile.CC3Ex;
+
+                        if (mesh.HasShape("V_Open") ||
+                            mesh.HasShape("V_Wide") ||
+                            mesh.HasShape("Eye_L_Look_L") ||
+                            mesh.HasShape("Eye_R_Look_R")) return FacialProfile.CC4;
+
+                        if (mesh.HasShape("Open") ||
+                            mesh.HasShape("Wide") ||
+                            mesh.HasShape("Mouth_Smile") ||
+                            mesh.HasShape("Eye_Blink")) possibleCC3Profile = true;
+                    }
+                }
+            }
+
+            return possibleCC3Profile ? FacialProfile.CC3 : FacialProfile.None;
         }
 
         public static string GetFacialProfileMapping(string blendShapeName, FacialProfile from, FacialProfile to)

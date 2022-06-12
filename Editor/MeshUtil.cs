@@ -1076,6 +1076,7 @@ namespace Reallusion.Import
             foreach (Renderer r in renderers)
             {
                 bool hasHairMaterial = false;
+                bool isFacialObject = FacialProfileMapper.MeshHasFacialBlendShapes(r.gameObject) != FacialProfile.None;
                 int subMeshCount = 0;
                 foreach (Material m in r.sharedMaterials)
                 {
@@ -1101,10 +1102,20 @@ namespace Reallusion.Import
                         {
                             // set alpha clip and remap to values that work better 
                             // with the two material system.
-                            oldMat.SetFloatIf("_AlphaClip", 0.5f);
-                            oldMat.SetFloatIf("_AlphaClip2", 0.5f);
-                            oldMat.SetFloatIf("_AlphaPower", 1.0f);
-                            oldMat.SetFloatIf("_AlphaRemap", 1.0f);
+                            if (isFacialObject)
+                            {
+                                oldMat.SetFloatIf("_AlphaClip", 0.75f);
+                                oldMat.SetFloatIf("_AlphaClip2", 0.75f);
+                                oldMat.SetFloatIf("_AlphaPower", 1.5f);
+                                oldMat.SetFloatIf("_AlphaRemap", 1.0f);
+                            }
+                            else
+                            {
+                                oldMat.SetFloatIf("_AlphaClip", 0.5f);
+                                oldMat.SetFloatIf("_AlphaClip2", 0.5f);
+                                oldMat.SetFloatIf("_AlphaPower", 1.0f);
+                                oldMat.SetFloatIf("_AlphaRemap", 1.0f);
+                            }
                         }
 
                         if (subMeshCount > 1 && oldMat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))

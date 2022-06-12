@@ -948,15 +948,15 @@ namespace Reallusion.Import
         private void ConnectDefaultHairMaterial(GameObject obj, string sourceName, Material sharedMat, 
             Material mat, MaterialType materialType, QuickJSON matJson)
         {
-            bool isHair = sourceName.iContains("hair");
+            //bool isFacialHair = FacialProfileMapper.MeshHasFacialBlendShapes(obj) != FacialProfile.None;
 
             if (!ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Diffuse",
                     matJson, "Textures/Base Color",
-                    FLAG_SRGB + (isHair ? FLAG_HAIR : FLAG_ALPHA_CLIP)))
+                    FLAG_SRGB + FLAG_HAIR))
             {
                 ConnectTextureTo(sourceName, mat, "_BaseColorMap", "Opacity",
                     matJson, "Textures/Opacity",
-                    FLAG_SRGB + (isHair ? FLAG_HAIR : FLAG_ALPHA_CLIP));
+                    FLAG_SRGB + FLAG_HAIR);
             }
 
             ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
@@ -1370,16 +1370,16 @@ namespace Reallusion.Import
 
         private void ConnectHQHairMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
             MaterialType materialType, QuickJSON matJson)
-        {
-            bool isHair = sourceName.iContains("Hair");
+        {            
+            bool isFacialHair = FacialProfileMapper.MeshHasFacialBlendShapes(obj) != FacialProfile.None;
 
             if (!ConnectTextureTo(sourceName, mat, "_DiffuseMap", "Diffuse",
                     matJson, "Textures/Base Color",
-                    FLAG_SRGB + (isHair ? FLAG_HAIR : FLAG_ALPHA_CLIP)))
+                    FLAG_SRGB + FLAG_HAIR))
             {
                 ConnectTextureTo(sourceName, mat, "_DiffuseMap", "Opacity",
                     matJson, "Textures/Opacity",
-                    FLAG_SRGB + (isHair ? FLAG_HAIR : FLAG_ALPHA_CLIP));
+                    FLAG_SRGB + FLAG_HAIR);
             }
 
             ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
@@ -1420,6 +1420,14 @@ namespace Reallusion.Import
             //{                
             //    mat.SetFloatIf("_AlphaRemap", 0.5f);
             //}
+
+            if (isFacialHair)
+            {
+                // make facial hair thinner
+                Debug.Log("FACIAL HAIR: " + mat.name);
+                mat.SetFloatIf("_DepthPrepass", 0.75f);                
+                mat.SetFloatIf("_AlphaPower", 1.25f);
+            }
 
             if (matJson != null)
             {
