@@ -1323,11 +1323,11 @@ namespace Reallusion.Import
                     mat.SetColorIf("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 mat.SetFloatIf("_ColorBlendStrength", 0.5f * matJson.GetFloatValue("Custom Shader/Variable/BlendMap2 Strength"));
                 mat.SetFloatIf("_ShadowRadius", matJson.GetFloatValue("Custom Shader/Variable/Shadow Radius"));
-                mat.SetFloatIf("_ShadowHardness", matJson.GetFloatValue("Custom Shader/Variable/Shadow Hardness"));
+                mat.SetFloatIf("_ShadowHardness", Mathf.Clamp01(matJson.GetFloatValue("Custom Shader/Variable/Shadow Hardness")));
                 float specularScale = matJson.GetFloatValue("Custom Shader/Variable/Specular Scale");
-                mat.SetColorIf("_CornerShadowColor", matJson.GetColorValue("Custom Shader/Variable/Eye Corner Darkness Color"));
-                mat.SetColorIf("_IrisColor", matJson.GetColorValue("Custom Shader/Variable/Iris Color"));
-                mat.SetColorIf("_IrisCloudyColor", matJson.GetColorValue("Custom Shader/Variable/Iris Cloudy Color"));
+                mat.SetColorIf("_CornerShadowColor", Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/Eye Corner Darkness Color")));
+                mat.SetColorIf("_IrisColor", Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/Iris Color")));
+                mat.SetColorIf("_IrisCloudyColor", Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/Iris Cloudy Color")));
 
                 if (characterInfo.RefractiveEyes)
                 {
@@ -1547,7 +1547,8 @@ namespace Reallusion.Import
                 mat.SetFloatIf("_ExpandOuter", 0.005f * matJson.GetFloatValue("Custom Shader/Variable/Outer Corner Offset"));
                 mat.SetFloatIf("_TearDuctPosition", matJson.GetFloatValue("Custom Shader/Variable/Tear Duct Position"));
                 //mat.SetFloat("_TearDuctWidth", 0.05f);
-                mat.SetColorIf("_OcclusionColor", Color.Lerp(matJson.GetColorValue("Custom Shader/Variable/Shadow Color"), Color.black, 0.2f));
+                mat.SetColorIf("_OcclusionColor", Color.Lerp(
+                    Util.sRGBToLinear(matJson.GetColorValue("Custom Shader/Variable/Shadow Color")), Color.black, 0.5f));
 
                 float os1 = matJson.GetFloatValue("Custom Shader/Variable/Shadow Strength");
                 float os2 = matJson.GetFloatValue("Custom Shader/Variable/Shadow2 Strength");

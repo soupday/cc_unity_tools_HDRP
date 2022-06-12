@@ -1086,7 +1086,7 @@ float EyeBlendMask(float radial)
 
 float EyeShadowMask(float radial)
 {
-    return 0.5f * saturate(invLerp(shadowRadius * shadowHardness * scleraScale, shadowRadius * scleraScale, radial));
+    return saturate(invLerp(shadowRadius * shadowHardness * scleraScale, shadowRadius * scleraScale, radial));
 }
 
 
