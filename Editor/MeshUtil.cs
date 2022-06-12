@@ -1081,7 +1081,7 @@ namespace Reallusion.Import
                 foreach (Material m in r.sharedMaterials)
                 {
                     subMeshCount++;
-                    if (m.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                    if (m.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         hasHairMaterial = true;
                 }
 
@@ -1098,7 +1098,7 @@ namespace Reallusion.Import
                     {
                         Material oldMat = r.sharedMaterials[index];
 
-                        if (oldMat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                        if (oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {
                             // set alpha clip and remap to values that work better 
                             // with the two material system.
@@ -1118,7 +1118,7 @@ namespace Reallusion.Import
                             }
                         }
 
-                        if (subMeshCount > 1 && oldMat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                        if (subMeshCount > 1 && oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {                            
                             Debug.Log("Extracting subMesh(" + index.ToString() +  ") from Object: " + oldObj.name);
 
@@ -1170,7 +1170,7 @@ namespace Reallusion.Import
                             subMeshCount--;
                             processCount++;
                         }
-                        else if (subMeshCount == 1 && oldMat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                        else if (subMeshCount == 1 && oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {
                             Debug.Log("Leaving subMesh(" + index.ToString() + ") in Object: " + oldObj.name);
 

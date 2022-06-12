@@ -219,17 +219,23 @@ namespace Reallusion.Import
 
         public static string GetFacialProfileMapping(string blendShapeName, FacialProfile from, FacialProfile to)
         {
+            if (from == FacialProfile.None || to == FacialProfile.None) return blendShapeName;
+
             Dictionary<string, FacialProfileMapping> cache = GetCache(from);
 
             if (cache.TryGetValue(blendShapeName, out FacialProfileMapping fpm))
-                return fpm.GetMapping(to);
+            {
+                string mapping = fpm.GetMapping(to);
+                return string.IsNullOrEmpty(mapping) ? blendShapeName : mapping;
+            }                
 
             foreach (FacialProfileMapping fpmSearch in facialProfileMaps)
             {
                 if (fpmSearch.HasMapping(blendShapeName, from))
                 {
                     cache.Add(blendShapeName, fpmSearch);
-                    return fpmSearch.GetMapping(to);
+                    string mapping = fpmSearch.GetMapping(to);
+                    return string.IsNullOrEmpty(mapping) ? blendShapeName : mapping;
                 }
             }
 
@@ -286,24 +292,28 @@ namespace Reallusion.Import
             if (root)
             {               
                 string profileShapeName = GetFacialProfileMapping(shapeName, fromProfile, toProfile);
-                GetMultiShapeNames(profileShapeName);
 
-                for (int i = 0; i < root.transform.childCount; i++)
+                if (!string.IsNullOrEmpty(profileShapeName))
                 {
-                    GameObject child = root.transform.GetChild(i).gameObject;
-                    SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
-                    if (renderer)
+                    GetMultiShapeNames(profileShapeName);
+
+                    for (int i = 0; i < root.transform.childCount; i++)
                     {
-                        Mesh mesh = renderer.sharedMesh;
-                        if (mesh.blendShapeCount > 0)
+                        GameObject child = root.transform.GetChild(i).gameObject;
+                        SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
+                        if (renderer)
                         {
-                            foreach (string name in multiShapeNames)
+                            Mesh mesh = renderer.sharedMesh;
+                            if (mesh.blendShapeCount > 0)
                             {
-                                int index = mesh.GetBlendShapeIndex(name);
-                                if (index >= 0)
+                                foreach (string name in multiShapeNames)
                                 {
-                                    renderer.SetBlendShapeWeight(index, weight);
-                                    res = true;
+                                    int index = mesh.GetBlendShapeIndex(name);
+                                    if (index >= 0)
+                                    {
+                                        renderer.SetBlendShapeWeight(index, weight);
+                                        res = true;
+                                    }
                                 }
                             }
                         }
@@ -322,22 +332,24 @@ namespace Reallusion.Import
             if (root)
             {
                 string profileShapeName = GetFacialProfileMapping(shapeName, fromProfile, toProfile);
-
-                for (int i = 0; i < root.transform.childCount; i++)
+                if (!string.IsNullOrEmpty(profileShapeName))
                 {
-                    GameObject child = root.transform.GetChild(i).gameObject;
-                    SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
-                    if (renderer)
+                    for (int i = 0; i < root.transform.childCount; i++)
                     {
-                        Mesh mesh = renderer.sharedMesh;
-                        if (mesh.blendShapeCount > 0)
+                        GameObject child = root.transform.GetChild(i).gameObject;
+                        SkinnedMeshRenderer renderer = child.GetComponent<SkinnedMeshRenderer>();
+                        if (renderer)
                         {
-                            int shapeIndexS = mesh.GetBlendShapeIndex(profileShapeName);
-
-                            if (shapeIndexS > 0)
+                            Mesh mesh = renderer.sharedMesh;
+                            if (mesh.blendShapeCount > 0)
                             {
-                                weight = renderer.GetBlendShapeWeight(shapeIndexS);
-                                numWeights++;
+                                int shapeIndexS = mesh.GetBlendShapeIndex(profileShapeName);
+
+                                if (shapeIndexS > 0)
+                                {
+                                    weight = renderer.GetBlendShapeWeight(shapeIndexS);
+                                    numWeights++;
+                                }
                             }
                         }
                     }

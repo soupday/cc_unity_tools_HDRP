@@ -32,7 +32,6 @@ namespace Reallusion.Import
                 Animator anim = scenePrefab.GetComponent<Animator>();
                 AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
                 facialProfile = FacialProfileMapper.GetMeshFacialProfile(scenePrefab);
-
                 UpdatePlayerTargets(anim, firstClip);
             }            
         }
@@ -135,8 +134,11 @@ namespace Reallusion.Import
                 if (EditorGUI.EndChangeCheck())
                 {                    
                     // set animator first
-                    WindowManager.SetSceneAnimator(animator);
+                    WindowManager.SetSceneAnimator(animator);                    
                     animationClip = CloneClip(selectedClip);
+
+                    if (animator) 
+                        facialProfile = FacialProfileMapper.GetMeshFacialProfile(animator.gameObject);
 
                     if (animationClip && animator)
                     {
@@ -146,7 +148,7 @@ namespace Reallusion.Import
                             AnimationMode.StartAnimationMode();
 
                         SampleOnce();
-                        clipManuallySet = true;
+                        clipManuallySet = true;                        
                     }
                     else
                     {

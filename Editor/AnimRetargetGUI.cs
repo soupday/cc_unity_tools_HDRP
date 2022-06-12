@@ -1056,26 +1056,29 @@ namespace Reallusion.Import
                 {
                     string blendShapeName = sourceCurveBindings[i].propertyName.Substring(blendShapePrefix.Length);
                     string profileBlendShapeName = FacialProfileMapper.GetFacialProfileMapping(blendShapeName, animProfile, meshProfile);
-                    List<string> multiProfileName = FacialProfileMapper.GetMultiShapeNames(profileBlendShapeName);
-                    if (multiProfileName.Count == 1)
+                    if (!string.IsNullOrEmpty(profileBlendShapeName))
                     {
-                        if (!cache.ContainsKey(profileBlendShapeName))
+                        List<string> multiProfileName = FacialProfileMapper.GetMultiShapeNames(profileBlendShapeName);
+                        if (multiProfileName.Count == 1)
                         {
-                            cache.Add(profileBlendShapeName, sourceCurveBindings[i]);
-                            //Debug.Log("Mapping: " + profileBlendShapeName + " to " + blendShapeName);
-                        }
-                    }
-                    else
-                    {
-                        foreach (string multiShapeName in multiProfileName)
-                        {
-                            if (!cache.ContainsKey(multiShapeName))
+                            if (!cache.ContainsKey(profileBlendShapeName))
                             {
-                                cache.Add(multiShapeName, sourceCurveBindings[i]);
-                                //Debug.Log("Mapping (multi): " + multiShapeName + " to " + blendShapeName);
+                                cache.Add(profileBlendShapeName, sourceCurveBindings[i]);
+                                //Debug.Log("Mapping: " + profileBlendShapeName + " to " + blendShapeName);
                             }
                         }
-                    }                    
+                        else
+                        {
+                            foreach (string multiShapeName in multiProfileName)
+                            {
+                                if (!cache.ContainsKey(multiShapeName))
+                                {
+                                    cache.Add(multiShapeName, sourceCurveBindings[i]);
+                                    //Debug.Log("Mapping (multi): " + multiShapeName + " to " + blendShapeName);
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
