@@ -66,7 +66,7 @@ namespace Reallusion.Import
         private static void DoAutoSmoothMesh()
         {
             bool playerOpen = false;
-            if (WindowManager.showPlayer && AnimPlayerGUI.IsPlayerShown())
+            if (AnimPlayerGUI.IsPlayerShown())
             {
                 WindowManager.HideAnimationPlayer(false);
                 playerOpen = true;
@@ -1076,7 +1076,7 @@ namespace Reallusion.Import
             foreach (Renderer r in renderers)
             {
                 bool hasHairMaterial = false;
-                bool isFacialObject = FacialProfileMapper.MeshHasFacialBlendShapes(r.gameObject) != FacialProfile.None;
+                bool isFacialObject = FacialProfileMapper.MeshHasFacialBlendShapes(r.gameObject);
                 int subMeshCount = 0;
                 foreach (Material m in r.sharedMaterials)
                 {

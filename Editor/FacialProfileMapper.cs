@@ -143,6 +143,7 @@ namespace Reallusion.Import
         {
             const string blendShapePrefix = "blendShape.";
             EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
+            bool possibleCC3Profile = false;
 
             foreach (EditorCurveBinding binding in curveBindings)
             {
@@ -163,44 +164,20 @@ namespace Reallusion.Import
                         case "Eye_L_Look_L":
                         case "Eye_R_Look_R":
                             return FacialProfile.CC4;
+                        case "Open":
+                        case "Wide":
+                        case "Mouth_Smile":
+                        case "Eye_Blink":
+                            possibleCC3Profile = true;
+                            break;
                     }
                 }
             }
 
-            return FacialProfile.CC3;
+            return possibleCC3Profile ? FacialProfile.CC3 : FacialProfile.None;
         }
 
         public static FacialProfile GetMeshFacialProfile(GameObject prefab)
-        {
-            Mesh mesh = null;           
-
-            SkinnedMeshRenderer[] renderers = prefab.GetComponentsInChildren<SkinnedMeshRenderer>();
-            foreach (SkinnedMeshRenderer r in renderers)
-            {
-                if (r.sharedMesh)
-                {
-                    mesh = r.sharedMesh;                    
-
-                    if (mesh.blendShapeCount > 0)
-                    {
-                        if (mesh.HasShape("A01_Brow_Inner_Up") ||
-                            mesh.HasShape("A06_Eye_Look_Up_Left") ||
-                            mesh.HasShape("A15_Eye_Blink_Right") ||
-                            mesh.HasShape("A25_Jaw_Open") ||
-                            mesh.HasShape("A37_Mouth_Close")) return FacialProfile.CC3Ex;
-
-                        if (mesh.HasShape("V_Open") ||
-                            mesh.HasShape("V_Wide") ||
-                            mesh.HasShape("Eye_L_Look_L") ||
-                            mesh.HasShape("Eye_R_Look_R")) return FacialProfile.CC4;
-                    }
-                }
-            }
-
-            return FacialProfile.CC3;
-        }
-
-        public static FacialProfile MeshHasFacialBlendShapes(GameObject prefab)
         {
             bool possibleCC3Profile = false;
 
@@ -209,7 +186,7 @@ namespace Reallusion.Import
             {
                 if (r.sharedMesh)
                 {
-                    Mesh mesh = r.sharedMesh;
+                    Mesh mesh = r.sharedMesh;                    
 
                     if (mesh.blendShapeCount > 0)
                     {
@@ -233,6 +210,11 @@ namespace Reallusion.Import
             }
 
             return possibleCC3Profile ? FacialProfile.CC3 : FacialProfile.None;
+        }
+
+        public static bool MeshHasFacialBlendShapes(GameObject obj)
+        {
+            return GetMeshFacialProfile(obj) != FacialProfile.None;
         }
 
         public static string GetFacialProfileMapping(string blendShapeName, FacialProfile from, FacialProfile to)

@@ -993,7 +993,17 @@ namespace Reallusion.Import
             GameObject targetGameObject = animator.gameObject;
             Transform[] targetAssetData = targetGameObject.GetComponentsInChildren<Transform>();
             FacialProfile meshProfile = FacialProfileMapper.GetMeshFacialProfile(targetGameObject);
+            if (meshProfile == FacialProfile.None)
+            {
+                Debug.LogWarning("Character has no facial blend shapes!");
+                return;
+            }
             FacialProfile animProfile = FacialProfileMapper.GetAnimationClipFacialProfile(workingClip);
+            if (animProfile == FacialProfile.None)
+            {
+                Debug.LogWarning("Animation has no facial blend shapes!");
+                return;
+            }
             Debug.Log("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile);
             if (meshProfile != animProfile)
             {

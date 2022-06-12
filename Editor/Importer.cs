@@ -89,6 +89,20 @@ namespace Reallusion.Import
                 EditorPrefs.SetBool("RL_Importer_Use_Tessellation_Shaders", value);
             }
         }
+        public static bool ANIMPLAYER_ON_BY_DEFAULT
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Animation_Player_On"))
+                    return EditorPrefs.GetBool("RL_Importer_Animation_Player_On");
+                return true;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_Animation_Player_On", value);
+            }
+        }
         public static bool RECONSTRUCT_FLOW_NORMALS
         {
             get
@@ -1377,7 +1391,7 @@ namespace Reallusion.Import
         private void ConnectHQHairMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
             MaterialType materialType, QuickJSON matJson)
         {            
-            bool isFacialHair = FacialProfileMapper.MeshHasFacialBlendShapes(obj) != FacialProfile.None;
+            bool isFacialHair = FacialProfileMapper.MeshHasFacialBlendShapes(obj);
 
             if (!ConnectTextureTo(sourceName, mat, "_DiffuseMap", "Diffuse",
                     matJson, "Textures/Base Color",

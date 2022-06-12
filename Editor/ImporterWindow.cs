@@ -338,7 +338,9 @@ namespace Reallusion.Import
 
                 WindowManager.OpenPreviewScene(contextCharacter.Fbx);
 
-                if (WindowManager.showPlayer) WindowManager.ShowAnimationPlayer();
+                if (WindowManager.showPlayer) 
+                    WindowManager.ShowAnimationPlayer();
+
                 ResetAllSceneViewCamera();                
             }
             else if (refreshAfterGUI)
@@ -672,7 +674,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAnimPlayer, "Show animation preview player."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (WindowManager.showPlayer && AnimPlayerGUI.IsPlayerShown())
+                if (AnimPlayerGUI.IsPlayerShown())
                 {
                     WindowManager.HideAnimationPlayer(true);                                        
                     ResetAllSceneViewCamera();
@@ -691,13 +693,14 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAvatarAlign, "Animation Adjustment & Retargeting."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (WindowManager.showRetarget && AnimRetargetGUI.IsPlayerShown())
+                if (AnimRetargetGUI.IsPlayerShown())
                 {
                     WindowManager.HideAnimationRetargeter(true);                    
                 }
                 else
                 {
-                    WindowManager.ShowAnimationRetargeter();                    
+                    if (AnimPlayerGUI.IsPlayerShown())
+                        WindowManager.ShowAnimationRetargeter();
                 }
             }
             GUI.enabled = true;
@@ -798,6 +801,10 @@ namespace Reallusion.Import
                 "For HDRP 10 & 11 this means default shaders only (HDRP/LitTessellation). For HDRP 12 (Unity 2021.2+) all shader graph shaders can have tessellation enabled."));
                 GUILayout.Space(ROW_SPACE);
             }
+
+            Importer.ANIMPLAYER_ON_BY_DEFAULT = GUILayout.Toggle(Importer.ANIMPLAYER_ON_BY_DEFAULT,
+                    new GUIContent("Animation Player On", "Always show the animation player when opening the preview scene."));
+            GUILayout.Space(ROW_SPACE);
 
             GUILayout.EndVertical();
 
@@ -989,10 +996,8 @@ namespace Reallusion.Import
             {
                 if (UpdatePreviewCharacter(prefabAsset))
                 {
-                    if (WindowManager.showPlayer)
-                    {
+                    if (WindowManager.showPlayer) 
                         WindowManager.ShowAnimationPlayer();
-                    }
                 }
             }
 

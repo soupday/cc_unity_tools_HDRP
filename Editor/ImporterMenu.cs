@@ -32,7 +32,7 @@ namespace Reallusion.Import
         [MenuItem("Reallusion/Animation Player", priority = 2)]
         public static void ShowAnimationPlayer()
         {
-            if (WindowManager.showPlayer && AnimPlayerGUI.IsPlayerShown())
+            if (AnimPlayerGUI.IsPlayerShown())
             {
                 WindowManager.HideAnimationPlayer(true);
             }
@@ -52,13 +52,14 @@ namespace Reallusion.Import
         [MenuItem("Reallusion/Animation Retargeter", priority = 3)]
         public static void ShowAnimationRetargeter()
         {
-            if (WindowManager.showRetarget)
+            if (AnimRetargetGUI.IsPlayerShown())
             {
                 WindowManager.HideAnimationRetargeter(true);
             }
             else
             {
-                WindowManager.ShowAnimationRetargeter();
+                if (AnimPlayerGUI.IsPlayerShown())
+                    WindowManager.ShowAnimationRetargeter();
             }
         }
 

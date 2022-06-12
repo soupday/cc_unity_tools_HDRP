@@ -21,7 +21,8 @@ namespace Reallusion.Import
         static WindowManager()
         {
             // Even if update is not the most elegant. Using hierarchyWindowChanged for CPU sake will not work in all cases, because when hierarchyWindowChanged is called, Time's values might be all higher than current values. Why? Because current values are set at the first frame. If you keep reloading the same scene, this case happens.
-            EditorApplication.update += WindowManager.MonitorScene;             
+            EditorApplication.update += WindowManager.MonitorScene;
+            showPlayer = Importer.ANIMPLAYER_ON_BY_DEFAULT;
         }        
 
         public static PreviewScene OpenPreviewScene(GameObject prefab)
@@ -257,10 +258,7 @@ namespace Reallusion.Import
                     openedInPreviewScene = true;
                 }
 
-                if (showRetarget && !AnimRetargetGUI.IsPlayerShown())
-                {
-                    ShowAnimationRetargeter();
-                }
+                if (showRetarget) ShowAnimationRetargeter();
 
                 showPlayer = true;                
             }
@@ -278,10 +276,7 @@ namespace Reallusion.Import
                     openedInPreviewScene = false;
                 }
 
-                if (showRetarget && !AnimRetargetGUI.IsPlayerShown())
-                {
-                    ShowAnimationRetargeter();
-                }
+                if (showRetarget) ShowAnimationRetargeter();
 
                 showPlayer = true;
             }
@@ -302,17 +297,20 @@ namespace Reallusion.Import
         }
 
         public static void ShowAnimationRetargeter()
-        {            
-            if (AnimPlayerGUI.IsPlayerShown() && !AnimRetargetGUI.IsPlayerShown())
+        {
+            if (AnimPlayerGUI.IsPlayerShown())
             {
-                AnimationClip clip = GetWorkingAnimation();
-                Animator animator = GetSceneAnimator();
-                GameObject model = null;
-                if (animator) model = animator.gameObject;
-                AnimRetargetGUI.CreateRetargeter(clip, model);
-            }
+                if (!AnimRetargetGUI.IsPlayerShown())
+                {
+                    AnimationClip clip = GetWorkingAnimation();
+                    Animator animator = GetSceneAnimator();
+                    GameObject model = null;
+                    if (animator) model = animator.gameObject;
+                    AnimRetargetGUI.CreateRetargeter(clip, model);
 
-            showRetarget = true;
+                }
+                showRetarget = true;
+            }
         }
 
         public static void HideAnimationRetargeter(bool updateShowRetarget)
