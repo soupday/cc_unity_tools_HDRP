@@ -2,11 +2,12 @@ Changelog
 =========
 
 ### v 1.3.2
-- HDRP12 Single pass hair shader fixes.
+- HDRP12 (Unity 2021.2+) Single pass hair shader fixes.
 - HDRP12 Tessellation shaders and material templates added.
-- Use Tessellation option added to import settings.
-- Skin SSS transmission thickness min-max remap parameters.
-- Fixes to facial expression retargeter targeting wrong blendshapes in same profile.
+- (HDRP Only) Use Tessellation option added to import settings.
+- HDRP Skin SSS transmission thickness min-max remap parameters.
+- Fixes to facial expression retargeter targeting wrong blendshapes for CC3 ExPlus profile.
+- Adjustments to Eye and Eye occlusion colors to more accurately match the coloring in CC3/4.
 
 ### v 1.3.1
 - Arm Flexion correction added.

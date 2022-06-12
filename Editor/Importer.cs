@@ -40,6 +40,7 @@ namespace Reallusion.Import
         private readonly List<string> importAssets = new List<string>();
         private CharacterInfo characterInfo;
         private List<string> processedSourceMaterials;
+        private List<string> doneTextureGUIDS = new List<string>();
         private Dictionary<Material, Texture2D> bakedDetailMaps;
         private Dictionary<Material, Texture2D> bakedThicknessMaps;
         private readonly BaseGeneration generation;
@@ -222,14 +223,14 @@ namespace Reallusion.Import
                 Util.LogInfo("Resetting import settings for correct material generation and reimporting.");
                 AssetDatabase.WriteImportSettingsIfDirty(fbxPath);
                 AssetDatabase.ImportAsset(fbxPath, ImportAssetOptions.ForceUpdate);
-            }            
+            }
 
             // Note: the material setup is split into three passes because,
             //       Unity's asset dependencies can cause re-import loops on *every* texure re-import.
             //       To minimise this, the import is done in three passes, and
             //       any import changes are applied and re-imported after each pass.
             //       So the *worst case* scenario is that the fbx/blend file is only re-imported three
-            //       times, rather than potentially hundreds if caught in a recursive import loop.
+            //       times, rather than potentially hundreds if caught in a recursive import loop.            
 
             // set up import settings in preparation for baking default and/or blender textures.
             ProcessObjectTreePrepass(fbx);
@@ -277,6 +278,8 @@ namespace Reallusion.Import
 
         void ProcessObjectTreeBuildPass(GameObject obj)
         {
+            doneTextureGUIDS.Clear();
+
             int childCount = obj.transform.childCount;
             for (int i = 0; i < childCount; i++) 
             {
@@ -361,7 +364,9 @@ namespace Reallusion.Import
         }
 
         void ProcessObjectTreePrepass(GameObject obj)
-        {             
+        {
+            doneTextureGUIDS.Clear();
+
             int childCount = obj.transform.childCount;
             for (int i = 0; i < childCount; i++)
             {
@@ -417,6 +422,8 @@ namespace Reallusion.Import
 
         void ProcessObjectTreeBakePass(GameObject obj)
         {
+            doneTextureGUIDS.Clear();
+
             int childCount = obj.transform.childCount;
             for (int i = 0; i < childCount; i++)
             {
@@ -775,15 +782,14 @@ namespace Reallusion.Import
             Texture2D metallic = GetTexture(sourceName, "Metallic", matJson, "Textures/Metallic", true);
             Texture2D roughness = GetTexture(sourceName, "Roughness", matJson, "Textures/Roughness", true);
             Texture2D occlusion = GetTexture(sourceName, "ao", matJson, "Textures/AO", true);
-            Texture2D microNormalMask = GetTexture(sourceName, "MicroNMask", matJson, "Custom Shader/Image/MicroNormalMask", true);            
-            SetTextureImport(diffuse, "", FLAG_FOR_BAKE + FLAG_SRGB);
+            Texture2D microNormalMask = GetTexture(sourceName, "MicroNMask", matJson, "Custom Shader/Image/MicroNormalMask", true);
+            if (!DoneTexture(diffuse)) SetTextureImport(diffuse, "", FLAG_FOR_BAKE + FLAG_SRGB);
             // sometimes the opacity texture is the alpha channel of the diffuse...
-            if (opacity != diffuse)
-                SetTextureImport(opacity, "", FLAG_FOR_BAKE);
-            SetTextureImport(metallic, "", FLAG_FOR_BAKE);
-            SetTextureImport(roughness, "", FLAG_FOR_BAKE);
-            SetTextureImport(occlusion, "", FLAG_FOR_BAKE);
-            SetTextureImport(microNormalMask, "", FLAG_FOR_BAKE);
+            if (opacity != diffuse && !DoneTexture(opacity)) SetTextureImport(opacity, "", FLAG_FOR_BAKE);
+            if (!DoneTexture(metallic)) SetTextureImport(metallic, "", FLAG_FOR_BAKE);
+            if (!DoneTexture(roughness)) SetTextureImport(roughness, "", FLAG_FOR_BAKE);
+            if (!DoneTexture(occlusion)) SetTextureImport(occlusion, "", FLAG_FOR_BAKE);
+            if (!DoneTexture(microNormalMask)) SetTextureImport(microNormalMask, "", FLAG_FOR_BAKE);
         }
 
         private void ConnectDefaultMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
@@ -1423,8 +1429,7 @@ namespace Reallusion.Import
 
             if (isFacialHair)
             {
-                // make facial hair thinner
-                Debug.Log("FACIAL HAIR: " + mat.name);
+                // make facial hair thinner                
                 mat.SetFloatIf("_DepthPrepass", 0.75f);                
                 mat.SetFloatIf("_AlphaPower", 1.25f);
             }
@@ -1650,7 +1655,7 @@ namespace Reallusion.Import
             Texture2D tex = GetTextureFrom(jsonTexturePath, sourceName, suffix, out string name, true);
             // make sure to set the correct import settings for 
             // these textures before using them for baking...                        
-            SetTextureImport(tex, name, FLAG_FOR_BAKE);
+            if (!DoneTexture(tex)) SetTextureImport(tex, name, FLAG_FOR_BAKE);
         }
 
         private void BakeDefaultMap(Material sharedMat, string sourceName, string shaderRef, string suffix, QuickJSON jsonData, string jsonPath)
@@ -1821,7 +1826,18 @@ namespace Reallusion.Import
             {
                 if (!importAssets.Contains(path)) importAssets.Add(path);
             }
-        }        
+        }    
+        
+        private bool DoneTexture(Texture2D tex)
+        {
+            string texGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(tex));
+            if (!doneTextureGUIDS.Contains(texGUID))
+            {                
+                doneTextureGUIDS.Add(texGUID);
+                return false;
+            }            
+            return true;
+        }
 
         private bool ConnectTextureTo(string materialName, Material mat, string shaderRef, string suffix, 
                                       QuickJSON jsonData, string jsonPath, int flags = 0)
@@ -1855,7 +1871,7 @@ namespace Reallusion.Import
 
                     Util.LogInfo("        Connected texture: " + tex.name);
 
-                    SetTextureImport(tex, name, flags); 
+                    if (!DoneTexture(tex)) SetTextureImport(tex, name, flags);
                 }
                 else
                 {
