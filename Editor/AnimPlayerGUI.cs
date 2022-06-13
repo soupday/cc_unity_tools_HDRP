@@ -296,8 +296,8 @@ namespace Reallusion.Import
 
         #region FaceMorph
 
-        public static bool FaceFoldOut { get; private set; } = true;        
-        private static bool useLightIcons = false;
+        public static bool FaceFoldOut { get; private set; } = true;
+        public static bool UseLightIcons { get; set; } = false;
         private static bool doOnce = true;
         private static bool doOnceCatchMouse = true;
         private static bool eyeChanged = false;
@@ -348,9 +348,9 @@ namespace Reallusion.Import
             outlineColor = mouseOverColor;
 
             string[] folders = new string[] { "Assets", "Packages" };
-            eyeControlImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Eye_Gry" : "RLIcon_Eye_Blk");
-            jawIconImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Mouth_Gry" : "RLIcon_Mouth_Blk");
-            blinkIconImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Blink_Gry" : "RLIcon_Blink_Blk");
+            eyeControlImage = Util.FindTexture(folders, UseLightIcons ? "RLIcon_Eye_Gry" : "RLIcon_Eye_Blk");
+            jawIconImage = Util.FindTexture(folders, UseLightIcons ? "RLIcon_Mouth_Gry" : "RLIcon_Mouth_Blk");
+            blinkIconImage = Util.FindTexture(folders, UseLightIcons ? "RLIcon_Blink_Gry" : "RLIcon_Blink_Blk");
             faceDefault = Util.FindTexture(folders, "RLIcon_FaceDefault");
             faceAngryImage = Util.FindTexture(folders, "RLIcon_FaceAngry");
             faceDisgust = Util.FindTexture(folders, "RLIcon_FaceDisgust");

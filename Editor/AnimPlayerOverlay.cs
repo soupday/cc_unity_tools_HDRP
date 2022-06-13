@@ -85,7 +85,7 @@ namespace Reallusion.Import
 
         public override void OnGUI()
         {
-            if (!AnimPlayerGUI.useLightIcons) AnimPlayerGUI.useLightIcons = true;
+            if (!AnimPlayerGUI.UseLightIcons) AnimPlayerGUI.UseLightIcons = true;
             AnimPlayerGUI.DrawPlayer();
             AnimPlayerGUI.DrawFacialMorph();
 

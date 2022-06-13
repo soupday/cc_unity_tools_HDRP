@@ -10,52 +10,52 @@ using System.IO;
 
 namespace Reallusion.Import
 {
-    public class AnimRetargetGUI
+    public static class AnimRetargetGUI
     {
         // GUI variables
-        static Texture2D handImage;
-        static Texture2D closedMouthImage;
-        static Texture2D openMouthImage;
-        static Texture2D blendshapeImage;
-        static Texture2D saveImage;
-        static Texture2D resetImage;
-        static Texture2D unlockedImage;
-        static Texture2D lockedImage;
+        private static Texture2D handImage;
+        private static Texture2D closedMouthImage;
+        private static Texture2D openMouthImage;
+        private static Texture2D blendshapeImage;
+        private static Texture2D saveImage;
+        private static Texture2D resetImage;
+        private static Texture2D unlockedImage;
+        private static Texture2D lockedImage;
 
-        static float baseControlWidth = 173f;
-        static float sliderWidth = 303f;
-        static float textWidth = 66f;
-        static float textHeight = 18f;
-        static float largeIconDim = 60f;
-        static float smallIconDim = 30f;
+        private static float baseControlWidth = 173f;
+        private static float sliderWidth = 303f;
+        private static float textWidth = 66f;
+        private static float textHeight = 18f;
+        private static float largeIconDim = 60f;
+        private static float smallIconDim = 30f;
 
-        static float shRange = 30f; // Angular Ranges in degrees
-        static float aRange = 30f;
-        static float lRange = 30f;
-        static float hRange = 30f;
+        private static float shRange = 30f; // Angular Ranges in degrees
+        private static float aRange = 30f;
+        private static float lRange = 30f;
+        private static float hRange = 30f;
 
-        static float yRange = 0.2f; //Raw y input range
+        private static float yRange = 0.2f; //Raw y input range
 
         // GUI Control variables (Reset to this state)
 
-        static bool holdValues = false;
+        private static bool holdValues = false;
 
-        static int handPose = 0;
-        static bool closeMouth = false;
-        static float shoulderOffset = 0f;
-        static float armOffset = 0f;
-        static float armFBOffset = 0f;
-        static float backgroundArmOffset = 0f;
-        static float legOffset = 0f;
-        static float heelOffset = 0f;
-        static float heightOffset = 0f;
+        private static int handPose = 0;
+        private static bool closeMouth = false;
+        private static float shoulderOffset = 0f;
+        private static float armOffset = 0f;
+        private static float armFBOffset = 0f;
+        private static float backgroundArmOffset = 0f;
+        private static float legOffset = 0f;
+        private static float heelOffset = 0f;
+        private static float heightOffset = 0f;
 
-        static AnimationClip OriginalClip => AnimPlayerGUI.OriginalClip;
-        static AnimationClip WorkingClip => AnimPlayerGUI.WorkingClip;
-        static Animator Animator => AnimPlayerGUI.CharacterAnimator;
+        private static AnimationClip OriginalClip => AnimPlayerGUI.OriginalClip;
+        private static AnimationClip WorkingClip => AnimPlayerGUI.WorkingClip;
+        private static Animator Animator => AnimPlayerGUI.CharacterAnimator;
 
-        static Vector3 animatorPosition;
-        static Quaternion animatorRotation;
+        private static Vector3 animatorPosition;
+        private static Quaternion animatorRotation;
 
 
         // Function variables
@@ -63,12 +63,12 @@ namespace Reallusion.Import
         public const string ANIM_FOLDER_NAME = "Animations";
         public const string RETARGET_FOLDER_NAME = "Retargeted";
 
-        static Dictionary<string, EditorCurveBinding> shoulderBindings;
-        static Dictionary<string, EditorCurveBinding> armBindings;
-        static Dictionary<string, EditorCurveBinding> armFBBindings;
-        static Dictionary<string, EditorCurveBinding> legBindings;
-        static Dictionary<string, EditorCurveBinding> heelBindings;
-        static Dictionary<string, EditorCurveBinding> heightBindings;
+        private static Dictionary<string, EditorCurveBinding> shoulderBindings;
+        private static Dictionary<string, EditorCurveBinding> armBindings;
+        private static Dictionary<string, EditorCurveBinding> armFBBindings;
+        private static Dictionary<string, EditorCurveBinding> legBindings;
+        private static Dictionary<string, EditorCurveBinding> heelBindings;
+        private static Dictionary<string, EditorCurveBinding> heightBindings;
 
         public static void OpenRetargeter()//(PreviewScene ps, GameObject fbx)
         {
@@ -1297,11 +1297,8 @@ namespace Reallusion.Import
         const float ftScale = 8f / 360f; // Foot Twist scale
         const float trScale = 4f / 360f; // Toe rotation scale
 
-
-
-
         // Pose Master Data
-        private void ExtractPose()
+        private static void ExtractPose()
         {
             string dictName = "openHandPose";
             string filename = "pose";
@@ -1331,135 +1328,135 @@ namespace Reallusion.Import
 
 
         static Dictionary<string, float> openHandPose = new Dictionary<string, float>()
-    {
-        { "LeftHand.Thumb.1 Stretched", -1.141453f },
-        { "LeftHand.Thumb.Spread", -0.4620222f },
-        { "LeftHand.Thumb.2 Stretched", 0.5442108f },
-        { "LeftHand.Thumb.3 Stretched", 0.4577243f },
-        { "LeftHand.Index.1 Stretched", 0.3184956f },
-        { "LeftHand.Index.Spread", -0.4479268f },
-        { "LeftHand.Index.2 Stretched", 0.2451891f },
-        { "LeftHand.Index.3 Stretched", 0.6176971f },
-        { "LeftHand.Middle.1 Stretched", 0.09830929f },
-        { "LeftHand.Middle.Spread", -0.5679846f },
-        { "LeftHand.Middle.2 Stretched", 0.3699116f },
-        { "LeftHand.Middle.3 Stretched", 0.3705207f },
-        { "LeftHand.Ring.1 Stretched", 0.09632754f },
-        { "LeftHand.Ring.Spread", -0.5876712f },
-        { "LeftHand.Ring.2 Stretched", 0.1289254f },
-        { "LeftHand.Ring.3 Stretched", 0.3732445f },
-        { "LeftHand.Little.1 Stretched", 0.09448492f },
-        { "LeftHand.Little.Spread", -0.4517526f },
-        { "LeftHand.Little.2 Stretched", -0.003889897f },
-        { "LeftHand.Little.3 Stretched", -0.04161567f },
-        { "RightHand.Thumb.1 Stretched", -1.135697f },
-        { "RightHand.Thumb.Spread", -0.4576517f },
-        { "RightHand.Thumb.2 Stretched", 0.5427816f },
-        { "RightHand.Thumb.3 Stretched", 0.4549177f },
-        { "RightHand.Index.1 Stretched", 0.3184868f },
-        { "RightHand.Index.Spread", -0.4478924f },
-        { "RightHand.Index.2 Stretched", 0.2451727f },
-        { "RightHand.Index.3 Stretched", 0.617752f },
-        { "RightHand.Middle.1 Stretched", 0.09830251f },
-        { "RightHand.Middle.Spread", -0.5680417f },
-        { "RightHand.Middle.2 Stretched", 0.3699542f },
-        { "RightHand.Middle.3 Stretched", 0.3705046f },
-        { "RightHand.Ring.1 Stretched", 0.09632745f },
-        { "RightHand.Ring.Spread", -0.5876312f },
-        { "RightHand.Ring.2 Stretched", 0.1288746f },
-        { "RightHand.Ring.3 Stretched", 0.3732805f },
-        { "RightHand.Little.1 Stretched", 0.09454078f },
-        { "RightHand.Little.Spread", -0.4516154f },
-        { "RightHand.Little.2 Stretched", -0.04165318f },
-        { "RightHand.Little.3 Stretched", -0.04163568f },
-    };
+        {
+            { "LeftHand.Thumb.1 Stretched", -1.141453f },
+            { "LeftHand.Thumb.Spread", -0.4620222f },
+            { "LeftHand.Thumb.2 Stretched", 0.5442108f },
+            { "LeftHand.Thumb.3 Stretched", 0.4577243f },
+            { "LeftHand.Index.1 Stretched", 0.3184956f },
+            { "LeftHand.Index.Spread", -0.4479268f },
+            { "LeftHand.Index.2 Stretched", 0.2451891f },
+            { "LeftHand.Index.3 Stretched", 0.6176971f },
+            { "LeftHand.Middle.1 Stretched", 0.09830929f },
+            { "LeftHand.Middle.Spread", -0.5679846f },
+            { "LeftHand.Middle.2 Stretched", 0.3699116f },
+            { "LeftHand.Middle.3 Stretched", 0.3705207f },
+            { "LeftHand.Ring.1 Stretched", 0.09632754f },
+            { "LeftHand.Ring.Spread", -0.5876712f },
+            { "LeftHand.Ring.2 Stretched", 0.1289254f },
+            { "LeftHand.Ring.3 Stretched", 0.3732445f },
+            { "LeftHand.Little.1 Stretched", 0.09448492f },
+            { "LeftHand.Little.Spread", -0.4517526f },
+            { "LeftHand.Little.2 Stretched", -0.003889897f },
+            { "LeftHand.Little.3 Stretched", -0.04161567f },
+            { "RightHand.Thumb.1 Stretched", -1.135697f },
+            { "RightHand.Thumb.Spread", -0.4576517f },
+            { "RightHand.Thumb.2 Stretched", 0.5427816f },
+            { "RightHand.Thumb.3 Stretched", 0.4549177f },
+            { "RightHand.Index.1 Stretched", 0.3184868f },
+            { "RightHand.Index.Spread", -0.4478924f },
+            { "RightHand.Index.2 Stretched", 0.2451727f },
+            { "RightHand.Index.3 Stretched", 0.617752f },
+            { "RightHand.Middle.1 Stretched", 0.09830251f },
+            { "RightHand.Middle.Spread", -0.5680417f },
+            { "RightHand.Middle.2 Stretched", 0.3699542f },
+            { "RightHand.Middle.3 Stretched", 0.3705046f },
+            { "RightHand.Ring.1 Stretched", 0.09632745f },
+            { "RightHand.Ring.Spread", -0.5876312f },
+            { "RightHand.Ring.2 Stretched", 0.1288746f },
+            { "RightHand.Ring.3 Stretched", 0.3732805f },
+            { "RightHand.Little.1 Stretched", 0.09454078f },
+            { "RightHand.Little.Spread", -0.4516154f },
+            { "RightHand.Little.2 Stretched", -0.04165318f },
+            { "RightHand.Little.3 Stretched", -0.04163568f },
+        };
 
         static Dictionary<string, float> closedHandPose = new Dictionary<string, float>()
-    {
-        { "LeftHand.Thumb.1 Stretched", -1.141455f },
-        { "LeftHand.Thumb.Spread", -0.4620211f },
-        { "LeftHand.Thumb.2 Stretched", 0.3974656f },
-        { "LeftHand.Thumb.3 Stretched", -0.0122656f },
-        { "LeftHand.Index.1 Stretched", -0.4441552f },
-        { "LeftHand.Index.Spread", -0.3593751f },
-        { "LeftHand.Index.2 Stretched", -0.8875571f },
-        { "LeftHand.Index.3 Stretched", -0.3460926f },
-        { "LeftHand.Middle.1 Stretched", -0.5940282f },
-        { "LeftHand.Middle.Spread", -0.4824f },
-        { "LeftHand.Middle.2 Stretched", -0.7796204f },
-        { "LeftHand.Middle.3 Stretched", -0.3495999f },
-        { "LeftHand.Ring.1 Stretched", -0.5579048f },
-        { "LeftHand.Ring.Spread", -1.060186f },
-        { "LeftHand.Ring.2 Stretched", -1.001659f },
-        { "LeftHand.Ring.3 Stretched", -0.1538185f },
-        { "LeftHand.Little.1 Stretched", -0.5157003f },
-        { "LeftHand.Little.Spread", -0.5512691f },
-        { "LeftHand.Little.2 Stretched", -0.6109533f },
-        { "LeftHand.Little.3 Stretched", -0.4368959f },
-        { "RightHand.Thumb.1 Stretched", -1.141842f },
-        { "RightHand.Thumb.Spread", -0.4619166f },
-        { "RightHand.Thumb.2 Stretched", 0.3966853f },
-        { "RightHand.Thumb.3 Stretched", -0.01453214f },
-        { "RightHand.Index.1 Stretched", -0.4441575f },
-        { "RightHand.Index.Spread", -0.3588968f },
-        { "RightHand.Index.2 Stretched", -0.887614f },
-        { "RightHand.Index.3 Stretched", -0.3457543f },
-        { "RightHand.Middle.1 Stretched", -0.5940221f },
-        { "RightHand.Middle.Spread", -0.4824342f },
-        { "RightHand.Middle.2 Stretched", -0.7796109f },
-        { "RightHand.Middle.3 Stretched", -0.3495855f },
-        { "RightHand.Ring.1 Stretched", -0.557913f },
-        { "RightHand.Ring.Spread", -1.060112f },
-        { "RightHand.Ring.2 Stretched", -1.001655f },
-        { "RightHand.Ring.3 Stretched", -0.1538157f },
-        { "RightHand.Little.1 Stretched", -0.5156479f },
-        { "RightHand.Little.Spread", -0.5513764f },
-        { "RightHand.Little.2 Stretched", -0.64873f },
-        { "RightHand.Little.3 Stretched", -0.4367864f },
-    };
+        {
+            { "LeftHand.Thumb.1 Stretched", -1.141455f },
+            { "LeftHand.Thumb.Spread", -0.4620211f },
+            { "LeftHand.Thumb.2 Stretched", 0.3974656f },
+            { "LeftHand.Thumb.3 Stretched", -0.0122656f },
+            { "LeftHand.Index.1 Stretched", -0.4441552f },
+            { "LeftHand.Index.Spread", -0.3593751f },
+            { "LeftHand.Index.2 Stretched", -0.8875571f },
+            { "LeftHand.Index.3 Stretched", -0.3460926f },
+            { "LeftHand.Middle.1 Stretched", -0.5940282f },
+            { "LeftHand.Middle.Spread", -0.4824f },
+            { "LeftHand.Middle.2 Stretched", -0.7796204f },
+            { "LeftHand.Middle.3 Stretched", -0.3495999f },
+            { "LeftHand.Ring.1 Stretched", -0.5579048f },
+            { "LeftHand.Ring.Spread", -1.060186f },
+            { "LeftHand.Ring.2 Stretched", -1.001659f },
+            { "LeftHand.Ring.3 Stretched", -0.1538185f },
+            { "LeftHand.Little.1 Stretched", -0.5157003f },
+            { "LeftHand.Little.Spread", -0.5512691f },
+            { "LeftHand.Little.2 Stretched", -0.6109533f },
+            { "LeftHand.Little.3 Stretched", -0.4368959f },
+            { "RightHand.Thumb.1 Stretched", -1.141842f },
+            { "RightHand.Thumb.Spread", -0.4619166f },
+            { "RightHand.Thumb.2 Stretched", 0.3966853f },
+            { "RightHand.Thumb.3 Stretched", -0.01453214f },
+            { "RightHand.Index.1 Stretched", -0.4441575f },
+            { "RightHand.Index.Spread", -0.3588968f },
+            { "RightHand.Index.2 Stretched", -0.887614f },
+            { "RightHand.Index.3 Stretched", -0.3457543f },
+            { "RightHand.Middle.1 Stretched", -0.5940221f },
+            { "RightHand.Middle.Spread", -0.4824342f },
+            { "RightHand.Middle.2 Stretched", -0.7796109f },
+            { "RightHand.Middle.3 Stretched", -0.3495855f },
+            { "RightHand.Ring.1 Stretched", -0.557913f },
+            { "RightHand.Ring.Spread", -1.060112f },
+            { "RightHand.Ring.2 Stretched", -1.001655f },
+            { "RightHand.Ring.3 Stretched", -0.1538157f },
+            { "RightHand.Little.1 Stretched", -0.5156479f },
+            { "RightHand.Little.Spread", -0.5513764f },
+            { "RightHand.Little.2 Stretched", -0.64873f },
+            { "RightHand.Little.3 Stretched", -0.4367864f },
+        };
 
         static string[] handCurves = new string[]
         {
-        "LeftHand.Thumb.1 Stretched",
-        "LeftHand.Thumb.Spread",
-        "LeftHand.Thumb.2 Stretched",
-        "LeftHand.Thumb.3 Stretched",
-        "LeftHand.Index.1 Stretched",
-        "LeftHand.Index.Spread",
-        "LeftHand.Index.2 Stretched",
-        "LeftHand.Index.3 Stretched",
-        "LeftHand.Middle.1 Stretched",
-        "LeftHand.Middle.Spread",
-        "LeftHand.Middle.2 Stretched",
-        "LeftHand.Middle.3 Stretched",
-        "LeftHand.Ring.1 Stretched",
-        "LeftHand.Ring.Spread",
-        "LeftHand.Ring.2 Stretched",
-        "LeftHand.Ring.3 Stretched",
-        "LeftHand.Little.1 Stretched",
-        "LeftHand.Little.Spread",
-        "LeftHand.Little.2 Stretched",
-        "LeftHand.Little.3 Stretched",
-        "RightHand.Thumb.1 Stretched",
-        "RightHand.Thumb.Spread",
-        "RightHand.Thumb.2 Stretched",
-        "RightHand.Thumb.3 Stretched",
-        "RightHand.Index.1 Stretched",
-        "RightHand.Index.Spread",
-        "RightHand.Index.2 Stretched",
-        "RightHand.Index.3 Stretched",
-        "RightHand.Middle.1 Stretched",
-        "RightHand.Middle.Spread",
-        "RightHand.Middle.2 Stretched",
-        "RightHand.Middle.3 Stretched",
-        "RightHand.Ring.1 Stretched",
-        "RightHand.Ring.Spread",
-        "RightHand.Ring.2 Stretched",
-        "RightHand.Ring.3 Stretched",
-        "RightHand.Little.1 Stretched",
-        "RightHand.Little.Spread",
-        "RightHand.Little.2 Stretched",
-        "RightHand.Little.3 Stretched"
+            "LeftHand.Thumb.1 Stretched",
+            "LeftHand.Thumb.Spread",
+            "LeftHand.Thumb.2 Stretched",
+            "LeftHand.Thumb.3 Stretched",
+            "LeftHand.Index.1 Stretched",
+            "LeftHand.Index.Spread",
+            "LeftHand.Index.2 Stretched",
+            "LeftHand.Index.3 Stretched",
+            "LeftHand.Middle.1 Stretched",
+            "LeftHand.Middle.Spread",
+            "LeftHand.Middle.2 Stretched",
+            "LeftHand.Middle.3 Stretched",
+            "LeftHand.Ring.1 Stretched",
+            "LeftHand.Ring.Spread",
+            "LeftHand.Ring.2 Stretched",
+            "LeftHand.Ring.3 Stretched",
+            "LeftHand.Little.1 Stretched",
+            "LeftHand.Little.Spread",
+            "LeftHand.Little.2 Stretched",
+            "LeftHand.Little.3 Stretched",
+            "RightHand.Thumb.1 Stretched",
+            "RightHand.Thumb.Spread",
+            "RightHand.Thumb.2 Stretched",
+            "RightHand.Thumb.3 Stretched",
+            "RightHand.Index.1 Stretched",
+            "RightHand.Index.Spread",
+            "RightHand.Index.2 Stretched",
+            "RightHand.Index.3 Stretched",
+            "RightHand.Middle.1 Stretched",
+            "RightHand.Middle.Spread",
+            "RightHand.Middle.2 Stretched",
+            "RightHand.Middle.3 Stretched",
+            "RightHand.Ring.1 Stretched",
+            "RightHand.Ring.Spread",
+            "RightHand.Ring.2 Stretched",
+            "RightHand.Ring.3 Stretched",
+            "RightHand.Little.1 Stretched",
+            "RightHand.Little.Spread",
+            "RightHand.Little.2 Stretched",
+            "RightHand.Little.3 Stretched"
         };
     }
 }
