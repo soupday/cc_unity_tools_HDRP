@@ -412,7 +412,7 @@ namespace Reallusion.Import
             doneInitFace = true;
         }
 
-        public static void ResetFace(bool full = false)
+        public static void ResetFace(bool update = true, bool full = false)
         {
             SetNeutralExpression();
             if (full)
@@ -428,7 +428,7 @@ namespace Reallusion.Import
             AdjustMouth(jawVal);
             blinkVal = blinkRef;
             AdjustBlink(blinkVal);
-            forceUpdate = true;
+            forceUpdate = update;
         }
 
         public static void ApplyFace()
@@ -547,7 +547,7 @@ namespace Reallusion.Import
 
                 if (GUI.Button(rightRefreshButton, new GUIContent(EditorGUIUtility.IconContent("Refresh").image, "Reset Face and View")))
                 {
-                    ResetFace(true);
+                    ResetFace(true, true);
 
                     // double click test
                     if (resetClickTimer > 0f && (EditorApplication.timeSinceStartup - resetClickTimer < 0.5f))
@@ -573,38 +573,38 @@ namespace Reallusion.Import
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceAngryImage, "Angry Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
+                    ResetFace(false);
                     SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_ANGRY : FACE_ANGRY_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceDisgust, "Disgusted Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
+                    ResetFace(false);
                     SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_DISGUST : FACE_DISGUST_EXT);
 
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceFear, "Fearful Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
+                    ResetFace(false);
                     SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_FEAR : FACE_FEAR_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceHappy, "Happy Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
+                    ResetFace(false);
                     SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_HAPPY : FACE_HAPPY_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceSad, "Sad Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
+                    ResetFace(false);
                     SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_SAD : FACE_SAD_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceSurprise, "Surprised Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
+                    ResetFace(false);
                     SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_SURPRISE : FACE_SURPRISE_EXT);
                 }
                 GUILayout.FlexibleSpace();
