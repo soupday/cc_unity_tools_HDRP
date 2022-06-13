@@ -110,7 +110,7 @@ namespace Reallusion.Import
             OriginalClip = clip;
             WorkingClip = CloneClip(OriginalClip);
 
-            AnimRetargetGUI.Reset();
+            AnimRetargetGUI.RebuildClip();
 
             MeshFacialProfile = FacialProfileMapper.GetMeshFacialProfile(animator ? animator.gameObject : null);
             ClipFacialProfile = FacialProfileMapper.GetAnimationClipFacialProfile(clip);
@@ -130,7 +130,15 @@ namespace Reallusion.Import
             ApplyFace();
         }
 
-        static AnimationClip CloneClip(AnimationClip clip)
+        public static void ReCloneClip()
+        {
+            WorkingClip = CloneClip(OriginalClip);
+
+            time = 0f;
+            play = false;            
+        }
+
+        private static AnimationClip CloneClip(AnimationClip clip)
         {
             if (clip)
             {
@@ -402,9 +410,13 @@ namespace Reallusion.Import
                     jawVal = jawRef;
                 }
 
-                if (!FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink", FacialProfile.CC3, MeshFacialProfile, out blinkRef))
+                if (!FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink", 
+                    new FacialProfile(ExpressionProfile.Std, VisemeProfile.None), 
+                    MeshFacialProfile, out blinkRef))
                 {
-                    FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink_L", FacialProfile.CC3, MeshFacialProfile, out blinkRef);
+                    FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink_L",
+                        new FacialProfile(ExpressionProfile.Std, VisemeProfile.None),
+                        MeshFacialProfile, out blinkRef);
                 }
                 blinkVal = blinkRef;                            
             }
@@ -574,38 +586,38 @@ namespace Reallusion.Import
                 if (GUILayout.Button(new GUIContent(faceAngryImage, "Angry Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace(false);
-                    SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_ANGRY : FACE_ANGRY_EXT);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_ANGRY : FACE_ANGRY_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceDisgust, "Disgusted Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace(false);
-                    SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_DISGUST : FACE_DISGUST_EXT);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_DISGUST : FACE_DISGUST_EXT);
 
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceFear, "Fearful Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace(false);
-                    SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_FEAR : FACE_FEAR_EXT);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_FEAR : FACE_FEAR_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceHappy, "Happy Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace(false);
-                    SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_HAPPY : FACE_HAPPY_EXT);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_HAPPY : FACE_HAPPY_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceSad, "Sad Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace(false);
-                    SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_SAD : FACE_SAD_EXT);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_SAD : FACE_SAD_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceSurprise, "Surprised Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
                     ResetFace(false);
-                    SetFacialExpression(MeshFacialProfile == FacialProfile.CC3 ? FACE_SURPRISE : FACE_SURPRISE_EXT);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_SURPRISE : FACE_SURPRISE_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
@@ -796,7 +808,9 @@ namespace Reallusion.Import
 
         private static bool SetCharacterBlendShape(GameObject characterRoot, string blendShapeName, float weight)
         {
-            return FacialProfileMapper.SetCharacterBlendShape(characterRoot, blendShapeName, FacialProfile.CC3Ex, MeshFacialProfile, weight);
+            return FacialProfileMapper.SetCharacterBlendShape(characterRoot, blendShapeName, 
+                new FacialProfile(ExpressionProfile.ExPlus, VisemeProfile.None),
+                MeshFacialProfile, weight);
         }        
 
         static void SetFacialExpression(Dictionary<string, float> dict, bool restore = false)
