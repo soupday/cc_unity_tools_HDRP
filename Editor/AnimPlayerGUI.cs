@@ -110,6 +110,8 @@ namespace Reallusion.Import
             OriginalClip = clip;
             WorkingClip = CloneClip(OriginalClip);
 
+            AnimRetargetGUI.Reset();
+
             MeshFacialProfile = FacialProfileMapper.GetMeshFacialProfile(animator?.gameObject);
             ClipFacialProfile = FacialProfileMapper.GetAnimationClipFacialProfile(clip);
             
@@ -134,11 +136,7 @@ namespace Reallusion.Import
             {
                 var clone = Object.Instantiate(clip);
                 clone.name = clip.name;
-                AnimationClip clonedClip = clone as AnimationClip;
-                if (AnimRetargetGUI.IsPlayerShown())
-                {
-                    AnimRetargetGUI.Reset();
-                }
+                AnimationClip clonedClip = clone as AnimationClip;                
 
                 return clonedClip;
             }
