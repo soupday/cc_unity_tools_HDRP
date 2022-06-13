@@ -1441,12 +1441,15 @@ namespace Reallusion.Import
             //    mat.SetFloatIf("_AlphaRemap", 0.5f);
             //}
 
+            float smoothnessPowerMod = 0.667f;
             if (isFacialHair)
             {
-                // make facial hair thinner                
+                // make facial hair thinner and rougher           
                 mat.SetFloatIf("_DepthPrepass", 0.75f);                
                 mat.SetFloatIf("_AlphaPower", 1.25f);
-            }
+                mat.SetFloatIf("_SmoothnessPower", 1.5f);
+                smoothnessPowerMod = 0.333f;
+            }            
 
             if (matJson != null)
             {
@@ -1480,7 +1483,7 @@ namespace Reallusion.Import
                 float specStrength = matJson.GetFloatValue("Custom Shader/Variable/Specular Strength");
                 float specStrength2 = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");
                 float rimTransmission = matJson.GetFloatValue("Custom Shader/Variable/Transmission Strength");
-                float smoothnessStrength = 1f - matJson.GetFloatValue("Custom Shader/Variable/Hair Roughness Map Strength");
+                float smoothnessStrength = 1f - Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/Hair Roughness Map Strength"), smoothnessPowerMod);
                 if (RP == RenderPipeline.HDRP)
                 {
                     float secondarySpecStrength = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");                    
@@ -1488,7 +1491,7 @@ namespace Reallusion.Import
                     // set by template
                     //mat.SetFloatIf("_SecondarySmoothness", 0.5f);
                     mat.SetFloatIf("_SpecularMultiplier", specMapStrength * specStrength);
-                    mat.SetFloatIf("_SecondarySpecularMultiplier", 0.65f * specMapStrength * specStrength2);
+                    mat.SetFloatIf("_SecondarySpecularMultiplier", specMapStrength * specStrength2);
                     mat.SetFloatIf("_RimTransmissionIntensity", 2f * rimTransmission);
                     mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                         matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));

@@ -112,7 +112,7 @@ namespace Reallusion.Import
 
             AnimRetargetGUI.Reset();
 
-            MeshFacialProfile = FacialProfileMapper.GetMeshFacialProfile(animator?.gameObject);
+            MeshFacialProfile = FacialProfileMapper.GetMeshFacialProfile(animator ? animator.gameObject : null);
             ClipFacialProfile = FacialProfileMapper.GetAnimationClipFacialProfile(clip);
             
             time = 0f;

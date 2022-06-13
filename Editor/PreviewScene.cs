@@ -25,7 +25,12 @@ namespace Reallusion.Import
 
         public Transform GetCamera()
         {
-            if (!camera) camera = GameObject.Find("Main Camera")?.transform;
+            if (!camera)
+            {
+                GameObject cameraObject = GameObject.Find("Main Camera");
+                if (cameraObject)
+                    camera = cameraObject.transform;
+            }
 
             if (!camera)
             {
