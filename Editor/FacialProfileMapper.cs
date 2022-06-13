@@ -141,6 +141,8 @@ namespace Reallusion.Import
 
         public static FacialProfile GetAnimationClipFacialProfile(AnimationClip clip)
         {
+            if (!clip) return FacialProfile.None;
+
             const string blendShapePrefix = "blendShape.";
             EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
             bool possibleCC3Profile = false;
@@ -179,6 +181,8 @@ namespace Reallusion.Import
 
         public static FacialProfile GetMeshFacialProfile(GameObject prefab)
         {
+            if (!prefab) return FacialProfile.None;
+
             bool possibleCC3Profile = false;
 
             SkinnedMeshRenderer[] renderers = prefab.GetComponentsInChildren<SkinnedMeshRenderer>();

@@ -393,6 +393,12 @@ namespace Reallusion.Import
                         else if (info.BuiltHQMaterials) iconTexture = iconHQ;
                     }
 
+                    Color background = GUI.backgroundColor;
+                    Color tint = background;
+                    if (contextCharacter == info) 
+                        tint = Color.green;
+                    GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
+
                     if (GUILayout.Button(iconTexture,                        
                         GUILayout.Width(ICON_SIZE),
                         GUILayout.Height(ICON_SIZE))) 
@@ -403,6 +409,8 @@ namespace Reallusion.Import
                             previewCharacterAfterGUI = true;
                         }
                     }
+
+                    GUI.backgroundColor = background;
                     
                     GUILayout.FlexibleSpace();                    
                     GUILayout.EndHorizontal();
@@ -1043,7 +1051,7 @@ namespace Reallusion.Import
                 GameObject obj = WindowManager.GetPreviewScene().GetPreviewCharacter();
                 if (obj)
                 {
-                    GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+                    GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
                     if (root)
                     {

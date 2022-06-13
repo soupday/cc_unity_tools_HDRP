@@ -238,8 +238,8 @@ namespace Reallusion.Import
 
             if (replaced) 
             {                
-                GameObject prefabAsset = Util.FindPrefabAssetFromSceneObject(obj);
-                GameObject sceneRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+                GameObject prefabAsset = Util.FindRootPrefabAssetFromSceneObject(obj);
+                GameObject sceneRoot = Util.GetScenePrefabInstanceRoot(obj);
                 string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);
                 Debug.Log(prefabPath);
                 // this doesn't work...
@@ -257,7 +257,7 @@ namespace Reallusion.Import
         {
             if (!obj) return;
 
-            GameObject sceneRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject sceneRoot = Util.GetScenePrefabInstanceRoot(obj);
             GameObject asset = PrefabUtility.GetCorrespondingObjectFromSource(sceneRoot);
             Object srcObj = PrefabUtility.GetCorrespondingObjectFromSource(obj);
             Mesh srcMesh = GetMeshFrom(srcObj);
@@ -538,7 +538,7 @@ namespace Reallusion.Import
         {
             if (!obj) return;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -600,7 +600,7 @@ namespace Reallusion.Import
         {
             if (!obj) return;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -650,7 +650,7 @@ namespace Reallusion.Import
         {
             if (!obj) return;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {

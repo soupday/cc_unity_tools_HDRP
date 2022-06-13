@@ -20,7 +20,8 @@ namespace Reallusion.Import
         Transform baked;
         Transform camera;
 
-        public bool IsValid { get { return scene.IsValid(); } }                
+        public bool IsValidPreviewScene { get { return scene.IsValid() && container && stage && lighting && character; } }
+        public Scene SceneHandle { get { return scene; } }
 
         public Transform GetCamera()
         {

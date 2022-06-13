@@ -724,12 +724,28 @@ namespace Reallusion.Import
             return (mainPrefab || bakedPrefab);
         }
 
-        public static GameObject FindPrefabAssetFromSceneObject(Object sceneObject)
+        public static GameObject GetScenePrefabInstanceRoot(Object sceneObject)
         {
-            Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
-            if (instanceRoot)
+            if (sceneObject)
             {
-                Object source = PrefabUtility.GetCorrespondingObjectFromSource(instanceRoot);
+                if (PrefabUtility.IsPartOfPrefabInstance(sceneObject))
+                {
+                    Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
+                    if (!instanceRoot) instanceRoot = sceneObject;
+
+                    if (instanceRoot.GetType() == typeof(GameObject))
+                        return (GameObject)instanceRoot;
+                }
+            }
+
+            return null;
+        }        
+
+        public static GameObject FindRootPrefabAsset(GameObject prefabAsset)
+        {
+            if (prefabAsset)
+            {
+                Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabAsset);
                 if (source)
                 {
                     if (source.GetType() == typeof(GameObject))
@@ -742,45 +758,21 @@ namespace Reallusion.Import
             return null;
         }
 
-        public static GameObject FindRootPrefabAsset(GameObject prefabAsset)
-        {
-            Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabAsset);
-            if (source)
-            {
-                if (source.GetType() == typeof(GameObject))
-                {
-                    return (GameObject)source;
-                }
-            }
+        public static GameObject FindRootPrefabAssetFromSceneObject(Object sceneObject)
+        {            
+            GameObject instanceRoot = GetScenePrefabInstanceRoot(sceneObject);
 
-            return null;
+            return FindRootPrefabAsset(instanceRoot);
         }
 
-        public static GameObject FindRootPrefabAssetFromSceneObject(Object sceneObject)
+        public static void ResetPrefabTransforms(Transform root)
         {
-            if (sceneObject)
-            {
-                Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
-
-                if (!instanceRoot && 
-                    sceneObject.GetType() == typeof(GameObject) &&
-                    PrefabUtility.IsPartOfPrefabAsset(sceneObject)) 
-                    instanceRoot = sceneObject;
-
-                if (instanceRoot)
-                {
-                    Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(instanceRoot);
-                    if (source)
-                    {
-                        if (source.GetType() == typeof(GameObject))
-                        {
-                            return (GameObject)source;
-                        }
-                    }
-                }
+            for (int i = 0; i < root.childCount; i++)
+            {                
+                Transform child = root.transform.GetChild(i);
+                PrefabUtility.RevertObjectOverride(child, InteractionMode.AutomatedAction);
+                ResetPrefabTransforms(child);
             }
-
-            return null;
         }
 
         public static void LogInfo(string message)
