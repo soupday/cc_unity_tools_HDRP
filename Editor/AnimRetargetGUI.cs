@@ -1056,12 +1056,17 @@ namespace Reallusion.Import
             {
                 Debug.LogWarning("Animation has no facial blend shapes!");
                 return;
-            }
-            Debug.Log("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile);
+            }            
+            
             if (!meshProfile.IsSameProfile(animProfile))
             {
-                Debug.LogWarning("Warning: Character mesh facial profile does not match the animation facial profile.\n" +
-                                 "Facial expression retargeting may not have the expected or desired results.");
+                Debug.LogWarning("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile + "\n" + 
+                                 "Warning: Character mesh facial profile does not match the animation facial profile.\n" +
+                                 "Facial expression retargeting may not have the expected or desired results.\n");
+            }
+            else
+            {
+                Debug.Log("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile + "\n");
             }
 
             EditorCurveBinding[] sourceCurveBindings = AnimationUtility.GetCurveBindings(WorkingClip);
@@ -1100,7 +1105,7 @@ namespace Reallusion.Import
             }
 
             logtime = 0f;
-            string report = "Blendshape Mapping report:\n\n";
+            string report = "";
 
             // build a cache of the blend shape names and their curve bindings:
             Dictionary<string, EditorCurveBinding> cache = new Dictionary<string, EditorCurveBinding>();            
@@ -1166,19 +1171,22 @@ namespace Reallusion.Import
                 }
             }
 
+            report += "\n";
             int curvesFailedToMap = 0;
             foreach (string shape in cache.Keys)
             {                
                 if (!mappedBlendShapes.Contains(shape))
                 {
                     curvesFailedToMap++;
-                    report += "Could not find suitable mapping from: " + shape + "\n";
+                    report += "Could not find BlendShape: " + shape + " in target character.\n";
                 }                
             }
-            if (curvesFailedToMap == 0) report += "\nAll " + cache.Count + " BlendShape curves retargeted!\n";
-            else report += "\n" + curvesFailedToMap + " out of " + cache.Count + " BlendShape curves could not be retargeted!\n";
 
-            Debug.Log(report);
+            string reportHeader = "Blendshape Mapping report:\n";
+            if (curvesFailedToMap == 0) reportHeader += "All " + cache.Count + " BlendShape curves retargeted!\n\n";
+            else reportHeader += curvesFailedToMap + " out of " + cache.Count + " BlendShape curves could not be retargeted!\n\n";
+
+            Debug.Log(reportHeader + report);
 
             bool PURGE = true; 
             // Purge all curves from the animation that dont have a valid path in the target object                    
