@@ -12,16 +12,18 @@ namespace Reallusion.Import
     {
         public ExpressionProfile expressionProfile;
         public VisemeProfile visemeProfile;
+        public bool corrections;
 
         public FacialProfile(ExpressionProfile exp, VisemeProfile vis)
         {
             expressionProfile = exp;
             visemeProfile = vis;
+            corrections = false;
         }
 
         public override string ToString()
         {
-            return "(" + expressionProfile + "/" + visemeProfile + ")";
+            return "(" + expressionProfile + (corrections ? "*" : "") + "/" + visemeProfile + ")";
         }
 
         public bool IsSameProfile(FacialProfile from)
@@ -36,18 +38,31 @@ namespace Reallusion.Import
 
         public string GetMappingFrom(string blendShapeName, FacialProfile from)
         {
-            return FacialProfileMapper.GetFacialProfileMapping(blendShapeName, from, this);
-        }
+            string mapping;
 
-        public string GetMappingTo(string blendShapeName, FacialProfile to)
-        {
-            return FacialProfileMapper.GetFacialProfileMapping(blendShapeName, this, to);
-        }
+            // ExPlus4 blendshapes are incorrectly named blendshapes from the CC4 exported - CC3+ExPlus profile
+            // which need to be corrected when mapping from
+            if (from.corrections && FacialProfileMapper.GetExPlus4Correction(blendShapeName, out string correction))
+            {
+                blendShapeName = correction;
+                if (FacialProfileMapper.GetFacialProfileMapping(blendShapeName, from, this, out mapping))
+                {
+                    return mapping;
+                }
+            }
 
-        public static string GetMapping(string blendShapeName, FacialProfile from, FacialProfile to)
-        {
-            return FacialProfileMapper.GetFacialProfileMapping(blendShapeName, from, to);
-        }
+            if (FacialProfileMapper.GetFacialProfileMapping(blendShapeName, from, this, out mapping))
+            {
+                // if we are mapping to a profile with EXPlus4 shapes we need to return the incorrect blendshape name
+                if (corrections && FacialProfileMapper.GetExPlus4Incorrection(mapping, out string incorrection))
+                {
+                    return incorrection;
+                }
+                return mapping;
+            }
+            
+            return blendShapeName;
+        }        
     }
 
     public struct ExpressionProfileMapping
@@ -129,6 +144,18 @@ namespace Reallusion.Import
         }
     }
 
+    public struct MappingCorrection
+    {
+        public string correct;
+        public string incorrect;
+
+        public MappingCorrection(string c, string i)
+        {
+            correct = c;
+            incorrect = i;
+        }        
+    }
+
     public static class FacialProfileMapper
     {
         public static List<ExpressionProfileMapping> facialProfileMaps = new List<ExpressionProfileMapping>() {
@@ -186,7 +213,7 @@ namespace Reallusion.Import
             new ExpressionProfileMapping("", "A50_Mouth_Stretch_Left", "Mouth_Stretch_L"),
             new ExpressionProfileMapping("", "A51_Mouth_Stretch_Right", "Mouth_Stretch_R"),
             new ExpressionProfileMapping("", "T10_Tongue_Bulge_Left", "Tongue_Bulge_L"),
-            new ExpressionProfileMapping("", "T11_Tongue_Bulge_Right", "Tongue_Bulge_R"),            
+            new ExpressionProfileMapping("", "T11_Tongue_Bulge_Right", "Tongue_Bulge_R"),
         };
 
         public static List<VisemeProfileMapping> visemeProfileMaps = new List<VisemeProfileMapping>() {
@@ -205,7 +232,19 @@ namespace Reallusion.Import
             new VisemeProfileMapping("Tongue_Narrow", "V_Tongue_Narrow", ""),
             new VisemeProfileMapping("Tongue_Lower", "V_Tongue_Lower", ""),
             new VisemeProfileMapping("Tongue_Curl-U", "V_Tongue_Curl_U", ""),
-            new VisemeProfileMapping("Tongue_Curl-D", "V_Tongue_Curl_D", ""),            
+            new VisemeProfileMapping("Tongue_Curl-D", "V_Tongue_Curl_D", ""),
+        };
+
+        public static List<MappingCorrection> corrections = new List<MappingCorrection>()
+        {
+            new MappingCorrection("Brow_Raise_Inner_L", "Brow_Raise_Inner_Left"),
+            new MappingCorrection("Brow_Raise_Inner_R", "Brow_Raise_Inner_Right"),
+            new MappingCorrection("Brow_Raise_Outer_L", "Brow_Raise_Outer_Left"),
+            new MappingCorrection("Brow_Raise_Outer_R", "Brow_Raise_Outer_Right"),
+            new MappingCorrection("Brow_Drop_L", "Brow_Drop_Left"),
+            new MappingCorrection("Brow_Drop_R", "Brow_Drop_Right"),
+            new MappingCorrection("Brow_Raise_L", "Brow_Raise_Left"),
+            new MappingCorrection("Brow_Raise_R", "Brow_Raise_Right"),
         };
 
         public static Dictionary<string, ExpressionProfileMapping> cacheStd = new Dictionary<string, ExpressionProfileMapping>();
@@ -214,7 +253,7 @@ namespace Reallusion.Import
 
         public static Dictionary<string, ExpressionProfileMapping> GetExpressionCache(ExpressionProfile profile)
         {
-            switch(profile)
+            switch (profile)
             {
                 case ExpressionProfile.ExPlus: return cacheExPlus;
                 case ExpressionProfile.Ext: return cacheExt;
@@ -249,7 +288,8 @@ namespace Reallusion.Import
             if (!clip) return default;
 
             const string blendShapePrefix = "blendShape.";
-            EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);            
+            EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
+            bool corrections = false;
 
             foreach (EditorCurveBinding binding in curveBindings)
             {
@@ -295,7 +335,7 @@ namespace Reallusion.Import
                         case "Open":
                         case "Tight":
                         case "Tongue_up":
-                        case "Tongue_Raise":                       
+                        case "Tongue_Raise":
                             if (visemeProfile == VisemeProfile.None ||
                                 visemeProfile == VisemeProfile.Direct)
                                 visemeProfile = VisemeProfile.PairsCC3;
@@ -307,11 +347,22 @@ namespace Reallusion.Import
                             if (visemeProfile == VisemeProfile.None)
                                 visemeProfile = VisemeProfile.Direct;
                             break;
+                        case "Brow_Raise_Inner_Left":                        
+                        case "Brow_Raise_Outer_Left":
+                        case "Brow_Drop_Left":
+                        case "Brow_Raise_Right":
+                            corrections = true;
+                            break;
+
+
                     }
                 }
             }
 
-            return new FacialProfile(expressionProfile, visemeProfile);
+            return new FacialProfile(expressionProfile, visemeProfile)
+            {
+                corrections = corrections
+            };            
         }
 
         public static FacialProfile GetMeshFacialProfile(GameObject prefab)
@@ -319,13 +370,14 @@ namespace Reallusion.Import
             ExpressionProfile expressionProfile = ExpressionProfile.None;
             VisemeProfile visemeProfile = VisemeProfile.None;
             if (!prefab) return default;
+            bool corrections = false;
 
             SkinnedMeshRenderer[] renderers = prefab.GetComponentsInChildren<SkinnedMeshRenderer>();
             foreach (SkinnedMeshRenderer r in renderers)
             {
                 if (r.sharedMesh)
                 {
-                    Mesh mesh = r.sharedMesh;                    
+                    Mesh mesh = r.sharedMesh;
 
                     if (mesh.blendShapeCount > 0)
                     {
@@ -376,11 +428,20 @@ namespace Reallusion.Import
                             mesh.HasShape("Oh"))
                             if (visemeProfile == VisemeProfile.None)
                                 visemeProfile = VisemeProfile.Direct;
+
+                        if (mesh.HasShape("Brow_Raise_Inner_Left") ||
+                            mesh.HasShape("Brow_Raise_Outer_Left") ||
+                            mesh.HasShape("Brow_Drop_Left") ||
+                            mesh.HasShape("Brow_Raise_Right"))
+                            corrections = true;                        
                     }
                 }
             }
 
-            return new FacialProfile(expressionProfile, visemeProfile);
+            return new FacialProfile(expressionProfile, visemeProfile)
+            {
+                corrections = corrections
+            };
         }
 
         public static bool MeshHasFacialBlendShapes(GameObject obj)
@@ -389,21 +450,23 @@ namespace Reallusion.Import
             return profile.HasFacialShapes;
         }
 
-        public static string GetFacialProfileMapping(string blendShapeName, FacialProfile from, FacialProfile to)
-        {            
+        public static bool GetFacialProfileMapping(string blendShapeName, FacialProfile from, FacialProfile to, out string mapping)
+        {
             Dictionary<string, ExpressionProfileMapping> cacheFacial = GetExpressionCache(from.expressionProfile);
             Dictionary<string, VisemeProfileMapping> cacheViseme = GetVisemeCache(from.visemeProfile);
 
             if (cacheFacial.TryGetValue(blendShapeName, out ExpressionProfileMapping fpm))
             {
-                string mapping = fpm.GetMapping(to.expressionProfile);
-                return string.IsNullOrEmpty(mapping) ? blendShapeName : mapping;
+                mapping = fpm.GetMapping(to.expressionProfile);
+                if (string.IsNullOrEmpty(mapping)) mapping = blendShapeName;
+                return true;
             }
 
             if (cacheViseme.TryGetValue(blendShapeName, out VisemeProfileMapping vpm))
             {
-                string mapping = vpm.GetMapping(to.visemeProfile);
-                return string.IsNullOrEmpty(mapping) ? blendShapeName : mapping;
+                mapping = vpm.GetMapping(to.visemeProfile);
+                if (string.IsNullOrEmpty(mapping)) mapping = blendShapeName;
+                return true;
             }
 
             foreach (ExpressionProfileMapping fpmSearch in facialProfileMaps)
@@ -411,8 +474,9 @@ namespace Reallusion.Import
                 if (fpmSearch.HasMapping(blendShapeName, from.expressionProfile))
                 {
                     cacheFacial.Add(blendShapeName, fpmSearch);
-                    string mapping = fpmSearch.GetMapping(to.expressionProfile);
-                    return string.IsNullOrEmpty(mapping) ? blendShapeName : mapping;
+                    mapping = fpmSearch.GetMapping(to.expressionProfile);
+                    if (string.IsNullOrEmpty(mapping)) mapping = blendShapeName;
+                    return true;
                 }
             }
 
@@ -421,12 +485,14 @@ namespace Reallusion.Import
                 if (vpmSearch.HasMapping(blendShapeName, from.visemeProfile))
                 {
                     cacheViseme.Add(blendShapeName, vpmSearch);
-                    string mapping = vpmSearch.GetMapping(to.visemeProfile);
-                    return string.IsNullOrEmpty(mapping) ? blendShapeName : mapping;
+                    mapping = vpmSearch.GetMapping(to.visemeProfile);
+                    if (string.IsNullOrEmpty(mapping)) mapping = blendShapeName;
+                    return true;
                 }
             }
 
-            return blendShapeName;
+            mapping = blendShapeName;
+            return false;
         }
 
         private static List<string> multiShapeNames = new List<string>(4);
@@ -442,7 +508,7 @@ namespace Reallusion.Import
                 {
                     multiShapeNames.Add(profileShapeName.Replace("_L/R", "_L"));
                     multiShapeNames.Add(profileShapeName.Replace("_L/R", "_R"));
-                    
+
                     foreach (string LRShapeName in multiShapeNames)
                     {
                         if (LRShapeName.Contains("_Up/Down"))
@@ -450,12 +516,12 @@ namespace Reallusion.Import
                             tempNames.Add(LRShapeName.Replace("_Up/Down", "_Up"));
                             tempNames.Add(LRShapeName.Replace("_Up/Down", "_Down"));
                         }
-                    }                    
+                    }
                 }
                 else if (profileShapeName.Contains("_Up/Down"))
                 {
                     multiShapeNames.Add(profileShapeName.Replace("_Up/Down", "_Up"));
-                    multiShapeNames.Add(profileShapeName.Replace("_Up/Down", "_Down"));                    
+                    multiShapeNames.Add(profileShapeName.Replace("_Up/Down", "_Down"));
                 }
             }
 
@@ -464,7 +530,7 @@ namespace Reallusion.Import
                 multiShapeNames.Clear();
                 multiShapeNames.AddRange(tempNames);
                 tempNames.Clear();
-            } 
+            }
 
             if (multiShapeNames.Count == 0)
                 multiShapeNames.Add(profileShapeName);
@@ -472,14 +538,14 @@ namespace Reallusion.Import
             return multiShapeNames;
         }
 
-        public static bool SetCharacterBlendShape(GameObject root, string shapeName, 
+        public static bool SetCharacterBlendShape(GameObject root, string shapeName,
             FacialProfile from, FacialProfile to, float weight)
         {
             bool res = false;
 
             if (root)
-            {               
-                string profileShapeName = GetFacialProfileMapping(shapeName, from, to);
+            {
+                string profileShapeName = to.GetMappingFrom(shapeName, from);
 
                 if (!string.IsNullOrEmpty(profileShapeName))
                 {
@@ -520,7 +586,7 @@ namespace Reallusion.Import
 
             if (root)
             {
-                string profileShapeName = GetFacialProfileMapping(shapeName, from, to);
+                string profileShapeName = to.GetMappingFrom(shapeName, from);
                 if (!string.IsNullOrEmpty(profileShapeName))
                 {
                     for (int i = 0; i < root.transform.childCount; i++)
@@ -548,6 +614,36 @@ namespace Reallusion.Import
             if (numWeights > 0) weight /= ((float)numWeights);
 
             return numWeights > 0;
+        }
+
+        public static bool GetExPlus4Correction(string blendShapeName, out string correction)
+        {            
+            foreach (MappingCorrection mc in corrections)
+            {
+                if (mc.incorrect == blendShapeName)
+                {
+                    correction = mc.correct;
+                    return true;
+                }
+            }
+
+            correction = blendShapeName;
+            return false;
+        }
+
+        public static bool GetExPlus4Incorrection(string blendShapeName, out string incorrection)
+        {
+            foreach (MappingCorrection mc in corrections)
+            {
+                if (mc.correct == blendShapeName)
+                {
+                    incorrection = mc.incorrect;
+                    return true;
+                }
+            }
+
+            incorrection = blendShapeName;
+            return false;
         }
     }
 }

@@ -1011,13 +1011,30 @@ namespace Reallusion.Import
                 propertyName = targetPropertyName
             };
 
-            if (AnimationUtility.GetEditorCurve(WorkingClip, workingBinding) == null)
+            if (AnimationUtility.GetEditorCurve(WorkingClip, workingBinding) == null || 
+                targetPropertyName != sourceCurveBinding.propertyName)
             {
                 AnimationCurve workingCurve = AnimationUtility.GetEditorCurve(OriginalClip, sourceCurveBinding);
                 AnimationUtility.SetEditorCurve(WorkingClip, workingBinding, workingCurve);
             }
 
             logtime += Time.realtimeSinceStartup - time;
+        }
+
+        public static bool CurveHasData(EditorCurveBinding binding, AnimationClip clip)
+        {
+            AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
+
+            if (curve != null)
+            {
+                if (curve.length > 2) return true;
+                for (int i = 0; i < curve.length; i++)
+                {
+                    if (Mathf.Abs(curve.keys[i].value) > 0.001f) return true;
+                }
+            }
+
+            return false;
         }
 
         static void RetargetBlendShapes()
@@ -1083,15 +1100,17 @@ namespace Reallusion.Import
             }
 
             logtime = 0f;
+            string report = "Blendshape Mapping report:\n\n";
 
             // build a cache of the blend shape names and their curve bindings:
             Dictionary<string, EditorCurveBinding> cache = new Dictionary<string, EditorCurveBinding>();            
             for (int i = 0; i < sourceCurveBindings.Length; i++)
             {
-                if (sourceCurveBindings[i].propertyName.StartsWith(blendShapePrefix))
+                if (CurveHasData(sourceCurveBindings[i], WorkingClip) && 
+                    sourceCurveBindings[i].propertyName.StartsWith(blendShapePrefix))
                 {
                     string blendShapeName = sourceCurveBindings[i].propertyName.Substring(blendShapePrefix.Length);
-                    string profileBlendShapeName = FacialProfileMapper.GetFacialProfileMapping(blendShapeName, animProfile, meshProfile);
+                    string profileBlendShapeName = meshProfile.GetMappingFrom(blendShapeName, animProfile);                    
                     if (!string.IsNullOrEmpty(profileBlendShapeName))
                     {
                         List<string> multiProfileName = FacialProfileMapper.GetMultiShapeNames(profileBlendShapeName);
@@ -1100,7 +1119,7 @@ namespace Reallusion.Import
                             if (!cache.ContainsKey(profileBlendShapeName))
                             {
                                 cache.Add(profileBlendShapeName, sourceCurveBindings[i]);
-                                //Debug.Log("Mapping: " + profileBlendShapeName + " to " + blendShapeName);
+                                report += "Mapping: " + profileBlendShapeName + " from " + blendShapeName + "\n";
                             }
                         }
                         else
@@ -1110,13 +1129,15 @@ namespace Reallusion.Import
                                 if (!cache.ContainsKey(multiShapeName))
                                 {
                                     cache.Add(multiShapeName, sourceCurveBindings[i]);
-                                    //Debug.Log("Mapping (multi): " + multiShapeName + " to " + blendShapeName);
+                                    report += "Mapping (multi): " + multiShapeName + " from " + blendShapeName + "\n";
                                 }
                             }
                         }
                     }
                 }
             }
+
+            List<string> mappedBlendShapes = new List<string>();
 
             // apply the curves to the target animation
             foreach (Transform t in targetAssetData)
@@ -1131,18 +1152,34 @@ namespace Reallusion.Import
                         string targetPropertyName = blendShapePrefix + blendShapeName;                        
 
                         if (cache.TryGetValue(blendShapeName, out EditorCurveBinding sourceCurveBinding))
-                        {
-                            CopyCurve(go.name, targetPropertyName, sourceCurveBinding);                            
+                        {                            
+                            CopyCurve(go.name, targetPropertyName, sourceCurveBinding);
+
+                            if (!mappedBlendShapes.Contains(blendShapeName))
+                                mappedBlendShapes.Add(blendShapeName);
                         }
                         else
                         {
-                            //    Debug.LogWarning("Could not map blendshape: " + blendShapeName + 
-                            //                     " in object: " + go.name);    
+                            //report += "Could not map blendshape: " + blendShapeName + " in object: " + go.name + "\n";
                         }
                     }
                 }
-            }            
-        
+            }
+
+            int curvesFailedToMap = 0;
+            foreach (string shape in cache.Keys)
+            {                
+                if (!mappedBlendShapes.Contains(shape))
+                {
+                    curvesFailedToMap++;
+                    report += "Could not find suitable mapping from: " + shape + "\n";
+                }                
+            }
+            if (curvesFailedToMap == 0) report += "\nAll " + cache.Count + " BlendShape curves retargeted!\n";
+            else report += "\n" + curvesFailedToMap + " out of " + cache.Count + " BlendShape curves could not be retargeted!\n";
+
+            Debug.Log(report);
+
             bool PURGE = true; 
             // Purge all curves from the animation that dont have a valid path in the target object                    
             if (PURGE)
