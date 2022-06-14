@@ -42,7 +42,7 @@ namespace Reallusion.Import
 
             // ExPlus4 blendshapes are incorrectly named blendshapes from the CC4 exported - CC3+ExPlus profile
             // which need to be corrected when mapping from
-            if (from.corrections && FacialProfileMapper.GetExPlus4Correction(blendShapeName, out string correction))
+            if (from.corrections && FacialProfileMapper.GetCorrection(blendShapeName, out string correction))
             {
                 blendShapeName = correction;
                 if (FacialProfileMapper.GetFacialProfileMapping(blendShapeName, from, this, out mapping))
@@ -54,7 +54,7 @@ namespace Reallusion.Import
             if (FacialProfileMapper.GetFacialProfileMapping(blendShapeName, from, this, out mapping))
             {
                 // if we are mapping to a profile with EXPlus4 shapes we need to return the incorrect blendshape name
-                if (corrections && FacialProfileMapper.GetExPlus4Incorrection(mapping, out string incorrection))
+                if (corrections && FacialProfileMapper.GetIncorrection(mapping, out string incorrection))
                 {
                     return incorrection;
                 }
@@ -65,13 +65,13 @@ namespace Reallusion.Import
         }        
     }
 
-    public struct ExpressionProfileMapping
+    public struct ExpressionMapping
     {        
         public string Standard;
         public string ExPlus;
         public string Extended;        
 
-        public ExpressionProfileMapping(string std, string exPlus, string ext)
+        public ExpressionMapping(string std, string exPlus, string ext)
         {
             Standard = std;
             ExPlus = exPlus;
@@ -110,13 +110,13 @@ namespace Reallusion.Import
         }
     }
 
-    public struct VisemeProfileMapping
+    public struct VisemeMapping
     {
         public string CC3;
         public string CC4;
         public string Direct;
 
-        public VisemeProfileMapping(string cc3, string cc4, string direct)
+        public VisemeMapping(string cc3, string cc4, string direct)
         {
             CC3 = cc3;
             CC4 = cc4;
@@ -158,91 +158,91 @@ namespace Reallusion.Import
 
     public static class FacialProfileMapper
     {
-        public static List<ExpressionProfileMapping> facialProfileMaps = new List<ExpressionProfileMapping>() {
+        public static List<ExpressionMapping> facialProfileMaps = new List<ExpressionMapping>() {
             //new FacialProfileMapping("", "", ""),            
-            new ExpressionProfileMapping("Brow_Raise_Inner_L/R", "A01_Brow_Inner_Up", "Brow_Raise_Inner_L/R"), // Brow_Raise_Inner_L/R
-            new ExpressionProfileMapping("Brow_Drop_L", "A02_Brow_Down_Left", "Brow_Drop_L"),
-            new ExpressionProfileMapping("Brow_Drop_R", "A03_Brow_Down_Right", "Brow_Drop_R"),
-            new ExpressionProfileMapping("Brow_Raise_Outer_L", "A04_Brow_Outer_Up_Left", "Brow_Raise_Outer_L"),
-            new ExpressionProfileMapping("Brow_Raise_Outer_R", "A05_Brow_Outer_Up_Right", "Brow_Raise_Outer_R"),
-            new ExpressionProfileMapping("", "A06_Eye_Look_Up_Left", "Eye_L_Look_Up"),
-            new ExpressionProfileMapping("", "A07_Eye_Look_Up_Right", "Eye_R_Look_Up"),
-            new ExpressionProfileMapping("", "A08_Eye_Look_Down_Left", "Eye_L_Look_Down"),
-            new ExpressionProfileMapping("", "A09_Eye_Look_Down_Right", "Eye_R_Look_Down"),
-            new ExpressionProfileMapping("", "A10_Eye_Look_Out_Left", "Eye_L_Look_L"),
-            new ExpressionProfileMapping("", "A11_Eye_Look_In_Left", "Eye_L_Look_R"),
-            new ExpressionProfileMapping("", "A12_Eye_Look_In_Right", "Eye_R_Look_L"),
-            new ExpressionProfileMapping("", "A13_Eye_Look_Out_Right", "Eye_R_Look_R"),
-            new ExpressionProfileMapping("Eye_Blink", "Eye_Blink", "Eyes_Blink"),
-            new ExpressionProfileMapping("Eye_Blink_L", "A14_Eye_Blink_Left", "Eye_Blink_L"),
-            new ExpressionProfileMapping("Eye_Blink_R", "A15_Eye_Blink_Right", "Eye_Blink_R"),
-            new ExpressionProfileMapping("Eye_Squint_L", "A16_Eye_Squint_Left", "Eye_Squint_L"),
-            new ExpressionProfileMapping("Eye_Squint_R", "A17_Eye_Squint_Right", "Eye_Squint_R"),
-            new ExpressionProfileMapping("Eye_Wide_L", "A18_Eye_Wide_Left", "Eye_Wide_L"),
-            new ExpressionProfileMapping("Eye_Wide_R", "A19_Eye_Wide_Right", "Eye_Wide_R"),
-            new ExpressionProfileMapping("Cheek_Puff_L/R", "A20_Cheek_Puff", "Cheek_Puff_L/R"), //Cheek_Puff_L/R
-            new ExpressionProfileMapping("Cheek_Raise_L", "A21_Cheek_Squint_Left", "Cheek_Raise_L"),
-            new ExpressionProfileMapping("Cheek_Raise_R", "A22_Cheek_Squint_Right", "Cheek_Raise_R"),
-            new ExpressionProfileMapping("Nose_Flank_Raise_L", "A23_Nose_Sneer_Left", "Nose_Sneer_L"),
-            new ExpressionProfileMapping("Nose_Flank_Raise_R", "A24_Nose_Sneer_Right", "Nose_Sneer_R"),
-            new ExpressionProfileMapping("", "A25_Jaw_Open", "Jaw_Open"),
-            new ExpressionProfileMapping("", "A26_Jaw_Forward", "Jaw_Forward"),
-            new ExpressionProfileMapping("", "A27_Jaw_Left", "Jaw_L"),
-            new ExpressionProfileMapping("", "A28_Jaw_Right", "Jaw_R"),
-            new ExpressionProfileMapping("Mouth_Pucker_Open", "A29_Mouth_Funnel", "Mouth_Funnel_Up/Down_L/R"), //Mouth_Funnel_Up/Down_L/R
-            new ExpressionProfileMapping("Mouth_Pucker", "A30_Mouth_Pucker", "Mouth_Pucker_Up/Down_L/R"), //Mouth_Pucker_Up/Down_L/R
-            new ExpressionProfileMapping("Mouth_L", "A31_Mouth_Left", "Mouth_L"),
-            new ExpressionProfileMapping("Mouth_R", "A32_Mouth_Right", "Mouth_R"),
-            new ExpressionProfileMapping("Mouth_Top_Lip_Under", "A33_Mouth_Roll_Upper", "Mouth_Roll_Out_Upper_L/R"), //Mouth_Roll_Out_Upper_L/R
-            new ExpressionProfileMapping("Mouth_Bottom_Lip_Under", "A34_Mouth_Roll_Lower", "Mouth_Roll_Out_Lower_L/R"), //Mouth_Roll_Out_Lower_L/R
-            new ExpressionProfileMapping("Mouth_Top_Lip_Up", "A35_Mouth_Shrug_Upper", "Mouth_Shrug_Upper"),
-            new ExpressionProfileMapping("", "A36_Mouth_Shrug_Lower", "Mouth_Shrug_Lower"), // -Mouth_Bottom_Lip_Down
-            new ExpressionProfileMapping("", "A37_Mouth_Close", "Mouth_Close"), //-Mouth_Open
-            new ExpressionProfileMapping("Mouth_Smile_L", "A38_Mouth_Smile_Left", "Mouth_Smile_L"),
-            new ExpressionProfileMapping("Mouth_Smile_R", "A39_Mouth_Smile_Right", "Mouth_Smile_R"),
-            new ExpressionProfileMapping("Mouth_Frown_L", "A40_Mouth_Frown_Left", "Mouth_Frown_L"),
-            new ExpressionProfileMapping("Mouth_Frown_R", "A41_Mouth_Frown_Right", "Mouth_Frown_R"),
-            new ExpressionProfileMapping("Mouth_Dimple_L", "A42_Mouth_Dimple_Left", "Mouth_Dimple_L"),
-            new ExpressionProfileMapping("Mouth_Dimple_R", "A43_Mouth_Dimple_Right", "Mouth_Dimple_R"),
-            new ExpressionProfileMapping("", "A44_Mouth_Upper_Up_Left", "Mouth_Up_Upper_L"), //Mouth_Up
-            new ExpressionProfileMapping("", "A45_Mouth_Upper_Up_Right", "Mouth_Up_Upper_R"), //Mouth_Up
-            new ExpressionProfileMapping("", "A46_Mouth_Lower_Down_Left", "Mouth_Down_Lower_L"), //Mouth_Down
-            new ExpressionProfileMapping("", "A47_Mouth_Lower_Down_Right", "Mouth_Down_Lower_R"), //Mouth_Down
-            new ExpressionProfileMapping("", "A48_Mouth_Press_Left", "Mouth_Press_L"),
-            new ExpressionProfileMapping("", "A49_Mouth_Press_Right", "Mouth_Press_R"),
-            new ExpressionProfileMapping("", "A50_Mouth_Stretch_Left", "Mouth_Stretch_L"),
-            new ExpressionProfileMapping("", "A51_Mouth_Stretch_Right", "Mouth_Stretch_R"),
-            new ExpressionProfileMapping("", "A52_Tongue_Out", "Tongue_Out"),
-            new ExpressionProfileMapping("", "T01_Tongue_Up", "Tongue_Up"),
-            new ExpressionProfileMapping("", "T02_Tongue_Down", "Tongue_Down"),
-            new ExpressionProfileMapping("", "T03_Tongue_Left", "Tongue_L"),
-            new ExpressionProfileMapping("", "T04_Tongue_Right", "Tongue_R"),
-            new ExpressionProfileMapping("", "T05_Tongue_Roll", "Tongue_Roll"),
-            new ExpressionProfileMapping("", "T06_Tongue_Tip_Up", "Tongue_Tip_Up"),
-            new ExpressionProfileMapping("", "T07_Tongue_Tip_Down", "Tongue_Tip_Down"),
-            new ExpressionProfileMapping("", "T08_Tongue_Width", "Tongue_Wide"),
-            new ExpressionProfileMapping("", "T09_Tongue_Thickness", "Tongue_Narrow"),
-            new ExpressionProfileMapping("", "T10_Tongue_Bulge_Left", "Tongue_Bulge_L"),
-            new ExpressionProfileMapping("", "T11_Tongue_Bulge_Right", "Tongue_Bulge_R"),
+            new ExpressionMapping("Brow_Raise_Inner_L/R", "A01_Brow_Inner_Up", "Brow_Raise_Inner_L/R"), // Brow_Raise_Inner_L/R
+            new ExpressionMapping("Brow_Drop_L", "A02_Brow_Down_Left", "Brow_Drop_L"),
+            new ExpressionMapping("Brow_Drop_R", "A03_Brow_Down_Right", "Brow_Drop_R"),
+            new ExpressionMapping("Brow_Raise_Outer_L", "A04_Brow_Outer_Up_Left", "Brow_Raise_Outer_L"),
+            new ExpressionMapping("Brow_Raise_Outer_R", "A05_Brow_Outer_Up_Right", "Brow_Raise_Outer_R"),
+            new ExpressionMapping("", "A06_Eye_Look_Up_Left", "Eye_L_Look_Up"),
+            new ExpressionMapping("", "A07_Eye_Look_Up_Right", "Eye_R_Look_Up"),
+            new ExpressionMapping("", "A08_Eye_Look_Down_Left", "Eye_L_Look_Down"),
+            new ExpressionMapping("", "A09_Eye_Look_Down_Right", "Eye_R_Look_Down"),
+            new ExpressionMapping("", "A10_Eye_Look_Out_Left", "Eye_L_Look_L"),
+            new ExpressionMapping("", "A11_Eye_Look_In_Left", "Eye_L_Look_R"),
+            new ExpressionMapping("", "A12_Eye_Look_In_Right", "Eye_R_Look_L"),
+            new ExpressionMapping("", "A13_Eye_Look_Out_Right", "Eye_R_Look_R"),
+            new ExpressionMapping("Eye_Blink", "Eye_Blink", "Eyes_Blink"),
+            new ExpressionMapping("Eye_Blink_L", "A14_Eye_Blink_Left", "Eye_Blink_L"),
+            new ExpressionMapping("Eye_Blink_R", "A15_Eye_Blink_Right", "Eye_Blink_R"),
+            new ExpressionMapping("Eye_Squint_L", "A16_Eye_Squint_Left", "Eye_Squint_L"),
+            new ExpressionMapping("Eye_Squint_R", "A17_Eye_Squint_Right", "Eye_Squint_R"),
+            new ExpressionMapping("Eye_Wide_L", "A18_Eye_Wide_Left", "Eye_Wide_L"),
+            new ExpressionMapping("Eye_Wide_R", "A19_Eye_Wide_Right", "Eye_Wide_R"),
+            new ExpressionMapping("Cheek_Puff_L/R", "A20_Cheek_Puff", "Cheek_Puff_L/R"), //Cheek_Puff_L/R
+            new ExpressionMapping("Cheek_Raise_L", "A21_Cheek_Squint_Left", "Cheek_Raise_L"),
+            new ExpressionMapping("Cheek_Raise_R", "A22_Cheek_Squint_Right", "Cheek_Raise_R"),
+            new ExpressionMapping("Nose_Flank_Raise_L", "A23_Nose_Sneer_Left", "Nose_Sneer_L"),
+            new ExpressionMapping("Nose_Flank_Raise_R", "A24_Nose_Sneer_Right", "Nose_Sneer_R"),
+            new ExpressionMapping("", "A25_Jaw_Open", "Jaw_Open"),
+            new ExpressionMapping("", "A26_Jaw_Forward", "Jaw_Forward"),
+            new ExpressionMapping("", "A27_Jaw_Left", "Jaw_L"),
+            new ExpressionMapping("", "A28_Jaw_Right", "Jaw_R"),
+            new ExpressionMapping("Mouth_Pucker_Open", "A29_Mouth_Funnel", "Mouth_Funnel_Up/Down_L/R"), //Mouth_Funnel_Up/Down_L/R
+            new ExpressionMapping("Mouth_Pucker", "A30_Mouth_Pucker", "Mouth_Pucker_Up/Down_L/R"), //Mouth_Pucker_Up/Down_L/R
+            new ExpressionMapping("Mouth_L", "A31_Mouth_Left", "Mouth_L"),
+            new ExpressionMapping("Mouth_R", "A32_Mouth_Right", "Mouth_R"),
+            new ExpressionMapping("Mouth_Top_Lip_Under", "A33_Mouth_Roll_Upper", "Mouth_Roll_Out_Upper_L/R"), //Mouth_Roll_Out_Upper_L/R
+            new ExpressionMapping("Mouth_Bottom_Lip_Under", "A34_Mouth_Roll_Lower", "Mouth_Roll_Out_Lower_L/R"), //Mouth_Roll_Out_Lower_L/R
+            new ExpressionMapping("Mouth_Top_Lip_Up", "A35_Mouth_Shrug_Upper", "Mouth_Shrug_Upper"),
+            new ExpressionMapping("", "A36_Mouth_Shrug_Lower", "Mouth_Shrug_Lower"), // -Mouth_Bottom_Lip_Down
+            new ExpressionMapping("", "A37_Mouth_Close", "Mouth_Close"), //-Mouth_Open
+            new ExpressionMapping("Mouth_Smile_L", "A38_Mouth_Smile_Left", "Mouth_Smile_L"),
+            new ExpressionMapping("Mouth_Smile_R", "A39_Mouth_Smile_Right", "Mouth_Smile_R"),
+            new ExpressionMapping("Mouth_Frown_L", "A40_Mouth_Frown_Left", "Mouth_Frown_L"),
+            new ExpressionMapping("Mouth_Frown_R", "A41_Mouth_Frown_Right", "Mouth_Frown_R"),
+            new ExpressionMapping("Mouth_Dimple_L", "A42_Mouth_Dimple_Left", "Mouth_Dimple_L"),
+            new ExpressionMapping("Mouth_Dimple_R", "A43_Mouth_Dimple_Right", "Mouth_Dimple_R"),
+            new ExpressionMapping("", "A44_Mouth_Upper_Up_Left", "Mouth_Up_Upper_L"), //Mouth_Up
+            new ExpressionMapping("", "A45_Mouth_Upper_Up_Right", "Mouth_Up_Upper_R"), //Mouth_Up
+            new ExpressionMapping("", "A46_Mouth_Lower_Down_Left", "Mouth_Down_Lower_L"), //Mouth_Down
+            new ExpressionMapping("", "A47_Mouth_Lower_Down_Right", "Mouth_Down_Lower_R"), //Mouth_Down
+            new ExpressionMapping("", "A48_Mouth_Press_Left", "Mouth_Press_L"),
+            new ExpressionMapping("", "A49_Mouth_Press_Right", "Mouth_Press_R"),
+            new ExpressionMapping("", "A50_Mouth_Stretch_Left", "Mouth_Stretch_L"),
+            new ExpressionMapping("", "A51_Mouth_Stretch_Right", "Mouth_Stretch_R"),
+            new ExpressionMapping("", "A52_Tongue_Out", "Tongue_Out"),
+            new ExpressionMapping("", "T01_Tongue_Up", "Tongue_Up"),
+            new ExpressionMapping("", "T02_Tongue_Down", "Tongue_Down"),
+            new ExpressionMapping("", "T03_Tongue_Left", "Tongue_L"),
+            new ExpressionMapping("", "T04_Tongue_Right", "Tongue_R"),
+            new ExpressionMapping("", "T05_Tongue_Roll", "Tongue_Roll"),
+            new ExpressionMapping("", "T06_Tongue_Tip_Up", "Tongue_Tip_Up"),
+            new ExpressionMapping("", "T07_Tongue_Tip_Down", "Tongue_Tip_Down"),
+            new ExpressionMapping("", "T08_Tongue_Width", "Tongue_Wide"),
+            new ExpressionMapping("", "T09_Tongue_Thickness", "Tongue_Narrow"),
+            new ExpressionMapping("", "T10_Tongue_Bulge_Left", "Tongue_Bulge_L"),
+            new ExpressionMapping("", "T11_Tongue_Bulge_Right", "Tongue_Bulge_R"),
         };
 
-        public static List<VisemeProfileMapping> visemeProfileMaps = new List<VisemeProfileMapping>() {
+        public static List<VisemeMapping> visemeProfileMaps = new List<VisemeMapping>() {
             //new VisemeProfileMapping("", "", ""),                        
-            new VisemeProfileMapping("Open", "V_Open", ""),
-            new VisemeProfileMapping("Explosive", "V_Explosive", ""),
-            new VisemeProfileMapping("Dental_Lip", "V_Dental_Lip", ""),
-            new VisemeProfileMapping("Tight-O", "V_Tight_O", ""),
-            new VisemeProfileMapping("Tight", "V_Tight", ""),
-            new VisemeProfileMapping("Wide", "V_Wide", ""),
-            new VisemeProfileMapping("Affricate", "V_Affricate", ""),
-            new VisemeProfileMapping("Lip_Open", "V_Lip_Open", ""),
-            new VisemeProfileMapping("Tongue_up", "V_Tongue_up", ""),
-            new VisemeProfileMapping("Tongue_Raise", "V_Tongue_Raise", ""),
-            new VisemeProfileMapping("Tongue_Out", "V_Tongue_Out", ""),
-            new VisemeProfileMapping("Tongue_Narrow", "V_Tongue_Narrow", ""),
-            new VisemeProfileMapping("Tongue_Lower", "V_Tongue_Lower", ""),
-            new VisemeProfileMapping("Tongue_Curl-U", "V_Tongue_Curl_U", ""),
-            new VisemeProfileMapping("Tongue_Curl-D", "V_Tongue_Curl_D", ""),
+            new VisemeMapping("Open", "V_Open", ""),
+            new VisemeMapping("Explosive", "V_Explosive", ""),
+            new VisemeMapping("Dental_Lip", "V_Dental_Lip", ""),
+            new VisemeMapping("Tight-O", "V_Tight_O", ""),
+            new VisemeMapping("Tight", "V_Tight", ""),
+            new VisemeMapping("Wide", "V_Wide", ""),
+            new VisemeMapping("Affricate", "V_Affricate", ""),
+            new VisemeMapping("Lip_Open", "V_Lip_Open", ""),
+            new VisemeMapping("Tongue_up", "V_Tongue_up", ""),
+            new VisemeMapping("Tongue_Raise", "V_Tongue_Raise", ""),
+            new VisemeMapping("Tongue_Out", "V_Tongue_Out", ""),
+            new VisemeMapping("Tongue_Narrow", "V_Tongue_Narrow", ""),
+            new VisemeMapping("Tongue_Lower", "V_Tongue_Lower", ""),
+            new VisemeMapping("Tongue_Curl-U", "V_Tongue_Curl_U", ""),
+            new VisemeMapping("Tongue_Curl-D", "V_Tongue_Curl_D", ""),
         };
 
         public static List<MappingCorrection> corrections = new List<MappingCorrection>()
@@ -257,11 +257,11 @@ namespace Reallusion.Import
             new MappingCorrection("Brow_Raise_R", "Brow_Raise_Right"),
         };
 
-        public static Dictionary<string, ExpressionProfileMapping> cacheStd = new Dictionary<string, ExpressionProfileMapping>();
-        public static Dictionary<string, ExpressionProfileMapping> cacheExPlus = new Dictionary<string, ExpressionProfileMapping>();
-        public static Dictionary<string, ExpressionProfileMapping> cacheExt = new Dictionary<string, ExpressionProfileMapping>();
+        public static Dictionary<string, ExpressionMapping> cacheStd = new Dictionary<string, ExpressionMapping>();
+        public static Dictionary<string, ExpressionMapping> cacheExPlus = new Dictionary<string, ExpressionMapping>();
+        public static Dictionary<string, ExpressionMapping> cacheExt = new Dictionary<string, ExpressionMapping>();
 
-        public static Dictionary<string, ExpressionProfileMapping> GetExpressionCache(ExpressionProfile profile)
+        public static Dictionary<string, ExpressionMapping> GetExpressionCache(ExpressionProfile profile)
         {
             switch (profile)
             {
@@ -271,11 +271,11 @@ namespace Reallusion.Import
             }
         }
 
-        public static Dictionary<string, VisemeProfileMapping> cacheCC3Pair = new Dictionary<string, VisemeProfileMapping>();
-        public static Dictionary<string, VisemeProfileMapping> cacheCC4Pair = new Dictionary<string, VisemeProfileMapping>();
-        public static Dictionary<string, VisemeProfileMapping> cacheDirect = new Dictionary<string, VisemeProfileMapping>();
+        public static Dictionary<string, VisemeMapping> cacheCC3Pair = new Dictionary<string, VisemeMapping>();
+        public static Dictionary<string, VisemeMapping> cacheCC4Pair = new Dictionary<string, VisemeMapping>();
+        public static Dictionary<string, VisemeMapping> cacheDirect = new Dictionary<string, VisemeMapping>();
 
-        public static Dictionary<string, VisemeProfileMapping> GetVisemeCache(VisemeProfile profile)
+        public static Dictionary<string, VisemeMapping> GetVisemeCache(VisemeProfile profile)
         {
             switch (profile)
             {
@@ -462,24 +462,24 @@ namespace Reallusion.Import
 
         public static bool GetFacialProfileMapping(string blendShapeName, FacialProfile from, FacialProfile to, out string mapping)
         {
-            Dictionary<string, ExpressionProfileMapping> cacheFacial = GetExpressionCache(from.expressionProfile);
-            Dictionary<string, VisemeProfileMapping> cacheViseme = GetVisemeCache(from.visemeProfile);
+            Dictionary<string, ExpressionMapping> cacheFacial = GetExpressionCache(from.expressionProfile);
+            Dictionary<string, VisemeMapping> cacheViseme = GetVisemeCache(from.visemeProfile);
 
-            if (cacheFacial.TryGetValue(blendShapeName, out ExpressionProfileMapping fpm))
+            if (cacheFacial.TryGetValue(blendShapeName, out ExpressionMapping fpm))
             {
                 mapping = fpm.GetMapping(to.expressionProfile);
                 if (string.IsNullOrEmpty(mapping)) mapping = blendShapeName;
                 return true;
             }
 
-            if (cacheViseme.TryGetValue(blendShapeName, out VisemeProfileMapping vpm))
+            if (cacheViseme.TryGetValue(blendShapeName, out VisemeMapping vpm))
             {
                 mapping = vpm.GetMapping(to.visemeProfile);
                 if (string.IsNullOrEmpty(mapping)) mapping = blendShapeName;
                 return true;
             }
 
-            foreach (ExpressionProfileMapping fpmSearch in facialProfileMaps)
+            foreach (ExpressionMapping fpmSearch in facialProfileMaps)
             {
                 if (fpmSearch.HasMapping(blendShapeName, from.expressionProfile))
                 {
@@ -490,7 +490,7 @@ namespace Reallusion.Import
                 }
             }
 
-            foreach (VisemeProfileMapping vpmSearch in visemeProfileMaps)
+            foreach (VisemeMapping vpmSearch in visemeProfileMaps)
             {
                 if (vpmSearch.HasMapping(blendShapeName, from.visemeProfile))
                 {
@@ -626,7 +626,7 @@ namespace Reallusion.Import
             return numWeights > 0;
         }
 
-        public static bool GetExPlus4Correction(string blendShapeName, out string correction)
+        public static bool GetCorrection(string blendShapeName, out string correction)
         {            
             foreach (MappingCorrection mc in corrections)
             {
@@ -641,7 +641,7 @@ namespace Reallusion.Import
             return false;
         }
 
-        public static bool GetExPlus4Incorrection(string blendShapeName, out string incorrection)
+        public static bool GetIncorrection(string blendShapeName, out string incorrection)
         {
             foreach (MappingCorrection mc in corrections)
             {
