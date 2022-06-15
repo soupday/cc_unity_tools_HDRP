@@ -20,7 +20,7 @@ namespace Reallusion.Import
         Transform baked;
         Transform camera;
 
-        public bool IsValidPreviewScene { get { return scene.IsValid() && container && stage && lighting && character; } }
+        public bool IsValidPreviewScene { get { return scene.IsValid() && container && stage && character; } }
         public Scene SceneHandle { get { return scene; } }
 
         public Transform GetCamera()
@@ -60,6 +60,28 @@ namespace Reallusion.Import
             ps.camera = GameObject.Find("Main Camera")?.transform;            
             return ps;
         }        
+        
+        public static void CycleLighting()
+        {
+            if (WindowManager.IsPreviewScene)
+            {
+                PreviewScene ps = WindowManager.GetPreviewScene();
+
+                List<GameObject> lightingContainers = new List<GameObject>();
+                Util.FindSceneObjects(ps.container, "Lighting", lightingContainers);
+
+                int active = 0;
+                for (int i = 0; i < lightingContainers.Count; i++)
+                {
+                    if (lightingContainers[i].activeSelf) active = i;
+                    lightingContainers[i].SetActive(false);
+                }
+
+                active++;
+                if (active >= lightingContainers.Count) active = 0;
+                lightingContainers[active].SetActive(true);
+            }
+        }
 
         public GameObject GetPreviewCharacter()
         {

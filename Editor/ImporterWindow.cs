@@ -52,6 +52,7 @@ namespace Reallusion.Import
         const float WINDOW_MARGIN = 4f;
         const float TOP_PADDING = 16f;
         const float ACTION_BUTTON_SIZE = 40f;
+        const float WEE_BUTTON_SIZE = 28f;
         const float ACTION_BUTTON_SPACE = 4f;
         const float BUTTON_HEIGHT = 40f;
         const float INFO_HEIGHT = 80f;
@@ -714,6 +715,36 @@ namespace Reallusion.Import
             GUI.enabled = true;
 
             GUILayout.FlexibleSpace();
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (!WindowManager.IsPreviewScene) GUI.enabled = false;
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PointLight Gizmo").image, "Cycle Lighting."),
+                GUILayout.Width(WEE_BUTTON_SIZE), GUILayout.Height(WEE_BUTTON_SIZE)))
+            {
+                PreviewScene.CycleLighting();
+            }
+            GUI.enabled = true;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (!WindowManager.IsPreviewScene) GUI.enabled = false;
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Camera Icon").image, "Match main camera to scene view."),
+                GUILayout.Width(WEE_BUTTON_SIZE), GUILayout.Height(WEE_BUTTON_SIZE)))
+            {
+                WindowManager.DoMatchSceneCameraOnce();
+            }
+            GUI.enabled = true;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
 
             GUIContent settingsIconGC;
             if (windowMode != ImporterWindowMode.Settings)

@@ -18,10 +18,10 @@ namespace Reallusion.Import
         public static bool showPlayer = true;
         public static bool showRetarget = false;
         
-        static WindowManager()  
+        static WindowManager()   
         {
             // Even if update is not the most elegant. Using hierarchyWindowChanged for CPU sake will not work in all cases, because when hierarchyWindowChanged is called, Time's values might be all higher than current values. Why? Because current values are set at the first frame. If you keep reloading the same scene, this case happens.
-            EditorApplication.update += WindowManager.MonitorScene;
+            EditorApplication.update += WindowManager.MonitorScene; 
             showPlayer = Importer.ANIMPLAYER_ON_BY_DEFAULT;
             currentScene = EditorSceneManager.GetActiveScene();
 
