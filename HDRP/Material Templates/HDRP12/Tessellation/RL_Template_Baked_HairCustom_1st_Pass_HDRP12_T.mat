@@ -24,16 +24,16 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: RL_Template_Baked_HairCustom_1st_Pass_HDRP12_T
-  m_Shader: {fileID: -6465566751694194690, guid: a3c9ad516f103934fbed433b9b48b6f4,
+  m_Shader: {fileID: -6465566751694194690, guid: 1d02e0dd3fd71bd409f40a782f322394,
     type: 3}
   m_ValidKeywords:
   - _ALPHATEST_ON
   - _ALPHATOMASK_ON
   - _DISABLE_SSR_TRANSPARENT
   - _DOUBLESIDED_ON
-  - _ENUMCLIPQUALITY_ON_STANDARD
   - _TESSELLATION_PHONG
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _ENUMCLIPQUALITY_ON_STANDARD
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
@@ -100,13 +100,10 @@ Material:
     - _CullMode: 0
     - _CullModeForward: 0
     - _DepthOffsetEnable: 0
-    - _DepthPostpass: 1
-    - _DepthPrepass: 0.9
     - _DoubleSidedEnable: 1
     - _DoubleSidedGIMode: 0
     - _DoubleSidedNormalMode: 0
     - _DstBlend: 0
-    - _ENUMCLIPQUALITY_ON: 0
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
     - _NormalStrength: 1

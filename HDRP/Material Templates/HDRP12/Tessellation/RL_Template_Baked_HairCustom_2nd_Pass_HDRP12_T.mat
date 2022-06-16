@@ -24,17 +24,19 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: RL_Template_Baked_HairCustom_2nd_Pass_HDRP12_T
-  m_Shader: {fileID: -6465566751694194690, guid: a3c9ad516f103934fbed433b9b48b6f4,
+  m_Shader: {fileID: -6465566751694194690, guid: 1d02e0dd3fd71bd409f40a782f322394,
     type: 3}
   m_ValidKeywords:
+  - _ALPHATEST_ON
+  - _ALPHATOMASK_ON
   - _DISABLE_SSR_TRANSPARENT
   - _DOUBLESIDED_ON
   - _ENABLE_FOG_ON_TRANSPARENT
-  - _ENUMCLIPQUALITY_ON_STANDARD
   - _SURFACE_TYPE_TRANSPARENT
   - _TESSELLATION_PHONG
   - _TRANSPARENT_WRITES_MOTION_VEC
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _ENUMCLIPQUALITY_ON_STANDARD
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
@@ -89,24 +91,21 @@ Material:
     m_Ints: []
     m_Floats:
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.1
-    - _AlphaCutoffEnable: 0
+    - _AlphaClip: 0.01
+    - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 10
     - _AlphaSrcBlend: 1
-    - _AlphaToMask: 0
+    - _AlphaToMask: 1
     - _AlphaToMaskInspectorValue: 1
     - _BlendMode: 0
     - _ConservativeDepthOffsetEnable: 0
     - _CullMode: 0
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
-    - _DepthPostpass: 1
-    - _DepthPrepass: 0.9
     - _DoubleSidedEnable: 1
     - _DoubleSidedGIMode: 0
     - _DoubleSidedNormalMode: 0
     - _DstBlend: 10
-    - _ENUMCLIPQUALITY_ON: 0
     - _EnableBlendModePreserveSpecularLighting: 0
     - _EnableFogOnTransparent: 1
     - _NormalStrength: 1
@@ -154,7 +153,7 @@ Material:
     - _UseShadowThreshold: 1
     - _VertexColorStrength: 0.5
     - _ZTestDepthEqualForOpaque: 2
-    - _ZTestGBuffer: 4
+    - _ZTestGBuffer: 3
     - _ZTestTransparent: 2
     - _ZWrite: 0
     m_Colors:

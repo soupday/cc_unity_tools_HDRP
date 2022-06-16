@@ -688,7 +688,28 @@ namespace Reallusion.Import
             }
 
             return found;
-        }        
+        }
+
+        public static AnimationClip[] GetAllAnimationClipsFromCharacter(GameObject sourceFbx)
+        {
+            List<AnimationClip> clips = new List<AnimationClip>();
+
+            if (sourceFbx)
+            {
+                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(sourceFbx));
+                foreach (Object subObject in data)
+                {
+                    if (subObject.GetType().Equals(typeof(AnimationClip)))
+                    {
+                        AnimationClip found = (AnimationClip)subObject;
+                        if (found.name.iContains("T-Pose")) continue;
+                        clips.Add(found);
+                    }
+                }
+            }
+
+            return clips.ToArray();
+        }
         
         public static GameObject FindCharacterPrefabAsset(GameObject fbxAsset)
         { 
@@ -808,6 +829,14 @@ namespace Reallusion.Import
                 Debug.LogError(message);
             }
         }
-               
+
+        
+
+
+
+
+
+
+
     }    
 }

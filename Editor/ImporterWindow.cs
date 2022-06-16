@@ -644,7 +644,8 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAnims, "Process character animations and create a default animtor controller."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);
+                RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);                
+                AnimRetargetGUI.GenerateCharacterTargetedAnimations(contextCharacter.Fbx);
             }
             GUI.enabled = true;
 

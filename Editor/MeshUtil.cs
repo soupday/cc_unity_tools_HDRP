@@ -1036,17 +1036,30 @@ namespace Reallusion.Import
 
                 firstPass.SetFloat("_SurfaceType", 0f);
                 firstPass.SetFloat("_ENUMCLIPQUALITY_ON", 0f);                
-                Pipeline.ResetMaterial(firstPass);                
+                firstPass.DisableKeyword("BOOLEAN_SECONDPASS_ON");
+                firstPass.SetFloat("BOOLEAN_SECONDPASS", 0f);
+                Pipeline.ResetMaterial(firstPass);
 
+                // transparent surface
                 secondPass.SetFloat("_SurfaceType", 1f);
-                secondPass.SetFloat("_AlphaCutoffEnable", 0f);                
+                // alpha clip
+                secondPass.SetFloat("_AlphaCutoffEnable", 1f);                
+                // prepass & postpass
                 secondPass.SetFloat("_TransparentDepthPostpassEnable", 0f);
                 secondPass.SetFloat("_TransparentDepthPrepassEnable", 0f);
+                // preserve specular lighting
                 secondPass.SetFloat("_EnableBlendModePreserveSpecularLighting", 0f);
+                // Z test (opaque and transparent): Less
                 secondPass.SetFloat("_ZTestDepthEqualForOpaque", 2f);
                 secondPass.SetFloat("_ZTestTransparent", 2f);
+                // keywords
                 secondPass.SetFloat("_ENUMCLIPQUALITY_ON", 0f);
+                secondPass.EnableKeyword("BOOLEAN_SECONDPASS_ON");
+                secondPass.SetFloat("BOOLEAN_SECONDPASS", 1f);
                 Pipeline.ResetMaterial(secondPass);
+
+                Debug.Log(firstPass.IsKeywordEnabled("BOOLEAN_SECONDPASS_ON"));
+                Debug.Log(secondPass.IsKeywordEnabled("BOOLEAN_SECONDPASS_ON"));
 
                 /*
                 aif.SaveAndReimport();
@@ -1165,6 +1178,8 @@ namespace Reallusion.Import
                             // a single submesh with multiple materials will render itself again with each material
                             // effectively acting as a multi-pass shader which fully complies with any SRP batching.
                             smr.sharedMaterials = sharedMaterials;
+                            // call the fix again as Unity reverts some settings when first saving...
+                            FixHDRP2PassMaterials(firstPass, secondPass);
 
                             indicesToRemove.Add(index);
                             subMeshCount--;
@@ -1194,6 +1209,8 @@ namespace Reallusion.Import
                             // a single submesh with multiple materials will render itself again with each material
                             // effectively acting as a multi-pass shader which fully complies with any SRP batching.
                             oldSmr.sharedMaterials = sharedMaterials;
+                            // call the fix again as Unity reverts some settings when first saving...
+                            FixHDRP2PassMaterials(firstPass, secondPass);
                             // as we have replaced the materials completely, don't remove any later when removing any submeshes...
                             dontRemoveMaterials = true;
                             processCount++;

@@ -308,27 +308,27 @@ namespace Reallusion.Import
                         Material firstPass = null;
                         Material secondPass = null;
 
-                        if (shaderName == Pipeline.SHADER_HQ_SKIN)
+                        if (shaderName.iContains(Pipeline.SHADER_HQ_SKIN))
                             bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
 
-                        else if (shaderName == Pipeline.SHADER_HQ_TEETH)
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH))
                             bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
 
-                        else if (shaderName == Pipeline.SHADER_HQ_TONGUE)
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_TONGUE))
                             bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
 
-                        else if (shaderName == Pipeline.SHADER_HQ_HAIR ||
-                                 shaderName == Pipeline.SHADER_HQ_HAIR_1ST_PASS ||
-                                 shaderName == Pipeline.SHADER_HQ_HAIR_COVERAGE)
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR) ||
+                                 shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS) ||
+                                 shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
                             bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);
 
-                        else if (shaderName == Pipeline.SHADER_HQ_CORNEA ||
-                                 shaderName == Pipeline.SHADER_HQ_CORNEA_PARALLAX ||
-                                 shaderName == Pipeline.SHADER_HQ_CORNEA_REFRACTIVE ||
-                                 shaderName == Pipeline.SHADER_HQ_EYE_REFRACTIVE)
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA) ||
+                                 shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
+                                 shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE) ||
+                                 shaderName.iContains(Pipeline.SHADER_HQ_EYE_REFRACTIVE))
                             bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);                        
 
-                        else if (shaderName == Pipeline.SHADER_HQ_EYE_OCCLUSION)
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION))
                             bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);                                               
 
                         if (firstPass && secondPass)
@@ -1130,8 +1130,8 @@ namespace Reallusion.Import
             float alphaClip = mat.GetFloatIf("_AlphaClip");
             if (IS_URP) alphaClip = mat.GetFloatIf("_AlphaClip2");
             float shadowClip = mat.GetFloatIf("_ShadowClip");
-            float depthPrepass = mat.GetFloatIf("_DepthPrepass");
-            float depthPostpass = mat.GetFloatIf("_DepthPostpass");
+            float depthPrepass = mat.GetFloatIf("_DepthPrepass", 1f);
+            float depthPostpass = mat.GetFloatIf("_DepthPostpass", 0f);
             float smoothnessMin = mat.GetFloatIf("_SmoothnessMin");
             float smoothnessMax = mat.GetFloatIf("_SmoothnessMax");
             float smoothnessPower = mat.GetFloatIf("_SmoothnessPower");
@@ -1302,7 +1302,7 @@ namespace Reallusion.Import
                     }
                 };
 
-                if (mat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
+                if (mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
                 {
                     firstPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
@@ -1320,6 +1320,9 @@ namespace Reallusion.Import
 
                     // multi material pass hair is custom baked shader only:
                     SetCustom(firstPass);
+                    alphaClip = 0.01f;
+                    depthPostpass = 0f;
+                    depthPrepass = 1f;
                     SetCustom(secondPass);                    
                     return null;
                 }
@@ -1356,13 +1359,13 @@ namespace Reallusion.Import
                     bakeMat.SetColorIf("_Color", diffuseColor);
                 };
 
-                if (mat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
+                if (mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
                 {
                     firstPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
+                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation));                    
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
@@ -1371,6 +1374,9 @@ namespace Reallusion.Import
                         Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
 
                     SetBasic(firstPass);
+                    alphaClip = 0.01f;
+                    depthPostpass = 0f;
+                    depthPrepass = 1f;
                     SetBasic(secondPass);
                     return null;
                 }

@@ -77,6 +77,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - BOOLEAN_ENABLECOLOR: 0
+    - BOOLEAN_SECONDPASS: 0
     - _AOOccludeAll: 0
     - _AOStrength: 1
     - _AddPrecomputedVelocity: 0
@@ -94,13 +95,10 @@ Material:
     - _CullMode: 0
     - _CullModeForward: 0
     - _DepthOffsetEnable: 0
-    - _DepthPostpass: 0.2
-    - _DepthPrepass: 0.95
     - _DiffuseStrength: 1
     - _DoubleSidedEnable: 1
     - _DoubleSidedNormalMode: 0
     - _DstBlend: 0
-    - _ENUMCLIPQUALITY_ON: 0
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
     - _EndColorStrength: 1

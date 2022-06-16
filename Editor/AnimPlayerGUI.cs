@@ -14,14 +14,15 @@ namespace Reallusion.Import
         public static bool AnimFoldOut { get; private set; } = true;
         public static FacialProfile MeshFacialProfile { get; private set; }
         public static FacialProfile ClipFacialProfile { get; private set; }        
-        public static AnimationClip OriginalClip { get; private set; }        
-        public static AnimationClip WorkingClip { get ; private set; }
-        public static Animator CharacterAnimator { get; private set; }
+        public static AnimationClip OriginalClip { get; set; }        
+        public static AnimationClip WorkingClip { get ; set; }
+        public static Animator CharacterAnimator { get; set; }
 
         private static double updateTime = 0f;
         private static double deltaTime = 0f;
         private static double frameTime = 1f;
         private static bool forceUpdate = false;
+        private static FacialProfile defaultProfile = new FacialProfile(ExpressionProfile.ExPlus, VisemeProfile.PairsCC3);
 
         public static void OpenPlayer(GameObject fbx)
         {
@@ -95,11 +96,12 @@ namespace Reallusion.Import
                 Animator animator = scenePrefab.GetComponent<Animator>();
                 GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
                 AnimationClip clip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
+                clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(sceneFbx, clip);
                 UpdateAnimatorClip(animator, clip);
             }         
         }
 
-        static void UpdateAnimatorClip(Animator animator, AnimationClip clip)
+        static public void UpdateAnimatorClip(Animator animator, AnimationClip clip)
         {
             // stop animation mode
             if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
@@ -138,7 +140,7 @@ namespace Reallusion.Import
             play = false;            
         }
 
-        private static AnimationClip CloneClip(AnimationClip clip)
+        public static AnimationClip CloneClip(AnimationClip clip)
         {
             if (clip)
             {
@@ -542,10 +544,10 @@ namespace Reallusion.Import
 
                 GUI.DrawTexture(rightTopRowIcon, jawIconImage);
                 EditorGUI.BeginChangeCheck();
-                jawVal = GUI.HorizontalSlider(rightTopRowSlider, jawVal, jawRef - 15f, jawRef + 0f);
+                jawVal = GUI.HorizontalSlider(rightTopRowSlider, jawVal, jawRef - 25f, jawRef + 0f);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    SetIndividualBlendShape("Mouth_Open", Mathf.InverseLerp(jawRef + 0f, jawRef - 15f, jawVal) * 100f);
+                    SetIndividualBlendShape("A25_Jaw_Open", Mathf.InverseLerp(jawRef + 0f, jawRef - 25f, jawVal) * 70f);
                     AdjustMouth(jawVal);
                 }
 
@@ -809,8 +811,7 @@ namespace Reallusion.Import
         private static bool SetCharacterBlendShape(GameObject characterRoot, string blendShapeName, float weight)
         {
             return FacialProfileMapper.SetCharacterBlendShape(characterRoot, blendShapeName, 
-                new FacialProfile(ExpressionProfile.ExPlus, VisemeProfile.None),
-                MeshFacialProfile, weight);
+                defaultProfile, MeshFacialProfile, weight);
         }        
 
         static void SetFacialExpression(Dictionary<string, float> dict, bool restore = false)
