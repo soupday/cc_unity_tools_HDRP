@@ -149,7 +149,7 @@ namespace Reallusion.Import
 
         private static bool isSceneViewOrbit;
         private static Vector3 pivotDisplacement;
-        private static Transform trackTarget;
+        private static Transform trackTarget;        
 
         static void SceneViewOrbitUpdate()
         {
@@ -163,13 +163,12 @@ namespace Reallusion.Import
                 {
                     pivot = trackTarget.position + pivotDisplacement;
                 }
-                float fov = scene.camera.fieldOfView;
-                float dist = scene.cameraDistance;
+                float fov = scene.cameraSettings.fieldOfView;
+                float dist = scene.cameraDistance;                
                 float size = Mathf.Sin(Mathf.Deg2Rad * fov / 2f) * dist;
 
                 boom = Quaternion.AngleAxis(0.1f, Vector3.up) * boom;
-
-                SceneView.lastActiveSceneView.LookAtDirect(pivot, Quaternion.LookRotation(-boom, Vector3.up), size);
+                scene.LookAtDirect(pivot, Quaternion.LookRotation(-boom, Vector3.up), size);
                 SceneView.RepaintAll();
             }
         }
