@@ -1365,7 +1365,9 @@ namespace Reallusion.Import
                 float limbusDarkT = Mathf.InverseLerp(0f, 10f, limbusDarkScale);
                 mat.SetFloatIf("_LimbusDarkRadius", Mathf.Lerp(0.145f, 0.075f, limbusDarkT));
                 //mat.SetFloatIf("_LimbusDarkWidth", 0.035f);
-                mat.SetFloatIf("_ScleraBrightness", Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"), 0.75f));
+                float scleraBrightnessPower = 0.65f;
+                if (Pipeline.isHDRP) scleraBrightnessPower = 0.75f;
+                mat.SetFloatIf("_ScleraBrightness", Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"), scleraBrightnessPower));
                 mat.SetFloatIf("_ScleraSaturation", 1.0f);
                 mat.SetFloatIf("_ScleraSmoothness", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Roughness"));
                 mat.SetFloatIf("_ScleraScale", matJson.GetFloatValue("Custom Shader/Variable/Sclera UV Radius"));
@@ -1497,8 +1499,9 @@ namespace Reallusion.Import
                 {                    
                     if (USE_AMPLIFY_SHADER)
                     {
-                        mat.SetFloatIf("_SmoothnessMin", smoothnessStrength);                        
-                        mat.SetFloatIf("_SpecularMultiplier", Mathf.Pow(0.18f * specMapStrength * specStrength, 0.333f));
+                        mat.SetFloatIf("_SmoothnessMin", smoothnessStrength);
+                        SetFloatPowerRange(mat, "_SpecularMultiplier", specMapStrength * specStrength, 0f, 0.5f, 0.5f);
+                        //mat.SetFloatIf("_SpecularMultiplier", Mathf.Pow(0.18f * specMapStrength * specStrength, 0.333f));
                         mat.SetFloatIf("_RimTransmissionIntensity", 50f * rimTransmission);
                         mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                             matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));

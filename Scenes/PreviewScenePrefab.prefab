@@ -6676,7 +6676,7 @@ MonoBehaviour:
   m_Intensity: 60000
   m_EnableSpotReflector: 1
   m_LuxAtDistance: 1
-  m_InnerSpotPercent: 50
+  m_InnerSpotPercent: 55
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1

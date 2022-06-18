@@ -538,10 +538,16 @@ namespace Reallusion.Import
                 menu.ShowAsContext();
             }
 
+            int features = 0;
+            if (Pipeline.isHDRP12) features++; // tessellation
+            if (Pipeline.is3D || Pipeline.isURP) features++; // Amplify
+
             if (Pipeline.isHDRP12)
             {
-                //contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(contextCharacter.ShaderFlags);
-                contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(contextCharacter.ShaderFlags);
+                if (features == 1)
+                    contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(contextCharacter.ShaderFlags);
+                else if (features > 1)
+                    contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(contextCharacter.ShaderFlags);
             }
 
             GUI.enabled = true;
