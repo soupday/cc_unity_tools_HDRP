@@ -336,7 +336,7 @@ namespace Reallusion.Import
             return null;
         }
 
-        public static Material FindCustomMaterial(string name, string[] folders = null)
+        public static Material FindCustomMaterial(string name, bool useTessellation, string[] folders = null)
         {
             Material template = null;
             Material foundTemplate = null;
@@ -365,7 +365,7 @@ namespace Reallusion.Import
                 }
             }
 
-            if (Importer.USE_TESSELLATION_SHADER)
+            if (useTessellation)
             {
                 foundTemplate = null;
 

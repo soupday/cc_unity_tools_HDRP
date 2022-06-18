@@ -299,11 +299,13 @@ namespace Reallusion.Import
 
             float width = position.width - WINDOW_MARGIN;
             float height = position.height - WINDOW_MARGIN;
-            float innerHeight = height - TOP_PADDING;                 
+            float innerHeight = height - TOP_PADDING;
+            float optionHeight = OPTION_HEIGHT;
+            if (Pipeline.isHDRP12) optionHeight += 14f;
 
             Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_WIDTH, innerHeight);
             Rect infoBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, INFO_HEIGHT);
-            Rect optionBlock = new Rect(iconBlock.xMax, infoBlock.yMax, infoBlock.width, OPTION_HEIGHT);
+            Rect optionBlock = new Rect(iconBlock.xMax, infoBlock.yMax, infoBlock.width, optionHeight);
             Rect actionBlock = new Rect(iconBlock.xMax + infoBlock.width, TOP_PADDING, ACTION_WIDTH, innerHeight);            
             Rect treeviewBlock = new Rect(iconBlock.xMax, optionBlock.yMax, infoBlock.width, height - optionBlock.yMax);
             Rect settingsBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, innerHeight);
@@ -535,6 +537,13 @@ namespace Reallusion.Import
                     menu.AddItem(new GUIContent("MSAA Coverage Hair"), contextCharacter.CoverageHair, HairOptionSelected, CharacterInfo.HairQuality.Coverage);
                 menu.ShowAsContext();
             }
+
+            if (Pipeline.isHDRP12)
+            {
+                //contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(contextCharacter.ShaderFlags);
+                contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(contextCharacter.ShaderFlags);
+            }
+
             GUI.enabled = true;
 
             GUILayout.Space(8f);
@@ -834,13 +843,13 @@ namespace Reallusion.Import
                 "Otherwise subsequent material rebuilds will try to re-use existing bakes. Only needed if the source textures are changed."));
             GUILayout.Space(ROW_SPACE);
 
-            if (Pipeline.isHDRP)
+            /*if (Pipeline.isHDRP)
             {
                 Importer.USE_TESSELLATION_SHADER = GUILayout.Toggle(Importer.USE_TESSELLATION_SHADER,
                 new GUIContent("Use Tessellation in Shaders", "Use tessellation enabled shaders where possible. " +
                 "For HDRP 10 & 11 this means default shaders only (HDRP/LitTessellation). For HDRP 12 (Unity 2021.2+) all shader graph shaders can have tessellation enabled."));
                 GUILayout.Space(ROW_SPACE);
-            }
+            }*/
 
             Importer.ANIMPLAYER_ON_BY_DEFAULT = GUILayout.Toggle(Importer.ANIMPLAYER_ON_BY_DEFAULT,
                     new GUIContent("Animation Player On", "Always show the animation player when opening the preview scene."));

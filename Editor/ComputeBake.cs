@@ -587,7 +587,7 @@ namespace Reallusion.Import
 
             bool isHead = mat.GetFloatIf("BOOLEAN_IS_HEAD") > 0f;
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
-            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
+            bool useTessellation = characterInfo.BuiltFeatureTessellation;
             if (!IS_HDRP && !useAmplify) sssNormalSoften = 0f;
 
             Texture2D bakedBaseMap = diffuse;
@@ -758,7 +758,7 @@ namespace Reallusion.Import
             if (IS_HDRP) subsurfaceFalloff = Color.white;
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
-            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
+            bool useTessellation = characterInfo.BuiltFeatureTessellation;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -854,7 +854,7 @@ namespace Reallusion.Import
             if (IS_HDRP) subsurfaceFalloff = Color.white;
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
-            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
+            bool useTessellation = characterInfo.BuiltFeatureTessellation;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -977,7 +977,7 @@ namespace Reallusion.Import
             Color subsurfaceFalloff = mat.GetColorIf("_SubsurfaceFalloff", Color.white);
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
-            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
+            bool useTessellation = characterInfo.BuiltFeatureTessellation;
 
             Texture2D bakedBaseMap = cornea;
             Texture2D bakedMaskMap = mask;
@@ -1178,7 +1178,7 @@ namespace Reallusion.Import
             secondPass = null;
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
-            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
+            bool useTessellation = characterInfo.BuiltFeatureTessellation;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -1423,7 +1423,7 @@ namespace Reallusion.Import
             float expandOuter = mat.GetFloatIf("_ExpandOuter");
             float expandScale = mat.GetFloatIf("_ExpandScale");
 
-            bool useTessellation = Importer.USE_TESSELLATION_SHADER;
+            bool useTessellation = characterInfo.BuiltFeatureTessellation;
 
             Texture2D bakedBaseMap = null;
             Texture2D bakedMaskMap = null;

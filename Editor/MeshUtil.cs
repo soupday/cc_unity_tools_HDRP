@@ -1131,6 +1131,8 @@ namespace Reallusion.Import
                             }
                         }
 
+                        bool useTessellation = oldMat.shader.name.iContains("_Tessellation");
+
                         if (subMeshCount > 1 && oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {                            
                             Debug.Log("Extracting subMesh(" + index.ToString() +  ") from Object: " + oldObj.name);
@@ -1162,8 +1164,8 @@ namespace Reallusion.Import
                             Material[] sharedMaterials = new Material[2];
                             // - add first pass hair shader material
                             // - add second pass hair shader material
-                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
-                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
+                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS, useTessellation);
+                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS, useTessellation);
                             Material firstPass = new Material(firstPassTemplate);
                             Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);
@@ -1193,8 +1195,8 @@ namespace Reallusion.Import
                             // - add first pass hair shader material
                             // - add second pass hair shader material
                             
-                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
-                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
+                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS, useTessellation);
+                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS, useTessellation);
                             Material firstPass = new Material(firstPassTemplate);
                             Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);

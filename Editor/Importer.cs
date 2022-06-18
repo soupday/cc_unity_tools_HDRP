@@ -75,20 +75,7 @@ namespace Reallusion.Import
                 EditorPrefs.SetBool("RL_Importer_Use_Amplify_Shaders", value);
             }
         }
-        public static bool USE_TESSELLATION_SHADER
-        {
-            get
-            {
-                if (EditorPrefs.HasKey("RL_Importer_Use_Tessellation_Shaders"))
-                    return EditorPrefs.GetBool("RL_Importer_Use_Tessellation_Shaders");
-                return false;
-            }
-
-            set
-            {
-                EditorPrefs.SetBool("RL_Importer_Use_Tessellation_Shaders", value);
-            }
-        }
+        
         public static bool ANIMPLAYER_ON_BY_DEFAULT
         {
             get
@@ -103,6 +90,7 @@ namespace Reallusion.Import
                 EditorPrefs.SetBool("RL_Importer_Animation_Player_On", value);
             }
         }
+
         public static bool RECONSTRUCT_FLOW_NORMALS
         {
             get
@@ -132,7 +120,6 @@ namespace Reallusion.Import
                 EditorPrefs.SetBool("RL_Rebake_Blender_Unity_Maps", value);
             }
         }
-
 
         private RenderPipeline RP => Pipeline.GetRenderPipeline();
 
@@ -584,7 +571,7 @@ namespace Reallusion.Import
         private Material CreateRemapMaterial(MaterialType materialType, Material sharedMaterial, string sourceName)
         {
             // get the template material.
-            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, characterInfo.BuildQuality, characterInfo, USE_AMPLIFY_SHADER, USE_TESSELLATION_SHADER);
+            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, characterInfo.BuildQuality, characterInfo, USE_AMPLIFY_SHADER, characterInfo.FeatureUseTessellation);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -1378,8 +1365,8 @@ namespace Reallusion.Import
                 float limbusDarkT = Mathf.InverseLerp(0f, 10f, limbusDarkScale);
                 mat.SetFloatIf("_LimbusDarkRadius", Mathf.Lerp(0.145f, 0.075f, limbusDarkT));
                 //mat.SetFloatIf("_LimbusDarkWidth", 0.035f);
-                mat.SetFloatIf("_ScleraBrightness", Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"), 0.65f));
-                mat.SetFloatIf("_ScleraSaturation", 0.75f);
+                mat.SetFloatIf("_ScleraBrightness", Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/ScleraBrightness"), 0.75f));
+                mat.SetFloatIf("_ScleraSaturation", 1.0f);
                 mat.SetFloatIf("_ScleraSmoothness", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Roughness"));
                 mat.SetFloatIf("_ScleraScale", matJson.GetFloatValue("Custom Shader/Variable/Sclera UV Radius"));
                 mat.SetFloatIf("_ScleraNormalStrength", 1f - matJson.GetFloatValue("Custom Shader/Variable/Sclera Flatten Normal"));
@@ -1441,14 +1428,14 @@ namespace Reallusion.Import
             //    mat.SetFloatIf("_AlphaRemap", 0.5f);
             //}
 
-            float smoothnessPowerMod = 0.667f;
+            float powerMod = 1f;
             if (isFacialHair)
             {
-                // make facial hair thinner and rougher           
+                // make facial hair thinner and rougher  
+                powerMod = 1.5f;
                 mat.SetFloatIf("_DepthPrepass", 0.75f);                
                 mat.SetFloatIf("_AlphaPower", 1.25f);
-                mat.SetFloatIf("_SmoothnessPower", 1.5f);
-                smoothnessPowerMod = 0.333f;
+                mat.SetFloatIf("_SmoothnessPower", powerMod);
             }            
 
             if (matJson != null)
@@ -1483,15 +1470,21 @@ namespace Reallusion.Import
                 float specStrength = matJson.GetFloatValue("Custom Shader/Variable/Specular Strength");
                 float specStrength2 = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");
                 float rimTransmission = matJson.GetFloatValue("Custom Shader/Variable/Transmission Strength");
-                float smoothnessStrength = 1f - Mathf.Pow(matJson.GetFloatValue("Custom Shader/Variable/Hair Roughness Map Strength"), smoothnessPowerMod);
+                float roughnessStrength = matJson.GetFloatValue("Custom Shader/Variable/Hair Roughness Map Strength");
+                //roughnessStrength = 0.25f;
+                //specStrength = 0.25f;
+                //specStrength2 = 0f;
+                //specMapStrength = 0.5f;                                
+                float smoothnessStrength = 1f - Mathf.Pow(roughnessStrength, 1f);
+                float smoothnessMax = mat.GetFloatIf("_SmoothnessMax", 0.8f);
                 if (RP == RenderPipeline.HDRP)
                 {
-                    float secondarySpecStrength = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");                    
-                    mat.SetFloatIf("_SmoothnessMin", smoothnessStrength);
+                    float secondarySpecStrength = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");
+                    SetFloatPowerRange(mat, "_SmoothnessMin", smoothnessStrength, 0f, smoothnessMax, powerMod);
+                    SetFloatPowerRange(mat, "_SpecularMultiplier", specMapStrength * specStrength, 0.1f, 1f, powerMod);
+                    SetFloatPowerRange(mat, "_SecondarySpecularMultiplier", specMapStrength * specStrength2, 0.05f, 0.15f, powerMod);
                     // set by template
                     //mat.SetFloatIf("_SecondarySmoothness", 0.5f);
-                    mat.SetFloatIf("_SpecularMultiplier", specMapStrength * specStrength);
-                    mat.SetFloatIf("_SecondarySpecularMultiplier", specMapStrength * specStrength2);
                     mat.SetFloatIf("_RimTransmissionIntensity", 2f * rimTransmission);
                     mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                         matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
@@ -1914,6 +1907,11 @@ namespace Reallusion.Import
             tex = GetTextureFrom(jsonTexturePath, materialName, suffix, out string name, search);
 
             return tex;
+        }
+
+        private void SetFloatPowerRange(Material mat, string shaderRef, float value, float min, float max, float power = 1f)
+        {
+            mat.SetFloatIf(shaderRef, Mathf.Lerp(min, max, Mathf.Pow(value, power)));
         }
     }
 }

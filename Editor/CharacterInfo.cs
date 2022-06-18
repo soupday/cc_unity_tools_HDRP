@@ -27,6 +27,7 @@ namespace Reallusion.Import
         public enum ProcessingType { None, Basic, HighQuality }
         public enum EyeQuality { None, Basic, Parallax, Refractive }
         public enum HairQuality { None, Default, TwoPass, Coverage }
+        public enum ShaderFeatureFlags { NoShaderFeatures = 0, Tessellation = 1 } //, Tessellation = ~0 }
 
         public string guid;
         public string path;        
@@ -44,7 +45,7 @@ namespace Reallusion.Import
         private HairQuality qualHair = HairQuality.TwoPass;
         private bool bakeCustomShaders = true;
         private bool bakeSeparatePrefab = true;
-        private bool useTessellation = false;
+        private bool useTessellation = false;        
 
         public ProcessingType BuildType { get { return logType; } set { logType = value; } }
         public MaterialQuality BuildQuality
@@ -62,6 +63,9 @@ namespace Reallusion.Import
                 else BuildType = ProcessingType.None;
             }
         }
+
+        public ShaderFeatureFlags ShaderFlags { get; set; } = ShaderFeatureFlags.NoShaderFeatures;
+        public bool FeatureUseTessellation => (ShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool BasicMaterials => logType == ProcessingType.Basic;
         public bool HQMaterials => logType == ProcessingType.HighQuality;
         public EyeQuality QualEyes { get { return qualEyes; } set { qualEyes = value; } }
@@ -74,7 +78,6 @@ namespace Reallusion.Import
         public bool DefaultHair { get { return qualHair == HairQuality.Default; } }
         public bool BakeCustomShaders { get { return bakeCustomShaders; } set { bakeCustomShaders = value; } }
         public bool BakeSeparatePrefab { get { return bakeSeparatePrefab; } set { bakeSeparatePrefab = value; } }        
-        public bool UseTessellation { get { return useTessellation; } set { useTessellation = value; } }
 
         // these are the settings the character has been built to.  
         private ProcessingType builtLogType = ProcessingType.None;
@@ -84,6 +87,8 @@ namespace Reallusion.Import
         private bool builtBakeSeparatePrefab = true;
         private bool builtTessellation = false;
 
+        public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoShaderFeatures;
+        public bool BuiltFeatureTessellation => (BuiltShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool BuiltBasicMaterials => builtLogType == ProcessingType.Basic;
         public bool BuiltHQMaterials => builtLogType == ProcessingType.HighQuality;
         public bool BuiltDualMaterialHair => builtQualHair == HairQuality.TwoPass;
@@ -93,8 +98,7 @@ namespace Reallusion.Import
         public HairQuality BuiltQualHair => builtQualHair;
         public bool BuiltRefractiveEyes => BuiltQualEyes == EyeQuality.Refractive;
         public bool BuiltBasicEyes => BuiltQualEyes == EyeQuality.Basic;
-        public bool BuiltParallaxEyes => BuiltQualEyes == EyeQuality.Parallax;
-        public bool BuiltTessellation { get { return builtTessellation; } set { builtTessellation = value; } }
+        public bool BuiltParallaxEyes => BuiltQualEyes == EyeQuality.Parallax;        
 
         public MaterialQuality BuiltQuality => BuiltHQMaterials ? MaterialQuality.High : MaterialQuality.Default;
         public bool Unprocessed => builtLogType == ProcessingType.None;
@@ -113,6 +117,11 @@ namespace Reallusion.Import
 
             if (qualHair == HairQuality.Coverage && Pipeline.isHDRP)
                 qualHair = HairQuality.Default;
+
+            if (!Pipeline.isHDRP && (ShaderFlags & ShaderFeatureFlags.Tessellation) > 0)
+            {
+                ShaderFlags = ShaderFlags & (~ShaderFeatureFlags.Tessellation);
+            }
         }
 
         public CharacterInfo(string guid)
@@ -141,6 +150,7 @@ namespace Reallusion.Import
             builtBakeCustomShaders = bakeCustomShaders;
             builtBakeSeparatePrefab = bakeSeparatePrefab;
             builtTessellation = useTessellation;
+            BuiltShaderFlags = ShaderFlags;
         }        
 
         public GameObject Fbx
@@ -270,6 +280,9 @@ namespace Reallusion.Import
                     case "isLOD":
                         isLOD = value == "true" ? true : false;
                         break;
+                    case "shaderFlags":
+                        ShaderFlags = (ShaderFeatureFlags)int.Parse(value);
+                        break;
                 }
             }
             ApplySettings();
@@ -287,6 +300,7 @@ namespace Reallusion.Import
             writer.WriteLine("bakeIsBaked=" + (bakeIsBaked ? "true" : "false"));
             writer.WriteLine("bakeCustomShaders=" + (builtBakeCustomShaders ? "true" : "false"));
             writer.WriteLine("bakeSeparatePrefab=" + (builtBakeSeparatePrefab ? "true" : "false"));
+            writer.WriteLine("shaderFlags=" + (int)BuiltShaderFlags);
             writer.Close();
             AssetDatabase.ImportAsset(infoPath);            
         }

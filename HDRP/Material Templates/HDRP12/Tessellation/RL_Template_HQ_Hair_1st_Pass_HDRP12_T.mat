@@ -107,7 +107,7 @@ Material:
     - _DiffuseStrength: 1
     - _DoubleSidedEnable: 1
     - _DoubleSidedGIMode: 0
-    - _DoubleSidedNormalMode: 0
+    - _DoubleSidedNormalMode: 2
     - _DstBlend: 0
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
@@ -131,7 +131,7 @@ Material:
     - _RootColorStrength: 1
     - _SecondarySmoothness: 0.625
     - _SecondarySpecularMultiplier: 0.05
-    - _SecondarySpecularShift: 0.15
+    - _SecondarySpecularShift: 0
     - _ShadowClip: 0.2
     - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
@@ -175,7 +175,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _DiffuseColor: {r: 1, g: 1, b: 1, a: 0}
-    - _DoubleSidedConstants: {r: -1, g: -1, b: -1, a: 0}
+    - _DoubleSidedConstants: {r: 1, g: 1, b: 1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _EndColor: {r: 0.6039216, g: 0.454902, b: 0.28627446, a: 0}
