@@ -161,11 +161,13 @@ namespace Reallusion.Import
     {
         public static List<ExpressionMapping> facialProfileMaps = new List<ExpressionMapping>() {
             //new FacialProfileMapping("", "", ""),            
-            new ExpressionMapping("Brow_Raise_Inner_L/R", "A01_Brow_Inner_Up", "Brow_Raise_Inner_L/R"), // Brow_Raise_Inner_L/R
+            new ExpressionMapping("Brow_Raise_Inner_L|Brow_Raise_Inner_R", "A01_Brow_Inner_Up", "Brow_Raise_Inner_L|Brow_Raise_Inner_R"), // Brow_Raise_Inner_L/R
             new ExpressionMapping("Brow_Drop_L", "A02_Brow_Down_Left", "Brow_Drop_L"),
             new ExpressionMapping("Brow_Drop_R", "A03_Brow_Down_Right", "Brow_Drop_R"),
             new ExpressionMapping("Brow_Raise_Outer_L", "A04_Brow_Outer_Up_Left", "Brow_Raise_Outer_L"),
             new ExpressionMapping("Brow_Raise_Outer_R", "A05_Brow_Outer_Up_Right", "Brow_Raise_Outer_R"),
+            new ExpressionMapping("Brow_Raise_L", "A04_Brow_Outer_Up_Left|A01_Brow_Inner_Up", "Brow_Raise_Inner_L|Brow_Raise_Inner_L"),
+            new ExpressionMapping("Brow_Raise_R", "A05_Brow_Outer_Up_Right|A01_Brow_Inner_Up", "Brow_Raise_Inner_R|Brow_Raise_outer_R"),
             new ExpressionMapping("", "A06_Eye_Look_Up_Left", "Eye_L_Look_Up"),
             new ExpressionMapping("", "A07_Eye_Look_Up_Right", "Eye_R_Look_Up"),
             new ExpressionMapping("", "A08_Eye_Look_Down_Left", "Eye_L_Look_Down"),
@@ -174,14 +176,14 @@ namespace Reallusion.Import
             new ExpressionMapping("", "A11_Eye_Look_In_Left", "Eye_L_Look_R"),
             new ExpressionMapping("", "A12_Eye_Look_In_Right", "Eye_R_Look_L"),
             new ExpressionMapping("", "A13_Eye_Look_Out_Right", "Eye_R_Look_R"),
-            new ExpressionMapping("Eye_Blink", "Eye_Blink", "Eye_Blink_L/R"),
+            new ExpressionMapping("Eye_Blink", "Eye_Blink", "Eye_Blink_L|Eye_Blink_R"),
             new ExpressionMapping("Eye_Blink_L", "A14_Eye_Blink_Left", "Eye_Blink_L"),
             new ExpressionMapping("Eye_Blink_R", "A15_Eye_Blink_Right", "Eye_Blink_R"),
             new ExpressionMapping("Eye_Squint_L", "A16_Eye_Squint_Left", "Eye_Squint_L"),
             new ExpressionMapping("Eye_Squint_R", "A17_Eye_Squint_Right", "Eye_Squint_R"),
             new ExpressionMapping("Eye_Wide_L", "A18_Eye_Wide_Left", "Eye_Wide_L"),
             new ExpressionMapping("Eye_Wide_R", "A19_Eye_Wide_Right", "Eye_Wide_R"),
-            new ExpressionMapping("Cheek_Puff_L/R", "A20_Cheek_Puff", "Cheek_Puff_L/R"), //Cheek_Puff_L/R
+            new ExpressionMapping("Cheek_Puff_L|Cheek_Puff_R", "A20_Cheek_Puff", "Cheek_Puff_L|Cheek_Puff_R"), //Cheek_Puff_L/R
             new ExpressionMapping("Cheek_Raise_L", "A21_Cheek_Squint_Left", "Cheek_Raise_L"),
             new ExpressionMapping("Cheek_Raise_R", "A22_Cheek_Squint_Right", "Cheek_Raise_R"),
             new ExpressionMapping("Nose_Flank_Raise_L", "A23_Nose_Sneer_Left", "Nose_Sneer_L"),
@@ -190,12 +192,12 @@ namespace Reallusion.Import
             new ExpressionMapping("", "A26_Jaw_Forward", "Jaw_Forward"),
             new ExpressionMapping("", "A27_Jaw_Left", "Jaw_L"),
             new ExpressionMapping("", "A28_Jaw_Right", "Jaw_R"),
-            new ExpressionMapping("Mouth_Pucker_Open", "A29_Mouth_Funnel", "Mouth_Funnel_Up/Down_L/R"), //Mouth_Funnel_Up/Down_L/R
-            new ExpressionMapping("Mouth_Pucker", "A30_Mouth_Pucker", "Mouth_Pucker_Up/Down_L/R"), //Mouth_Pucker_Up/Down_L/R
+            new ExpressionMapping("Mouth_Pucker_Open", "A29_Mouth_Funnel", "Mouth_Funnel_Up_L|Mouth_Funnel_Up_R|Mouth_Funnel_Down_L|Mouth_Funnel_Down_R"), //Mouth_Funnel_Up/Down_L/R
+            new ExpressionMapping("Mouth_Pucker", "A30_Mouth_Pucker", "Mouth_Pucker_Up_L|Mouth_Pucker_Up_R|Mouth_Pucker_Down_L|Mouth_Pucker_Down_R"), //Mouth_Pucker_Up/Down_L/R
             new ExpressionMapping("Mouth_L", "A31_Mouth_Left", "Mouth_L"),
             new ExpressionMapping("Mouth_R", "A32_Mouth_Right", "Mouth_R"),
-            new ExpressionMapping("Mouth_Top_Lip_Under", "A33_Mouth_Roll_Upper", "Mouth_Roll_Out_Upper_L/R"), //Mouth_Roll_Out_Upper_L/R
-            new ExpressionMapping("Mouth_Bottom_Lip_Under", "A34_Mouth_Roll_Lower", "Mouth_Roll_Out_Lower_L/R"), //Mouth_Roll_Out_Lower_L/R
+            new ExpressionMapping("Mouth_Top_Lip_Under", "A33_Mouth_Roll_Upper", "Mouth_Roll_Out_Upper_L|Mouth_Roll_Out_Upper_R"), //Mouth_Roll_Out_Upper_L/R
+            new ExpressionMapping("Mouth_Bottom_Lip_Under", "A34_Mouth_Roll_Lower", "Mouth_Roll_Out_Lower_L|Mouth_Roll_Out_Lower_R"), //Mouth_Roll_Out_Lower_L/R
             new ExpressionMapping("Mouth_Top_Lip_Up", "A35_Mouth_Shrug_Upper", "Mouth_Shrug_Upper"),
             new ExpressionMapping("", "A36_Mouth_Shrug_Lower", "Mouth_Shrug_Lower"), // -Mouth_Bottom_Lip_Down
             new ExpressionMapping("", "A37_Mouth_Close", "Mouth_Close"), //-Mouth_Open
@@ -506,42 +508,16 @@ namespace Reallusion.Import
             return false;
         }
 
-        private static List<string> multiShapeNames = new List<string>(4);
-        private static List<string> tempNames = new List<string>(4);
+        private static List<string> multiShapeNames = new List<string>(4);        
 
         public static List<string> GetMultiShapeNames(string profileShapeName)
         {
-            multiShapeNames.Clear();
-            tempNames.Clear();
-            if (profileShapeName.Contains("/"))
+            multiShapeNames.Clear();            
+            if (profileShapeName.Contains("|"))
             {
-                if (profileShapeName.Contains("_L/R"))
-                {
-                    multiShapeNames.Add(profileShapeName.Replace("_L/R", "_L"));
-                    multiShapeNames.Add(profileShapeName.Replace("_L/R", "_R"));
-
-                    foreach (string LRShapeName in multiShapeNames)
-                    {
-                        if (LRShapeName.Contains("_Up/Down"))
-                        {
-                            tempNames.Add(LRShapeName.Replace("_Up/Down", "_Up"));
-                            tempNames.Add(LRShapeName.Replace("_Up/Down", "_Down"));
-                        }
-                    }
-                }
-                else if (profileShapeName.Contains("_Up/Down"))
-                {
-                    multiShapeNames.Add(profileShapeName.Replace("_Up/Down", "_Up"));
-                    multiShapeNames.Add(profileShapeName.Replace("_Up/Down", "_Down"));
-                }
-            }
-
-            if (tempNames.Count > 0)
-            {
-                multiShapeNames.Clear();
-                multiShapeNames.AddRange(tempNames);
-                tempNames.Clear();
-            }
+                string[] splitNames = profileShapeName.Split('|');
+                multiShapeNames.AddRange(splitNames);                
+            }            
 
             if (multiShapeNames.Count == 0)
                 multiShapeNames.Add(profileShapeName);
