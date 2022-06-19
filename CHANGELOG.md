@@ -6,6 +6,7 @@ Changelog
     - Tessellation option added to build settings. (Currently HDRP12 Only)
     - Lighting presets added to preview scene, and lighting cycle button added to importer window. (All pipelines)
     - Lock retarget values toggle added. (To no longer reset on changing animation)
+    - Animation Processor (Importer Window) now also extracts fully facial expression retargeted animations from FBX.
     - Animation Player and Retargeter can now work in any Editor scene. (Note: the character being animated will show at the origin of it's current parent)
     - Match camera to scene view button added to importer window.
 - Shader / Material adjustments:
