@@ -1238,8 +1238,18 @@ namespace Reallusion.Import
             string fbxFolder = Path.GetDirectoryName(fbxPath);
             string animFolder = Path.Combine(fbxFolder, ANIM_FOLDER_NAME, characterName);
             Util.EnsureAssetsFolderExists(animFolder);
+            string clipName = originalClip.name;
+            if (clipName.iStartsWith(characterName + "_")) 
+                clipName = clipName.Remove(0, characterName.Length + 1);
 
-            string animName = NameAnimation(characterName, originalClip.name, prefix);
+            if (string.IsNullOrEmpty(prefix))
+            {
+                string clipPath = AssetDatabase.GetAssetPath(originalClip);
+                string clipFile = Path.GetFileNameWithoutExtension(clipPath);
+                if (!clipPath.iEndsWith(".anim")) prefix = clipFile;
+            }       
+
+            string animName = NameAnimation(characterName, clipName, prefix);
             string assetPath = Path.Combine(animFolder, animName + ".anim");
 
             if (!overwrite)

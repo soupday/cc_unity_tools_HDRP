@@ -103,6 +103,8 @@ namespace Reallusion.Import
 
         static public void UpdateAnimatorClip(Animator animator, AnimationClip clip)
         {
+            if (doneInitFace) ResetFace(true, true);
+
             // stop animation mode
             if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
 
@@ -118,18 +120,18 @@ namespace Reallusion.Import
             ClipFacialProfile = FacialProfileMapper.GetAnimationClipFacialProfile(clip);
             
             time = 0f;
-            play = false;
+            play = false;            
 
             // intitialise the face refs if needed
             if (!doneInitFace) InitFace();
 
+            // finally, apply the face
+            //ApplyFace();
+
             if (WorkingClip && CharacterAnimator)
             {
                 SampleOnce();
-            }            
-
-            // finally, apply the face
-            ApplyFace();
+            }                        
         }
 
         public static void ReCloneClip()
@@ -398,7 +400,7 @@ namespace Reallusion.Import
                 {
                     Vector3 euler = leftEye.transform.localRotation.eulerAngles;
                     eyeRef = new Vector2(euler.z, euler.x);
-                    eyeVal = new Vector2(euler.z, euler.x);
+                    eyeVal = eyeRef;
                 }
 
                 doOnceCatchMouse = true;

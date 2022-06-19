@@ -656,7 +656,7 @@ namespace Reallusion.Import
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
             if (contextCharacter.Unprocessed) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(iconActionAnims, "Process character animations and create a default animtor controller."),
+            if (GUILayout.Button(new GUIContent(iconActionAnims, "Process, extract and rename character animations and create a default animtor controller."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);                
