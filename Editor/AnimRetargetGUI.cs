@@ -1429,16 +1429,26 @@ namespace Reallusion.Import
 
         public static AnimationClip TryGetRetargetedAnimationClip(GameObject fbxAsset, AnimationClip clip)
         {
-            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
-            string characterName = Path.GetFileNameWithoutExtension(fbxPath);
-            string fbxFolder = Path.GetDirectoryName(fbxPath);
-            string animFolder = Path.Combine(fbxFolder, ANIM_FOLDER_NAME, characterName);            
+            try
+            {
+                if (clip)
+                {
+                    string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
+                    string characterName = Path.GetFileNameWithoutExtension(fbxPath);
+                    string fbxFolder = Path.GetDirectoryName(fbxPath);
+                    string animFolder = Path.Combine(fbxFolder, ANIM_FOLDER_NAME, characterName);
 
-            string animName = NameAnimation(characterName, clip.name, RETARGET_SOURCE_PREFIX);
-            string assetPath = Path.Combine(animFolder, animName + ".anim");
-            AnimationClip retargetedClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
-            if (retargetedClip) return retargetedClip;
-            return clip;
+                    string animName = NameAnimation(characterName, clip.name, RETARGET_SOURCE_PREFIX);
+                    string assetPath = Path.Combine(animFolder, animName + ".anim");
+                    AnimationClip retargetedClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                    if (retargetedClip) return retargetedClip;
+                }
+                return clip;
+            }
+            catch (Exception)
+            {
+                return clip;
+            }
         }
 
 

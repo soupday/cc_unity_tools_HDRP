@@ -96,7 +96,8 @@ namespace Reallusion.Import
                 Animator animator = scenePrefab.GetComponent<Animator>();
                 GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
                 AnimationClip clip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
-                clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(sceneFbx, clip);
+                if (sceneFbx && clip)
+                    clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(sceneFbx, clip);
                 UpdateAnimatorClip(animator, clip);
             }         
         }
