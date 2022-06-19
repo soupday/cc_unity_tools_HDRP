@@ -26,9 +26,10 @@ namespace Reallusion.Import
             return "(" + expressionProfile + (corrections ? "*" : "") + "/" + visemeProfile + ")";
         }
 
-        public bool IsSameProfile(FacialProfile from)
+        public bool IsSameProfileFrom(FacialProfile from)
         {
-            return (from.expressionProfile == expressionProfile && from.visemeProfile == visemeProfile);
+            return ((from.expressionProfile == expressionProfile || from.expressionProfile == ExpressionProfile.None) && 
+                    (from.visemeProfile == visemeProfile || from.visemeProfile == VisemeProfile.None));
         }        
 
         public bool HasFacialShapes 
@@ -173,7 +174,7 @@ namespace Reallusion.Import
             new ExpressionMapping("", "A11_Eye_Look_In_Left", "Eye_L_Look_R"),
             new ExpressionMapping("", "A12_Eye_Look_In_Right", "Eye_R_Look_L"),
             new ExpressionMapping("", "A13_Eye_Look_Out_Right", "Eye_R_Look_R"),
-            new ExpressionMapping("Eye_Blink", "Eye_Blink", "Eyes_Blink"),
+            new ExpressionMapping("Eye_Blink", "Eye_Blink", "Eye_Blink_L/R"),
             new ExpressionMapping("Eye_Blink_L", "A14_Eye_Blink_Left", "Eye_Blink_L"),
             new ExpressionMapping("Eye_Blink_R", "A15_Eye_Blink_Right", "Eye_Blink_R"),
             new ExpressionMapping("Eye_Squint_L", "A16_Eye_Squint_Left", "Eye_Squint_L"),

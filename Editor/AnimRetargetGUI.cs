@@ -308,7 +308,7 @@ namespace Reallusion.Import
                 GUI.enabled = false;
                 tint = backgroundColor;
             }
-            if (!mfp.IsSameProfile(cfp))
+            if (!mfp.IsSameProfileFrom(cfp))
             {
                 if (mfp.expressionProfile != ExpressionProfile.None && 
                     cfp.expressionProfile != ExpressionProfile.None)
@@ -1064,7 +1064,7 @@ namespace Reallusion.Import
 
             if (log)
             {
-                if (!meshProfile.IsSameProfile(animProfile))
+                if (!meshProfile.IsSameProfileFrom(animProfile))
                 {
                     Debug.LogWarning("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile + "\n" +
                                      "Warning: Character mesh facial profile does not match the animation facial profile.\n" +
