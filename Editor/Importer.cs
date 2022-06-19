@@ -1430,14 +1430,19 @@ namespace Reallusion.Import
             //    mat.SetFloatIf("_AlphaRemap", 0.5f);
             //}
 
-            float powerMod = 1f;
+            float smoothnessPowerMod = ValueByPipeline(1f, 1f, 1f);
+            float specularPowerMod = ValueByPipeline(0.5f, 0.5f, 0.33f);
+            float specularMin = ValueByPipeline(0.05f, 0f, 0f);
+            float specularMax = ValueByPipeline(0.5f, 0.45f, 0.5f);
+
             if (isFacialHair)
             {
                 // make facial hair thinner and rougher  
-                powerMod = 1.5f;
+                smoothnessPowerMod = ValueByPipeline(1.5f, 1.5f, 1.5f);
+                specularPowerMod = ValueByPipeline(1f, 1f, 1f);
                 mat.SetFloatIf("_DepthPrepass", 0.75f);                
                 mat.SetFloatIf("_AlphaPower", 1.25f);
-                mat.SetFloatIf("_SmoothnessPower", powerMod);
+                mat.SetFloatIf("_SmoothnessPower", smoothnessPowerMod);
             }            
 
             if (matJson != null)
@@ -1473,18 +1478,15 @@ namespace Reallusion.Import
                 float specStrength2 = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");
                 float rimTransmission = matJson.GetFloatValue("Custom Shader/Variable/Transmission Strength");
                 float roughnessStrength = matJson.GetFloatValue("Custom Shader/Variable/Hair Roughness Map Strength");
-                //roughnessStrength = 0.25f;
-                //specStrength = 0.25f;
-                //specStrength2 = 0f;
-                //specMapStrength = 0.5f;                                
                 float smoothnessStrength = 1f - Mathf.Pow(roughnessStrength, 1f);
                 float smoothnessMax = mat.GetFloatIf("_SmoothnessMax", 0.8f);
+
                 if (RP == RenderPipeline.HDRP)
                 {
                     float secondarySpecStrength = matJson.GetFloatValue("Custom Shader/Variable/Secondary Specular Strength");
-                    SetFloatPowerRange(mat, "_SmoothnessMin", smoothnessStrength, 0f, smoothnessMax, powerMod);
-                    SetFloatPowerRange(mat, "_SpecularMultiplier", specMapStrength * specStrength, 0.1f, 1f, powerMod);
-                    SetFloatPowerRange(mat, "_SecondarySpecularMultiplier", specMapStrength * specStrength2, 0.05f, 0.15f, powerMod);
+                    SetFloatPowerRange(mat, "_SmoothnessMin", smoothnessStrength, 0f, smoothnessMax, smoothnessPowerMod);
+                    SetFloatPowerRange(mat, "_SpecularMultiplier", specMapStrength * specStrength, specularMin, specularMax, specularPowerMod);
+                    SetFloatPowerRange(mat, "_SecondarySpecularMultiplier", specMapStrength * specStrength2, 0.0125f, 0.125f, specularPowerMod);
                     // set by template
                     //mat.SetFloatIf("_SecondarySmoothness", 0.5f);
                     mat.SetFloatIf("_RimTransmissionIntensity", 2f * rimTransmission);
@@ -1499,9 +1501,8 @@ namespace Reallusion.Import
                 {                    
                     if (USE_AMPLIFY_SHADER)
                     {
-                        mat.SetFloatIf("_SmoothnessMin", smoothnessStrength);
-                        SetFloatPowerRange(mat, "_SpecularMultiplier", specMapStrength * specStrength, 0f, 0.5f, 0.5f);
-                        //mat.SetFloatIf("_SpecularMultiplier", Mathf.Pow(0.18f * specMapStrength * specStrength, 0.333f));
+                        SetFloatPowerRange(mat, "_SmoothnessMin", smoothnessStrength, 0f, smoothnessMax, smoothnessPowerMod);
+                        SetFloatPowerRange(mat, "_SpecularMultiplier", specMapStrength * specStrength, specularMin, specularMax, specularPowerMod);
                         mat.SetFloatIf("_RimTransmissionIntensity", 50f * rimTransmission);
                         mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                             matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
@@ -1911,6 +1912,13 @@ namespace Reallusion.Import
 
             return tex;
         }
+
+        private T ValueByPipeline<T>(T hdrp, T urp, T builtin)
+        {
+            if (RP == RenderPipeline.HDRP) return hdrp;
+            else if (RP == RenderPipeline.URP) return urp;
+            else return builtin;
+        }        
 
         private void SetFloatPowerRange(Material mat, string shaderRef, float value, float min, float max, float power = 1f)
         {
