@@ -240,8 +240,7 @@ namespace Reallusion.Import
             {                
                 GameObject prefabAsset = Util.FindRootPrefabAssetFromSceneObject(obj);
                 GameObject sceneRoot = Util.GetScenePrefabInstanceRoot(obj);
-                string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);
-                Debug.Log(prefabPath);
+                string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);                
                 // this doesn't work...
                 //PrefabUtility.ApplyObjectOverride(obj, prefabPath, InteractionMode.UserAction);
                 // only this works:
@@ -265,13 +264,13 @@ namespace Reallusion.Import
 
             if (string.IsNullOrEmpty(path))
             {
-                Debug.LogWarning("Object: " + obj.name + " has no source Prefab Asset.");
+                Util.LogWarn("Object: " + obj.name + " has no source Prefab Asset.");
                 path = Path.Combine("Assets", "dummy.prefab");
             }
 
             if (!srcMesh)
             {
-                Debug.LogError("No mesh found in selected object.");
+                Util.LogError("No mesh found in selected object.");
                 return;
             }
 
@@ -339,7 +338,7 @@ namespace Reallusion.Import
 
                     if (!ReplaceMesh(obj, createdMesh))
                     {
-                        Debug.LogError("Unable to set mesh in selected object!");
+                        Util.LogError("Unable to set mesh in selected object!");
                     }
                 }
             }
@@ -405,13 +404,13 @@ namespace Reallusion.Import
 
             if (string.IsNullOrEmpty(fbxPath))
             {
-                Debug.LogWarning("Object: " + obj.name + " has no source Prefab Asset.");
+                Util.LogWarn("Object: " + obj.name + " has no source Prefab Asset.");
                 fbxPath = Path.Combine("Assets", "dummy.prefab");
             }
 
             if (!srcMesh)
             {
-                Debug.LogError("No mesh found in selected object.");
+                Util.LogError("No mesh found in selected object.");
                 return;
             }
                         
@@ -491,7 +490,7 @@ namespace Reallusion.Import
 
                         if (!ReplaceMesh(obj, createdMesh))
                         {
-                            Debug.LogError("Unable to set mesh in selected object!");
+                            Util.LogError("Unable to set mesh in selected object!");
                         }
                     }
                 }
@@ -1057,10 +1056,7 @@ namespace Reallusion.Import
                 secondPass.EnableKeyword("BOOLEAN_SECONDPASS_ON");
                 secondPass.SetFloat("BOOLEAN_SECONDPASS", 1f);
                 Pipeline.ResetMaterial(secondPass);
-
-                Debug.Log(firstPass.IsKeywordEnabled("BOOLEAN_SECONDPASS_ON"));
-                Debug.Log(secondPass.IsKeywordEnabled("BOOLEAN_SECONDPASS_ON"));
-
+                
                 /*
                 aif.SaveAndReimport();
                 ais.SaveAndReimport();
@@ -1068,18 +1064,15 @@ namespace Reallusion.Import
             }            
         }
 
-        public static void Extract2PassHairMeshes(Object prefabAsset)
+        public static GameObject Extract2PassHairMeshes(CharacterInfo info, GameObject prefab)
         {
-            if (!prefabAsset) return;
-            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(prefabAsset);
-            GameObject prefab = Util.FindCharacterPrefabAsset(fbxAsset);
-            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
-            string name = Path.GetFileNameWithoutExtension(fbxPath);
-            string fbxFolder = Path.GetDirectoryName(fbxPath);
+            if (!prefab) return null;
+            string name = info.name;
+            string fbxFolder = info.folder;
             string materialFolder = Path.Combine(fbxFolder, Importer.MATERIALS_FOLDER, name);
             string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, name);            
 
-            if (!prefab) return;
+            if (!prefab) return null;
             
             GameObject clone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             int processCount = 0;
@@ -1134,8 +1127,8 @@ namespace Reallusion.Import
                         bool useTessellation = oldMat.shader.name.iContains("_Tessellation");
 
                         if (subMeshCount > 1 && oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
-                        {                            
-                            Debug.Log("Extracting subMesh(" + index.ToString() +  ") from Object: " + oldObj.name);
+                        {
+                            Util.LogInfo("Extracting subMesh(" + index.ToString() +  ") from Object: " + oldObj.name);
 
                             // extract mesh into two new meshes, the old mesh without the extracted submesh
                             // and just the extracted submesh
@@ -1189,7 +1182,7 @@ namespace Reallusion.Import
                         }
                         else if (subMeshCount == 1 && oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {
-                            Debug.Log("Leaving subMesh(" + index.ToString() + ") in Object: " + oldObj.name);
+                            Util.LogInfo("Leaving subMesh(" + index.ToString() + ") in Object: " + oldObj.name);
 
                             Material[] sharedMaterials = new Material[2];
                             // - add first pass hair shader material
@@ -1221,7 +1214,7 @@ namespace Reallusion.Import
 
                     if (indicesToRemove.Count > 0)
                     {
-                        Debug.Log("Removing submeshes from Object: " + oldObj.name);
+                        Util.LogInfo("Removing submeshes from Object: " + oldObj.name);
                         Mesh remainingMesh = RemoveSubMeshes(oldMesh, indicesToRemove);
                         // Save the mesh asset.                        
                         string meshPath = Path.Combine(meshFolder, oldObj.name + "_Remaining.mesh");
@@ -1244,12 +1237,12 @@ namespace Reallusion.Import
 
                         processCount++;
                     }
-                }
+                }                
             }
 
             if (prefab && processCount > 0)
-            {                
-                Debug.Log("Updating character prefab...");
+            {
+                Util.LogInfo("Updating character prefab...");
                 // save the clone as the prefab for this character         
                 string prefabPath = AssetDatabase.GetAssetPath(prefab);
                 prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);                
@@ -1257,10 +1250,12 @@ namespace Reallusion.Import
             }
             else
             {
-                Debug.Log("Nothing to process (or already processed)...");
+                Util.LogInfo("Nothing to process (or already processed)...");
             }
 
             if (clone) UnityEngine.Object.DestroyImmediate(clone);
+
+            return prefab;
         }
 
         public struct SmoothVertData
@@ -1445,7 +1440,7 @@ namespace Reallusion.Import
                 {
                     if (srcMesh.name.iEndsWith("_Smoothed"))
                     {
-                        Debug.LogWarning("Mesh is already smoothed!");
+                        Util.LogWarn("Mesh is already smoothed!");
                         return;
                     }
 
@@ -1466,9 +1461,9 @@ namespace Reallusion.Import
                                 Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
 
                                 if (ReplaceMesh(obj, createdMesh))
-                                    Debug.Log("Auto Smooth Mesh Complete!");
+                                    Util.LogAlways("Auto Smooth Mesh Complete!");
                                 else
-                                    Debug.LogError("Unable to set mesh in selected object!");                                
+                                    Util.LogError("Unable to set mesh in selected object!");                                
                             }
                         }
                     }

@@ -25,14 +25,7 @@ namespace Reallusion.Import
 {
     public static class Util
     {
-        public static int LOG_LEVEL = 0;
-
-        public static bool ImportCharacter(CharacterInfo info, MaterialQuality quality)
-        {
-            Importer importCharacter = new Importer(info);
-            return importCharacter.Import();
-        }
-
+        public static int LOG_LEVEL = 1;
 
         public static bool IsCC3Character(Object obj)
         {
@@ -507,19 +500,7 @@ namespace Reallusion.Import
             const float specularMid = 0.5f;
             float P = Mathf.Log(smoothnessStdMax) / Mathf.Log(specularMid);
             return smoothness * Mathf.Clamp(Mathf.Pow(specular, P), 0f, 0.897f);
-        }
-
-        public static void DoTest(Object asset)
-        {
-            string assetPath = AssetDatabase.GetAssetPath(asset);
-
-            Object[] objects = AssetDatabase.LoadAllAssetsAtPath(assetPath);
-
-            foreach (Object o in objects)
-            {
-                Debug.Log(o);
-            }
-        }
+        }        
 
         public static string GetShaderName(Material mat)
         {
@@ -830,13 +811,9 @@ namespace Reallusion.Import
             }
         }
 
-        
-
-
-
-
-
-
-
+        public static void LogAlways(string message)
+        {
+            Debug.Log(message);
+        }
     }    
 }

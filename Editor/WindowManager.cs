@@ -246,7 +246,7 @@ namespace Reallusion.Import
         {
             string dateStamp = DateTime.Now.ToString("yyMMdd-hhmmss");
             string fileName = "Screenshot-" + dateStamp + ".png";
-            Debug.Log("Saving screenshot to: " + fileName);
+            Util.LogAlways("Saving screenshot to: " + fileName);
             ScreenCapture.CaptureScreenshot(fileName);
         }
 

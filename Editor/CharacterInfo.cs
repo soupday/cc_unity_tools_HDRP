@@ -37,7 +37,9 @@ namespace Reallusion.Import
         public string folder;                
           
         public bool isLOD = false;
-        public bool bakeIsBaked = false;        
+        public bool bakeIsBaked = false;
+        public bool animationSetup = false;
+        public int animationRetargeted = 0;
 
         // these are the settings the character is currently set to build
         private ProcessingType logType = ProcessingType.None;
@@ -283,6 +285,12 @@ namespace Reallusion.Import
                     case "shaderFlags":
                         ShaderFlags = (ShaderFeatureFlags)int.Parse(value);
                         break;
+                    case "animationSetup":
+                        animationSetup = value == "true" ? true : false;
+                        break;
+                    case "animationRetargeted":
+                        animationRetargeted = int.Parse(value);
+                        break;
                 }
             }
             ApplySettings();
@@ -301,6 +309,8 @@ namespace Reallusion.Import
             writer.WriteLine("bakeCustomShaders=" + (builtBakeCustomShaders ? "true" : "false"));
             writer.WriteLine("bakeSeparatePrefab=" + (builtBakeSeparatePrefab ? "true" : "false"));
             writer.WriteLine("shaderFlags=" + (int)BuiltShaderFlags);
+            writer.WriteLine("animationSetup=" + (animationSetup ? "true" : "false"));
+            writer.WriteLine("animationRetargeted=" + animationRetargeted.ToString());
             writer.Close();
             AssetDatabase.ImportAsset(infoPath);            
         }

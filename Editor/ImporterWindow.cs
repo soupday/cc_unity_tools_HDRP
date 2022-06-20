@@ -660,7 +660,10 @@ namespace Reallusion.Import
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);                
-                AnimRetargetGUI.GenerateCharacterTargetedAnimations(contextCharacter.Fbx);
+                AnimRetargetGUI.GenerateCharacterTargetedAnimations(contextCharacter.Fbx, null, true);
+                int animationRetargeted = contextCharacter.DualMaterialHair ? 2 : 1;
+                contextCharacter.animationRetargeted = animationRetargeted;
+                contextCharacter.Write();
             }
             GUI.enabled = true;
 
@@ -812,9 +815,6 @@ namespace Reallusion.Import
             GUILayout.EndArea();            
         }
 
-
-
-
         private void OnGUISettingsArea(Rect settingsBlock)
         {
             GUILayout.BeginArea(settingsBlock);
@@ -861,12 +861,33 @@ namespace Reallusion.Import
                     new GUIContent("Animation Player On", "Always show the animation player when opening the preview scene."));
             GUILayout.Space(ROW_SPACE);
 
+
+            string label = "Log Everything";
+            if (Util.LOG_LEVEL == 0) label = "Log Errors Only";
+            if (Util.LOG_LEVEL == 1) label = "Log Warnings and Errors";
+            if (EditorGUILayout.DropdownButton(
+                content: new GUIContent(label),
+                focusType: FocusType.Passive))
+            {
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent("Log Errors Only"), Util.LOG_LEVEL == 0, LogOptionSelected, 0);
+                menu.AddItem(new GUIContent("Log Warnings and Errors"), Util.LOG_LEVEL == 1, LogOptionSelected, 1);
+                menu.AddItem(new GUIContent("Log Everything"), Util.LOG_LEVEL == 2, LogOptionSelected, 2);
+                menu.ShowAsContext();
+            }
+            GUILayout.Space(ROW_SPACE);
+
             GUILayout.EndVertical();
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.EndArea();
+        }
+
+        private void LogOptionSelected(object sel)
+        {
+            Util.LOG_LEVEL = (int)sel;
         }
 
         private void EyeOptionSelected(object sel)
@@ -919,8 +940,10 @@ namespace Reallusion.Import
 
         private GameObject ImportCharacter(CharacterInfo info)
         {
-            Importer import = new Importer(info);            
-            return import.Import();
+            Importer import = new Importer(info);
+            GameObject prefab = import.Import();
+            info.Write();
+            return prefab;
         }
         
         private static void ClearAllData()
@@ -1036,8 +1059,7 @@ namespace Reallusion.Import
                 contextCharacter.BuildQuality = MaterialQuality.High;
 
             // import and build the materials from the Json data
-            GameObject prefabAsset = ImportCharacter(contextCharacter);
-            contextCharacter.Write();
+            GameObject prefabAsset = ImportCharacter(contextCharacter);            
 
             // refresh the tree view with the new data
             CreateTreeView(true);

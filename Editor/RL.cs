@@ -352,52 +352,53 @@ namespace Reallusion.Import
             importer.humanDescription = human;
         }
         
-        public static void AutoCreateAnimator(GameObject fbx, string assetPath, ModelImporter importer)
+        public static AnimatorController AutoCreateAnimator(GameObject fbx, string assetPath, ModelImporter importer)
         {
             string animatorPath = Path.GetDirectoryName(assetPath) + "/" + fbx.name + "_animator.controller";
-
-            /*
-            if (!fbx.GetComponent<Animator>())
-            {
-                fbx.AddComponent<Animator>();
-                fbx.GetComponent<Animator>().avatar = AvatarBuilder.BuildHumanAvatar(fbx, importer.humanDescription);
-                fbx.GetComponent<Animator>().applyRootMotion = true;
-                fbx.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-            }*/
             
+            AnimatorController controller = null;
 
-            ModelImporterClipAnimation[] clipAnimations = importer.defaultClipAnimations;
-
-            if (clipAnimations.Length != 0)
+            if (!File.Exists(animatorPath))
             {
-                if (File.Exists(animatorPath)) return;
-                AnimatorController.CreateAnimatorControllerAtPath(animatorPath);                
-                AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(animatorPath);
-                AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
+                ModelImporterClipAnimation[] clipAnimations = importer.defaultClipAnimations;
 
-                UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
-                foreach (UnityEngine.Object obj in assets)
+                if (clipAnimations.Length != 0)
                 {
-                    AnimationClip clip = obj as AnimationClip;
+                    AnimatorController.CreateAnimatorControllerAtPath(animatorPath);
+                    controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(animatorPath);
+                    AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
 
-                    if (clip)
+                    UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+                    foreach (UnityEngine.Object obj in assets)
                     {
-                        if (clip.name.iContains("__preview__") || clip.name.iContains("t-pose"))
-                            continue;
+                        AnimationClip clip = obj as AnimationClip;
+                        clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(fbx, clip);
 
-                        controller.AddMotion(clip, 0);                        
+                        if (clip)
+                        {
+                            if (clip.name.iContains("__preview__") || clip.name.iContains("t-pose"))
+                                continue;
+
+                            controller.AddMotion(clip, 0);
+                        }
+                    }
+
+                    if (AssetDatabase.WriteImportSettingsIfDirty(assetPath))
+                    {
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
                     }
                 }
-
-                if (AssetDatabase.WriteImportSettingsIfDirty(assetPath))
-                {
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                }
             }
+            else
+            {
+                controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(animatorPath);
+            }
+
+            return controller;
         }
         
-        public static void SetAnimation(ModelImporter importer, string assetPath)
+        public static void SetupAnimation(ModelImporter importer, CharacterInfo characterInfo, bool forceUpdate)
         {
             if (importer.defaultClipAnimations.Length > 0)
             {
@@ -439,77 +440,58 @@ namespace Reallusion.Import
             if (changed)
             {
                 importer.clipAnimations = animations;
-                AssetDatabase.WriteImportSettingsIfDirty(assetPath);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
+                if (forceUpdate)
+                {
+                    AssetDatabase.WriteImportSettingsIfDirty(characterInfo.path);
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+                }
             }
+
+            characterInfo.animationSetup = true;
         }
 
         public static void SetAnimationImport(CharacterInfo info, GameObject fbx)
+        {            
+            ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(info.path);                        
+            SetupAnimation(importer, info, true);            
+            ApplyAnimatorController(info, AutoCreateAnimator(fbx, info.path, importer));
+        }
+
+        public static void ApplyAnimatorController(CharacterInfo info, AnimatorController controller)
         {
-            string assetPath = info.path;
-            ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(info.path);
-
-            // set humanoid animation type
-            //CC3Util.HumanoidImportSettings(fbx, importer, characterName, generation, jsonData);
-
-            SetAnimation(importer, info.path);            
-
-            AutoCreateAnimator(fbx, info.path, importer);            
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);            
+            string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
             string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
             string prefabBakedPath = Path.Combine(prefabFolder, info.name + "_Baked.prefab");
-            string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");
-            if (File.Exists(animatorControllerPath))
+
+            if (controller)
             {
                 if (File.Exists(prefabPath))
                 {
                     GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                    GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+                    Animator animator = prefab.GetComponent<Animator>();
 
-                    // Apply Animator:
-                    if (!clone.GetComponent<Animator>().runtimeAnimatorController)
-                    {                        
-                        clone.GetComponent<Animator>().runtimeAnimatorController =
-                                AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(animatorControllerPath);
-
-                        clone.GetComponent<Animator>().applyRootMotion = true;
-                        clone.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-
-                        PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
+                    if (animator && !animator.runtimeAnimatorController)
+                    {
+                        animator.runtimeAnimatorController = controller;
+                        animator.applyRootMotion = true;
+                        animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
                     }
-
-                    UnityEngine.Object.DestroyImmediate(clone);                    
-                }
-                else
-                {
-                    CreatePrefabFromFbx(info, fbx);
                 }
 
                 if (File.Exists(prefabBakedPath))
                 {
                     GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabBakedPath);
-                    GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+                    Animator animator = prefab.GetComponent<Animator>();
 
-                    // Apply Animator:
-                    if (!clone.GetComponent<Animator>().runtimeAnimatorController)
+                    if (animator && !animator.runtimeAnimatorController)
                     {
-                        clone.GetComponent<Animator>().runtimeAnimatorController =
-                                AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(animatorControllerPath);
-
-                        clone.GetComponent<Animator>().applyRootMotion = true;
-                        clone.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-
-                        PrefabUtility.SaveAsPrefabAsset(clone, prefabBakedPath);
-                    }                    
-
-                    UnityEngine.Object.DestroyImmediate(clone);
+                        animator.runtimeAnimatorController = controller;
+                        animator.applyRootMotion = true;
+                        animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+                    }
                 }
-            }            
+            }
         }
 
         public static GameObject CreatePrefabFromFbx(CharacterInfo info, GameObject fbx)

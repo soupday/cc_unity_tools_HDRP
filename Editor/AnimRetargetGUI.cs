@@ -62,7 +62,7 @@ namespace Reallusion.Import
         const string emptyGuid = "00000000000000000000000000000000";
         public const string ANIM_FOLDER_NAME = "Animations";
         public const string RETARGET_FOLDER_NAME = "Retargeted";
-        public const string RETARGET_SOURCE_PREFIX = "Source";
+        public const string RETARGET_SOURCE_PREFIX = "Imported";
 
         private static Dictionary<string, EditorCurveBinding> shoulderBindings;
         private static Dictionary<string, EditorCurveBinding> armBindings;
@@ -457,7 +457,10 @@ namespace Reallusion.Import
                 GameObject scenePrefab = AnimPlayerGUI.CharacterAnimator.gameObject;
                 GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(scenePrefab);
                 if (fbxAsset)
-                    WriteAnimationToAssetDatabase(OriginalClip, WorkingClip, fbxAsset);
+                {
+                    string assetPath = GenerateClipAssetPath(OriginalClip, fbxAsset);
+                    WriteAnimationToAssetDatabase(WorkingClip, assetPath);
+                }
             }
             GUILayout.EndVertical();
             GUILayout.EndHorizontal(); // End of reset and save controls
@@ -466,7 +469,7 @@ namespace Reallusion.Import
             // End of retarget controls
         }
 
-        static bool CanClipLoop(AnimationClip clip)
+        public static bool CanClipLoop(AnimationClip clip)
         {
             bool canLoop = true;
             EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
@@ -1052,13 +1055,13 @@ namespace Reallusion.Import
             FacialProfile meshProfile = FacialProfileMapper.GetMeshFacialProfile(targetCharacter);
             if (!meshProfile.HasFacialShapes)
             {
-                if (log) Debug.LogWarning("Character has no facial blend shapes!");
+                if (log) Util.LogWarn("Character has no facial blend shapes!");
                 return;
             }
             FacialProfile animProfile = FacialProfileMapper.GetAnimationClipFacialProfile(workingClip);
             if (!animProfile.HasFacialShapes)
             {
-                if (log) Debug.LogWarning("Animation has no facial blend shapes!");
+                if (log) Util.LogWarn("Animation has no facial blend shapes!");
                 return;
             }
 
@@ -1066,13 +1069,13 @@ namespace Reallusion.Import
             {
                 if (!meshProfile.IsSameProfileFrom(animProfile))
                 {
-                    Debug.LogWarning("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile + "\n" +
+                    Util.LogWarn("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile + "\n" +
                                      "Warning: Character mesh facial profile does not match the animation facial profile.\n" +
                                      "Facial expression retargeting may not have the expected or desired results.\n");
                 }
                 else
                 {
-                    Debug.Log("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile + "\n");
+                    Util.LogAlways("Retargeting to Facial Profile: " + meshProfile + ", From: " + animProfile + "\n");
                 }
             }
 
@@ -1193,7 +1196,7 @@ namespace Reallusion.Import
             if (curvesFailedToMap == 0) reportHeader += "All " + cache.Count + " BlendShape curves retargeted!\n\n";
             else reportHeader += curvesFailedToMap + " out of " + cache.Count + " BlendShape curves could not be retargeted!\n\n";
 
-            if (log) Debug.Log(reportHeader + report);
+            if (log) Util.LogAlways(reportHeader + report);
 
             bool PURGE = true; 
             // Purge all curves from the animation that dont have a valid path in the target object                    
@@ -1222,24 +1225,19 @@ namespace Reallusion.Import
             }
         }
 
-        static AnimationClip WriteAnimationToAssetDatabase(AnimationClip originalClip, AnimationClip workingClip, GameObject fbxAsset, string prefix = "", bool overwrite = false)
+        static string GenerateClipAssetPath(AnimationClip originalClip, GameObject fbxAsset, string prefix = "", bool overwrite = false)
         {
-            if (!(originalClip && workingClip && fbxAsset)) return null;                       
+            if (!(originalClip && fbxAsset)) return null;
 
             string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
-
-            if (string.IsNullOrEmpty(fbxPath))
-            {
-                Debug.LogError("Unable to locate source character path from model: " + fbxAsset.name);
-                return null;
-            }
+            if (string.IsNullOrEmpty(fbxPath)) return null;
 
             string characterName = Path.GetFileNameWithoutExtension(fbxPath);
             string fbxFolder = Path.GetDirectoryName(fbxPath);
             string animFolder = Path.Combine(fbxFolder, ANIM_FOLDER_NAME, characterName);
             Util.EnsureAssetsFolderExists(animFolder);
             string clipName = originalClip.name;
-            if (clipName.iStartsWith(characterName + "_")) 
+            if (clipName.iStartsWith(characterName + "_"))
                 clipName = clipName.Remove(0, characterName.Length + 1);
 
             if (string.IsNullOrEmpty(prefix))
@@ -1247,7 +1245,7 @@ namespace Reallusion.Import
                 string clipPath = AssetDatabase.GetAssetPath(originalClip);
                 string clipFile = Path.GetFileNameWithoutExtension(clipPath);
                 if (!clipPath.iEndsWith(".anim")) prefix = clipFile;
-            }       
+            }
 
             string animName = NameAnimation(characterName, clipName, prefix);
             string assetPath = Path.Combine(animFolder, animName + ".anim");
@@ -1265,7 +1263,14 @@ namespace Reallusion.Import
                 }
             }
 
-            Debug.Log("Writing Asset: " + assetPath);
+            return assetPath;
+        }
+
+        static AnimationClip WriteAnimationToAssetDatabase(AnimationClip workingClip, string assetPath)
+        {            
+            if (string.IsNullOrEmpty(assetPath)) return null;
+
+            Util.LogInfo("Writing Asset: " + assetPath);
 
             var output = Object.Instantiate(workingClip);  // clone so that workingClip isn't locked to an on-disk asset
             AnimationClip outputClip = output as AnimationClip;
@@ -1405,25 +1410,31 @@ namespace Reallusion.Import
             System.IO.File.WriteAllText(path, pathString);
         }
 
-        public static void GenerateCharacterTargetedAnimations(GameObject characterFbx)
+        public static void GenerateCharacterTargetedAnimations(GameObject characterFbx, GameObject characterPrefab, bool replace)
         {
-            AnimationClip[] clips = Util.GetAllAnimationClipsFromCharacter(characterFbx);
-            List<AnimationClip> processedAssets = new List<AnimationClip>();
-            GameObject characterPrefab = Util.FindCharacterPrefabAsset(characterFbx);
+            AnimationClip[] clips = Util.GetAllAnimationClipsFromCharacter(characterFbx);            
+
+            if (!characterPrefab) characterPrefab = Util.FindCharacterPrefabAsset(characterFbx);
+            if (!characterPrefab) return;
+            string firstPath = null;
 
             if (clips.Length > 0)
             {
                 int index = 0;
                 foreach (AnimationClip clip in clips)
-                {                    
+                {
+                    string assetPath = GenerateClipAssetPath(clip, characterFbx, RETARGET_SOURCE_PREFIX, true);
+                    if (string.IsNullOrEmpty(firstPath)) firstPath = assetPath;
+                    if (File.Exists(assetPath) && !replace) continue;
                     AnimationClip workingClip = AnimPlayerGUI.CloneClip(clip);
                     RetargetBlendShapes(clip, workingClip, characterPrefab, false);
-                    AnimationClip asset = WriteAnimationToAssetDatabase(clip, workingClip, characterFbx, RETARGET_SOURCE_PREFIX, true);
-                    processedAssets.Add(asset);
+                    AnimationClip asset = WriteAnimationToAssetDatabase(workingClip, assetPath);
                     index++;
                 }
 
-                AnimPlayerGUI.UpdateAnimatorClip(CharacterAnimator, processedAssets[0]);
+                if (!string.IsNullOrEmpty(firstPath))
+                    AnimPlayerGUI.UpdateAnimatorClip(CharacterAnimator, 
+                                                     AssetDatabase.LoadAssetAtPath<AnimationClip>(firstPath));
             }
         }
 

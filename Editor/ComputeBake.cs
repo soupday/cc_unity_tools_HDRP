@@ -516,7 +516,7 @@ namespace Reallusion.Import
 
             // add the path of the remapped material for later re-import.
             string remapPath = AssetDatabase.GetAssetPath(bakedMaterial);
-            if (remapPath == fbxPath) Debug.LogError("remapPath: " + remapPath + " is fbxPath!");
+            if (remapPath == fbxPath) Util.LogError("remapPath: " + remapPath + " is fbxPath!");
             if (remapPath != fbxPath && AssetDatabase.WriteImportSettingsIfDirty(remapPath))
                 importAssets.Add(AssetDatabase.GetAssetPath(bakedMaterial));
 

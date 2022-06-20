@@ -157,7 +157,7 @@ namespace Reallusion.Import
             if (jsonData.PathExists(jsonPath))
                 jsonMeshData = jsonData.GetObjectAtPath(jsonPath);
             else
-                Debug.LogError("Unable to find Json mesh data: " + jsonPath);            
+                Util.LogError("Unable to find Json mesh data: " + jsonPath);            
 
             string jsonVersion = jsonData?.GetStringValue(characterName + "/Version");
             if (!string.IsNullOrEmpty(jsonVersion))
@@ -226,6 +226,8 @@ namespace Reallusion.Import
                 AssetDatabase.ImportAsset(fbxPath, ImportAssetOptions.ForceUpdate);
             }
 
+            Util.LogInfo("Processing Materials.");
+
             // Note: the material setup is split into three passes because,
             //       Unity's asset dependencies can cause re-import loops on *every* texure re-import.
             //       To minimise this, the import is done in three passes, and
@@ -252,23 +254,41 @@ namespace Reallusion.Import
                 importer.importLights = false;
                 importer.importVisibility = true;
             }
+            
+            // setup initial animations (only do this once)
+            if (!characterInfo.animationSetup)
+            {
+                RL.SetupAnimation(importer, characterInfo, false);
+            }
 
             // save all the changes and refresh the asset database.
             AssetDatabase.WriteImportSettingsIfDirty(fbxPath);
             importAssets.Add(fbxPath);
             AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            AssetDatabase.Refresh();            
 
-            // create prefab
+            // create prefab.
             GameObject prefab = RL.CreatePrefabFromFbx(characterInfo, fbx);
 
+            // setup 2 pass hair in the prefab.
             if (characterInfo.DualMaterialHair)
             {
-                MeshUtil.Extract2PassHairMeshes(prefab);
+                Util.LogInfo("Extracting 2 Pass hair meshes.");
+                prefab = MeshUtil.Extract2PassHairMeshes(characterInfo, prefab);
                 ImporterWindow.TrySetMultiPass(true);
             }
 
-            Util.LogInfo("Done!");
+            // extract and retarget animations if needed.
+            int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
+            bool replace = characterInfo.animationRetargeted != animationRetargeted;
+            if (replace) Util.LogInfo("Retargeting all imported animations.");
+            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbx, prefab, replace);
+            characterInfo.animationRetargeted = animationRetargeted;
+
+            // create default animator if there isn't one.
+            RL.ApplyAnimatorController(characterInfo, RL.AutoCreateAnimator(fbx, characterInfo.path, importer));
+
+            Util.LogAlways("Done building materials for character " + characterName + "!");
 
             Selection.activeObject = prefab;     
 
@@ -330,7 +350,7 @@ namespace Reallusion.Import
                                 // there is a bug where a space in name causes the name to be truncated on export from CC3/4
                                 if (objName.Contains(" ")) 
                                 {
-                                    Debug.LogWarning("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly.");
+                                    Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly.");
                                     string[] split = objName.Split(' ');
                                     objName = split[0];
                                     jsonPath = objName + "/Materials/" + sourceName;
@@ -341,7 +361,7 @@ namespace Reallusion.Import
                                 }                                
                             }
                         }    
-                        if (matJson == null) Debug.LogError("Unable to find json material data: " + jsonPath);
+                        if (matJson == null) Util.LogError("Unable to find json material data: " + jsonPath);
 
                         // determine the material type, this dictates the shader and template material.
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
@@ -583,7 +603,7 @@ namespace Reallusion.Import
             // check that shader exists.
             if (!shader)
             {
-                Debug.LogError("No shader found for material: " + sourceName);
+                Util.LogError("No shader found for material: " + sourceName);
                 return null;
             }
 
@@ -626,7 +646,7 @@ namespace Reallusion.Import
 
             // add the path of the remapped material for later re-import.
             string remapPath = AssetDatabase.GetAssetPath(remapMaterial);
-            if (remapPath == fbxPath) Debug.LogError("remapPath: " + remapPath + " is fbxPath (shouldn't happen)!");
+            if (remapPath == fbxPath) Util.LogError("remapPath: " + remapPath + " is fbxPath (shouldn't happen)!");
             if (remapPath != fbxPath && AssetDatabase.WriteImportSettingsIfDirty(remapPath))
                 importAssets.Add(AssetDatabase.GetAssetPath(remapMaterial));
 
@@ -726,7 +746,7 @@ namespace Reallusion.Import
                 {
                     if (diffuse && opacity && diffuse != opacity)
                     {
-                        Debug.Log("Baking DiffuseAlpha texture for " + sourceName);
+                        Util.LogInfo("Baking DiffuseAlpha texture for " + sourceName);
                         folder = Util.GetAssetFolder(diffuse, opacity);
                         diffuseAlpha = baker.BakeBlenderDiffuseAlphaMap(diffuse, opacity, folder, sourceName + "_BDiffuseAlpha");                        
                         baked = true;
@@ -737,7 +757,7 @@ namespace Reallusion.Import
                 {                                        
                     if (metallic || roughness || occlusion || microNormalMask)
                     {
-                        Debug.Log("Baking HDRP Mask texture for " + sourceName);
+                        Util.LogInfo("Baking HDRP Mask texture for " + sourceName);
                         folder = Util.GetAssetFolder(metallic, roughness, occlusion, microNormalMask);
                         HDRPMask = baker.BakeBlenderHDRPMaskMap(metallic, occlusion, microNormalMask, roughness, smoothnessLUT, folder, sourceName + "_BHDRP");
                         baked = true;
@@ -748,7 +768,7 @@ namespace Reallusion.Import
                 {                    
                     if (metallic || roughness)
                     {
-                        Debug.Log("Baking MetallicAlpha texture for " + sourceName);
+                        Util.LogInfo("Baking MetallicAlpha texture for " + sourceName);
                         folder = Util.GetAssetFolder(metallic, roughness);
                         metallicGloss = baker.BakeBlenderMetallicGlossMap(metallic, roughness, smoothnessLUT, folder, sourceName + "_BMetallicAlpha");                        
                         baked = true;

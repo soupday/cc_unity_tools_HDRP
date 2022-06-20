@@ -643,7 +643,7 @@ namespace Reallusion.Import
                 templateName = GetDefaultMaterialName(quality);
 
             if (string.IsNullOrEmpty(templateName))
-                Debug.LogError("Unable to find Template Material for: " + materialType + "/" + quality);
+                Util.LogError("Unable to find Template Material for: " + materialType + "/" + quality);
 
             return templateName;
         }        

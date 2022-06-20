@@ -147,7 +147,7 @@ namespace Reallusion.Import
                                 }
                                 else
                                 {
-                                    Debug.Log("Could not find material: " + key);
+                                    Util.LogWarn("Could not find material: " + key);
                                 }
                             }
                         }                        

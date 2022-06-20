@@ -185,7 +185,7 @@ namespace Reallusion.Import
             GameObject clone = PrefabUtility.InstantiatePrefab(prefabAsset, character.transform) as GameObject;
             if (clone)
             {
-                Debug.Log("Replacing prefab with new generated prefab...");
+                Util.LogInfo("Replacing prefab with new generated prefab...");
                 Selection.activeGameObject = clone;
                 return clone;
             }
