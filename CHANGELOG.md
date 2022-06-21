@@ -2,8 +2,38 @@ Changelog
 =========
 
 ### v 1.3.2
-- HDRP12 Single pass hair shader fixes.
-- Skin SSS transmission thickness min-max remap parameters.
+- Updates / Additions:
+    - Tessellation option added to build settings. (Currently HDRP12 Only)
+    - Lighting presets added to preview scene, and lighting cycle button added to importer window. (All pipelines)
+    - Lock retarget values toggle added. (To no longer reset on changing animation)
+    - Animation Processor (Importer Window) now also extracts fully facial expression retargeted animations from FBX.
+    - Animation Player and Retargeter can now work in any Editor scene. (Note: the character being animated will show at the origin of it's current parent)
+    - Match camera to scene view button added to importer window.
+- Shader / Material adjustments:
+    - HDRP12 (Unity 2021.2+) Single pass hair shader fixes.
+    - HDRP12 Tessellation shaders added.
+    - HDRP Skin SSS transmission thickness min-max remap parameters.
+    - HDRP hair 2-pass shadow clip fixes.
+    - HDRP hair no longer uses flipped back lighting by default. (Less shadow artifacts and rim lighting works much better without it)
+    - Hair shader smoothness and specular tweaks. (Should look more consistent between the 3 pipelines)
+    - Adjustments to Eye and Eye occlusion colors and saturation to more accurately match the coloring in CC3/4.
+    - Facial hair naterials are now generated with thinner opacity and less smoothness and specularity. (Should no longer look too thick and too shiny)
+    - Compute bake shaders updated with shader changes.
+- Fixes to:
+    - Facial expression retargeter:
+        - Now correctly maps based on the source facial profile as well as the target profile.
+        - Includes all tongue blendshapes.
+        - Correctly remaps compatible viseme profiles. (8+7 split visemes cannot be retargeted to the 15 direct visemes).
+        - Button now color coded to the estimated quality of the retarget:
+            - Green - should retarget completely.
+            - Yellow - some BlendShapes will not restarget.
+            - Red - most BlendShapes will not retarget.
+        - A report of the retarget, listing how the BlendShapes are remapped and which could not be retarget is logged to the console.
+    - Animation player and retargetter UI and internal logic, should be less glitchy.
+    - No longer reprocesses the same textures when used by different materials during material build.
+    - Character prefab no longer gets stuck in current Animation Player pose after recompiling editor assembly.
+    - Numerous fixes to internal workings and code refactors.
+
 
 ### v 1.3.1
 - Arm Flexion correction added.

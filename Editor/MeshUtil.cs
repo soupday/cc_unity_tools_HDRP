@@ -35,9 +35,9 @@ namespace Reallusion.Import
         {
             if (Selection.gameObjects.Length > 1)
                 foreach (GameObject go in Selection.gameObjects)
-                    MeshUtil.ReverseTriangleOrder(go);
+                    ReverseTriangleOrder(go);
             else
-                MeshUtil.ReverseTriangleOrder(Selection.activeObject);
+                ReverseTriangleOrder(Selection.activeObject);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Reverse Triangle Order", true)]
@@ -51,9 +51,9 @@ namespace Reallusion.Import
         {            
             if (Selection.gameObjects.Length > 1)
                 foreach (GameObject go in Selection.gameObjects)
-                    MeshUtil.PruneBlendShapes(go);
+                    PruneBlendShapes(go);
             else
-                MeshUtil.PruneBlendShapes(Selection.activeObject);
+                PruneBlendShapes(Selection.activeObject);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Prune Blend Shapes", true)]
@@ -66,7 +66,7 @@ namespace Reallusion.Import
         private static void DoAutoSmoothMesh()
         {
             bool playerOpen = false;
-            if (WindowManager.showPlayer && AnimPlayerGUI.IsPlayerShown())
+            if (AnimPlayerGUI.IsPlayerShown())
             {
                 WindowManager.HideAnimationPlayer(false);
                 playerOpen = true;
@@ -74,11 +74,11 @@ namespace Reallusion.Import
 
             if (Selection.gameObjects.Length > 1)
                 foreach (GameObject go in Selection.gameObjects)
-                    MeshUtil.AutoSmoothMesh(go);
+                    AutoSmoothMesh(go);
             else
-                MeshUtil.AutoSmoothMesh(Selection.activeObject);
+                AutoSmoothMesh(Selection.activeObject);
 
-            if (playerOpen) 
+            if (playerOpen)  
                 WindowManager.ShowAnimationPlayer();
         }
 
@@ -91,101 +91,86 @@ namespace Reallusion.Import
         [MenuItem("Reallusion/Mesh Tools/Open or Close Character Mouth", priority = 201)]
         private static void DoOpenCloseMouth()
         {
-            MeshUtil.CharacterOpenCloseMouth(Selection.activeObject);
+            CharacterOpenCloseMouth(Selection.activeObject);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Open or Close Character Mouth", true)]
         private static bool ValudidateDoOpenCloseMouth()
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-            return ps.IsValid && ps.GetPreviewCharacter() != null;
+            return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
 
         [MenuItem("Reallusion/Mesh Tools/Open or Close Character Eyes", priority = 202)]
         private static void DoOpenCloseEyes()
         {
-            MeshUtil.CharacterOpenCloseEyes(Selection.activeObject);
+            CharacterOpenCloseEyes(Selection.activeObject);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Open or Close Character Eyes", true)]
         private static bool ValudidateDoOpenCloseEyes()
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-            return ps.IsValid && ps.GetPreviewCharacter() != null;
+            return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Left", priority = 203)]
         private static void DoLookLeft()
         {
-            MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Left);
+            CharacterEyeLook(Selection.activeObject, EyeLookDir.Left);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Left", true)]
         private static bool ValudidateDoLookLeft()
-        {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-            return ps.IsValid && ps.GetPreviewCharacter() != null;
+        {            
+            return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Right", priority = 204)]
         private static void DoLookRight()
         {
-            MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Right);
+            CharacterEyeLook(Selection.activeObject, EyeLookDir.Right);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Right", true)]
         private static bool ValudidateDoLookRight()
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-            return ps.IsValid && ps.GetPreviewCharacter() != null;
+            return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Up", priority = 205)]
         private static void DoLookUp()
         {
-            MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Up);
+            CharacterEyeLook(Selection.activeObject, EyeLookDir.Up);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Up", true)]
         private static bool ValudidateDoLookUp()
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-            return ps.IsValid && ps.GetPreviewCharacter() != null;
+            return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Down", priority = 206)]
         private static void DoLookDown()
         {
-            MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.Down);
+            CharacterEyeLook(Selection.activeObject, EyeLookDir.Down);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Down", true)]
         private static bool ValudidateDoLookDown()
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-            return ps.IsValid && ps.GetPreviewCharacter() != null;
+            return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Forward", priority = 207)]
         private static void DoLookForward()
         {
-            MeshUtil.CharacterEyeLook(Selection.activeObject, EyeLookDir.None);
+            CharacterEyeLook(Selection.activeObject, EyeLookDir.None);
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Forward", true)]
         private static bool ValudidateDoLookForward()
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-            return ps.IsValid && ps.GetPreviewCharacter() != null;
+            return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
-
-#if HDRP_10_5_0_OR_NEWER
-        [MenuItem("Reallusion/Tools/Add HDRP Diffusion Profiles", priority = 180)]
-        private static void DoAddDiffusionProfiles()
-        {
-            Pipeline.AddDiffusionProfilesHDRP();
-        }
-#endif
 
         public static Mesh GetMeshFrom(Object obj)
         {
@@ -221,9 +206,8 @@ namespace Reallusion.Import
         }
 
         public static bool ReplaceMesh(Object obj, Mesh mesh)
-        {
-            bool animationMode = AnimationMode.InAnimationMode();
-            if (animationMode) AnimationMode.StopAnimationMode();
+        {            
+            bool animationMode = WindowManager.StopAnimationMode(obj);
 
             bool replaced = false;
             Object o = null;
@@ -251,19 +235,16 @@ namespace Reallusion.Import
                 }
             }
 
-            if (replaced) 
-            {                
-                GameObject prefabAsset = Util.FindPrefabAssetFromSceneObject(obj);
-                GameObject sceneRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-                string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);
-                Debug.Log(prefabPath);
+            if (replaced)
+            {                                
+                GameObject sceneRoot = Util.GetScenePrefabInstanceRoot(obj);
                 // this doesn't work...
                 //PrefabUtility.ApplyObjectOverride(obj, prefabPath, InteractionMode.UserAction);
                 // only this works:
                 PrefabUtility.ApplyPrefabInstance(sceneRoot, InteractionMode.UserAction);
             }
 
-            if (animationMode) AnimationMode.StartAnimationMode();
+            WindowManager.RestartAnimationMode(animationMode);            
 
             return replaced;
         }
@@ -272,7 +253,7 @@ namespace Reallusion.Import
         {
             if (!obj) return;
 
-            GameObject sceneRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject sceneRoot = Util.GetScenePrefabInstanceRoot(obj);
             GameObject asset = PrefabUtility.GetCorrespondingObjectFromSource(sceneRoot);
             Object srcObj = PrefabUtility.GetCorrespondingObjectFromSource(obj);
             Mesh srcMesh = GetMeshFrom(srcObj);
@@ -280,13 +261,13 @@ namespace Reallusion.Import
 
             if (string.IsNullOrEmpty(path))
             {
-                Debug.LogWarning("Object: " + obj.name + " has no source Prefab Asset.");
+                Util.LogWarn("Object: " + obj.name + " has no source Prefab Asset.");
                 path = Path.Combine("Assets", "dummy.prefab");
             }
 
             if (!srcMesh)
             {
-                Debug.LogError("No mesh found in selected object.");
+                Util.LogError("No mesh found in selected object.");
                 return;
             }
 
@@ -354,7 +335,7 @@ namespace Reallusion.Import
 
                     if (!ReplaceMesh(obj, createdMesh))
                     {
-                        Debug.LogError("Unable to set mesh in selected object!");
+                        Util.LogError("Unable to set mesh in selected object!");
                     }
                 }
             }
@@ -420,13 +401,13 @@ namespace Reallusion.Import
 
             if (string.IsNullOrEmpty(fbxPath))
             {
-                Debug.LogWarning("Object: " + obj.name + " has no source Prefab Asset.");
+                Util.LogWarn("Object: " + obj.name + " has no source Prefab Asset.");
                 fbxPath = Path.Combine("Assets", "dummy.prefab");
             }
 
             if (!srcMesh)
             {
-                Debug.LogError("No mesh found in selected object.");
+                Util.LogError("No mesh found in selected object.");
                 return;
             }
                         
@@ -506,7 +487,7 @@ namespace Reallusion.Import
 
                         if (!ReplaceMesh(obj, createdMesh))
                         {
-                            Debug.LogError("Unable to set mesh in selected object!");
+                            Util.LogError("Unable to set mesh in selected object!");
                         }
                     }
                 }
@@ -553,7 +534,7 @@ namespace Reallusion.Import
         {
             if (!obj) return;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -615,7 +596,7 @@ namespace Reallusion.Import
         {
             if (!obj) return;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -665,7 +646,7 @@ namespace Reallusion.Import
         {
             if (!obj) return;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -1051,18 +1032,28 @@ namespace Reallusion.Import
 
                 firstPass.SetFloat("_SurfaceType", 0f);
                 firstPass.SetFloat("_ENUMCLIPQUALITY_ON", 0f);                
-                Pipeline.ResetMaterial(firstPass);                
+                firstPass.DisableKeyword("BOOLEAN_SECONDPASS_ON");
+                firstPass.SetFloat("BOOLEAN_SECONDPASS", 0f);
+                Pipeline.ResetMaterial(firstPass);
 
+                // transparent surface
                 secondPass.SetFloat("_SurfaceType", 1f);
-                secondPass.SetFloat("_AlphaCutoffEnable", 0f);                
+                // alpha clip
+                secondPass.SetFloat("_AlphaCutoffEnable", 1f);                
+                // prepass & postpass
                 secondPass.SetFloat("_TransparentDepthPostpassEnable", 0f);
                 secondPass.SetFloat("_TransparentDepthPrepassEnable", 0f);
+                // preserve specular lighting
                 secondPass.SetFloat("_EnableBlendModePreserveSpecularLighting", 0f);
+                // Z test (opaque and transparent): Less
                 secondPass.SetFloat("_ZTestDepthEqualForOpaque", 2f);
                 secondPass.SetFloat("_ZTestTransparent", 2f);
+                // keywords
                 secondPass.SetFloat("_ENUMCLIPQUALITY_ON", 0f);
+                secondPass.EnableKeyword("BOOLEAN_SECONDPASS_ON");
+                secondPass.SetFloat("BOOLEAN_SECONDPASS", 1f);
                 Pipeline.ResetMaterial(secondPass);
-
+                
                 /*
                 aif.SaveAndReimport();
                 ais.SaveAndReimport();
@@ -1070,18 +1061,15 @@ namespace Reallusion.Import
             }            
         }
 
-        public static void Extract2PassHairMeshes(Object prefabAsset)
+        public static GameObject Extract2PassHairMeshes(CharacterInfo info, GameObject prefab)
         {
-            if (!prefabAsset) return;
-            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(prefabAsset);
-            GameObject prefab = Util.FindCharacterPrefabAsset(fbxAsset);
-            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
-            string name = Path.GetFileNameWithoutExtension(fbxPath);
-            string fbxFolder = Path.GetDirectoryName(fbxPath);
+            if (!prefab) return null;
+            string name = info.name;
+            string fbxFolder = info.folder;
             string materialFolder = Path.Combine(fbxFolder, Importer.MATERIALS_FOLDER, name);
             string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, name);            
 
-            if (!prefab) return;
+            if (!prefab) return null;
             
             GameObject clone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             int processCount = 0;
@@ -1091,11 +1079,12 @@ namespace Reallusion.Import
             foreach (Renderer r in renderers)
             {
                 bool hasHairMaterial = false;
+                bool isFacialObject = FacialProfileMapper.MeshHasFacialBlendShapes(r.gameObject);
                 int subMeshCount = 0;
                 foreach (Material m in r.sharedMaterials)
                 {
                     subMeshCount++;
-                    if (m.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                    if (m.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         hasHairMaterial = true;
                 }
 
@@ -1112,19 +1101,31 @@ namespace Reallusion.Import
                     {
                         Material oldMat = r.sharedMaterials[index];
 
-                        if (oldMat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                        if (oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {
                             // set alpha clip and remap to values that work better 
                             // with the two material system.
-                            oldMat.SetFloatIf("_AlphaClip", 0.5f);
-                            oldMat.SetFloatIf("_AlphaClip2", 0.5f);
-                            oldMat.SetFloatIf("_AlphaPower", 1.0f);
-                            oldMat.SetFloatIf("_AlphaRemap", 1.0f);
+                            if (isFacialObject)
+                            {
+                                oldMat.SetFloatIf("_AlphaClip", 0.75f);
+                                oldMat.SetFloatIf("_AlphaClip2", 0.75f);
+                                oldMat.SetFloatIf("_AlphaPower", 1.5f);
+                                oldMat.SetFloatIf("_AlphaRemap", 1.0f);
+                            }
+                            else
+                            {
+                                oldMat.SetFloatIf("_AlphaClip", 0.5f);
+                                oldMat.SetFloatIf("_AlphaClip2", 0.5f);
+                                oldMat.SetFloatIf("_AlphaPower", 1.0f);
+                                oldMat.SetFloatIf("_AlphaRemap", 1.0f);
+                            }
                         }
 
-                        if (subMeshCount > 1 && oldMat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
-                        {                            
-                            Debug.Log("Extracting subMesh(" + index.ToString() +  ") from Object: " + oldObj.name);
+                        bool useTessellation = oldMat.shader.name.iContains("_Tessellation");
+
+                        if (subMeshCount > 1 && oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
+                        {
+                            Util.LogInfo("Extracting subMesh(" + index.ToString() +  ") from Object: " + oldObj.name);
 
                             // extract mesh into two new meshes, the old mesh without the extracted submesh
                             // and just the extracted submesh
@@ -1153,8 +1154,8 @@ namespace Reallusion.Import
                             Material[] sharedMaterials = new Material[2];
                             // - add first pass hair shader material
                             // - add second pass hair shader material
-                            Material firstPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
-                            Material secondPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
+                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS, useTessellation);
+                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS, useTessellation);
                             Material firstPass = new Material(firstPassTemplate);
                             Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);
@@ -1169,21 +1170,23 @@ namespace Reallusion.Import
                             // a single submesh with multiple materials will render itself again with each material
                             // effectively acting as a multi-pass shader which fully complies with any SRP batching.
                             smr.sharedMaterials = sharedMaterials;
+                            // call the fix again as Unity reverts some settings when first saving...
+                            FixHDRP2PassMaterials(firstPass, secondPass);
 
                             indicesToRemove.Add(index);
                             subMeshCount--;
                             processCount++;
                         }
-                        else if (subMeshCount == 1 && oldMat.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                        else if (subMeshCount == 1 && oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {
-                            Debug.Log("Leaving subMesh(" + index.ToString() + ") in Object: " + oldObj.name);
+                            Util.LogInfo("Leaving subMesh(" + index.ToString() + ") in Object: " + oldObj.name);
 
                             Material[] sharedMaterials = new Material[2];
                             // - add first pass hair shader material
                             // - add second pass hair shader material
                             
-                            Material firstPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS);
-                            Material secondPassTemplate = Util.FindAmplifyMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS);
+                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS, useTessellation);
+                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS, useTessellation);
                             Material firstPass = new Material(firstPassTemplate);
                             Material secondPass = new Material(secondPassTemplate);                            
                             CopyMaterialParameters(oldMat, firstPass);
@@ -1198,6 +1201,8 @@ namespace Reallusion.Import
                             // a single submesh with multiple materials will render itself again with each material
                             // effectively acting as a multi-pass shader which fully complies with any SRP batching.
                             oldSmr.sharedMaterials = sharedMaterials;
+                            // call the fix again as Unity reverts some settings when first saving...
+                            FixHDRP2PassMaterials(firstPass, secondPass);
                             // as we have replaced the materials completely, don't remove any later when removing any submeshes...
                             dontRemoveMaterials = true;
                             processCount++;
@@ -1206,7 +1211,7 @@ namespace Reallusion.Import
 
                     if (indicesToRemove.Count > 0)
                     {
-                        Debug.Log("Removing submeshes from Object: " + oldObj.name);
+                        Util.LogInfo("Removing submeshes from Object: " + oldObj.name);
                         Mesh remainingMesh = RemoveSubMeshes(oldMesh, indicesToRemove);
                         // Save the mesh asset.                        
                         string meshPath = Path.Combine(meshFolder, oldObj.name + "_Remaining.mesh");
@@ -1229,12 +1234,12 @@ namespace Reallusion.Import
 
                         processCount++;
                     }
-                }
+                }                
             }
 
             if (prefab && processCount > 0)
-            {                
-                Debug.Log("Updating character prefab...");
+            {
+                Util.LogInfo("Updating character prefab...");
                 // save the clone as the prefab for this character         
                 string prefabPath = AssetDatabase.GetAssetPath(prefab);
                 prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);                
@@ -1242,10 +1247,12 @@ namespace Reallusion.Import
             }
             else
             {
-                Debug.Log("Nothing to process (or already processed)...");
+                Util.LogInfo("Nothing to process (or already processed)...");
             }
 
             if (clone) UnityEngine.Object.DestroyImmediate(clone);
+
+            return prefab;
         }
 
         public struct SmoothVertData
@@ -1360,7 +1367,7 @@ namespace Reallusion.Import
             
             Vector3[] uniqueNormals = new Vector3[uniqueVerts.Count];
 
-            for (int t = 0; t < numTriangles; t++)
+            for (int t = 0; t < numTriangles; t++) 
             {
                 int t0 = t * 3 + 0;
                 int t1 = t * 3 + 1;
@@ -1430,7 +1437,7 @@ namespace Reallusion.Import
                 {
                     if (srcMesh.name.iEndsWith("_Smoothed"))
                     {
-                        Debug.LogWarning("Mesh is already smoothed!");
+                        Util.LogWarn("Mesh is already smoothed!");
                         return;
                     }
 
@@ -1451,9 +1458,9 @@ namespace Reallusion.Import
                                 Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
 
                                 if (ReplaceMesh(obj, createdMesh))
-                                    Debug.Log("Auto Smooth Mesh Complete!");
+                                    Util.LogAlways("Auto Smooth Mesh Complete!");
                                 else
-                                    Debug.LogError("Unable to set mesh in selected object!");                                
+                                    Util.LogError("Unable to set mesh in selected object!");                                
                             }
                         }
                     }

@@ -5,180 +5,195 @@ using Object = UnityEngine.Object;
 
 namespace Reallusion.Import
 {
-    public class AnimPlayerGUI
+    public static class AnimPlayerGUI
     {
         #region AnimPlayer  
 
-        public static AnimationClip selectedClip;
-        public static AnimationClip animationClip;
-        public static Animator animator;
-        public static FacialProfile facialProfile;
-        public static bool play = false;
-        public static bool clipManuallySet = false;
-        public static float time, prev, current = 0f;
-        public static bool animFoldOut = true;
-        public static string sourceFbxPath;
-        public static bool AnimFoldOut { get { return animFoldOut; } set { animFoldOut = value; } }
+        private static bool play = false;        
+        private static float time, prev, current = 0f;
+        public static bool AnimFoldOut { get; private set; } = true;
+        public static FacialProfile MeshFacialProfile { get; private set; }
+        public static FacialProfile ClipFacialProfile { get; private set; }        
+        public static AnimationClip OriginalClip { get; set; }        
+        public static AnimationClip WorkingClip { get ; set; }
+        public static Animator CharacterAnimator { get; set; }
 
-        public static void SetCharacter(PreviewScene ps, GameObject scenePrefab)
+        private static double updateTime = 0f;
+        private static double deltaTime = 0f;
+        private static double frameTime = 1f;
+        private static bool forceUpdate = false;
+        private static FacialProfile defaultProfile = new FacialProfile(ExpressionProfile.ExPlus, VisemeProfile.PairsCC3);
+
+        public static void OpenPlayer(GameObject scenePrefab)
         {
-            if (ps.IsValid)
-                scenePrefab = ps.GetPreviewCharacter();        
-
             if (scenePrefab)
-            {                
-                GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
-                sourceFbxPath = AssetDatabase.GetAssetPath(sceneFbx);
-                Animator anim = scenePrefab.GetComponent<Animator>();
-                AnimationClip firstClip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
-                facialProfile = FacialProfileMapper.GetFacialProfile(scenePrefab);
-
-                UpdatePlayerTargets(anim, firstClip);
-            }            
-        }
-
-        public static void UpdatePlayerTargets(Animator setAnimator, AnimationClip setClip)
-        {            
-            if (setAnimator)
             {
-                WindowManager.SetSceneAnimator(setAnimator);
+                scenePrefab = Util.TryResetScenePrefab(scenePrefab);
+                SetCharacter(scenePrefab);
+            }
 
-                // stop animation mode
-                if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+            if (!IsPlayerShown())
+            {
+#if SCENEVIEW_OVERLAY_COMPATIBLE
+                //2021.2.0a17+  When GUI.Window is called from a static SceneView delegate, it is broken in 2021.2.0f1 - 2021.2.1f1
+                //so we switch to overlays starting from an earlier version
+                AnimPlayerOverlay.ShowAll();
+#else
+                //2020 LTS            
+                AnimPlayerWindow.ShowPlayer();
+#endif
 
-                // set the animator
-                if (animator != setAnimator) animator = setAnimator;                    
-                
-                if (setClip)
-                {
-                    //displayeed clip is the clip to be set
-                    selectedClip = setClip;
+                //Common            
+                SceneView.RepaintAll();
 
-                    // replace animation clip with a working clone
-                    // if: there is no current clip.
-                    // or: the current clip was not set manually by the user.
-                    if (!animationClip || !clipManuallySet)
-                    {
-                        animationClip = CloneClip(setClip);
-                        time = 0f;
-                        play = false;
-                        doneInitFace = false;
-                    }
-                } 
-
-                // intitialise the face refs if needed
-                if (!doneInitFace) InitFace();
-
-                // restart the animation mode
-                if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
-
-                // then sample the animation
-                if (animationClip) SampleOnce();
-
-                // finally, apply the face
-                ApplyFace();
+                EditorApplication.update += UpdateDelegate;
             }
         }
 
-        static AnimationClip CloneClip(AnimationClip clip)
+        public static void ClosePlayer()  
+        {
+            if (IsPlayerShown())
+            {
+                EditorApplication.update -= UpdateDelegate;
+
+                if (AnimationMode.InAnimationMode())
+                    AnimationMode.StopAnimationMode();
+
+                if (CharacterAnimator)       
+                {
+                    GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator.gameObject);
+                    Util.TryResetScenePrefab(scenePrefab);
+                }
+
+#if SCENEVIEW_OVERLAY_COMPATIBLE
+                //2021.2.0a17+          
+                AnimPlayerOverlay.HideAll();
+#else
+                //2020 LTS            
+                AnimPlayerWindow.HidePlayer();
+#endif
+                //Common
+                play = false;
+                time = 0f;
+                CharacterAnimator = null;
+                WorkingClip = null;
+
+                SceneView.RepaintAll();
+            }
+        }
+
+        public static bool IsPlayerShown()
+        {
+#if SCENEVIEW_OVERLAY_COMPATIBLE
+            //2021.2.0a17+
+            return AnimPlayerOverlay.Visibility;
+#else
+            //2020 LTS            
+            return AnimPlayerWindow.isShown;
+#endif
+        }
+
+        public static void SetCharacter(GameObject scenePrefab)
+        {
+            if (WindowManager.IsPreviewScene)
+                scenePrefab = WindowManager.GetPreviewScene().GetPreviewCharacter();
+
+            if (scenePrefab)  
+            {                                
+                Animator animator = scenePrefab.GetComponent<Animator>();
+                GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
+                AnimationClip clip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
+                if (sceneFbx && clip)
+                    clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(sceneFbx, clip);
+                UpdateAnimatorClip(animator, clip);
+            }         
+        }
+
+        static public void UpdateAnimatorClip(Animator animator, AnimationClip clip)
+        {
+            if (doneInitFace) ResetFace(true, true);
+
+            // stop animation mode
+            if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+
+            if (!animator || CharacterAnimator != animator) doneInitFace = false;
+
+            CharacterAnimator = animator;
+            OriginalClip = clip;
+            WorkingClip = CloneClip(OriginalClip);
+
+            AnimRetargetGUI.RebuildClip();
+
+            MeshFacialProfile = FacialProfileMapper.GetMeshFacialProfile(animator ? animator.gameObject : null);
+            ClipFacialProfile = FacialProfileMapper.GetAnimationClipFacialProfile(clip);
+            
+            time = 0f;
+            play = false;            
+
+            // intitialise the face refs if needed
+            if (!doneInitFace) InitFace();
+
+            // finally, apply the face
+            //ApplyFace();
+
+            if (WorkingClip && CharacterAnimator)
+            {
+                // also restarts animation mode
+                SampleOnce();
+            }                        
+        }
+
+        public static void ReCloneClip()
+        {
+            WorkingClip = CloneClip(OriginalClip);
+
+            time = 0f;
+            play = false;            
+        }
+
+        public static AnimationClip CloneClip(AnimationClip clip)
         {
             if (clip)
             {
                 var clone = Object.Instantiate(clip);
                 clone.name = clip.name;
-                AnimationClip clonedClip = clone as AnimationClip;
-                WindowManager.SetSelectedAnimation(clip);
-                WindowManager.SetWorkingAnimation(clonedClip);
+                AnimationClip clonedClip = clone as AnimationClip;                
 
                 return clonedClip;
             }
-            else
-            {
-                WindowManager.SetSelectedAnimation(null);
-                WindowManager.SetWorkingAnimation(null);
-                return null;
-            }
-        }
-
-        public static void UpdatePlayerClip(AnimationClip setClip)
-        {            
-            if (animator && setClip && animationClip != setClip)
-            {
-                if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
-
-                animationClip = setClip;
-                time = 0f;
-                play = false;
-
-                if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
-
-                SampleOnce();
-            }
-        }
-
-        public static void RefreshPlayerClip()
-        {            
-            if (animator && selectedClip)
-            {
-                if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
-
-                animationClip = CloneClip(selectedClip);                
-
-                if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
-
-                SampleOnce();
-            }
-        }
+            
+            return null;            
+        }        
 
         public static void DrawPlayer()
         {            
             GUILayout.BeginVertical();
             EditorGUI.BeginChangeCheck();
-            animFoldOut = EditorGUILayout.Foldout(animFoldOut, "Animation Playback", EditorStyles.foldout);
+            AnimFoldOut = EditorGUILayout.Foldout(AnimFoldOut, "Animation Playback", EditorStyles.foldout);
             if (EditorGUI.EndChangeCheck())
             {
                 //if (foldOut && FacialMorphIMGUI.FoldOut)
                 //    FacialMorphIMGUI.FoldOut = false;
                 doOnceCatchMouse = true;
             }
-            if (animFoldOut)
+            if (AnimFoldOut)
             {
                 EditorGUI.BeginChangeCheck();
-                animator = (Animator)EditorGUILayout.ObjectField(new GUIContent("Scene Model", "Animated model in scene"), animator, typeof(Animator), true);
-                selectedClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation", "Animation to play and manipulate"), selectedClip, typeof(AnimationClip), false);
+                Animator selectedAnimator = (Animator)EditorGUILayout.ObjectField(new GUIContent("Scene Model", "Animated model in scene"), CharacterAnimator, typeof(Animator), true);
+                AnimationClip selectedClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation", "Animation to play and manipulate"), OriginalClip, typeof(AnimationClip), false);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    animationClip = CloneClip(selectedClip);                    
-
-                    WindowManager.SetSceneAnimator(animator);
-
-                    if (animationClip && animator)
-                    {
-                        time = 0f;
-                        play = false;
-                        if (!AnimationMode.InAnimationMode())
-                            AnimationMode.StartAnimationMode();
-
-                        SampleOnce();
-                        clipManuallySet = true;
-                    }
-                    else
-                    {
-                        time = 0f;
-                        play = false;
-                        if (AnimationMode.InAnimationMode())
-                            AnimationMode.StopAnimationMode();
-                    }
+                    UpdateAnimatorClip(selectedAnimator, selectedClip);
                 }
 
-                GUI.enabled = animationClip && animator;
+                GUI.enabled = WorkingClip && CharacterAnimator;
 
                 EditorGUI.BeginDisabledGroup(!AnimationMode.InAnimationMode());
 
-                if (animationClip != null)
+                if (WorkingClip != null)
                 {
                     float startTime = 0.0f;
-                    float stopTime = animationClip.length;
+                    float stopTime = WorkingClip.length;
                     EditorGUI.BeginChangeCheck();
                     time = EditorGUILayout.Slider(time, startTime, stopTime);
                     if (EditorGUI.EndChangeCheck())
@@ -231,7 +246,7 @@ namespace Reallusion.Import
                 if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Animation.LastKey").image, "Last Frame"), EditorStyles.toolbarButton))
                 {
                     play = false;
-                    time = animationClip.length;
+                    time = WorkingClip.length;
                     ResetFace();
                 }
 
@@ -248,76 +263,16 @@ namespace Reallusion.Import
 
         public static void SampleOnce()
         {
-            if (animator && animationClip)
+            if (CharacterAnimator && WorkingClip)
             {
+                if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
                 AnimationMode.BeginSampling();
-                AnimationMode.SampleAnimationClip(animator.gameObject, animationClip, time);
+                AnimationMode.SampleAnimationClip(CharacterAnimator.gameObject, WorkingClip, time);
                 AnimationMode.EndSampling();
             }
         }
-
-        public static void CreatePlayer(PreviewScene ps, GameObject fbx)
-        {            
-            if (fbx)
-            {
-                SetCharacter(ps, fbx);
-            }
-
-#if SCENEVIEW_OVERLAY_COMPATIBLE
-            //2021.2.0a17+  When GUI.Window is called from a static SceneView delegate, it is broken in 2021.2.0f1 - 2021.2.1f1
-            //so we switch to overlays starting from an earlier version
-            if (AnimPlayerOverlay.exists)
-                AnimPlayerOverlay.createdOverlay.Show();
-#else 
-            //2020 LTS            
-            AnimPlayerWindow.ShowPlayer();
-#endif
-            //Common
-            SceneView.RepaintAll();
-
-            EditorApplication.update += UpdateDelegate;
-            System.Delegate[] list = EditorApplication.update.GetInvocationList();
-        }
-
-        public static void DestroyPlayer()
-        {            
-            EditorApplication.update -= UpdateDelegate;
-
-            if (AnimationMode.InAnimationMode())
-                AnimationMode.StopAnimationMode();            
-
-#if SCENEVIEW_OVERLAY_COMPATIBLE
-            //2021.2.0a17+          
-            if (AnimPlayerOverlay.exists)
-                AnimPlayerOverlay.createdOverlay.Hide();
-#else
-            //2020 LTS            
-            AnimPlayerWindow.HidePlayer();
-#endif
-            //Common
-            AnimPlayerGUI.play = false;
-            AnimPlayerGUI.time = 0f;
-            AnimPlayerGUI.animator = null;
-            AnimPlayerGUI.animationClip = null;            
-
-            SceneView.RepaintAll();
-        }
-
-        public static bool IsPlayerShown()
-        {
-#if SCENEVIEW_OVERLAY_COMPATIBLE
-            //2021.2.0a17+
-            return AnimPlayerOverlay.createdOverlay.visible;
-#else
-            //2020 LTS            
-            return AnimPlayerWindow.isShown;
-#endif
-        }
-
-        static double updateTime = 0f;
-        static double deltaTime = 0f;
-        static double frameTime = 1f;
-        static void UpdateDelegate()
+        
+        private static void UpdateDelegate()
         {
             if (updateTime == 0f) updateTime = EditorApplication.timeSinceStartup;
             deltaTime = EditorApplication.timeSinceStartup - updateTime;
@@ -327,15 +282,15 @@ namespace Reallusion.Import
 
             if (!EditorApplication.isPlaying && AnimationMode.InAnimationMode())
             {
-                if (animationClip && animator)
+                if (WorkingClip && CharacterAnimator)
                 {
                     if (play)
                     {
-                        double frameDuration = 1.0f / animationClip.frameRate;
+                        double frameDuration = 1.0f / WorkingClip.frameRate;
 
                         time += (float)deltaTime;
                         frameTime += deltaTime;
-                        if (time >= animationClip.length)
+                        if (time >= WorkingClip.length)
                             time = 0f;
 
                         if (frameTime < frameDuration) return;
@@ -344,14 +299,15 @@ namespace Reallusion.Import
                     else
                         frameTime = 1f;
 
-                    if (current != time)
+                    if (current != time || forceUpdate)
                     {
                         AnimationMode.BeginSampling();
-                        AnimationMode.SampleAnimationClip(animator.gameObject, animationClip, time);
+                        AnimationMode.SampleAnimationClip(CharacterAnimator.gameObject, WorkingClip, time);
                         AnimationMode.EndSampling();
                         SceneView.RepaintAll();
                         
                         AnimPlayerGUI.current = time;
+                        forceUpdate = false;
                     }
                 }
             }
@@ -361,48 +317,46 @@ namespace Reallusion.Import
 
         #region FaceMorph
 
-        public static bool faceFoldOut = true;
-        public static bool FaceFoldOut { get { return faceFoldOut; } set { faceFoldOut = value; } }
-        public static bool useLightIcons = false;
-        public static bool doOnce = true;
-        public static bool doOnceCatchMouse = true;
-        public static bool eyeChanged = false;
-        public static bool doneStartUp = false;
-        public static bool doneInitFace = false;
+        public static bool FaceFoldOut { get; private set; } = true;
+        public static bool UseLightIcons { get; set; } = false;
+        private static bool doOnce = true;
+        private static bool doOnceCatchMouse = true;
+        private static bool eyeChanged = false;
+        private static bool doneInitFace = false;
 
 
-        static float EXPRESSIVENESS = 0.25f;
-        static Dictionary<string, float> EXPRESSION;
+        private static float EXPRESSIVENESS = 0.25f;
+        private static Dictionary<string, float> EXPRESSION;
 
-        static float Xpos = 0f;
-        static float RestXpos = 0f;
-        static float Ypos = 0f;
-        static float RestYpos = 0f;
+        private static float Xpos = 0f;
+        private static float RestXpos = 0f;
+        private static float Ypos = 0f;
+        private static float RestYpos = 0f;
 
-        static Texture2D eyeControlImage;
-        static Texture2D jawIconImage;
-        static Texture2D blinkIconImage;
-        static Texture2D faceDefault;
-        static Texture2D faceAngryImage;
-        static Texture2D faceDisgust;
-        static Texture2D faceFear;
-        static Texture2D faceHappy;
-        static Texture2D faceSad;
-        static Texture2D faceSurprise;
-        static GUIStyle transparentBoxStyle;        
-        static Color outlineColor = Color.gray;
-        static Color selectedColor = Color.gray;
-        static Color mouseOverColor = Color.gray;
-        static Rect last;
-        static Vector2 eyeVal;
-        static Vector2 eyeRef;
-        static float jawVal;
-        static float jawRef;
-        static float blinkVal;
-        static float blinkRef;
-        static double resetClickTimer;
-        
-        static Quaternion camDir;
+        private static Texture2D eyeControlImage;
+        private static Texture2D jawIconImage;
+        private static Texture2D blinkIconImage;
+        private static Texture2D faceDefault;
+        private static Texture2D faceAngryImage;
+        private static Texture2D faceDisgust;
+        private static Texture2D faceFear;
+        private static Texture2D faceHappy;
+        private static Texture2D faceSad;
+        private static Texture2D faceSurprise;
+        private static GUIStyle transparentBoxStyle;
+        private static Color outlineColor = Color.gray;
+        private static Color selectedColor = Color.gray;
+        private static Color mouseOverColor = Color.gray;
+        private static Rect last;
+        private static Vector2 eyeVal;
+        private static Vector2 eyeRef;
+        private static float jawVal;
+        private static float jawRef;
+        private static float blinkVal;
+        private static float blinkRef;
+        private static double resetClickTimer;
+
+        private static Quaternion camDir;
 
         const float ICON_FACE_SIZE = 48f;
 
@@ -415,9 +369,9 @@ namespace Reallusion.Import
             outlineColor = mouseOverColor;
 
             string[] folders = new string[] { "Assets", "Packages" };
-            eyeControlImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Eye_Gry" : "RLIcon_Eye_Blk");
-            jawIconImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Mouth_Gry" : "RLIcon_Mouth_Blk");
-            blinkIconImage = Util.FindTexture(folders, useLightIcons ? "RLIcon_Blink_Gry" : "RLIcon_Blink_Blk");
+            eyeControlImage = Util.FindTexture(folders, UseLightIcons ? "RLIcon_Eye_Gry" : "RLIcon_Eye_Blk");
+            jawIconImage = Util.FindTexture(folders, UseLightIcons ? "RLIcon_Mouth_Gry" : "RLIcon_Mouth_Blk");
+            blinkIconImage = Util.FindTexture(folders, UseLightIcons ? "RLIcon_Blink_Gry" : "RLIcon_Blink_Blk");
             faceDefault = Util.FindTexture(folders, "RLIcon_FaceDefault");
             faceAngryImage = Util.FindTexture(folders, "RLIcon_FaceAngry");
             faceDisgust = Util.FindTexture(folders, "RLIcon_FaceDisgust");
@@ -433,20 +387,18 @@ namespace Reallusion.Import
             transparentBoxStyle.normal.background = transparent;
 
             InitFace();
-
-            doneStartUp = true;
         }
 
         public static void InitFace()
         {
-            if (animator == null) return;
+            if (CharacterAnimator == null) return;
 
             EXPRESSIVENESS = 0f;
             EXPRESSION = null;            
 
-            Object obj = animator.gameObject;
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-
+            Object obj = CharacterAnimator.gameObject;
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
+            
             if (root)
             {
                 GameObject leftEye = MeshUtil.FindCharacterBone(root, "CC_Base_L_Eye", "L_Eye");
@@ -457,7 +409,7 @@ namespace Reallusion.Import
                 {
                     Vector3 euler = leftEye.transform.localRotation.eulerAngles;
                     eyeRef = new Vector2(euler.z, euler.x);
-                    eyeVal = new Vector2(euler.z, euler.x);
+                    eyeVal = eyeRef;
                 }
 
                 doOnceCatchMouse = true;
@@ -471,9 +423,13 @@ namespace Reallusion.Import
                     jawVal = jawRef;
                 }
 
-                if (!FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink", facialProfile, out blinkRef))
+                if (!FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink", 
+                    new FacialProfile(ExpressionProfile.Std, VisemeProfile.None), 
+                    MeshFacialProfile, out blinkRef))
                 {
-                    FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink_L", facialProfile, out blinkRef);
+                    FacialProfileMapper.GetCharacterBlendShapeWeight(root, "Eye_Blink_L",
+                        new FacialProfile(ExpressionProfile.Std, VisemeProfile.None),
+                        MeshFacialProfile, out blinkRef);
                 }
                 blinkVal = blinkRef;                            
             }
@@ -481,7 +437,7 @@ namespace Reallusion.Import
             doneInitFace = true;
         }
 
-        public static void ResetFace(bool full = false)
+        public static void ResetFace(bool update = true, bool full = false)
         {
             SetNeutralExpression();
             if (full)
@@ -497,6 +453,7 @@ namespace Reallusion.Import
             AdjustMouth(jawVal);
             blinkVal = blinkRef;
             AdjustBlink(blinkVal);
+            forceUpdate = update;
         }
 
         public static void ApplyFace()
@@ -510,8 +467,8 @@ namespace Reallusion.Import
 
         public static void ResetFaceViewCamera()
         {
-            Object obj = AnimPlayerGUI.animator.gameObject;
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            Object obj = AnimPlayerGUI.CharacterAnimator.gameObject;
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -540,9 +497,7 @@ namespace Reallusion.Import
         {
             doOnce = true;
             doOnceCatchMouse = true;
-            doneStartUp = false;
-            doneInitFace = false;
-            clipManuallySet = false;
+            doneInitFace = false;            
             EXPRESSION = null;
             EXPRESSIVENESS = 0f;
         }
@@ -557,20 +512,20 @@ namespace Reallusion.Import
 
             EditorGUI.BeginDisabledGroup(play);
             EditorGUI.BeginChangeCheck();
-            faceFoldOut = EditorGUILayout.Foldout(faceFoldOut, "Facial Expression", EditorStyles.foldout);
+            FaceFoldOut = EditorGUILayout.Foldout(FaceFoldOut, "Facial Expression", EditorStyles.foldout);
             if (EditorGUI.EndChangeCheck())
             {
                 //if (foldOut && AnimPlayerIMGUI.FoldOut)
                 //    AnimPlayerIMGUI.FoldOut = false;
             }
-            if (faceFoldOut && Event.current.type == EventType.Repaint)
+            if (FaceFoldOut && Event.current.type == EventType.Repaint)
             {
                 last = GUILayoutUtility.GetLastRect();
             }
 
-            if (faceFoldOut)
+            if (FaceFoldOut)
             {
-                GUI.enabled = animationClip && animator;
+                GUI.enabled = WorkingClip && CharacterAnimator;
 
                 //Directly positioned controls
                 float xPadding = 6f;
@@ -600,16 +555,16 @@ namespace Reallusion.Import
 
                 GUI.DrawTexture(rightTopRowIcon, jawIconImage);
                 EditorGUI.BeginChangeCheck();
-                jawVal = GUI.HorizontalSlider(rightTopRowSlider, jawVal, jawRef - 15f, jawRef + 0f);
+                jawVal = GUI.HorizontalSlider(rightTopRowSlider, jawVal, jawRef - 25f, jawRef + 0f);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    SetIndividualBlendShape("Mouth_Open", Mathf.InverseLerp(jawRef + 0f, jawRef - 15f, jawVal) * 100f);
+                    SetIndividualBlendShape("A25_Jaw_Open", Mathf.InverseLerp(jawRef + 0f, jawRef - 25f, jawVal) * 70f);
                     AdjustMouth(jawVal);
                 }
 
                 GUI.DrawTexture(rightSecRowIcon, blinkIconImage);
                 EditorGUI.BeginChangeCheck();
-                blinkVal = GUI.HorizontalSlider(rightSecRowSlider, blinkVal, -30f, 120f);
+                blinkVal = GUI.HorizontalSlider(rightSecRowSlider, blinkVal, -30f, 100f);
                 if (EditorGUI.EndChangeCheck())
                 {
                     AdjustBlink(blinkVal);
@@ -617,7 +572,7 @@ namespace Reallusion.Import
 
                 if (GUI.Button(rightRefreshButton, new GUIContent(EditorGUIUtility.IconContent("Refresh").image, "Reset Face and View")))
                 {
-                    ResetFace(true);
+                    ResetFace(true, true);
 
                     // double click test
                     if (resetClickTimer > 0f && (EditorApplication.timeSinceStartup - resetClickTimer < 0.5f))
@@ -643,39 +598,39 @@ namespace Reallusion.Import
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceAngryImage, "Angry Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
-                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_ANGRY : FACE_ANGRY_EXT);
+                    ResetFace(false);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_ANGRY : FACE_ANGRY_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceDisgust, "Disgusted Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
-                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_DISGUST : FACE_DISGUST_EXT);
+                    ResetFace(false);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_DISGUST : FACE_DISGUST_EXT);
 
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceFear, "Fearful Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
-                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_FEAR : FACE_FEAR_EXT);
+                    ResetFace(false);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_FEAR : FACE_FEAR_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceHappy, "Happy Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
-                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_HAPPY : FACE_HAPPY_EXT);
+                    ResetFace(false);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_HAPPY : FACE_HAPPY_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceSad, "Sad Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
-                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_SAD : FACE_SAD_EXT);
+                    ResetFace(false);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_SAD : FACE_SAD_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(faceSurprise, "Surprised Face"), GUILayout.Height(ICON_FACE_SIZE), GUILayout.Width(ICON_FACE_SIZE)))
                 {
-                    ResetFace();
-                    SetFacialExpression(facialProfile == FacialProfile.CC3 ? FACE_SURPRISE : FACE_SURPRISE_EXT);
+                    ResetFace(false);
+                    SetFacialExpression(MeshFacialProfile.expressionProfile == ExpressionProfile.Std ? FACE_SURPRISE : FACE_SURPRISE_EXT);
                 }
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
@@ -759,9 +714,8 @@ namespace Reallusion.Import
 
                     case EventType.MouseUp:
                         {
-                            outlineColor = mouseOverColor;
-                            if (GUIUtility.hotControl == buttonId)
-                                GUIUtility.hotControl = 0;
+                            outlineColor = mouseOverColor;                            
+                            GUIUtility.hotControl = 0;
                         }
                         break;
 
@@ -793,10 +747,10 @@ namespace Reallusion.Import
             if (input.y > 360f) input.y -= 360f;
             if (input.y < -360f) input.y += 360f;
 
-            if (AnimPlayerGUI.animator == null) return;
-            Object obj = AnimPlayerGUI.animator.gameObject;
+            if (AnimPlayerGUI.CharacterAnimator == null) return;
+            Object obj = AnimPlayerGUI.CharacterAnimator.gameObject;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -835,10 +789,10 @@ namespace Reallusion.Import
 
         static void AdjustMouth(float input)
         {
-            if (AnimPlayerGUI.animator == null) return;
-            Object obj = AnimPlayerGUI.animator.gameObject;
+            if (AnimPlayerGUI.CharacterAnimator == null) return;
+            Object obj = AnimPlayerGUI.CharacterAnimator.gameObject;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -856,29 +810,27 @@ namespace Reallusion.Import
 
         static void AdjustBlink(float input)
         {
-            if (AnimPlayerGUI.animator == null) return;
-            Object obj = AnimPlayerGUI.animator.gameObject;
+            if (AnimPlayerGUI.CharacterAnimator == null) return;
+            Object obj = AnimPlayerGUI.CharacterAnimator.gameObject;
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);            
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);            
 
-            if (!SetCharacterBlendShape(root, "Eye_Blink", input))
-            {
-                SetCharacterBlendShape(root, "Eye_Blink_L", input);
-                SetCharacterBlendShape(root, "Eye_Blink_R", input);
-            }
+            SetCharacterBlendShape(root, "A14_Eye_Blink_Left", input);
+            SetCharacterBlendShape(root, "A15_Eye_Blink_Right", input);            
         }
 
         private static bool SetCharacterBlendShape(GameObject characterRoot, string blendShapeName, float weight)
         {
-            return FacialProfileMapper.SetCharacterBlendShape(characterRoot, blendShapeName, facialProfile, weight);
+            return FacialProfileMapper.SetCharacterBlendShape(characterRoot, blendShapeName, 
+                defaultProfile, MeshFacialProfile, weight);
         }        
 
         static void SetFacialExpression(Dictionary<string, float> dict, bool restore = false)
         {
-            if (animator == null) return;
+            if (CharacterAnimator == null) return;
             if (dict == null) return;
 
-            Object obj = animator.gameObject;
+            Object obj = CharacterAnimator.gameObject;
 
             if (!restore)
             {
@@ -897,7 +849,7 @@ namespace Reallusion.Import
                 }
             }
 
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {
@@ -928,18 +880,18 @@ namespace Reallusion.Import
 
         static void SetIndividualBlendShape(string individualShapeName, float value)
         {
-            if (animator == null) return;
-            Object obj = animator.gameObject;
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            if (CharacterAnimator == null) return;
+            Object obj = CharacterAnimator.gameObject;
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
             SetCharacterBlendShape(root, individualShapeName, value);
         }        
 
         static void SnapViewToHead()
         {
-            if (AnimPlayerGUI.animator == null) return;
+            if (AnimPlayerGUI.CharacterAnimator == null) return;
 
-            Object obj = AnimPlayerGUI.animator.gameObject;
-            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+            Object obj = AnimPlayerGUI.CharacterAnimator.gameObject;
+            GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)
             {

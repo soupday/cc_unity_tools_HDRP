@@ -18476,7 +18476,7 @@
     "m_DOTSInstancing": false,
     "m_CustomVelocity": false,
     "m_Tessellation": false,
-    "m_TessellationMode": 0,
+    "m_TessellationMode": 1,
     "m_TessellationFactorMinDistance": 20.0,
     "m_TessellationFactorMaxDistance": 50.0,
     "m_TessellationFactorTriangleSize": 100.0,

@@ -20,42 +20,68 @@ namespace Reallusion.Import
         Transform baked;
         Transform camera;
 
+        public bool IsValidPreviewScene { get { return scene.IsValid() && container && stage && lighting && character; } }
+        public Scene SceneHandle { get { return scene; } }
 
-        public static PreviewScene OpenPreviewScene(GameObject fbx)
-        {
-            if (!fbx) return new PreviewScene();
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return new PreviewScene();
-
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-            GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
-
-            PreviewScene previewScene = GetPreviewScene();
-
-            previewScene.PostProcessingAndLighting();
-
-            previewScene.ShowPreviewCharacter(fbx);            
-
-            return previewScene;
-        }
         public Transform GetCamera()
         {
-            return camera;
-        }
+            if (!camera)
+            {
+                GameObject cameraObject = GameObject.Find("Main Camera");
+                if (cameraObject)
+                    camera = cameraObject.transform;
+            }
 
-        public static PreviewScene GetPreviewScene()
+            if (!camera)
+            {
+                Camera[] cams = GameObject.FindObjectsOfType<Camera>();
+                foreach (Camera cam in cams)
+                {
+                    if (cam.isActiveAndEnabled)
+                    {
+                        return cam.transform;
+                    }
+                }
+            }
+
+            return camera;
+        }        
+
+        public static PreviewScene FetchPreviewScene(Scene scene)
         {
+            if (!scene.IsValid()) scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             PreviewScene ps = new PreviewScene();
+            ps.scene = scene;
             ps.container = GameObject.Find("Preview Scene Container")?.transform;
             ps.character = GameObject.Find("Character Container")?.transform;
             ps.baked = GameObject.Find("Baked Character Container")?.transform;
             ps.stage = GameObject.Find("Stage")?.transform;
-            ps.lighting = GameObject.Find("Lighting")?.transform;
-            ps.scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-            ps.camera = GameObject.Find("Main Camera")?.transform;
+            ps.lighting = GameObject.Find("Lighting")?.transform;            
+            ps.camera = GameObject.Find("Main Camera")?.transform;            
             return ps;
-        }
+        }        
+        
+        public static void CycleLighting()
+        {
+            if (WindowManager.IsPreviewScene)
+            {
+                PreviewScene ps = WindowManager.GetPreviewScene();
 
-        public bool IsValid { get { return scene.IsValid() && container && character && baked && stage && lighting; } }
+                List<GameObject> lightingContainers = new List<GameObject>();
+                Util.FindSceneObjects(ps.lighting, "LightingConfig", lightingContainers);
+
+                int active = 0;
+                for (int i = 0; i < lightingContainers.Count; i++)
+                {
+                    if (lightingContainers[i].activeSelf) active = i;
+                    lightingContainers[i].SetActive(false);
+                }
+
+                active++;
+                if (active >= lightingContainers.Count) active = 0;
+                lightingContainers[active].SetActive(true);
+            }
+        }
 
         public GameObject GetPreviewCharacter()
         {
@@ -159,7 +185,7 @@ namespace Reallusion.Import
             GameObject clone = PrefabUtility.InstantiatePrefab(prefabAsset, character.transform) as GameObject;
             if (clone)
             {
-                Debug.Log("Replacing prefab with new generated prefab...");
+                Util.LogInfo("Replacing prefab with new generated prefab...");
                 Selection.activeGameObject = clone;
                 return clone;
             }

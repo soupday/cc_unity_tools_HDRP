@@ -40,7 +40,7 @@ namespace Reallusion.Import
 
     public static class Pipeline
     {
-        public const string VERSION = "1.3.1";
+        public const string VERSION = "1.3.2";
 
 #if HDRP_10_5_0_OR_NEWER
         // version
@@ -56,11 +56,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_EYE = "RL_EyeShaderBasic_Dummy_HDRP"; // Dummy shader (unlit no textures)
         public const string SHADER_HQ_EYE_OCCLUSION = "RL_EyeOcclusionShader_HDRP";
         public const string SHADER_HQ_TEARLINE = "RL_TearlineShader_HDRP";
-#if HDRP_12_0_0_OR_NEWER
-        public const string SHADER_HQ_HAIR = "RL_HairShader_Variants_HDRP12";
-#else
         public const string SHADER_HQ_HAIR = "RL_HairShader_Variants_HDRP";
-#endif
         public const string SHADER_HQ_SCALPBASE = "HDRP/Lit";
         public const string SHADER_HQ_EYELASH = "HDRP/Lit";
         public const string SHADER_HQ_TEETH = "RL_TeethShader_HDRP";
@@ -85,11 +81,7 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_EYE = "RL_Template_HQ_EyeBasic_Dummy_HDRP";        
         public const string MATERIAL_HQ_EYE_OCCLUSION = "RL_Template_HQ_EyeOcclusion_HDRP";
         public const string MATERIAL_HQ_TEARLINE = "RL_Template_HQ_Tearline_HDRP";
-#if HDRP_12_0_0_OR_NEWER
-        public const string MATERIAL_HQ_HAIR = "RL_Template_HQ_Hair_HDRP12";
-#else
         public const string MATERIAL_HQ_HAIR = "RL_Template_HQ_Hair_HDRP";
-#endif
         public const string MATERIAL_HQ_SCALPBASE = "RL_Template_Default_ScalpBase_HDRP";
         public const string MATERIAL_HQ_EYELASH = "RL_Template_Default_Eyelash_HDRP";
         public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_HDRP";
@@ -145,11 +137,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_CORNEA_REFRACTIVE_CUSTOM = "RL_Template_Baked_CorneaRefractiveCustom_HDRP";        
         public const string MATERIAL_BAKED_EYE_REFRACTIVE_CUSTOM = "RL_Template_Baked_EyeRefractiveCustom_HDRP";
         public const string MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM = "RL_Template_Baked_EyeOcclusionCustom_HDRP";
-#if HDRP_12_0_0_OR_NEWER
-        public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_HDRP12";
-#else
         public const string MATERIAL_BAKED_HAIR_CUSTOM = "RL_Template_Baked_HairCustom_HDRP";
-#endif        
         public const string MATERIAL_BAKED_HAIR_COVERAGE_CUSTOM = "RL_Template_Baked_HairCustom_HDRP";
         // 2 pass        
         public const string MATERIAL_BAKED_HAIR_1ST_PASS = "RL_Template_Baked_Hair_1st_Pass_HDRP";
@@ -440,6 +428,11 @@ namespace Reallusion.Import
         public static bool is3D => RP == RenderPipeline.Builtin;
         public static bool isURP => RP == RenderPipeline.URP;
         public static bool isHDRP => RP == RenderPipeline.HDRP;
+#if HDRP_12_0_0_OR_NEWER
+        public static bool isHDRP12 => true;
+#else
+        public static bool isHDRP12 => false;
+#endif
 
 
         public static RenderPipeline GetRenderPipeline()
@@ -650,40 +643,77 @@ namespace Reallusion.Import
                 templateName = GetDefaultMaterialName(quality);
 
             if (string.IsNullOrEmpty(templateName))
-                Debug.LogError("Unable to find Template Material for: " + materialType + "/" + quality);
+                Util.LogError("Unable to find Template Material for: " + materialType + "/" + quality);
 
             return templateName;
         }        
 
-        public static Material GetTemplateMaterial(MaterialType materialType, MaterialQuality quality, CharacterInfo info, bool useAmplify = false)
+        public static Material GetTemplateMaterial(MaterialType materialType, MaterialQuality quality, CharacterInfo info, bool useAmplify = false, bool useTessellation = false)
         {
             string templateName = GetTemplateMaterialName(materialType, quality, info);
-            
-            if (useAmplify)
-            {
-                Material amplifyTemplate = Util.FindMaterial(templateName + "_Amplify");
-                if (amplifyTemplate)
-                {
-                    return amplifyTemplate;
-                }
-            }
 
-            Material template = Util.FindMaterial(templateName);
-            if (template) return template;
-
-            return GetDefaultMaterial(quality);
+            return GetCustomTemplateMaterial(templateName, quality, useAmplify, useTessellation);
         }
 
-        public static Material GetCustomTemplateMaterial(string templateName, MaterialQuality quality, bool useAmplify)
+        public static Material GetCustomTemplateMaterial(string templateName, MaterialQuality quality, bool useAmplify, bool useTessellation)
         {
-            if (useAmplify)
+            string customTemplateName;
+            Material customTemplate = null;
+            Material foundTemplate = null;
+            bool foundHDRP12 = false;
+            
+            if (isHDRP12)
             {
-                Material amplifyTemplate = Util.FindMaterial(templateName + "_Amplify");
-                if (amplifyTemplate)
+                customTemplateName = templateName + "12";
+                foundTemplate = Util.FindMaterial(customTemplateName);
+                if (foundTemplate)
                 {
-                    return amplifyTemplate;
+                    templateName = customTemplateName;
+                    customTemplate = foundTemplate;
+                    foundHDRP12 = true;
                 }
             }
+
+            if (useAmplify)
+            {
+                customTemplateName = templateName + "_Amplify";
+                foundTemplate = Util.FindMaterial(customTemplateName);
+                if (foundTemplate)
+                {
+                    templateName = customTemplateName;
+                    customTemplate = foundTemplate;
+                }
+            }
+
+            if (useTessellation)
+            {
+                foundTemplate = null;
+
+                if (isHDRP12 && !foundHDRP12)
+                {                    
+                    customTemplateName = templateName + "12_T";
+                    foundTemplate = Util.FindMaterial(customTemplateName);
+                    if (foundTemplate)
+                    {
+                        templateName = customTemplateName;
+                        customTemplate = foundTemplate;
+                        foundHDRP12 = true;
+                    }
+                }
+
+                if (!foundTemplate)
+                {
+                    customTemplateName = templateName + "_T";
+                    foundTemplate = Util.FindMaterial(customTemplateName);
+                    if (foundTemplate)
+                    {
+                        templateName = customTemplateName;
+                        customTemplate = foundTemplate;
+                    }
+                }
+            }
+
+            if (customTemplate) return customTemplate;
 
             Material template = Util.FindMaterial(templateName);
             if (template) return template;

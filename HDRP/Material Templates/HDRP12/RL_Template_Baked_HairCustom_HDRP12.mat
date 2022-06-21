@@ -35,7 +35,8 @@ Material:
   - _ENUMCLIPQUALITY_ON_STANDARD
   - _SURFACE_TYPE_TRANSPARENT
   - _TRANSPARENT_WRITES_MOTION_VEC
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _TESSELLATION_PHONG
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
@@ -103,7 +104,7 @@ Material:
     - _DepthPrepass: 0.9
     - _DoubleSidedEnable: 1
     - _DoubleSidedGIMode: 0
-    - _DoubleSidedNormalMode: 0
+    - _DoubleSidedNormalMode: 2
     - _DstBlend: 10
     - _ENUMCLIPQUALITY_ON: 0
     - _EnableBlendModePreserveSpecularLighting: 0
@@ -149,9 +150,8 @@ Material:
     - _ZTestTransparent: 4
     - _ZWrite: 0
     m_Colors:
-    - Color_1fead8c8f2eb471886227150feb2da07: {r: 1, g: 1, b: 1, a: 0}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 0}
-    - _DoubleSidedConstants: {r: -1, g: -1, b: -1, a: 0}
+    - _DoubleSidedConstants: {r: 1, g: 1, b: 1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _SpecularTint: {r: 1, g: 1, b: 1, a: 1}

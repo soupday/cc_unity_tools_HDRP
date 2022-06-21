@@ -45,7 +45,7 @@ namespace Reallusion.Import
             }
             catch
             {
-                Debug.LogError("Unable to Parse JSON text...");
+                Util.LogError("Unable to Parse JSON text...");
             }
             text = null;
         }

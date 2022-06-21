@@ -25,14 +25,32 @@ namespace Reallusion.Import
 {
     public static class Util
     {
-        public static int LOG_LEVEL = 0;
-
-        public static bool ImportCharacter(CharacterInfo info, MaterialQuality quality)
+        public static int log_level = -1;
+        public static int LOG_LEVEL
         {
-            Importer importCharacter = new Importer(info);
-            return importCharacter.Import();
-        }
+            get
+            {
+                if (log_level == -1)
+                {
+                    if (EditorPrefs.HasKey("RL_Log_Level"))
+                    {
+                        log_level = EditorPrefs.GetInt("RL_Log_Level");
+                    }
+                    else
+                    {
+                        log_level = 0;
+                        EditorPrefs.SetInt("RL_Log_Level", log_level);
+                    }
+                }
+                return log_level;
+            }
 
+            set
+            {
+                log_level = value;
+                EditorPrefs.SetInt("RL_Log_Level", value);
+            }
+        }
 
         public static bool IsCC3Character(Object obj)
         {
@@ -336,16 +354,64 @@ namespace Reallusion.Import
             return null;
         }
 
-        public static Material FindAmplifyMaterial(string name, string[] folders = null)
+        public static Material FindCustomMaterial(string name, bool useTessellation, string[] folders = null)
         {
-            if (Importer.USE_AMPLIFY_SHADER)
+            Material template = null;
+            Material foundTemplate = null;
+            bool foundHDRP12 = false;
+
+            if (Pipeline.isHDRP12)
             {
-                Material amplifyTemplate = FindMaterial(name + "_Amplify", folders);
-                if (amplifyTemplate)
+                string templateName = name + "12";
+                foundTemplate = FindMaterial(templateName, folders);
+                if (foundTemplate)
                 {
-                    return amplifyTemplate;
+                    name = templateName;
+                    template = foundTemplate;
+                    foundHDRP12 = true;
                 }
             }
+
+            if (Importer.USE_AMPLIFY_SHADER)
+            {
+                string templateName = name + "_Amplify";
+                foundTemplate = FindMaterial(templateName, folders);
+                if (foundTemplate)
+                {
+                    name = templateName;
+                    template = foundTemplate;
+                }
+            }
+
+            if (useTessellation)
+            {
+                foundTemplate = null;
+
+                if (Pipeline.isHDRP12 && !foundHDRP12)
+                {
+                    string templateName = name + "12_T";
+                    foundTemplate = FindMaterial(templateName, folders);
+                    if (foundTemplate)
+                    {
+                        name = templateName;
+                        template = foundTemplate;
+                        foundHDRP12 = true;
+                    }
+                }
+                
+                if (!foundTemplate)
+                {
+                    string templateName = name + "_T";
+                    foundTemplate = FindMaterial(templateName, folders);
+                    if (foundTemplate)
+                    {
+                        name = templateName;
+                        template = foundTemplate;
+                    }
+                }
+            }
+
+            if (template) return template;
 
             return FindMaterial(name, folders);
         }
@@ -459,19 +525,7 @@ namespace Reallusion.Import
             const float specularMid = 0.5f;
             float P = Mathf.Log(smoothnessStdMax) / Mathf.Log(specularMid);
             return smoothness * Mathf.Clamp(Mathf.Pow(specular, P), 0f, 0.897f);
-        }
-
-        public static void DoTest(Object asset)
-        {
-            string assetPath = AssetDatabase.GetAssetPath(asset);
-
-            Object[] objects = AssetDatabase.LoadAllAssetsAtPath(assetPath);
-
-            foreach (Object o in objects)
-            {
-                Debug.Log(o);
-            }
-        }
+        }        
 
         public static string GetShaderName(Material mat)
         {
@@ -640,7 +694,28 @@ namespace Reallusion.Import
             }
 
             return found;
-        }        
+        }
+
+        public static AnimationClip[] GetAllAnimationClipsFromCharacter(GameObject sourceFbx)
+        {
+            List<AnimationClip> clips = new List<AnimationClip>();
+
+            if (sourceFbx)
+            {
+                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(sourceFbx));
+                foreach (Object subObject in data)
+                {
+                    if (subObject.GetType().Equals(typeof(AnimationClip)))
+                    {
+                        AnimationClip found = (AnimationClip)subObject;
+                        if (found.name.iContains("T-Pose")) continue;
+                        clips.Add(found);
+                    }
+                }
+            }
+
+            return clips.ToArray();
+        }
         
         public static GameObject FindCharacterPrefabAsset(GameObject fbxAsset)
         { 
@@ -676,12 +751,28 @@ namespace Reallusion.Import
             return (mainPrefab || bakedPrefab);
         }
 
-        public static GameObject FindPrefabAssetFromSceneObject(Object sceneObject)
+        public static GameObject GetScenePrefabInstanceRoot(Object sceneObject)
         {
-            Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
-            if (instanceRoot)
+            if (sceneObject)
             {
-                Object source = PrefabUtility.GetCorrespondingObjectFromSource(instanceRoot);
+                if (PrefabUtility.IsPartOfPrefabInstance(sceneObject))
+                {
+                    Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
+                    if (!instanceRoot) instanceRoot = sceneObject;
+
+                    if (instanceRoot.GetType() == typeof(GameObject))
+                        return (GameObject)instanceRoot;
+                }
+            }
+
+            return null;
+        }        
+
+        public static GameObject FindRootPrefabAsset(GameObject prefabAsset)
+        {
+            if (prefabAsset)
+            {
+                Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabAsset);
                 if (source)
                 {
                     if (source.GetType() == typeof(GameObject))
@@ -694,45 +785,112 @@ namespace Reallusion.Import
             return null;
         }
 
-        public static GameObject FindRootPrefabAsset(GameObject prefabAsset)
+        public static GameObject FindRootPrefabAssetFromSceneObject(Object sceneObject)
+        {            
+            GameObject instanceRoot = GetScenePrefabInstanceRoot(sceneObject);
+
+            return FindRootPrefabAsset(instanceRoot);
+        }        
+
+        public static void ResetPrefabTransforms(GameObject prefabObj)
         {
-            Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabAsset);
-            if (source)
+            if (prefabObj)
             {
-                if (source.GetType() == typeof(GameObject))
+                GameObject source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabObj);
+                if (source && source != prefabObj)
                 {
-                    return (GameObject)source;
+                    bool resetPos = false;
+                    bool resetRot = false;
+                    bool resetSca = false;
+                    if (prefabObj.transform.position != source.transform.position) resetPos = true;
+                    if (prefabObj.transform.rotation != source.transform.rotation) resetRot = true;
+                    if (prefabObj.transform.localScale != source.transform.localScale) resetSca = true;
+                    if (resetPos) prefabObj.transform.position = source.transform.position;
+                    if (resetRot) prefabObj.transform.rotation = source.transform.rotation;
+                    if (resetSca) prefabObj.transform.localScale = source.transform.localScale;
+                    /*
+                    if (resetPos || resetRot || resetSca) 
+                    { 
+                        string report = "Resetting " + prefabObj.name + ":";
+                        if (resetPos) report += " Position";
+                        if (resetRot) report += " Rotation";
+                        if (resetSca) report += " Scale";
+                        Debug.Log(report);
+                    }
+                    */
+
+                    for (int i = 0; i < prefabObj.transform.childCount; i++)
+                    {
+                        Transform child = prefabObj.transform.GetChild(i);
+                        ResetPrefabTransforms(child.gameObject);
+                    }
                 }
             }
-
-            return null;
         }
 
-        public static GameObject FindRootPrefabAssetFromSceneObject(Object sceneObject)
+        public static GameObject TryResetScenePrefab(GameObject scenePrefab)  
         {
-            if (sceneObject)
+            if (PrefabNeedsReset(scenePrefab))
             {
-                Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
+                Util.LogInfo("Resetting Prefab");
+                ResetPrefabTransforms(scenePrefab);
+                /*
+                GameObject prefabSource = PrefabUtility.GetCorrespondingObjectFromSource(scenePrefab);
+                Transform t = scenePrefab.transform;
+                Transform parent = t.parent;
+                Vector3 pos = t.position;
+                Quaternion rot = t.rotation;
+                Vector3 sca = t.localScale;
+                GameObject.DestroyImmediate(scenePrefab);
+                scenePrefab = (GameObject)PrefabUtility.InstantiatePrefab(prefabSource);
+                scenePrefab.transform.parent = parent;
+                scenePrefab.transform.position = pos;
+                scenePrefab.transform.rotation = rot;
+                scenePrefab.transform.localScale = sca;
+                */
+            }
 
-                if (!instanceRoot && 
-                    sceneObject.GetType() == typeof(GameObject) &&
-                    PrefabUtility.IsPartOfPrefabAsset(sceneObject)) 
-                    instanceRoot = sceneObject;
+            return scenePrefab;
+        }
 
-                if (instanceRoot)
+        public static bool PrefabNeedsReset(GameObject prefabObj)
+        {            
+            if (prefabObj)
+            {
+                GameObject source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabObj);
+                if (source && source != prefabObj)
                 {
-                    Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(instanceRoot);
-                    if (source)
+                    bool resetPos = false;
+                    bool resetRot = false;
+                    bool resetSca = false;
+                    if (prefabObj.transform.position != source.transform.position) resetPos = true;
+                    if (prefabObj.transform.rotation != source.transform.rotation) resetRot = true;
+                    if (prefabObj.transform.localScale != source.transform.localScale) resetSca = true;
+                    if (resetPos || resetRot || resetSca)
                     {
-                        if (source.GetType() == typeof(GameObject))
-                        {
-                            return (GameObject)source;
-                        }
+                        return true;
+                    }
+
+                    for (int i = 0; i < prefabObj.transform.childCount; i++)
+                    {
+                        Transform child = prefabObj.transform.GetChild(i);
+                        bool result = PrefabNeedsReset(child.gameObject);
+                        if (result) return true;
                     }
                 }
             }
 
-            return null;
+            return false;
+        }
+
+        public static void FindSceneObjects(Transform root, string search, List<GameObject> found)
+        {
+            if (root.name.iStartsWith(search)) found.Add(root.gameObject);
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                FindSceneObjects(root.GetChild(i), search, found);
+            }
         }
 
         public static void LogInfo(string message)
@@ -758,6 +916,10 @@ namespace Reallusion.Import
                 Debug.LogError(message);
             }
         }
-               
+
+        public static void LogAlways(string message)
+        {
+            Debug.Log(message);
+        }
     }    
 }

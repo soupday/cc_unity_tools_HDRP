@@ -18,8 +18,8 @@ namespace Reallusion.Import
         public static void OnSceneGUI(SceneView sceneView)
         {
             height = 72f;
-            if (AnimPlayerGUI.animFoldOut) height += 84f;
-            if (AnimPlayerGUI.faceFoldOut) height += 90f;
+            if (AnimPlayerGUI.AnimFoldOut) height += 84f;
+            if (AnimPlayerGUI.FaceFoldOut) height += 90f;
             
             float x = sceneView.position.width - width - xpadding;
             float y = sceneView.position.height - height - ypadding;

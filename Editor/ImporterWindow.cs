@@ -52,6 +52,7 @@ namespace Reallusion.Import
         const float WINDOW_MARGIN = 4f;
         const float TOP_PADDING = 16f;
         const float ACTION_BUTTON_SIZE = 40f;
+        const float WEE_BUTTON_SIZE = 28f;
         const float ACTION_BUTTON_SPACE = 4f;
         const float BUTTON_HEIGHT = 40f;
         const float INFO_HEIGHT = 80f;
@@ -298,11 +299,13 @@ namespace Reallusion.Import
 
             float width = position.width - WINDOW_MARGIN;
             float height = position.height - WINDOW_MARGIN;
-            float innerHeight = height - TOP_PADDING;                 
+            float innerHeight = height - TOP_PADDING;
+            float optionHeight = OPTION_HEIGHT;
+            if (Pipeline.isHDRP12) optionHeight += 14f;
 
             Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_WIDTH, innerHeight);
             Rect infoBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, INFO_HEIGHT);
-            Rect optionBlock = new Rect(iconBlock.xMax, infoBlock.yMax, infoBlock.width, OPTION_HEIGHT);
+            Rect optionBlock = new Rect(iconBlock.xMax, infoBlock.yMax, infoBlock.width, optionHeight);
             Rect actionBlock = new Rect(iconBlock.xMax + infoBlock.width, TOP_PADDING, ACTION_WIDTH, innerHeight);            
             Rect treeviewBlock = new Rect(iconBlock.xMax, optionBlock.yMax, infoBlock.width, height - optionBlock.yMax);
             Rect settingsBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, innerHeight);
@@ -336,10 +339,12 @@ namespace Reallusion.Import
             {
                 StoreBackScene();
 
-                PreviewScene.OpenPreviewScene(contextCharacter.Fbx);
+                WindowManager.OpenPreviewScene(contextCharacter.Fbx);
 
-                if (WindowManager.showPlayer) WindowManager.ShowAnimationPlayer();
-                ResetAllSceneViewCamera();
+                if (WindowManager.showPlayer) 
+                    WindowManager.ShowAnimationPlayer();
+
+                ResetAllSceneViewCamera();                
             }
             else if (refreshAfterGUI)
             {
@@ -391,6 +396,12 @@ namespace Reallusion.Import
                         else if (info.BuiltHQMaterials) iconTexture = iconHQ;
                     }
 
+                    Color background = GUI.backgroundColor;
+                    Color tint = background;
+                    if (contextCharacter == info) 
+                        tint = Color.green;
+                    GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
+
                     if (GUILayout.Button(iconTexture,                        
                         GUILayout.Width(ICON_SIZE),
                         GUILayout.Height(ICON_SIZE))) 
@@ -401,6 +412,8 @@ namespace Reallusion.Import
                             previewCharacterAfterGUI = true;
                         }
                     }
+
+                    GUI.backgroundColor = background;
                     
                     GUILayout.FlexibleSpace();                    
                     GUILayout.EndHorizontal();
@@ -524,6 +537,19 @@ namespace Reallusion.Import
                     menu.AddItem(new GUIContent("MSAA Coverage Hair"), contextCharacter.CoverageHair, HairOptionSelected, CharacterInfo.HairQuality.Coverage);
                 menu.ShowAsContext();
             }
+
+            int features = 0;
+            if (Pipeline.isHDRP12) features++; // tessellation
+            if (Pipeline.is3D || Pipeline.isURP) features++; // Amplify
+
+            if (Pipeline.isHDRP12)
+            {
+                if (features == 1)
+                    contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(contextCharacter.ShaderFlags);
+                else if (features > 1)
+                    contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(contextCharacter.ShaderFlags);
+            }
+
             GUI.enabled = true;
 
             GUILayout.Space(8f);
@@ -630,10 +656,14 @@ namespace Reallusion.Import
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
             if (contextCharacter.Unprocessed) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(iconActionAnims, "Process character animations and create a default animtor controller."),
+            if (GUILayout.Button(new GUIContent(iconActionAnims, "Process, extract and rename character animations and create a default animtor controller."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);
+                RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);                
+                AnimRetargetGUI.GenerateCharacterTargetedAnimations(contextCharacter.Fbx, null, true);
+                int animationRetargeted = contextCharacter.DualMaterialHair ? 2 : 1;
+                contextCharacter.animationRetargeted = animationRetargeted;
+                contextCharacter.Write();
             }
             GUI.enabled = true;
 
@@ -672,7 +702,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAnimPlayer, "Show animation preview player."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (WindowManager.showPlayer && AnimPlayerGUI.IsPlayerShown())
+                if (AnimPlayerGUI.IsPlayerShown())
                 {
                     WindowManager.HideAnimationPlayer(true);                                        
                     ResetAllSceneViewCamera();
@@ -691,18 +721,49 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAvatarAlign, "Animation Adjustment & Retargeting."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                if (WindowManager.showRetarget && AnimRetargetGUI.IsPlayerShown())
+                if (AnimRetargetGUI.IsPlayerShown())
                 {
                     WindowManager.HideAnimationRetargeter(true);                    
                 }
                 else
                 {
-                    WindowManager.ShowAnimationRetargeter();                    
+                    if (AnimPlayerGUI.IsPlayerShown())
+                        WindowManager.ShowAnimationRetargeter();
                 }
             }
             GUI.enabled = true;
 
             GUILayout.FlexibleSpace();
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (!WindowManager.IsPreviewScene) GUI.enabled = false;
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PointLight Gizmo").image, "Cycle Lighting."),
+                GUILayout.Width(WEE_BUTTON_SIZE), GUILayout.Height(WEE_BUTTON_SIZE)))
+            {
+                PreviewScene.CycleLighting();
+            }
+            GUI.enabled = true;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (!WindowManager.IsPreviewScene) GUI.enabled = false;
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Camera Icon").image, "Match main camera to scene view."),
+                GUILayout.Width(WEE_BUTTON_SIZE), GUILayout.Height(WEE_BUTTON_SIZE)))
+            {
+                WindowManager.DoMatchSceneCameraOnce();
+            }
+            GUI.enabled = true;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
 
             GUIContent settingsIconGC;
             if (windowMode != ImporterWindowMode.Settings)
@@ -754,9 +815,6 @@ namespace Reallusion.Import
             GUILayout.EndArea();            
         }
 
-
-
-
         private void OnGUISettingsArea(Rect settingsBlock)
         {
             GUILayout.BeginArea(settingsBlock);
@@ -791,6 +849,34 @@ namespace Reallusion.Import
                 "Otherwise subsequent material rebuilds will try to re-use existing bakes. Only needed if the source textures are changed."));
             GUILayout.Space(ROW_SPACE);
 
+            /*if (Pipeline.isHDRP)
+            {
+                Importer.USE_TESSELLATION_SHADER = GUILayout.Toggle(Importer.USE_TESSELLATION_SHADER,
+                new GUIContent("Use Tessellation in Shaders", "Use tessellation enabled shaders where possible. " +
+                "For HDRP 10 & 11 this means default shaders only (HDRP/LitTessellation). For HDRP 12 (Unity 2021.2+) all shader graph shaders can have tessellation enabled."));
+                GUILayout.Space(ROW_SPACE);
+            }*/
+
+            Importer.ANIMPLAYER_ON_BY_DEFAULT = GUILayout.Toggle(Importer.ANIMPLAYER_ON_BY_DEFAULT,
+                    new GUIContent("Animation Player On", "Always show the animation player when opening the preview scene."));
+            GUILayout.Space(ROW_SPACE);
+
+
+            string label = "Log Everything";
+            if (Util.LOG_LEVEL == 0) label = "Log Errors Only";
+            if (Util.LOG_LEVEL == 1) label = "Log Warnings and Errors";
+            if (EditorGUILayout.DropdownButton(
+                content: new GUIContent(label),
+                focusType: FocusType.Passive))
+            {
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent("Log Errors Only"), Util.LOG_LEVEL == 0, LogOptionSelected, 0);
+                menu.AddItem(new GUIContent("Log Warnings and Errors"), Util.LOG_LEVEL == 1, LogOptionSelected, 1);
+                menu.AddItem(new GUIContent("Log Everything"), Util.LOG_LEVEL == 2, LogOptionSelected, 2);
+                menu.ShowAsContext();
+            }
+            GUILayout.Space(ROW_SPACE);
+
             GUILayout.EndVertical();
 
             GUILayout.FlexibleSpace();
@@ -799,8 +885,10 @@ namespace Reallusion.Import
             GUILayout.EndArea();
         }
 
-
-
+        private void LogOptionSelected(object sel)
+        {
+            Util.LOG_LEVEL = (int)sel;
+        }
 
         private void EyeOptionSelected(object sel)
         {            
@@ -852,8 +940,10 @@ namespace Reallusion.Import
 
         private GameObject ImportCharacter(CharacterInfo info)
         {
-            Importer import = new Importer(info);            
-            return import.Import();
+            Importer import = new Importer(info);
+            GameObject prefab = import.Import();
+            info.Write();
+            return prefab;
         }
         
         private static void ClearAllData()
@@ -940,47 +1030,25 @@ namespace Reallusion.Import
                     DragAndDrop.AcceptDrag();                    
                     break;                    
             }
-        }      
-        
-        bool ShowPreviewCharacter()
-        {
-            GameObject fbx = contextCharacter.Fbx;
-
-            PreviewScene ps = PreviewScene.GetPreviewScene();            
-
-            if (ps.IsValid)
-            {
-                bool animationMode = AnimationMode.InAnimationMode();
-                if (animationMode) AnimationMode.StopAnimationMode();
-
-                ps.ShowPreviewCharacter(fbx);
-
-                if (animationMode) AnimationMode.StartAnimationMode();
-            }            
-
-            return ps.IsValid;
-        }
+        }        
 
         bool UpdatePreviewCharacter(GameObject prefabAsset)
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();            
-
-            if (ps.IsValid)
+            if (WindowManager.IsPreviewScene)
             {
-                bool animationMode = AnimationMode.InAnimationMode();
-                if (animationMode) AnimationMode.StopAnimationMode();
+                bool animationMode = WindowManager.StopAnimationMode();
 
-                ps.UpdatePreviewCharacter(prefabAsset);
+                WindowManager.GetPreviewScene().UpdatePreviewCharacter(prefabAsset);
 
-                if (animationMode) AnimationMode.StartAnimationMode();
+                WindowManager.RestartAnimationMode(animationMode);
             }            
 
-            return ps.IsValid;
+            return WindowManager.IsPreviewScene;
         }
 
         private void BuildCharacter()
         {
-            Util.LogInfo("Doing: Building materials...");
+            Util.LogInfo("Building materials:");            
 
             // refresh the character info for any Json changes
             contextCharacter.Refresh();
@@ -990,8 +1058,7 @@ namespace Reallusion.Import
                 contextCharacter.BuildQuality = MaterialQuality.High;
 
             // import and build the materials from the Json data
-            GameObject prefabAsset = ImportCharacter(contextCharacter);
-            contextCharacter.Write();
+            GameObject prefabAsset = ImportCharacter(contextCharacter);            
 
             // refresh the tree view with the new data
             CreateTreeView(true);
@@ -1005,10 +1072,8 @@ namespace Reallusion.Import
             {
                 if (UpdatePreviewCharacter(prefabAsset))
                 {
-                    if (WindowManager.showPlayer)
-                    {
+                    if (WindowManager.showPlayer) 
                         WindowManager.ShowAnimationPlayer();
-                    }
                 }
             }
 
@@ -1019,6 +1084,10 @@ namespace Reallusion.Import
         {
             if (contextCharacter.HQMaterials)
             {
+                Util.LogInfo("Baking materials:");
+
+                WindowManager.HideAnimationPlayer(true);
+
                 ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
                 GameObject bakedAsset = baker.BakeHQ();
 
@@ -1034,31 +1103,26 @@ namespace Reallusion.Import
 
         bool ShowBakedCharacter(GameObject bakedAsset)
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();            
-
-            if (ps.IsValid)
+            if (WindowManager.IsPreviewScene)
             {
-                bool animationMode = AnimationMode.InAnimationMode();
-                if (animationMode) AnimationMode.StopAnimationMode();
+                bool animationMode = WindowManager.StopAnimationMode();
 
-                ps.ShowBakedCharacter(bakedAsset);
+                WindowManager.GetPreviewScene().ShowBakedCharacter(bakedAsset);
 
-                if (animationMode) AnimationMode.StartAnimationMode();
+                WindowManager.RestartAnimationMode(animationMode);
             }            
 
-            return ps.IsValid;
+            return WindowManager.IsPreviewScene;
         }                
 
         public static void ResetAllSceneViewCamera()
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
-
-            if (ps.IsValid) 
+            if (WindowManager.IsPreviewScene) 
             {
-                GameObject obj = ps.GetPreviewCharacter();
+                GameObject obj = WindowManager.GetPreviewScene().GetPreviewCharacter();
                 if (obj)
                 {
-                    GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+                    GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
                     if (root)
                     {

@@ -174,7 +174,7 @@ namespace Reallusion.Import
                 if (objList[index].GetType() == typeof(Material))
                 {
                     Material m = objList[index] as Material;
-                    if (m && m.shader.name.iEndsWith(Pipeline.SHADER_HQ_HAIR))
+                    if (m && m.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                     {
                         if (Util.GetMultiPassMaterials(m, out Material firstPass, out Material secondPass))
                         {

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.Compilation;
 using System;
 
 namespace Reallusion.Import
@@ -12,45 +13,106 @@ namespace Reallusion.Import
     public static class WindowManager
     {
         public static Scene currentScene;
+        public static Scene previewSceneHandle;
         public static PreviewScene previewScene;
         public static bool openedInPreviewScene;
         public static bool showPlayer = true;
         public static bool showRetarget = false;
+        private static bool eventsAdded = false;
         
-        static WindowManager()
-        {
+        static WindowManager()   
+        { 
             // Even if update is not the most elegant. Using hierarchyWindowChanged for CPU sake will not work in all cases, because when hierarchyWindowChanged is called, Time's values might be all higher than current values. Why? Because current values are set at the first frame. If you keep reloading the same scene, this case happens.
-            EditorApplication.update += WindowManager.MonitorScene;             
+            EditorApplication.update += WindowManager.MonitorScene; 
+            showPlayer = Importer.ANIMPLAYER_ON_BY_DEFAULT;
+            currentScene = EditorSceneManager.GetActiveScene();            
+
+            previewScene = PreviewScene.FetchPreviewScene(currentScene);
+            if (previewScene.IsValidPreviewScene)
+            {
+                openedInPreviewScene = true;
+                previewSceneHandle = currentScene;
+            }
+            else
+            {
+                previewScene = default;
+                previewSceneHandle = default;
+            }            
+
+            if (!eventsAdded)   
+            {                
+                AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+            }
+        }
+
+        public static void OnBeforeAssemblyReload()
+        {
+            if (AnimationMode.InAnimationMode())
+            { 
+                Util.LogInfo("Disabling Animation Mode on editor assembly reload.");
+                AnimationMode.StopAnimationMode();
+            }
+        }        
+
+        public static PreviewScene OpenPreviewScene(GameObject prefab)
+        {
+            if (!prefab) return default;
+            if (!IsPreviewScene && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return default;
+
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+            GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
+
+            previewSceneHandle = scene;
+            previewScene = PreviewScene.FetchPreviewScene(scene);
+
+            previewScene.PostProcessingAndLighting();
+            previewScene.ShowPreviewCharacter(prefab);
+            
+            return previewScene;
+        }        
+
+        public static bool IsPreviewScene
+        {
+            get { return (EditorSceneManager.GetActiveScene() == previewSceneHandle && previewScene.IsValidPreviewScene); }
+        }
+
+        public static PreviewScene GetPreviewScene() 
+        {
+            if (IsPreviewScene) 
+            {
+                return previewScene;
+            }            
+
+            return default;
         }        
                 
-        private static void MonitorScene()
-        {
+        private static void MonitorScene()  
+        {                        
             Scene activeScene = EditorSceneManager.GetActiveScene();
             if (currentScene != activeScene)
             {
-                currentScene = activeScene;
-                previewScene = PreviewScene.GetPreviewScene();
+                currentScene = activeScene;                
+                previewScene = GetPreviewScene();
             }
 
-            bool isPlayerShown = AnimPlayerGUI.IsPlayerShown();
-            bool validPreviewScene = previewScene.IsValid;
+            bool isPlayerShown = AnimPlayerGUI.IsPlayerShown();            
 
-            if (validPreviewScene) 
+            if (IsPreviewScene) 
             {                
                 if (showPlayer && !isPlayerShown)
-                {                    
-                    AnimPlayerGUI.CreatePlayer(previewScene, ImporterWindow.Current?.Character?.Fbx);
+                {
+                    ShowAnimationPlayer();                    
                 }
                 else if (!showPlayer && isPlayerShown)
-                {                    
-                    AnimPlayerGUI.DestroyPlayer();
+                {
+                    HideAnimationPlayer(false);
                 }
             }
             else if (openedInPreviewScene)
             {
                 if (isPlayerShown)
-                {                    
-                    AnimPlayerGUI.DestroyPlayer();
+                {
+                    HideAnimationPlayer(false);                    
                 }
             }
         }
@@ -103,7 +165,7 @@ namespace Reallusion.Import
 
         private static bool isSceneViewOrbit;
         private static Vector3 pivotDisplacement;
-        private static Transform trackTarget;
+        private static Transform trackTarget;        
 
         static void SceneViewOrbitUpdate()
         {
@@ -117,20 +179,23 @@ namespace Reallusion.Import
                 {
                     pivot = trackTarget.position + pivotDisplacement;
                 }
-                float fov = scene.camera.fieldOfView;
-                float dist = scene.cameraDistance;
+                float fov = scene.cameraSettings.fieldOfView;
+                float dist = scene.cameraDistance;                
                 float size = Mathf.Sin(Mathf.Deg2Rad * fov / 2f) * dist;
 
                 boom = Quaternion.AngleAxis(0.1f, Vector3.up) * boom;
-
-                SceneView.lastActiveSceneView.LookAtDirect(pivot, Quaternion.LookRotation(-boom, Vector3.up), size);
+                scene.LookAtDirect(pivot, Quaternion.LookRotation(-boom, Vector3.up), size);
                 SceneView.RepaintAll();
             }
         }
 
         public static void DoMatchSceneCameraOnce()
         {
+            if (isMatchSceneViewCamera) StopMatchSceneCamera();
+
+            isMatchSceneViewCamera = true;
             MatchSceneCameraUpdate();
+            isMatchSceneViewCamera = false;
         }
 
         public static void DoMatchSceneCamera()
@@ -144,6 +209,22 @@ namespace Reallusion.Import
             {
                 EditorApplication.update -= MatchSceneCameraUpdate;
                 isMatchSceneViewCamera = false;
+            }
+        }
+
+        public static void DoSceneToggleOffAll()
+        {
+            if (isMatchSceneViewCamera)
+            {
+                EditorApplication.update -= MatchSceneCameraUpdate;
+                isMatchSceneViewCamera = false;
+            }
+
+            if (isSceneViewOrbit)
+            {                
+                EditorApplication.update -= SceneViewOrbitUpdate;
+                isSceneViewOrbit = false;
+                trackTarget = null;
             }
         }
 
@@ -181,71 +262,32 @@ namespace Reallusion.Import
         {
             string dateStamp = DateTime.Now.ToString("yyMMdd-hhmmss");
             string fileName = "Screenshot-" + dateStamp + ".png";
-            Debug.Log("Saving screenshot to: " + fileName);
+            Util.LogAlways("Saving screenshot to: " + fileName);
             ScreenCapture.CaptureScreenshot(fileName);
         }
 
-        private static AnimationClip selectedAnimation;
-        private static AnimationClip workingAnimation;
-        private static Animator sceneAnimator;
-
         public static void ShowAnimationPlayer()
         {
-            PreviewScene ps = PreviewScene.GetPreviewScene();
+            GameObject scenePrefab;
 
-            if (ps.IsValid)
-            {
-                GameObject currentCharacterFbx = null;
-                if (ImporterWindow.Current)
-                    currentCharacterFbx = ImporterWindow.Current.Character?.Fbx;
-
-                if (AnimPlayerGUI.IsPlayerShown())
-                {
-                    AnimPlayerGUI.SetCharacter(ps, currentCharacterFbx);
-                }
-                else
-                {
-                    AnimPlayerGUI.CreatePlayer(ps, currentCharacterFbx);
-                    openedInPreviewScene = true;
-                }
-
-                if (showRetarget && !AnimRetargetGUI.IsPlayerShown())
-                {
-                    ShowAnimationRetargeter();
-                }
-
-                showPlayer = true;                
-            }
+            if (IsPreviewScene)
+                scenePrefab = GetPreviewScene().GetPreviewCharacter();
             else
-            {
-                GameObject currentCharacterFbx = Selection.activeGameObject;                
+                scenePrefab = Selection.activeGameObject;
 
-                if (AnimPlayerGUI.IsPlayerShown())
-                {
-                    AnimPlayerGUI.SetCharacter(ps, currentCharacterFbx);
-                }
-                else
-                {
-                    AnimPlayerGUI.CreatePlayer(ps, currentCharacterFbx);
-                    openedInPreviewScene = false;
-                }
+            AnimPlayerGUI.OpenPlayer(scenePrefab);
+            openedInPreviewScene = IsPreviewScene;
 
-                if (showRetarget && !AnimRetargetGUI.IsPlayerShown())
-                {
-                    ShowAnimationRetargeter();
-                }
+            if (showRetarget) ShowAnimationRetargeter();
 
-                showPlayer = true;
-            }
+            showPlayer = true;
         }
 
         public static void HideAnimationPlayer(bool updateShowPlayer)
         {
-            if (AnimPlayerGUI.IsPlayerShown())
-            {
-                AnimPlayerGUI.ResetFace();
-                AnimPlayerGUI.DestroyPlayer();
-            }
+            if (AnimPlayerGUI.IsPlayerShown()) AnimPlayerGUI.ResetFace();
+
+            AnimPlayerGUI.ClosePlayer();
 
             HideAnimationRetargeter(false);
 
@@ -254,58 +296,46 @@ namespace Reallusion.Import
         }
 
         public static void ShowAnimationRetargeter()
-        {            
-            if (AnimPlayerGUI.IsPlayerShown() && !AnimRetargetGUI.IsPlayerShown())
+        {
+            if (AnimPlayerGUI.IsPlayerShown())
             {
-                AnimRetargetGUI.CreateRetargeter(GetWorkingAnimation(), GetSceneAnimator()?.gameObject);
+                AnimRetargetGUI.OpenRetargeter();
+                showRetarget = true;
             }
-
-            showRetarget = true;
         }
 
         public static void HideAnimationRetargeter(bool updateShowRetarget)
         {
-            if (AnimRetargetGUI.IsPlayerShown())
-            {
-                AnimRetargetGUI.DestroyRetargeter();
-            }
-
+            AnimRetargetGUI.CloseRetargeter();
+            
             if (updateShowRetarget)
                 showRetarget = false;
-        }
-
-        public static void SetSelectedAnimation(AnimationClip clip)
+        }      
+        
+        public static bool StopAnimationMode(UnityEngine.Object obj = null)
         {
-            selectedAnimation = clip;           
-        }
-
-        public static AnimationClip GetSelectedAnimation()
-        {
-            return selectedAnimation;
-        }
-
-        public static void SetWorkingAnimation(AnimationClip clip)
-        {
-            workingAnimation = clip;            
-            if (AnimRetargetGUI.IsPlayerShown())
+            bool inAnimationMode = false;
+            if (AnimationMode.InAnimationMode())
             {
-                AnimRetargetGUI.Reselect();
+                inAnimationMode = true;
+                AnimationMode.StopAnimationMode();
+                if (obj)
+                {
+                    GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(obj);
+                    Util.TryResetScenePrefab(scenePrefab);
+                }
             }
+
+            return inAnimationMode;
         }
 
-        public static AnimationClip GetWorkingAnimation()
+        public static void RestartAnimationMode(bool inAnimationMode)
         {
-            return workingAnimation;
-        }
-
-        public static void SetSceneAnimator(Animator anim)
-        {
-            sceneAnimator = anim;            
-        }
-
-        public static Animator GetSceneAnimator()
-        {
-            return sceneAnimator;
-        }
+            if (inAnimationMode)
+            {
+                if (!AnimationMode.InAnimationMode())
+                    AnimationMode.StartAnimationMode();
+            }
+        }        
     }
 }
