@@ -25,7 +25,32 @@ namespace Reallusion.Import
 {
     public static class Util
     {
-        public static int LOG_LEVEL = 1;
+        public static int log_level = -1;
+        public static int LOG_LEVEL
+        {
+            get
+            {
+                if (log_level == -1)
+                {
+                    if (EditorPrefs.HasKey("RL_Log_Level"))
+                    {
+                        log_level = EditorPrefs.GetInt("RL_Log_Level");
+                    }
+                    else
+                    {
+                        log_level = 0;
+                        EditorPrefs.SetInt("RL_Log_Level", log_level);
+                    }
+                }
+                return log_level;
+            }
+
+            set
+            {
+                log_level = value;
+                EditorPrefs.SetInt("RL_Log_Level", value);
+            }
+        }
 
         public static bool IsCC3Character(Object obj)
         {
@@ -765,16 +790,97 @@ namespace Reallusion.Import
             GameObject instanceRoot = GetScenePrefabInstanceRoot(sceneObject);
 
             return FindRootPrefabAsset(instanceRoot);
+        }        
+
+        public static void ResetPrefabTransforms(GameObject prefabObj)
+        {
+            if (prefabObj)
+            {
+                GameObject source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabObj);
+                if (source && source != prefabObj)
+                {
+                    bool resetPos = false;
+                    bool resetRot = false;
+                    bool resetSca = false;
+                    if (prefabObj.transform.position != source.transform.position) resetPos = true;
+                    if (prefabObj.transform.rotation != source.transform.rotation) resetRot = true;
+                    if (prefabObj.transform.localScale != source.transform.localScale) resetSca = true;
+                    if (resetPos) prefabObj.transform.position = source.transform.position;
+                    if (resetRot) prefabObj.transform.rotation = source.transform.rotation;
+                    if (resetSca) prefabObj.transform.localScale = source.transform.localScale;
+                    /*
+                    if (resetPos || resetRot || resetSca) 
+                    { 
+                        string report = "Resetting " + prefabObj.name + ":";
+                        if (resetPos) report += " Position";
+                        if (resetRot) report += " Rotation";
+                        if (resetSca) report += " Scale";
+                        Debug.Log(report);
+                    }
+                    */
+
+                    for (int i = 0; i < prefabObj.transform.childCount; i++)
+                    {
+                        Transform child = prefabObj.transform.GetChild(i);
+                        ResetPrefabTransforms(child.gameObject);
+                    }
+                }
+            }
         }
 
-        public static void ResetPrefabTransforms(Transform root)
+        public static GameObject TryResetScenePrefab(GameObject scenePrefab)  
         {
-            for (int i = 0; i < root.childCount; i++)
-            {                
-                Transform child = root.transform.GetChild(i);
-                PrefabUtility.RevertObjectOverride(child, InteractionMode.AutomatedAction);
-                ResetPrefabTransforms(child);
+            if (PrefabNeedsReset(scenePrefab))
+            {
+                Util.LogInfo("Resetting Prefab");
+                ResetPrefabTransforms(scenePrefab);
+                /*
+                GameObject prefabSource = PrefabUtility.GetCorrespondingObjectFromSource(scenePrefab);
+                Transform t = scenePrefab.transform;
+                Transform parent = t.parent;
+                Vector3 pos = t.position;
+                Quaternion rot = t.rotation;
+                Vector3 sca = t.localScale;
+                GameObject.DestroyImmediate(scenePrefab);
+                scenePrefab = (GameObject)PrefabUtility.InstantiatePrefab(prefabSource);
+                scenePrefab.transform.parent = parent;
+                scenePrefab.transform.position = pos;
+                scenePrefab.transform.rotation = rot;
+                scenePrefab.transform.localScale = sca;
+                */
             }
+
+            return scenePrefab;
+        }
+
+        public static bool PrefabNeedsReset(GameObject prefabObj)
+        {            
+            if (prefabObj)
+            {
+                GameObject source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabObj);
+                if (source && source != prefabObj)
+                {
+                    bool resetPos = false;
+                    bool resetRot = false;
+                    bool resetSca = false;
+                    if (prefabObj.transform.position != source.transform.position) resetPos = true;
+                    if (prefabObj.transform.rotation != source.transform.rotation) resetRot = true;
+                    if (prefabObj.transform.localScale != source.transform.localScale) resetSca = true;
+                    if (resetPos || resetRot || resetSca)
+                    {
+                        return true;
+                    }
+
+                    for (int i = 0; i < prefabObj.transform.childCount; i++)
+                    {
+                        Transform child = prefabObj.transform.GetChild(i);
+                        bool result = PrefabNeedsReset(child.gameObject);
+                        if (result) return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public static void FindSceneObjects(Transform root, string search, List<GameObject> found)

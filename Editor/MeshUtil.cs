@@ -206,9 +206,8 @@ namespace Reallusion.Import
         }
 
         public static bool ReplaceMesh(Object obj, Mesh mesh)
-        {
-            bool animationMode = AnimationMode.InAnimationMode();
-            if (animationMode) AnimationMode.StopAnimationMode();
+        {            
+            bool animationMode = WindowManager.StopAnimationMode(obj);
 
             bool replaced = false;
             Object o = null;
@@ -236,18 +235,16 @@ namespace Reallusion.Import
                 }
             }
 
-            if (replaced) 
-            {                
-                GameObject prefabAsset = Util.FindRootPrefabAssetFromSceneObject(obj);
+            if (replaced)
+            {                                
                 GameObject sceneRoot = Util.GetScenePrefabInstanceRoot(obj);
-                string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);                
                 // this doesn't work...
                 //PrefabUtility.ApplyObjectOverride(obj, prefabPath, InteractionMode.UserAction);
                 // only this works:
                 PrefabUtility.ApplyPrefabInstance(sceneRoot, InteractionMode.UserAction);
             }
 
-            if (animationMode) AnimationMode.StartAnimationMode();
+            WindowManager.RestartAnimationMode(animationMode);            
 
             return replaced;
         }

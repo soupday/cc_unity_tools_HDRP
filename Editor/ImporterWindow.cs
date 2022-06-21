@@ -1036,12 +1036,11 @@ namespace Reallusion.Import
         {
             if (WindowManager.IsPreviewScene)
             {
-                bool animationMode = AnimationMode.InAnimationMode();
-                if (animationMode) AnimationMode.StopAnimationMode();
+                bool animationMode = WindowManager.StopAnimationMode();
 
                 WindowManager.GetPreviewScene().UpdatePreviewCharacter(prefabAsset);
 
-                if (animationMode) AnimationMode.StartAnimationMode();
+                WindowManager.RestartAnimationMode(animationMode);
             }            
 
             return WindowManager.IsPreviewScene;
@@ -1049,7 +1048,7 @@ namespace Reallusion.Import
 
         private void BuildCharacter()
         {
-            Util.LogInfo("Doing: Building materials...");
+            Util.LogInfo("Building materials:");            
 
             // refresh the character info for any Json changes
             contextCharacter.Refresh();
@@ -1085,6 +1084,8 @@ namespace Reallusion.Import
         {
             if (contextCharacter.HQMaterials)
             {
+                Util.LogInfo("Baking materials:");
+
                 WindowManager.HideAnimationPlayer(true);
 
                 ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
@@ -1104,12 +1105,11 @@ namespace Reallusion.Import
         {
             if (WindowManager.IsPreviewScene)
             {
-                bool animationMode = AnimationMode.InAnimationMode();
-                if (animationMode) AnimationMode.StopAnimationMode();
+                bool animationMode = WindowManager.StopAnimationMode();
 
                 WindowManager.GetPreviewScene().ShowBakedCharacter(bakedAsset);
 
-                if (animationMode) AnimationMode.StartAnimationMode();
+                WindowManager.RestartAnimationMode(animationMode);
             }            
 
             return WindowManager.IsPreviewScene;

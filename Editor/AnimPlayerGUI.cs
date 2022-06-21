@@ -24,11 +24,12 @@ namespace Reallusion.Import
         private static bool forceUpdate = false;
         private static FacialProfile defaultProfile = new FacialProfile(ExpressionProfile.ExPlus, VisemeProfile.PairsCC3);
 
-        public static void OpenPlayer(GameObject fbx)
+        public static void OpenPlayer(GameObject scenePrefab)
         {
-            if (fbx)
+            if (scenePrefab)
             {
-                SetCharacter(fbx);
+                scenePrefab = Util.TryResetScenePrefab(scenePrefab);
+                SetCharacter(scenePrefab);
             }
 
             if (!IsPlayerShown())
@@ -49,7 +50,7 @@ namespace Reallusion.Import
             }
         }
 
-        public static void ClosePlayer()
+        public static void ClosePlayer()  
         {
             if (IsPlayerShown())
             {
@@ -57,6 +58,12 @@ namespace Reallusion.Import
 
                 if (AnimationMode.InAnimationMode())
                     AnimationMode.StopAnimationMode();
+
+                if (CharacterAnimator)       
+                {
+                    GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator.gameObject);
+                    Util.TryResetScenePrefab(scenePrefab);
+                }
 
 #if SCENEVIEW_OVERLAY_COMPATIBLE
                 //2021.2.0a17+          
@@ -91,8 +98,8 @@ namespace Reallusion.Import
             if (WindowManager.IsPreviewScene)
                 scenePrefab = WindowManager.GetPreviewScene().GetPreviewCharacter();
 
-            if (scenePrefab)
-            {
+            if (scenePrefab)  
+            {                                
                 Animator animator = scenePrefab.GetComponent<Animator>();
                 GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
                 AnimationClip clip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
@@ -131,6 +138,7 @@ namespace Reallusion.Import
 
             if (WorkingClip && CharacterAnimator)
             {
+                // also restarts animation mode
                 SampleOnce();
             }                        
         }

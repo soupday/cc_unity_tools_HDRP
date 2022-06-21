@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.Compilation;
 using System;
 
 namespace Reallusion.Import
@@ -17,13 +18,14 @@ namespace Reallusion.Import
         public static bool openedInPreviewScene;
         public static bool showPlayer = true;
         public static bool showRetarget = false;
+        private static bool eventsAdded = false;
         
         static WindowManager()   
-        {
+        { 
             // Even if update is not the most elegant. Using hierarchyWindowChanged for CPU sake will not work in all cases, because when hierarchyWindowChanged is called, Time's values might be all higher than current values. Why? Because current values are set at the first frame. If you keep reloading the same scene, this case happens.
             EditorApplication.update += WindowManager.MonitorScene; 
             showPlayer = Importer.ANIMPLAYER_ON_BY_DEFAULT;
-            currentScene = EditorSceneManager.GetActiveScene();
+            currentScene = EditorSceneManager.GetActiveScene();            
 
             previewScene = PreviewScene.FetchPreviewScene(currentScene);
             if (previewScene.IsValidPreviewScene)
@@ -36,6 +38,20 @@ namespace Reallusion.Import
                 previewScene = default;
                 previewSceneHandle = default;
             }            
+
+            if (!eventsAdded)   
+            {                
+                AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+            }
+        }
+
+        public static void OnBeforeAssemblyReload()
+        {
+            if (AnimationMode.InAnimationMode())
+            { 
+                Util.LogInfo("Disabling Animation Mode on editor assembly reload.");
+                AnimationMode.StopAnimationMode();
+            }
         }        
 
         public static PreviewScene OpenPreviewScene(GameObject prefab)
@@ -68,10 +84,10 @@ namespace Reallusion.Import
             }            
 
             return default;
-        }
+        }        
                 
-        private static void MonitorScene() 
-        {
+        private static void MonitorScene()  
+        {                        
             Scene activeScene = EditorSceneManager.GetActiveScene();
             if (currentScene != activeScene)
             {
@@ -252,14 +268,14 @@ namespace Reallusion.Import
 
         public static void ShowAnimationPlayer()
         {
-            GameObject currentCharacterFbx;
+            GameObject scenePrefab;
 
             if (IsPreviewScene)
-                currentCharacterFbx = GetPreviewScene().GetPreviewCharacter();
+                scenePrefab = GetPreviewScene().GetPreviewCharacter();
             else
-                currentCharacterFbx = Selection.activeGameObject;
+                scenePrefab = Selection.activeGameObject;
 
-            AnimPlayerGUI.OpenPlayer(currentCharacterFbx);
+            AnimPlayerGUI.OpenPlayer(scenePrefab);
             openedInPreviewScene = IsPreviewScene;
 
             if (showRetarget) ShowAnimationRetargeter();
@@ -294,6 +310,32 @@ namespace Reallusion.Import
             
             if (updateShowRetarget)
                 showRetarget = false;
+        }      
+        
+        public static bool StopAnimationMode(UnityEngine.Object obj = null)
+        {
+            bool inAnimationMode = false;
+            if (AnimationMode.InAnimationMode())
+            {
+                inAnimationMode = true;
+                AnimationMode.StopAnimationMode();
+                if (obj)
+                {
+                    GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(obj);
+                    Util.TryResetScenePrefab(scenePrefab);
+                }
+            }
+
+            return inAnimationMode;
+        }
+
+        public static void RestartAnimationMode(bool inAnimationMode)
+        {
+            if (inAnimationMode)
+            {
+                if (!AnimationMode.InAnimationMode())
+                    AnimationMode.StartAnimationMode();
+            }
         }        
     }
 }
