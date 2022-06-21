@@ -1085,6 +1085,8 @@ namespace Reallusion.Import
         {
             if (contextCharacter.HQMaterials)
             {
+                WindowManager.HideAnimationPlayer(true);
+
                 ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
                 GameObject bakedAsset = baker.BakeHQ();
 
