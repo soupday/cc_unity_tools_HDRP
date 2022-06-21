@@ -1,7 +1,7 @@
 Changelog
 =========
 
-### v 1.3.2
+### v 1.3.3
 - Updates / Additions:
     - Tessellation option added to build settings. (Currently HDRP12 Only)
     - Lighting presets added to preview scene, and lighting cycle button added to importer window. (All pipelines)
@@ -10,9 +10,7 @@ Changelog
     - Animation Player and Retargeter can now work in any Editor scene. (Note: the character being animated will show at the origin of it's current parent)
     - Match camera to scene view button added to importer window.
 - Shader / Material adjustments:
-    - HDRP12 (Unity 2021.2+) Single pass hair shader fixes.
     - HDRP12 Tessellation shaders added.
-    - HDRP Skin SSS transmission thickness min-max remap parameters.
     - HDRP hair 2-pass shadow clip fixes.
     - HDRP hair no longer uses flipped back lighting by default. (Less shadow artifacts and rim lighting works much better without it)
     - Hair shader smoothness and specular tweaks. (Should look more consistent between the 3 pipelines)
@@ -34,6 +32,9 @@ Changelog
     - Character prefab no longer gets stuck in current Animation Player pose after recompiling editor assembly.
     - Numerous fixes to internal workings and code refactors.
 
+### v 1.3.2
+    - HDRP12 (Unity 2021.2+) Single pass hair shader fixes.
+    - HDRP Skin SSS transmission thickness min-max remap parameters.
 
 ### v 1.3.1
 - Arm Flexion correction added.
