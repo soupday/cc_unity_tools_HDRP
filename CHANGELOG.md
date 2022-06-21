@@ -31,6 +31,7 @@ Changelog
         - A report of the retarget, listing how the BlendShapes are remapped and which could not be retarget is logged to the console.
     - Animation player and retargetter UI and internal logic, should be less glitchy.
     - No longer reprocesses the same textures when used by different materials during material build.
+    - Character prefab no longer gets stuck in current Animation Player pose after recompiling editor assembly.
     - Numerous fixes to internal workings and code refactors.
 
 
