@@ -33,8 +33,8 @@ Changelog
     - Numerous fixes to internal workings and code refactors.
 
 ### v 1.3.2
-    - HDRP12 (Unity 2021.2+) Single pass hair shader fixes.
-    - HDRP Skin SSS transmission thickness min-max remap parameters.
+- HDRP12 (Unity 2021.2+) Single pass hair shader fixes.
+- HDRP Skin SSS transmission thickness min-max remap parameters.
 
 ### v 1.3.1
 - Arm Flexion correction added.

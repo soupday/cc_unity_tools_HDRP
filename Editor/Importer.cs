@@ -28,6 +28,7 @@ namespace Reallusion.Import
         private readonly GameObject fbx;
         private readonly QuickJSON jsonData;
         private readonly QuickJSON jsonMeshData;
+        private readonly QuickJSON jsonPhysicsData;
         private readonly string fbxPath;
         private readonly string fbxFolder;
         private readonly string fbmFolder;
@@ -157,7 +158,14 @@ namespace Reallusion.Import
             if (jsonData.PathExists(jsonPath))
                 jsonMeshData = jsonData.GetObjectAtPath(jsonPath);
             else
-                Util.LogError("Unable to find Json mesh data: " + jsonPath);            
+                Util.LogError("Unable to find Json mesh data: " + jsonPath);
+
+            jsonPath = characterName + "/Object/" + characterName + "/Physics";
+            jsonPhysicsData = null;
+            if (jsonData.PathExists(jsonPath))
+                jsonPhysicsData = jsonData.GetObjectAtPath(jsonPath);
+            else
+                Util.LogWarn("Unable to find Json physics data: " + jsonPath);
 
             string jsonVersion = jsonData?.GetStringValue(characterName + "/Version");
             if (!string.IsNullOrEmpty(jsonVersion))
@@ -276,6 +284,12 @@ namespace Reallusion.Import
                 Util.LogInfo("Extracting 2 Pass hair meshes.");
                 prefab = MeshUtil.Extract2PassHairMeshes(characterInfo, prefab);
                 ImporterWindow.TrySetMultiPass(true);
+            }
+
+            if (true && jsonPhysicsData != null)
+            {
+                Physics physics = new Physics(characterInfo, prefab, jsonPhysicsData);
+                prefab = physics.AddPhysics();
             }
 
             // extract and retarget animations if needed.

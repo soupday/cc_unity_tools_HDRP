@@ -394,6 +394,30 @@ namespace Reallusion.Import
             return Color.white;
         }
 
+
+        public Quaternion GetQuaternionValue(string path)
+        {
+            string[] paths = path.Split('/');
+
+            return GetQuaternionValue(paths);
+        }
+
+        public Quaternion GetQuaternionValue(string[] paths)
+        {
+            if (paths.Length > 0)
+            {
+                MultiValue mv = GetValue(paths[0]);
+                if (paths.Length > 1 && mv.Type == MultiType.Object)
+                    return mv.ObjectValue.GetQuaternionValue(paths.Skip(1).ToArray());
+                else if (mv.Type == MultiType.Object)
+                    return mv.ObjectValue.QuaternionValue;
+            }
+
+            return Quaternion.identity;
+        }
+
+
+
         public Vector3 GetVector3Value(string path)
         {
             string[] paths = path.Split('/');
@@ -447,6 +471,24 @@ namespace Reallusion.Import
                     value.r = values[0].FloatValue / 255.0f;
                     value.g = values[1].FloatValue / 255.0f;
                     value.b = values[2].FloatValue / 255.0f;
+                }
+
+                return value;
+            }
+        }
+
+        public Quaternion QuaternionValue
+        {
+            get
+            {
+                Quaternion value = Quaternion.identity;
+
+                if (isArray && values.Count == 4)
+                {
+                    value.x = values[0].FloatValue;
+                    value.y = values[1].FloatValue;
+                    value.z = values[2].FloatValue;
+                    value.w = values[3].FloatValue;
                 }
 
                 return value;
