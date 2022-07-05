@@ -341,7 +341,7 @@ namespace Reallusion.Import
                         cloth.bendingStiffness = 1f - (data.bending / 100f);
                         cloth.clothSolverFrequency = data.solverFrequency;
                         cloth.stiffnessFrequency = data.stiffnessFrequency;
-                        cloth.stretchingStiffness = 1f - (data.stretch / 100f);
+                        cloth.stretchingStiffness = 1f - (data.stretch / 200f);
                         cloth.collisionMassScale = data.mass;
                         cloth.friction = data.friction;
                         cloth.damping = data.damping;                        
@@ -365,11 +365,14 @@ namespace Reallusion.Import
                                 x = Mathf.FloorToInt(coord.x * w);
                                 y = Mathf.FloorToInt(coord.y * h);
                                 Color32 sample = pixels[x + y * w];
-                                float weight = sample.g / 255f;                                
+                                float weight = sample.g / 255f;
+                                float Whalf = Mathf.Pow(weight, 0.5f);
+                                float W1 = Mathf.Pow(weight, 1f);
+                                float W2 = Mathf.Pow(weight, 2f);
                                 if (data.softRigidCollision)
                                 {
-                                    coefficients[clothVert].maxDistance = data.softRigidMargin * modelScale * weight;
-                                    coefficients[clothVert].collisionSphereDistance = data.softRigidMargin * modelScale * weight;
+                                    coefficients[clothVert].maxDistance = maxDistance * W1;
+                                    coefficients[clothVert].collisionSphereDistance = maxDistance * W2;
                                 }                                
                             }
                         }
