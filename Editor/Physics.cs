@@ -341,7 +341,7 @@ namespace Reallusion.Import
                         cloth.bendingStiffness = 1f - (data.bending / 100f);
                         cloth.clothSolverFrequency = data.solverFrequency;
                         cloth.stiffnessFrequency = data.stiffnessFrequency;
-                        cloth.stretchingStiffness = 1f - (data.stretch / 200f);
+                        cloth.stretchingStiffness = 1f - (data.stretch / 100f);
                         cloth.collisionMassScale = data.mass;
                         cloth.friction = data.friction;
                         cloth.damping = data.damping;                        
