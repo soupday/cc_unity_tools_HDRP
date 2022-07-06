@@ -8,12 +8,12 @@ namespace Reallusion.Import
     public enum ExpressionProfile { None, Std, ExPlus, Ext }
     public enum VisemeProfile { None, PairsCC3, PairsCC4, Direct }
 
-    public struct FacialProfile 
+    public struct FacialProfile
     {
         public ExpressionProfile expressionProfile;
         public VisemeProfile visemeProfile;
         public bool corrections;
-
+        
         public FacialProfile(ExpressionProfile exp, VisemeProfile vis)
         {
             expressionProfile = exp;

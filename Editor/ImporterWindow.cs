@@ -120,6 +120,8 @@ namespace Reallusion.Import
             {
                 if (contextCharacter != null) contextCharacter.Release();
                 contextCharacter = GetCharacterState(guid);
+
+
                 
                 CreateTreeView(oldCharacter != contextCharacter);
 
@@ -301,7 +303,8 @@ namespace Reallusion.Import
             float height = position.height - WINDOW_MARGIN;
             float innerHeight = height - TOP_PADDING;
             float optionHeight = OPTION_HEIGHT;
-            if (Pipeline.isHDRP12) optionHeight += 14f;
+            //if (Pipeline.isHDRP12) optionHeight += 14f;
+            optionHeight += 14f;
 
             Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_WIDTH, innerHeight);
             Rect infoBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, INFO_HEIGHT);
@@ -441,6 +444,8 @@ namespace Reallusion.Import
             if (contextCharacter.bakeIsBaked)
                 importType += " + Baked";
 
+            
+
             GUILayout.BeginArea(infoBlock);
 
             GUILayout.BeginHorizontal();
@@ -462,7 +467,10 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label("(" + contextCharacter.Generation.ToString() + ")", boldStyle);
+            GUILayout.Label("(" + contextCharacter.Generation.ToString() + "/"
+                                + contextCharacter.FaceProfile.expressionProfile + "/"
+                                + contextCharacter.FaceProfile.visemeProfile
+                            + ")", boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -538,7 +546,7 @@ namespace Reallusion.Import
                 menu.ShowAsContext();
             }
 
-            int features = 0;
+            int features = 2;
             if (Pipeline.isHDRP12) features++; // tessellation
             if (Pipeline.is3D || Pipeline.isURP) features++; // Amplify
 
@@ -860,6 +868,18 @@ namespace Reallusion.Import
             Importer.ANIMPLAYER_ON_BY_DEFAULT = GUILayout.Toggle(Importer.ANIMPLAYER_ON_BY_DEFAULT,
                     new GUIContent("Animation Player On", "Always show the animation player when opening the preview scene."));
             GUILayout.Space(ROW_SPACE);
+
+
+            GUILayout.Space(10f);
+            GUILayout.Label("Physics Collider Shrink (cm)");
+            GUILayout.Space(ROW_SPACE);
+            GUILayout.BeginHorizontal();            
+            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = GUILayout.HorizontalSlider(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS, -2f, 2f);
+            GUILayout.Label(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS.ToString(), GUILayout.Width(30f));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(ROW_SPACE);
+            GUILayout.Space(10f);
+
 
 
             string label = "Log Everything";

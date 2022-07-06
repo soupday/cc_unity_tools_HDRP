@@ -27,7 +27,7 @@ namespace Reallusion.Import
         public enum ProcessingType { None, Basic, HighQuality }
         public enum EyeQuality { None, Basic, Parallax, Refractive }
         public enum HairQuality { None, Default, TwoPass, Coverage }
-        public enum ShaderFeatureFlags { NoShaderFeatures = 0, Tessellation = 1 } //, Tessellation = ~0 }
+        public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4 } //, Tessellation = ~0 }
 
         public string guid;
         public string path;        
@@ -66,7 +66,7 @@ namespace Reallusion.Import
             }
         }
 
-        public ShaderFeatureFlags ShaderFlags { get; set; } = ShaderFeatureFlags.NoShaderFeatures;
+        public ShaderFeatureFlags ShaderFlags { get; set; } = ShaderFeatureFlags.NoFeatures;
         public bool FeatureUseTessellation => (ShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool BasicMaterials => logType == ProcessingType.Basic;
         public bool HQMaterials => logType == ProcessingType.HighQuality;
@@ -89,7 +89,7 @@ namespace Reallusion.Import
         private bool builtBakeSeparatePrefab = true;
         private bool builtTessellation = false;
 
-        public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoShaderFeatures;
+        public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoFeatures;
         public bool BuiltFeatureTessellation => (BuiltShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool BuiltBasicMaterials => builtLogType == ProcessingType.Basic;
         public bool BuiltHQMaterials => builtLogType == ProcessingType.HighQuality;
@@ -178,6 +178,19 @@ namespace Reallusion.Import
                     Util.LogInfo("CharInfo: " + name + " JsonData Fetched");
                 }
                 return jsonData;
+            }
+        }
+
+        private FacialProfile facialProfile;
+        public FacialProfile FaceProfile
+        {
+            get
+            {
+                if (facialProfile.expressionProfile == ExpressionProfile.None && facialProfile.visemeProfile == VisemeProfile.None)
+                {
+                    facialProfile = FacialProfileMapper.GetMeshFacialProfile(Fbx);
+                }
+                return facialProfile;
             }
         }
 

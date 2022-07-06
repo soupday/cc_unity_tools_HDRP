@@ -286,7 +286,9 @@ namespace Reallusion.Import
                 ImporterWindow.TrySetMultiPass(true);
             }
 
-            if (true && jsonPhysicsData != null)
+            bool clothPhysics = (characterInfo.ShaderFlags & CharacterInfo.ShaderFeatureFlags.ClothPhysics) > 0;
+            bool hairPhysics = (characterInfo.ShaderFlags & CharacterInfo.ShaderFeatureFlags.HairPhysics) > 0;
+            if ((clothPhysics || hairPhysics) && jsonPhysicsData != null)
             {
                 Physics physics = new Physics(characterInfo, prefab, jsonPhysicsData);
                 prefab = physics.AddPhysics();

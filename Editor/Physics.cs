@@ -121,11 +121,29 @@ namespace Reallusion.Import
             }
         }
 
+        public static float PHYSICS_SHRINK_COLLIDER_RADIUS
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Physics_Shrink_Collider_Radius"))
+                    return EditorPrefs.GetFloat("RL_Physics_Shrink_Collider_Radius");
+                return 1f;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Physics_Shrink_Collider_Radius", value);
+            }
+        }
+
         private GameObject prefabAsset;
         private GameObject workingPrefab;
         private float modelScale = 0.01f;
         private float maxDistance = 0.2f;
         private float radiusScale = 1f;
+        private float radiusReduction = 0.5f / 100f;
+        private bool addClothPhysics = false;
+        private bool addHairPhysics = false;
 
         private Dictionary<GameObject, string> colliderObjs;
         private List<CollisionShapeData> BoneColliders;
@@ -143,10 +161,12 @@ namespace Reallusion.Import
             colliderObjs = new Dictionary<GameObject, string>();
             modelScale = 0.01f;
             maxDistance = 0.1f;
-            radiusScale = 1f;
+            radiusScale = 0.9f;
             fbxFolder = info.folder;
             characterName = info.name;
             fbxFolder = info.folder;
+            addClothPhysics = (info.ShaderFlags & CharacterInfo.ShaderFeatureFlags.ClothPhysics) > 0;
+            addHairPhysics = (info.ShaderFlags & CharacterInfo.ShaderFeatureFlags.HairPhysics) > 0;
             string fbmFolder = Path.Combine(fbxFolder, characterName + ".fbm");
             string texFolder = Path.Combine(fbxFolder, "textures", characterName);
             textureFolders = new List<string>() { fbmFolder, texFolder };
@@ -234,9 +254,10 @@ namespace Reallusion.Import
                 {
                     CapsuleCollider c = g.AddComponent<CapsuleCollider>();
 
-                    c.direction = (int)collider.colliderAxis;
-                    c.radius = collider.radius * modelScale * radiusScale;
-                    c.height = collider.length * modelScale + c.radius * 2f;
+                    c.direction = (int)collider.colliderAxis;                    
+                    float radius = (collider.radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
+                    c.radius = radius;
+                    c.height = collider.length * modelScale + radius * 2f;
                 }
                 else
                 {
@@ -275,17 +296,67 @@ namespace Reallusion.Import
                     }
 
                     if (meshName == data.meshName)
-                    {                        
-                        DoCloth(obj, meshName);
+                    {                 
+                        if (CanAddPhysics(obj)) DoCloth(obj, meshName);
                     }
                 }
             }
         }
 
+        private bool MaterialIsHair(Material mat)
+        {
+            bool isHair = false;
+
+            if (mat)
+            {                
+                if (mat.shader.name.iContains(Pipeline.SHADER_DEFAULT_HAIR) ||
+                    mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR) ||
+                    mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS) ||
+                    mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR_2ND_PASS) ||
+                    mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
+                    isHair = true;
+            }
+
+            return isHair;
+        }
+
+        private bool CanAddPhysics(Material mat)
+        {
+            if (mat)
+            {
+                if (MaterialIsHair(mat))
+                {
+                    if (addHairPhysics) return true;
+                }
+                else
+                {
+                    if (addClothPhysics) return true;
+                }
+            }
+
+            return false;
+        }
+        
+        private bool CanAddPhysics(GameObject obj)
+        {
+            SkinnedMeshRenderer renderer = obj.GetComponent<SkinnedMeshRenderer>();
+            if (renderer)
+            {
+                foreach (Material mat in renderer.sharedMaterials)
+                {
+                    if (CanAddPhysics(mat)) return true;
+                }
+            }
+
+            return false;
+        }
+
         private void DoCloth(GameObject clothTarget, string meshName)
         {            
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
+            if (!renderer) return;
             Mesh mesh = renderer.sharedMesh;
+            if (!mesh) return;
 
             // add cloth component
             if (clothTarget.GetComponent<Cloth>()) Component.DestroyImmediate(clothTarget.GetComponent<Cloth>());
@@ -327,53 +398,66 @@ namespace Reallusion.Import
             for (int i = 0; i < mesh.subMeshCount; i++)//
             {
                 Material mat = renderer.sharedMaterials[i];
-                string sourceName = mat.name;
-                if (sourceName.iContains("_2nd_Pass")) continue;
-                if (sourceName.iContains("_1st_Pass"))
+                if (CanAddPhysics(mat))
                 {
-                    sourceName = sourceName.Remove(sourceName.IndexOf("_1st_Pass"));
-                }                
-
-                foreach (SoftPhysicsData data in softPhysics)
-                {
-                    if (data.materialName == sourceName && data.meshName == meshName)
+                    string sourceName = mat.name;
+                    if (sourceName.iContains("_2nd_Pass")) continue;
+                    if (sourceName.iContains("_1st_Pass"))
                     {
-                        cloth.bendingStiffness = 1f - (data.bending / 100f);
-                        cloth.clothSolverFrequency = data.solverFrequency;
-                        cloth.stiffnessFrequency = data.stiffnessFrequency;
-                        cloth.stretchingStiffness = 1f - (data.stretch / 100f);
-                        cloth.collisionMassScale = data.mass;
-                        cloth.friction = data.friction;
-                        cloth.damping = data.damping;                        
-                        //cloth.selfCollisionDistance = data.selfMargin * modelScale;
-                        //cloth.selfCollisionStiffness = 1f;
+                        sourceName = sourceName.Remove(sourceName.IndexOf("_1st_Pass"));
+                    }
 
-                        Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
-                        if (!weightMap) weightMap = Texture2D.blackTexture;
-                        Color32[] pixels = weightMap.GetPixels32(0);
-                        int w = weightMap.width;
-                        int h = weightMap.height;
-                        int x, y;
-
-                        int[] tris = mesh.GetTriangles(i);
-                        Debug.Log(tris.Length);
-                        foreach (int vertIdx in tris)
+                    foreach (SoftPhysicsData data in softPhysics)
+                    {
+                        if (data.materialName == sourceName && data.meshName == meshName)
                         {
-                            if (uniqueVertices.TryGetValue(SpatialHash(mesh.vertices[vertIdx]), out int clothVert))
+                            if (MaterialIsHair(mat))
                             {
-                                Vector2 coord = uvs[vertIdx];
-                                x = Mathf.FloorToInt(coord.x * w);
-                                y = Mathf.FloorToInt(coord.y * h);
-                                Color32 sample = pixels[x + y * w];
-                                float weight = sample.g / 255f;
-                                float Whalf = Mathf.Pow(weight, 0.5f);
-                                float W1 = Mathf.Pow(weight, 1f);
-                                float W2 = Mathf.Pow(weight, 2f);
-                                if (data.softRigidCollision)
+                                // hair meshes degenerate quickly if less than full stiffness 
+                                // (too dense, too many verts?)
+                                cloth.bendingStiffness = 1f;
+                                cloth.stretchingStiffness = 1f;
+                            }
+                            else
+                            {
+                                cloth.bendingStiffness = 1f - (data.bending / 100f);
+                                cloth.stretchingStiffness = 1f - (data.stretch / 100f);
+                            }
+                            cloth.clothSolverFrequency = data.solverFrequency;
+                            cloth.stiffnessFrequency = data.stiffnessFrequency;
+                            cloth.collisionMassScale = data.mass;
+                            cloth.friction = data.friction;
+                            cloth.damping = data.damping;
+                            //cloth.selfCollisionDistance = data.selfMargin * modelScale;
+                            //cloth.selfCollisionStiffness = 1f;
+
+                            Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
+                            if (!weightMap) weightMap = Texture2D.blackTexture;
+                            Color32[] pixels = weightMap.GetPixels32(0);
+                            int w = weightMap.width;
+                            int h = weightMap.height;
+                            int x, y;
+
+                            int[] tris = mesh.GetTriangles(i);
+                            Debug.Log(tris.Length);
+                            foreach (int vertIdx in tris)
+                            {
+                                if (uniqueVertices.TryGetValue(SpatialHash(mesh.vertices[vertIdx]), out int clothVert))
                                 {
-                                    coefficients[clothVert].maxDistance = maxDistance * W1;
-                                    coefficients[clothVert].collisionSphereDistance = maxDistance * W2;
-                                }                                
+                                    Vector2 coord = uvs[vertIdx];
+                                    x = Mathf.FloorToInt(coord.x * w);
+                                    y = Mathf.FloorToInt(coord.y * h);
+                                    Color32 sample = pixels[x + y * w];
+                                    float weight = sample.g / 255f;
+                                    float Whalf = Mathf.Pow(weight, 0.5f);
+                                    float W1 = Mathf.Pow(weight, 1f);
+                                    float W2 = Mathf.Pow(weight, 2f);
+                                    if (data.softRigidCollision)
+                                    {
+                                        coefficients[clothVert].maxDistance = maxDistance * W1;                                        
+                                        coefficients[clothVert].collisionSphereDistance = maxDistance * W1;
+                                    }
+                                }
                             }
                         }
                     }
