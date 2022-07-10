@@ -93,7 +93,7 @@ namespace Reallusion.Import
             if (currentScene.IsValid() && !string.IsNullOrEmpty(currentScene.path))
             {                
                 backScenePath = currentScene.path;
-            }
+            }            
         }
 
         public static void GoBackScene()
@@ -673,7 +673,7 @@ namespace Reallusion.Import
                 contextCharacter.animationRetargeted = animationRetargeted;
                 contextCharacter.Write();
             }
-            GUI.enabled = true;
+            GUI.enabled = true;            
 
 #if UNITY_ALEMBIC_1_0_7
             GUILayout.Space(ACTION_BUTTON_SPACE);

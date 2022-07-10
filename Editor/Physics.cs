@@ -8,7 +8,11 @@ using System.IO;
 namespace Reallusion.Import
 {
     public class Physics
-    {        
+    {
+        const float MAX_DISTANCE = 0.1f;
+        const float MAX_PENETRATION = 0.02f;
+        const float WEIGHT_POWER = 1f;        
+
         public enum PhysicsType
         {
             CollisionShapes,
@@ -139,13 +143,13 @@ namespace Reallusion.Import
         private GameObject prefabAsset;
         private GameObject workingPrefab;
         private float modelScale = 0.01f;
-        private float maxDistance = 0.2f;
+        private float maxDistance = MAX_DISTANCE;
         private float radiusScale = 1f;
         private float radiusReduction = 0.5f / 100f;
         private bool addClothPhysics = false;
         private bool addHairPhysics = false;
 
-        private Dictionary<GameObject, string> colliderObjs;
+        private Dictionary<Collider, string> colliderObjs;
         private List<CollisionShapeData> BoneColliders;
         private List<SoftPhysicsData> softPhysics;
 
@@ -158,9 +162,9 @@ namespace Reallusion.Import
             this.prefabAsset = prefabAsset;            
             BoneColliders = new List<CollisionShapeData>();
             softPhysics = new List<SoftPhysicsData>();
-            colliderObjs = new Dictionary<GameObject, string>();
+            colliderObjs = new Dictionary<Collider, string>();
             modelScale = 0.01f;
-            maxDistance = 0.1f;
+            maxDistance = MAX_DISTANCE;
             radiusScale = 0.9f;
             fbxFolder = info.folder;
             characterName = info.name;
@@ -258,18 +262,19 @@ namespace Reallusion.Import
                     float radius = (collider.radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
                     c.radius = radius;
                     c.height = collider.length * modelScale + radius * 2f;
+                    colliderObjs.Add(c, collider.boneName);
                 }
                 else
                 {
                     BoxCollider b = g.gameObject.AddComponent<BoxCollider>();
                     b.size = collider.extent * modelScale;
-                }
-                colliderObjs.Add(g, collider.boneName);
+                    colliderObjs.Add(b, collider.boneName);
+                }                
             }
             parent.transform.Rotate(Vector3.left, 90);
             parent.transform.localScale = new Vector3(-1f, 1f, 1f);
 
-            foreach (KeyValuePair<GameObject, string> collPair in colliderObjs)
+            foreach (KeyValuePair<Collider, string> collPair in colliderObjs)
             {
                 for (int i = 0; i < objs.Length; i++)
                 {
@@ -296,8 +301,9 @@ namespace Reallusion.Import
                     }
 
                     if (meshName == data.meshName)
-                    {                 
+                    {
                         if (CanAddPhysics(obj)) DoCloth(obj, meshName);
+                        else RemoveCloth(obj);
                     }
                 }
             }
@@ -351,7 +357,7 @@ namespace Reallusion.Import
             return false;
         }
 
-        private void DoCloth(GameObject clothTarget, string meshName)
+        private void DoClothOld(GameObject clothTarget, string meshName)
         {            
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
             if (!renderer) return;
@@ -378,7 +384,7 @@ namespace Reallusion.Import
             Array.Copy(cloth.coefficients, coefficients, coefficients.Length);            
             for (int i = 0; i < cloth.coefficients.Length; i++)
             {
-                coefficients[i].maxDistance = 0;
+                coefficients[i].maxDistance = 0;                
             }
 
             // fetch UV's
@@ -424,12 +430,13 @@ namespace Reallusion.Import
                                 cloth.stretchingStiffness = 1f - (data.stretch / 100f);
                             }
                             cloth.clothSolverFrequency = data.solverFrequency;
-                            cloth.stiffnessFrequency = data.stiffnessFrequency;
+                            Debug.Log(cloth.stiffnessFrequency);
+                            //cloth.stiffnessFrequency = data.stiffnessFrequency;
                             cloth.collisionMassScale = data.mass;
                             cloth.friction = data.friction;
                             cloth.damping = data.damping;
-                            //cloth.selfCollisionDistance = data.selfMargin * modelScale;
-                            //cloth.selfCollisionStiffness = 1f;
+                            cloth.selfCollisionDistance = data.selfMargin * modelScale;
+                            cloth.selfCollisionStiffness = 1f;
 
                             Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
                             if (!weightMap) weightMap = Texture2D.blackTexture;
@@ -438,8 +445,7 @@ namespace Reallusion.Import
                             int h = weightMap.height;
                             int x, y;
 
-                            int[] tris = mesh.GetTriangles(i);
-                            Debug.Log(tris.Length);
+                            int[] tris = mesh.GetTriangles(i);                            
                             foreach (int vertIdx in tris)
                             {
                                 if (uniqueVertices.TryGetValue(SpatialHash(mesh.vertices[vertIdx]), out int clothVert))
@@ -448,14 +454,11 @@ namespace Reallusion.Import
                                     x = Mathf.FloorToInt(coord.x * w);
                                     y = Mathf.FloorToInt(coord.y * h);
                                     Color32 sample = pixels[x + y * w];
-                                    float weight = sample.g / 255f;
-                                    float Whalf = Mathf.Pow(weight, 0.5f);
-                                    float W1 = Mathf.Pow(weight, 1f);
-                                    float W2 = Mathf.Pow(weight, 2f);
+                                    float weight = Mathf.Pow(sample.g / 255f, WEIGHT_POWER);
                                     if (data.softRigidCollision)
                                     {
-                                        coefficients[clothVert].maxDistance = maxDistance * W1;                                        
-                                        coefficients[clothVert].collisionSphereDistance = maxDistance * W1;
+                                        coefficients[clothVert].maxDistance = MAX_DISTANCE * weight;                                        
+                                        coefficients[clothVert].collisionSphereDistance = MAX_PENETRATION * weight;
                                     }
                                 }
                             }
@@ -464,18 +467,118 @@ namespace Reallusion.Import
                 }
             }
 
-            // set colliders
+            // set coefficients
             cloth.coefficients = coefficients;
-            CapsuleCollider[] colliders = new CapsuleCollider[colliderObjs.Count];
-            int index = 0;
-            foreach (KeyValuePair<GameObject, string> collPair in colliderObjs)
+
+            // set colliders
+            List<CapsuleCollider> colliders = new List<CapsuleCollider>();             
+            foreach (KeyValuePair<Collider, string> collPair in colliderObjs)
             {
-                colliders[index] = collPair.Key.GetComponent<CapsuleCollider>();
-                index++;
+                CapsuleCollider cc = collPair.Key.GetComponent<CapsuleCollider>();
+                if (cc) colliders.Add(cc);
             }
-            cloth.capsuleColliders = colliders;
+            cloth.capsuleColliders = colliders.ToArray();
         }
 
+        private void DoCloth(GameObject clothTarget, string meshName)
+        {
+            SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
+            if (!renderer) return;
+            Mesh mesh = renderer.sharedMesh;
+            if (!mesh) return;
+                       
+            foreach (SoftPhysicsData data in softPhysics)
+            {
+                Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
+                SetWeightMapImport(weightMap);
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            PhysXWeightMapper mapper = clothTarget.GetComponent<PhysXWeightMapper>();
+            if (!mapper) mapper = clothTarget.AddComponent<PhysXWeightMapper>();
+            List<PhysXWeightMapper.PhysicsSettings> allSettings = new List<PhysXWeightMapper.PhysicsSettings>();            
+
+            for (int i = 0; i < mesh.subMeshCount; i++)//
+            {
+                Material mat = renderer.sharedMaterials[i];
+                if (CanAddPhysics(mat))
+                {
+                    string sourceName = mat.name;
+                    if (sourceName.iContains("_2nd_Pass")) continue;
+                    if (sourceName.iContains("_1st_Pass"))
+                    {
+                        sourceName = sourceName.Remove(sourceName.IndexOf("_1st_Pass"));
+                    }
+
+                    foreach (SoftPhysicsData data in softPhysics)
+                    {
+                        if (data.materialName == sourceName && data.meshName == meshName)
+                        {
+                            PhysXWeightMapper.PhysicsSettings settings = new PhysXWeightMapper.PhysicsSettings();
+
+                            settings.name = sourceName;
+                            settings.activate = data.activate;
+                            settings.gravity = data.gravity;
+                            settings.selfCollision = data.selfCollision;
+                            settings.softRigidCollision = data.softRigidCollision;
+                            settings.softRigidMargin = data.softRigidMargin;
+
+                            if (MaterialIsHair(mat))
+                            {
+                                // hair meshes degenerate quickly if less than full stiffness 
+                                // (too dense, too many verts?)
+                                settings.bending = 0f;
+                                settings.stretch = 0f;
+                            }
+                            else
+                            {
+                                settings.bending = data.bending;
+                                settings.stretch = data.stretch;
+                            }
+
+                            settings.solverFrequency = data.solverFrequency;
+                            settings.stiffnessFrequency = data.stiffnessFrequency;
+                            settings.mass = data.mass;
+                            settings.friction = data.friction;
+                            settings.damping = data.damping;
+                            settings.selfMargin = data.selfMargin;                            
+
+                            Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
+                            if (!weightMap) weightMap = Texture2D.blackTexture;
+                            settings.weightMap = weightMap;
+
+                            allSettings.Add(settings);
+                        }
+                    }
+                }
+            }
+
+            mapper.settings = allSettings.ToArray();
+
+            PhysXColliders colliders = workingPrefab.GetComponent<PhysXColliders>();
+            if (colliders == null) colliders = workingPrefab.AddComponent<PhysXColliders>();
+            List<PhysXColliders.ColliderSettings> colliderSettings = new List<PhysXColliders.ColliderSettings>();
+            foreach (KeyValuePair<Collider, string> collPair in colliderObjs)
+            {
+                Collider col = collPair.Key.GetComponent<Collider>();
+                PhysXColliders.ColliderSettings cs = new PhysXColliders.ColliderSettings(col);                
+                if (col) colliderSettings.Add(cs);
+            }
+            colliders.colliders = colliderSettings.ToArray();
+
+            mapper.DoCloth();
+        }
+
+        public void RemoveCloth(GameObject obj)
+        {
+            Cloth cloth = obj.GetComponent<Cloth>();
+            PhysXWeightMapper mapper = obj.GetComponent<PhysXWeightMapper>();
+
+            if (cloth) Component.DestroyImmediate(cloth);
+            if (mapper) Component.DestroyImmediate(mapper);
+        }
 
         private Texture2D GetTextureFrom(string jsonTexturePath, string materialName, string suffix, out string name, bool search)
         {
@@ -523,7 +626,7 @@ namespace Reallusion.Import
             importer.isReadable = true;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.compressionQuality = 0;
-            importer.maxTextureSize = 4096;
+            importer.maxTextureSize = 256;
 
             AssetDatabase.WriteImportSettingsIfDirty(path);
         }
