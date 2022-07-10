@@ -168,15 +168,15 @@ namespace Reallusion.Import
 			string symName = null;
 			//Debug.Log(boneName);
 
-			if (boneName.Contains("_L_", System.StringComparison.InvariantCultureIgnoreCase))
+			if (boneName.Contains("_L_"))
 			{
 				symName = boneName.Replace("_L_", "_R_");
 			}
-			else if (boneName.Contains("_R_", System.StringComparison.InvariantCultureIgnoreCase))
+			else if (boneName.Contains("_R_"))
 			{
 				symName = boneName.Replace("_R_", "_L_");
 			}
-			else if (boneName.Contains("_Hip", System.StringComparison.InvariantCultureIgnoreCase))
+			else if (boneName.Contains("_Hip"))
 			{
 				symName = boneName;
 				
