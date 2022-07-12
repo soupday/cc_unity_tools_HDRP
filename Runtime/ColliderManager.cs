@@ -8,7 +8,7 @@ using System.IO;
 namespace Reallusion.Import
 {
     [Serializable]
-    public class PhysXColliders : MonoBehaviour
+    public class ColliderManager : MonoBehaviour
     {
 #if UNITY_EDITOR
         [Serializable]
@@ -102,8 +102,23 @@ namespace Reallusion.Import
             }
         }
 
+        public Collider[] colliders;
+
         [HideInInspector]
-        public ColliderSettings[] colliders;
+        public ColliderSettings[] settings;
+
+        public void AddColliders(List<Collider> colliders)
+        {
+            List<ColliderSettings> settings = new List<ColliderSettings>();
+            foreach (Collider col in colliders)
+            {                
+                ColliderSettings cs = new ColliderSettings(col);
+                settings.Add(cs);                
+            }
+            this.settings = settings.ToArray();
+            this.colliders = colliders.ToArray();
+        }
+
 #endif        
     }
 }

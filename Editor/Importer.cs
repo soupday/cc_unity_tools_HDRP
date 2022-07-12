@@ -260,7 +260,8 @@ namespace Reallusion.Import
             {
                 importer.importCameras = false;
                 importer.importLights = false;
-                importer.importVisibility = true;
+                importer.importVisibility = false;
+                importer.useFileUnits = false;
             }
             
             // setup initial animations (only do this once)

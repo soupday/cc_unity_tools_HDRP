@@ -5,12 +5,14 @@ using UnityEditor;
 
 namespace Reallusion.Import
 {
-	[CustomEditor(typeof(PhysXColliders))]
-	public class PhysXCollidersEditor : Editor
+	[CustomEditor(typeof(WeightMapper))]
+	public class WeightMapperEditor : Editor
 	{
-		private PhysXColliders script;
-		private PhysXColliders.ColliderSettings currentCollider;
-		private bool symetrical = true;
+		private WeightMapper script;
+		private ColliderManager collidersScript;
+		private ColliderManager.ColliderSettings currentCollider;
+		private bool symmetrical = true;
+
 
 		const float LABEL_WIDTH = 80f;
 		const float GUTTER = 40f;
@@ -19,15 +21,51 @@ namespace Reallusion.Import
 		private void OnEnable()
 		{
 			// Method 1
-			script = (PhysXColliders)target;
-			if (script.colliders.Length > 0)
-				currentCollider = script.colliders[0];
+			script = (WeightMapper)target;
+			collidersScript = script.GetComponentInParent<ColliderManager>();
+			
+			if (collidersScript.settings.Length > 0)
+				currentCollider = collidersScript.settings[0];
 			else
 				currentCollider = null;
 		}
 
 		public override void OnInspectorGUI()
-		{						
+		{			
+			// Draw default inspector after button...
+			base.OnInspectorGUI();
+
+			GUILayout.Space(4f);
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("Rebuild Constraints", GUILayout.Width(BUTTON_WIDTH)))
+			{
+				script.ApplyWeightMap(false);
+			}
+			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();
+
+			if (!collidersScript)
+			{
+				GUILayout.Space(10f);
+				GUILayout.BeginHorizontal();
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
+				{
+					UpdatePrefab();
+				}
+				GUILayout.FlexibleSpace();
+				GUILayout.EndHorizontal();
+			}
+			else
+			{
+				GUILayout.Space(10f);
+				OnInspectorGUColliders();
+			}
+		}
+
+		public void OnInspectorGUColliders()
+		{
 			GUILayout.Label("Adjust Colliders", EditorStyles.boldLabel);
 
 			GUILayout.Space(10f);
@@ -46,18 +84,18 @@ namespace Reallusion.Import
 					))
 				{
 					GenericMenu menu = new GenericMenu();
-					foreach (PhysXColliders.ColliderSettings c in script.colliders)
+					foreach (ColliderManager.ColliderSettings c in collidersScript.settings)
 					{
 						menu.AddItem(new GUIContent(c.name), c == currentCollider, SelectCurrentCollider, c);
-					}									
+					}
 					menu.ShowAsContext();
 				}
 				GUILayout.EndHorizontal();
-			}			
+			}
 
 			GUILayout.Space(8f);
 
-			EditorGUI.BeginChangeCheck();			
+			EditorGUI.BeginChangeCheck();
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
@@ -91,8 +129,8 @@ namespace Reallusion.Import
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
-			GUILayout.Label("Symetrical", GUILayout.Width(LABEL_WIDTH));
-			symetrical = EditorGUILayout.Toggle(symetrical);
+			GUILayout.Label("Symmetrical", GUILayout.Width(LABEL_WIDTH));
+			symmetrical = EditorGUILayout.Toggle(symmetrical);
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
@@ -101,19 +139,20 @@ namespace Reallusion.Import
 			if (GUILayout.Button("Reset", GUILayout.Width(80f)))
 			{
 				currentCollider.Reset();
-				if (symetrical) UpdateSymetrical();
+				if (symmetrical) UpdateSymetrical();
 			}
 			GUILayout.EndHorizontal();
 
 
 			if (EditorGUI.EndChangeCheck())
-			{				
+			{
 				currentCollider.Update();
-				if (symetrical) UpdateSymetrical();				
+				if (symmetrical) UpdateSymetrical();
 			}
 
 			GUILayout.EndVertical();
 
+			if (Application.isPlaying) GUI.enabled = false;
 			GUILayout.Space(10f);
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
@@ -123,6 +162,7 @@ namespace Reallusion.Import
 			}
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
+			GUI.enabled = true;
 		}
 
 
@@ -135,7 +175,7 @@ namespace Reallusion.Import
 			serializedObject.Update();
 
 			int i = 0;
-			foreach (PhysXColliders.ColliderSettings cs in script.colliders)
+			foreach (ColliderManager.ColliderSettings cs in collidersScript.settings)
 			{
 				SerializedProperty prop = serializedObject.FindProperty("colliders.Array.data[" + i + "].radiusAdjust");
 				prop.floatValue = cs.radiusAdjust;
@@ -153,7 +193,7 @@ namespace Reallusion.Import
 			if (prefabRoot)
 			{
 				PrefabUtility.ApplyPrefabInstance(prefabRoot, InteractionMode.UserAction);
-				foreach (PhysXColliders.ColliderSettings cs in script.colliders)
+				foreach (ColliderManager.ColliderSettings cs in collidersScript.settings)
 				{
 					cs.Reset(true);
 				}
@@ -179,12 +219,12 @@ namespace Reallusion.Import
 			else if (boneName.Contains("_Hip"))
 			{
 				symName = boneName;
-				
-			}			
+
+			}
 
 			if (!string.IsNullOrEmpty(symName))
 			{
-				foreach (PhysXColliders.ColliderSettings cs in script.colliders)
+				foreach (ColliderManager.ColliderSettings cs in collidersScript.settings)
 				{
 					if (cs != currentCollider && cs.name.StartsWith(symName))
 					{
@@ -202,7 +242,7 @@ namespace Reallusion.Import
 
 			if (!string.IsNullOrEmpty(symName))
 			{
-				foreach (PhysXColliders.ColliderSettings cs in script.colliders)
+				foreach (ColliderManager.ColliderSettings cs in collidersScript.settings)
 				{
 					if (cs != currentCollider && cs.name.StartsWith(symName))
 					{
@@ -216,8 +256,10 @@ namespace Reallusion.Import
 
 		private void SelectCurrentCollider(object sel)
 		{
-			currentCollider = (PhysXColliders.ColliderSettings)sel;
+			currentCollider = (ColliderManager.ColliderSettings)sel;
 		}
+
+
 	}
 }
 
