@@ -2,26 +2,27 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using System.IO;
+using ColliderSettings = Reallusion.Import.ColliderManager.ColliderSettings;
 
 namespace Reallusion.Import
 {
 	[CustomEditor(typeof(ColliderManager))]
 	public class ColliderManagerEditor : Editor
 	{
-		private ColliderManager script;
-		private ColliderManager.ColliderSettings currentCollider;
+		private ColliderManager colliderManager;
+		private ColliderSettings currentCollider;
 		private bool symetrical = true;
 
 		const float LABEL_WIDTH = 80f;
 		const float GUTTER = 40f;
-		const float BUTTON_WIDTH = 200f;
+		const float BUTTON_WIDTH = 160f;
 
 		private void OnEnable()
 		{
-			// Method 1
-			script = (ColliderManager)target;
-			if (script.settings.Length > 0)
-				currentCollider = script.settings[0];
+			colliderManager = (ColliderManager)target;
+			if (colliderManager.settings.Length > 0)
+				currentCollider = colliderManager.settings[0];
 			else
 				currentCollider = null;
 		}
@@ -30,38 +31,45 @@ namespace Reallusion.Import
 		{
 			base.OnInspectorGUI();
 
+			OnColliderInspectorGUI();
+		}
+
+		public void OnColliderInspectorGUI()
+		{
+			if (currentCollider == null) return;
+
+			Color background = GUI.backgroundColor;
+
 			GUILayout.Space(10f);
 
 			GUILayout.Label("Adjust Colliders", EditorStyles.boldLabel);
 
 			GUILayout.Space(10f);
 
-			GUILayout.BeginVertical(EditorStyles.helpBox);
+			GUILayout.BeginVertical(EditorStyles.helpBox);			
 
-			// custom collider adjuster
-			if (currentCollider != null)
+			// custom collider adjuster			
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(GUTTER);
+			GUILayout.Label("Collider", GUILayout.Width(LABEL_WIDTH));
+			if (EditorGUILayout.DropdownButton(
+				new GUIContent(currentCollider.name),
+				FocusType.Passive
+				))
 			{
-				GUILayout.BeginHorizontal();
-				GUILayout.Space(GUTTER);
-				GUILayout.Label("Collider", GUILayout.Width(LABEL_WIDTH));
-				if (EditorGUILayout.DropdownButton(
-					new GUIContent(currentCollider.name),
-					FocusType.Passive
-					))
+				GenericMenu menu = new GenericMenu();
+				foreach (ColliderSettings c in colliderManager.settings)
 				{
-					GenericMenu menu = new GenericMenu();
-					foreach (ColliderManager.ColliderSettings c in script.settings)
-					{
-						menu.AddItem(new GUIContent(c.name), c == currentCollider, SelectCurrentCollider, c);
-					}									
-					menu.ShowAsContext();
+					menu.AddItem(new GUIContent(c.name), c == currentCollider, SelectCurrentCollider, c);
 				}
-				GUILayout.EndHorizontal();
-			}			
+				menu.ShowAsContext();
+			}
+			GUILayout.EndHorizontal();
+
 
 			GUILayout.Space(8f);
 
-			EditorGUI.BeginChangeCheck();			
+			EditorGUI.BeginChangeCheck();
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
@@ -107,13 +115,18 @@ namespace Reallusion.Import
 				currentCollider.Reset();
 				if (symetrical) UpdateSymetrical();
 			}
+			GUILayout.Space(10f);
+			if (GUILayout.Button("Select", GUILayout.Width(80f)))
+            {
+				Selection.activeObject = currentCollider.collider;
+            }
 			GUILayout.EndHorizontal();
 
 
 			if (EditorGUI.EndChangeCheck())
-			{				
+			{
 				currentCollider.Update();
-				if (symetrical) UpdateSymetrical();				
+				if (symetrical) UpdateSymetrical();
 			}
 
 			GUILayout.EndVertical();
@@ -121,46 +134,77 @@ namespace Reallusion.Import
 			GUILayout.Space(10f);
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
+
+			if (!EditorApplication.isPlaying)
 			{
-				UpdatePrefab();
+				GUI.backgroundColor = Color.Lerp(background, Color.cyan, 0.25f);
+				if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
+				{
+					UpdatePrefab(colliderManager);
+				}
+				EditorGUI.BeginDisabledGroup(!PhysicsSettingsStore.TryFindSettingsObject(out string foundSettingsGuid));
+				GUI.backgroundColor = Color.Lerp(background, Color.yellow, 0.25f);
+				if (GUILayout.Button("Recall Settings", GUILayout.Width(BUTTON_WIDTH)))
+				{
+					PhysicsSettingsStore.RecallColliderSettings(colliderManager);
+				}
+				GUI.backgroundColor = background;
+				EditorGUI.EndDisabledGroup();
 			}
+			else
+			{
+				GUI.backgroundColor = Color.Lerp(background, Color.red, 0.25f);
+				if (GUILayout.Button("Save Settings", GUILayout.Width(BUTTON_WIDTH)))
+				{
+					PhysicsSettingsStore.SaveColliderSettings(colliderManager);
+				}
+				GUI.backgroundColor = background;
+			}
+
 			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();
+
+			GUILayout.Space(10f);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Cloth Meshes", EditorStyles.boldLabel);
+			GUILayout.BeginVertical();
+			
+			GUI.backgroundColor = Color.Lerp(background, Color.green, 0.25f);
+			foreach (GameObject clothMesh in colliderManager.clothMeshes)
+            {
+				GUILayout.BeginHorizontal();
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button(clothMesh.name, GUILayout.Width(160f)))
+				{
+					Selection.activeObject = clothMesh;
+				}
+				GUILayout.FlexibleSpace();
+				GUILayout.EndHorizontal();
+				GUILayout.Space(4f);
+			}
+			GUI.backgroundColor = background;
+			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 		}
 
-
-
-		private void UpdateSerialized()
+		public void UpdatePrefab(Object component)
 		{
-			// doesn't do nothing in play mode...
-
-			//"colliders.Array.data[3].name.Array.data[2]"
-			serializedObject.Update();
-
-			int i = 0;
-			foreach (ColliderManager.ColliderSettings cs in script.settings)
-			{
-				SerializedProperty prop = serializedObject.FindProperty("colliders.Array.data[" + i + "].radiusAdjust");
-				prop.floatValue = cs.radiusAdjust;
-				prop = serializedObject.FindProperty("colliders.Array.data[" + i + "].heightAdjust");
-				prop.floatValue = cs.heightAdjust;
-				i++;
-			}
-
-			serializedObject.ApplyModifiedProperties();
-		}
-
-		private void UpdatePrefab()
-		{
-			GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(script);
+			GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(component);			
 			if (prefabRoot)
-			{
-				PrefabUtility.ApplyPrefabInstance(prefabRoot, InteractionMode.UserAction);
-				foreach (ColliderManager.ColliderSettings cs in script.settings)
+			{									
+				// reset collider states
+				ColliderManager colliderManager = prefabRoot.GetComponentInChildren<ColliderManager>();
+				if (colliderManager)
 				{
-					cs.Reset(true);
+					foreach (ColliderSettings cs in colliderManager.settings)
+					{
+						cs.Reset(true);
+					}
 				}
+
+				// save prefab asset
+				PrefabUtility.ApplyPrefabInstance(prefabRoot, InteractionMode.UserAction);
 			}
 		}
 
@@ -188,7 +232,7 @@ namespace Reallusion.Import
 
 			if (!string.IsNullOrEmpty(symName))
 			{
-				foreach (ColliderManager.ColliderSettings cs in script.settings)
+				foreach (ColliderSettings cs in colliderManager.settings)
 				{
 					if (cs != currentCollider && cs.name.StartsWith(symName))
 					{
@@ -206,7 +250,7 @@ namespace Reallusion.Import
 
 			if (!string.IsNullOrEmpty(symName))
 			{
-				foreach (ColliderManager.ColliderSettings cs in script.settings)
+				foreach (ColliderSettings cs in colliderManager.settings)
 				{
 					if (cs != currentCollider && cs.name.StartsWith(symName))
 					{
@@ -220,8 +264,8 @@ namespace Reallusion.Import
 
 		private void SelectCurrentCollider(object sel)
 		{
-			currentCollider = (ColliderManager.ColliderSettings)sel;
-		}
+			currentCollider = (ColliderSettings)sel;
+		}			
 	}
 }
 

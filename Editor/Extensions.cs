@@ -6,6 +6,16 @@ namespace Reallusion.Import
 {
     public static class Extensions
     {
+        public static bool iContains(this List<string> list, string search)
+        {
+            foreach (string s in list)
+            {
+                if (s.iEquals(search)) return true;
+            }
+
+            return false;
+        }
+
         public static bool iEquals(this string a, string b)
         {
             return a.Equals(b, System.StringComparison.InvariantCultureIgnoreCase);

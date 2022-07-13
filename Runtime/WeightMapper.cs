@@ -66,6 +66,9 @@ namespace Reallusion.Import
 
         public void ApplyWeightMap(bool useAllColliders = true)
         {
+            bool animationMode = AnimationMode.InAnimationMode();
+            if (animationMode) AnimationMode.StopAnimationMode();
+
             GameObject clothTarget = gameObject;
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
             if (!renderer) return;
@@ -184,8 +187,8 @@ namespace Reallusion.Import
                             if (uniqueVertices.TryGetValue(SpatialHash(vert), out int clothVert))
                             {                                
                                 Vector2 coord = uvs[vertIdx];
-                                x = Mathf.FloorToInt(coord.x * w);
-                                y = Mathf.FloorToInt(coord.y * h);
+                                x = Mathf.Max(0, Mathf.Min(w, Mathf.FloorToInt(coord.x * w)));
+                                y = Mathf.Max(0, Mathf.Min(h, Mathf.FloorToInt(coord.y * h)));
                                 Color32 sample = pixels[x + y * w];
                                 float weight = (Mathf.Pow(sample.g / 255f, data.weightMapPower) + data.weightMapOffset) * data.weightMapScale;
                                 float maxDistance = data.maxDistance * weight * modelScale;
@@ -224,7 +227,7 @@ namespace Reallusion.Import
                     }
 
                 }
-            }
+            }            
 
             // set coefficients
             cloth.coefficients = coefficients;
@@ -238,7 +241,9 @@ namespace Reallusion.Import
                     detectedCapsuleColliders.Add((CapsuleCollider)c);
                 }
             }
-            cloth.capsuleColliders = detectedCapsuleColliders.ToArray();            
+            cloth.capsuleColliders = detectedCapsuleColliders.ToArray();
+
+            if (animationMode) AnimationMode.StartAnimationMode();
         }        
 
         private static long SpatialHash(Vector3 v)

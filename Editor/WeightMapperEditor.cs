@@ -2,264 +2,105 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using System.IO;
+using System.Linq;
+using PhysicsSettings = Reallusion.Import.WeightMapper.PhysicsSettings;
+using ColliderSettings = Reallusion.Import.ColliderManager.ColliderSettings;
 
 namespace Reallusion.Import
 {
 	[CustomEditor(typeof(WeightMapper))]
 	public class WeightMapperEditor : Editor
 	{
-		private WeightMapper script;
-		private ColliderManager collidersScript;
-		private ColliderManager.ColliderSettings currentCollider;
-		private bool symmetrical = true;
-
-
+		private WeightMapper weightMapper;
+		private ColliderManager colliderManager;
+		
 		const float LABEL_WIDTH = 80f;
 		const float GUTTER = 40f;
-		const float BUTTON_WIDTH = 200f;
+		const float BUTTON_WIDTH = 160f;
 
 		private void OnEnable()
 		{
 			// Method 1
-			script = (WeightMapper)target;
-			collidersScript = script.GetComponentInParent<ColliderManager>();
-			
-			if (collidersScript.settings.Length > 0)
-				currentCollider = collidersScript.settings[0];
-			else
-				currentCollider = null;
+			weightMapper = (WeightMapper)target;
+			colliderManager = weightMapper.GetComponentInParent<ColliderManager>();					
 		}
 
 		public override void OnInspectorGUI()
-		{			
+		{
 			// Draw default inspector after button...
 			base.OnInspectorGUI();
 
-			GUILayout.Space(4f);
+			OnClothInspectorGUI();
+		}
+
+		public void OnClothInspectorGUI()
+		{
+			Color background = GUI.backgroundColor;
+
+			GUILayout.Space(10f);
+
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
+			GUI.backgroundColor = Color.Lerp(background, Color.white, 0.25f);
 			if (GUILayout.Button("Rebuild Constraints", GUILayout.Width(BUTTON_WIDTH)))
 			{
-				script.ApplyWeightMap(false);
+				weightMapper.ApplyWeightMap(false);
 			}
+			GUI.backgroundColor = background;
 			GUILayout.FlexibleSpace();
-			GUILayout.EndHorizontal();
-
-			if (!collidersScript)
+			if (!EditorApplication.isPlaying)
 			{
-				GUILayout.Space(10f);
-				GUILayout.BeginHorizontal();
-				GUILayout.FlexibleSpace();
-				if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
+				EditorGUI.BeginDisabledGroup(!PhysicsSettingsStore.TryFindSettingsObject(out string foundSettingsGuid));
+				GUI.backgroundColor = Color.Lerp(background, Color.yellow, 0.25f);
+				if (GUILayout.Button("Recall Settings", GUILayout.Width(BUTTON_WIDTH)))
 				{
-					UpdatePrefab();
+					PhysicsSettingsStore.RecallClothSettings(weightMapper);
 				}
-				GUILayout.FlexibleSpace();
-				GUILayout.EndHorizontal();
+				GUI.backgroundColor = background;
+				EditorGUI.EndDisabledGroup();
 			}
 			else
 			{
-				GUILayout.Space(10f);
-				OnInspectorGUColliders();
-			}
-		}
-
-		public void OnInspectorGUColliders()
-		{
-			GUILayout.Label("Adjust Colliders", EditorStyles.boldLabel);
-
-			GUILayout.Space(10f);
-
-			GUILayout.BeginVertical(EditorStyles.helpBox);
-
-			// custom collider adjuster
-			if (currentCollider != null)
-			{
-				GUILayout.BeginHorizontal();
-				GUILayout.Space(GUTTER);
-				GUILayout.Label("Collider", GUILayout.Width(LABEL_WIDTH));
-				if (EditorGUILayout.DropdownButton(
-					new GUIContent(currentCollider.name),
-					FocusType.Passive
-					))
+				GUI.backgroundColor = Color.Lerp(background, Color.red, 0.25f);
+				if (GUILayout.Button("Save Settings", GUILayout.Width(BUTTON_WIDTH)))
 				{
-					GenericMenu menu = new GenericMenu();
-					foreach (ColliderManager.ColliderSettings c in collidersScript.settings)
-					{
-						menu.AddItem(new GUIContent(c.name), c == currentCollider, SelectCurrentCollider, c);
-					}
-					menu.ShowAsContext();
+					PhysicsSettingsStore.SaveClothSettings(weightMapper);
 				}
-				GUILayout.EndHorizontal();
+				GUI.backgroundColor = background;
 			}
-
-			GUILayout.Space(8f);
-
-			EditorGUI.BeginChangeCheck();
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(GUTTER);
-			GUILayout.Label("Radius", GUILayout.Width(LABEL_WIDTH));
-			currentCollider.radiusAdjust = EditorGUILayout.Slider(currentCollider.radiusAdjust, -0.1f, 0.1f);
+			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(GUTTER);
-			GUILayout.Label("Height", GUILayout.Width(LABEL_WIDTH));
-			currentCollider.heightAdjust = EditorGUILayout.Slider(currentCollider.heightAdjust, -0.1f, 0.1f);
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(GUTTER);
-			GUILayout.Label("X", GUILayout.Width(LABEL_WIDTH));
-			currentCollider.xAdjust = EditorGUILayout.Slider(currentCollider.xAdjust, -0.1f, 0.1f);
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(GUTTER);
-			GUILayout.Label("Y", GUILayout.Width(LABEL_WIDTH));
-			currentCollider.yAdjust = EditorGUILayout.Slider(currentCollider.yAdjust, -0.1f, 0.1f);
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(GUTTER);
-			GUILayout.Label("Z", GUILayout.Width(LABEL_WIDTH));
-			currentCollider.zAdjust = EditorGUILayout.Slider(currentCollider.zAdjust, -0.1f, 0.1f);
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(GUTTER);
-			GUILayout.Label("Symmetrical", GUILayout.Width(LABEL_WIDTH));
-			symmetrical = EditorGUILayout.Toggle(symmetrical);
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(GUTTER);
-			GUILayout.Label("", GUILayout.Width(LABEL_WIDTH));
-			if (GUILayout.Button("Reset", GUILayout.Width(80f)))
-			{
-				currentCollider.Reset();
-				if (symmetrical) UpdateSymetrical();
-			}
-			GUILayout.EndHorizontal();
-
-
-			if (EditorGUI.EndChangeCheck())
-			{
-				currentCollider.Update();
-				if (symmetrical) UpdateSymetrical();
-			}
-
-			GUILayout.EndVertical();
-
-			if (Application.isPlaying) GUI.enabled = false;
 			GUILayout.Space(10f);
+
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
+			GUI.backgroundColor = Color.Lerp(background, Color.cyan, 0.25f);
 			if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
 			{
-				UpdatePrefab();
+				UpdatePrefab(weightMapper);
 			}
+			GUILayout.FlexibleSpace(); 
+			GUI.backgroundColor = Color.Lerp(background, Color.green, 0.25f);
+			if (GUILayout.Button("Collider Manager", GUILayout.Width(BUTTON_WIDTH)))
+			{
+				Selection.activeObject = colliderManager;
+			}
+			GUI.backgroundColor = background;
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
-			GUI.enabled = true;
 		}
 
-
-
-		private void UpdateSerialized()
+		public void UpdatePrefab(Object component)
 		{
-			// doesn't do nothing in play mode...
-
-			//"colliders.Array.data[3].name.Array.data[2]"
-			serializedObject.Update();
-
-			int i = 0;
-			foreach (ColliderManager.ColliderSettings cs in collidersScript.settings)
-			{
-				SerializedProperty prop = serializedObject.FindProperty("colliders.Array.data[" + i + "].radiusAdjust");
-				prop.floatValue = cs.radiusAdjust;
-				prop = serializedObject.FindProperty("colliders.Array.data[" + i + "].heightAdjust");
-				prop.floatValue = cs.heightAdjust;
-				i++;
-			}
-
-			serializedObject.ApplyModifiedProperties();
-		}
-
-		private void UpdatePrefab()
-		{
-			GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(script);
+			GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(component);
 			if (prefabRoot)
 			{
+				// save prefab asset
 				PrefabUtility.ApplyPrefabInstance(prefabRoot, InteractionMode.UserAction);
-				foreach (ColliderManager.ColliderSettings cs in collidersScript.settings)
-				{
-					cs.Reset(true);
-				}
 			}
 		}
-
-		private void UpdateSymetrical()
-		{
-			string name = currentCollider.name;
-
-			string boneName = name.Remove(name.IndexOf("_Capsule"));
-			string symName = null;
-			//Debug.Log(boneName);
-
-			if (boneName.Contains("_L_"))
-			{
-				symName = boneName.Replace("_L_", "_R_");
-			}
-			else if (boneName.Contains("_R_"))
-			{
-				symName = boneName.Replace("_R_", "_L_");
-			}
-			else if (boneName.Contains("_Hip"))
-			{
-				symName = boneName;
-
-			}
-
-			if (!string.IsNullOrEmpty(symName))
-			{
-				foreach (ColliderManager.ColliderSettings cs in collidersScript.settings)
-				{
-					if (cs != currentCollider && cs.name.StartsWith(symName))
-					{
-						cs.MirrorX(currentCollider);
-						cs.Update();
-					}
-				}
-			}
-
-			symName = null;
-			if (name == "CC_Base_NeckTwist01_Capsule(1)")
-			{
-				symName = "CC_Base_NeckTwist01_Capsule(2)";
-			}
-
-			if (!string.IsNullOrEmpty(symName))
-			{
-				foreach (ColliderManager.ColliderSettings cs in collidersScript.settings)
-				{
-					if (cs != currentCollider && cs.name.StartsWith(symName))
-					{
-						cs.MirrorZ(currentCollider);
-						cs.Update();
-					}
-				}
-			}
-
-		}
-
-		private void SelectCurrentCollider(object sel)
-		{
-			currentCollider = (ColliderManager.ColliderSettings)sel;
-		}
-
-
 	}
 }
 

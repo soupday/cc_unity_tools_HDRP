@@ -140,30 +140,28 @@ namespace Reallusion.Import
             }
         }
 
-        private GameObject prefabAsset;
-        private GameObject workingPrefab;
+        private GameObject prefabAsset;        
+        private GameObject prefabInstance;
         private float modelScale = 0.01f;
-        private float maxDistance = MAX_DISTANCE;
-        private float radiusScale = 1f;
-        private float radiusReduction = 0.5f / 100f;
         private bool addClothPhysics = false;
         private bool addHairPhysics = false;
 
-        private List<CollisionShapeData> BoneColliders;
+        private List<CollisionShapeData> boneColliders;
         private List<SoftPhysicsData> softPhysics;
+        private List<GameObject> clothMeshes;
 
         private string characterName;
         private string fbxFolder;
         private List<string> textureFolders;
 
-        public Physics(CharacterInfo info, GameObject prefabAsset, QuickJSON physicsJson)
+        public Physics(CharacterInfo info, GameObject prefabAsset, GameObject prefabInstance, QuickJSON physicsJson)
         {
-            this.prefabAsset = prefabAsset;            
-            BoneColliders = new List<CollisionShapeData>();
-            softPhysics = new List<SoftPhysicsData>();            
+            this.prefabAsset = prefabAsset;
+            this.prefabInstance = prefabInstance;
+            boneColliders = new List<CollisionShapeData>();
+            softPhysics = new List<SoftPhysicsData>();
+            clothMeshes = new List<GameObject>();
             modelScale = 0.01f;
-            maxDistance = MAX_DISTANCE;
-            radiusScale = 0.9f;
             fbxFolder = info.folder;
             characterName = info.name;
             fbxFolder = info.folder;
@@ -183,7 +181,7 @@ namespace Reallusion.Import
             
             if (shapesJson != null)
             {
-                BoneColliders.Clear();
+                boneColliders.Clear();
 
                 foreach (MultiValue boneJson in shapesJson.values)
                 {
@@ -195,7 +193,7 @@ namespace Reallusion.Import
                         {
                             string colliderName = colliderJson.Key;
                             if (colliderJson.ObjectValue != null)
-                                BoneColliders.Add(new CollisionShapeData(boneName, colliderName, colliderJson.ObjectValue));
+                                boneColliders.Add(new CollisionShapeData(boneName, colliderName, colliderJson.ObjectValue));
                         }
                     }
                 }
@@ -223,26 +221,21 @@ namespace Reallusion.Import
         }
 
         public GameObject AddPhysics()
-        {
-            workingPrefab = PrefabUtility.InstantiatePrefab(prefabAsset) as GameObject;
-
+        {                        
             AddColliders();
             AddCloth();
 
-            GameObject newPrefabAsset = PrefabUtility.SaveAsPrefabAsset(workingPrefab, AssetDatabase.GetAssetPath(prefabAsset));
-            UnityEngine.Object.DestroyImmediate(workingPrefab);
-            workingPrefab = null;
-            return newPrefabAsset;
+            return PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
         }
 
         private void AddColliders()
         {
             GameObject parent = new GameObject();
             GameObject g;
-            Transform[] objs = workingPrefab.GetComponentsInChildren<Transform>();
+            Transform[] objs = prefabInstance.GetComponentsInChildren<Transform>();
             Dictionary<Collider, string> colliderLookup = new Dictionary<Collider, string>();
 
-            foreach (CollisionShapeData collider in BoneColliders)
+            foreach (CollisionShapeData collider in boneColliders)
             {
                 g = new GameObject();
                 g.transform.SetParent(parent.transform);
@@ -287,8 +280,8 @@ namespace Reallusion.Import
             }
 
             // add collider manager to prefab root
-            ColliderManager colliderManager = workingPrefab.GetComponent<ColliderManager>();
-            if (colliderManager == null) colliderManager = workingPrefab.AddComponent<ColliderManager>();
+            ColliderManager colliderManager = prefabInstance.GetComponent<ColliderManager>();
+            if (colliderManager == null) colliderManager = prefabInstance.AddComponent<ColliderManager>();
 
             // add colliders to manager
             if (colliderManager) colliderManager.AddColliders(listColliders);
@@ -296,7 +289,9 @@ namespace Reallusion.Import
 
         private void AddCloth()
         {
-            Transform[] transforms = workingPrefab.GetComponentsInChildren<Transform>();
+            clothMeshes.Clear();
+            List<string> hairMeshNames = FindHairMeshes();
+            Transform[] transforms = prefabInstance.GetComponentsInChildren<Transform>();
             foreach (Transform t in transforms)
             {
                 GameObject obj = t.gameObject;
@@ -310,10 +305,23 @@ namespace Reallusion.Import
 
                     if (meshName == data.meshName)
                     {
-                        if (CanAddPhysics(obj)) DoCloth(obj, meshName);
-                        else RemoveCloth(obj);
+                        if (CanAddPhysics(meshName, hairMeshNames))
+                        {
+                            DoCloth(obj, meshName);
+                            clothMeshes.Add(obj);
+                        }
+                        else
+                        {
+                            RemoveCloth(obj);
+                        }
                     }
                 }
+            }
+
+            ColliderManager colliderManager = prefabInstance.GetComponent<ColliderManager>();
+            if (colliderManager)
+            {
+                colliderManager.clothMeshes = clothMeshes.ToArray();
             }
         }
 
@@ -351,19 +359,57 @@ namespace Reallusion.Import
             return false;
         }
         
-        private bool CanAddPhysics(GameObject obj)
+        private bool CanAddPhysics(string meshName, List<string>hairMeshNames)
+        {
+            if (hairMeshNames.iContains(meshName))
+            {
+                return addHairPhysics;
+            }
+            else
+            {
+                return addClothPhysics;
+            }
+        }
+
+        private bool HasHairMaterials(GameObject obj)
         {
             SkinnedMeshRenderer renderer = obj.GetComponent<SkinnedMeshRenderer>();
             if (renderer)
             {
                 foreach (Material mat in renderer.sharedMaterials)
                 {
-                    if (CanAddPhysics(mat)) return true;
+                    if (MaterialIsHair(mat)) return true;
                 }
             }
 
             return false;
-        }        
+        }
+
+        private List<string> FindHairMeshes()
+        {
+            List<string> hairMeshNames = new List<string>();
+            Transform[] transforms = prefabInstance.GetComponentsInChildren<Transform>();
+            foreach (Transform t in transforms)
+            {
+                GameObject obj = t.gameObject;
+                foreach (SoftPhysicsData data in softPhysics)
+                {
+                    string meshName = obj.name;
+                    if (meshName.iContains("_Extracted"))
+                    {
+                        meshName = meshName.Remove(meshName.IndexOf("_Extracted"));
+                    }
+
+                    if (meshName == data.meshName)
+                    {
+                        if (HasHairMaterials(obj) && !hairMeshNames.Contains(meshName)) 
+                            hairMeshNames.Add(meshName);
+                    }
+                }
+            }
+
+            return hairMeshNames;
+        }
 
         private void DoCloth(GameObject clothTarget, string meshName)
         {            
@@ -383,7 +429,7 @@ namespace Reallusion.Import
 
             WeightMapper mapper = clothTarget.GetComponent<WeightMapper>();
             if (!mapper) mapper = clothTarget.AddComponent<WeightMapper>();
-            List<WeightMapper.PhysicsSettings> allSettings = new List<WeightMapper.PhysicsSettings>();            
+            List<WeightMapper.PhysicsSettings> settingsList = new List<WeightMapper.PhysicsSettings>();            
 
             for (int i = 0; i < mesh.subMeshCount; i++)//
             {
@@ -436,13 +482,13 @@ namespace Reallusion.Import
                             if (!weightMap) weightMap = Texture2D.blackTexture;
                             settings.weightMap = weightMap;
 
-                            allSettings.Add(settings);
+                            settingsList.Add(settings);
                         }
                     }
                 }
             }
 
-            mapper.settings = allSettings.ToArray();           
+            mapper.settings = settingsList.ToArray();           
 
             mapper.ApplyWeightMap();
         }
@@ -505,41 +551,10 @@ namespace Reallusion.Import
             importer.maxTextureSize = 256;
 
             AssetDatabase.WriteImportSettingsIfDirty(path);
-        }
+        }        
 
+        
 
-        private static long SpatialHash(Vector3 v)
-        {
-            const long p1 = 73868489;
-            const long p2 = 23875351;
-            const long p3 = 53885459;
-            const long discrete = 1000;
-
-            long x = (long)(v.x * discrete);
-            long y = (long)(v.y * discrete);
-            long z = (long)(v.z * discrete);
-
-            return (x * p1) ^ (y * p2) ^ (z * p3);
-        }
-
-        private void CleanUP()
-        {
-            GameObject model = workingPrefab.gameObject;
-            Transform[] objs = model.GetComponentsInChildren<Transform>();
-
-            //horrible
-            for (int i = 0; i < 5; i++)
-            {
-                foreach (Transform t in objs)
-                {
-                    if (t.gameObject.GetComponent<CapsuleCollider>())
-                        Component.DestroyImmediate(t.gameObject.GetComponent<CapsuleCollider>());
-
-                    if (t.gameObject.GetComponent<BoxCollider>())
-                        Component.DestroyImmediate(t.gameObject.GetComponent<BoxCollider>());
-
-                }
-            }
-        }            
+        
     }
 }

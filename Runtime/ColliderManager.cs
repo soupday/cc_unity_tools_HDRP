@@ -103,7 +103,8 @@ namespace Reallusion.Import
         }
 
         public Collider[] colliders;
-
+        [HideInInspector]
+        public GameObject[] clothMeshes;
         [HideInInspector]
         public ColliderSettings[] settings;
 
@@ -119,6 +120,18 @@ namespace Reallusion.Import
             this.colliders = colliders.ToArray();
         }
 
+        public void UpdateColliders()
+        {
+            foreach (ColliderSettings cs in settings)
+            {
+                cs.Update();
+            }
+        }
+
+        public void RefreshData()
+        {
+
+        }
 #endif        
     }
 }
