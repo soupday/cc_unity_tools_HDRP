@@ -131,7 +131,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Physics_Shrink_Collider_Radius"))
                     return EditorPrefs.GetFloat("RL_Physics_Shrink_Collider_Radius");
-                return 1f;
+                return 0f;
             }
 
             set
