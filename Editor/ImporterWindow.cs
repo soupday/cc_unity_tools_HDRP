@@ -670,7 +670,17 @@ namespace Reallusion.Import
                 contextCharacter.animationRetargeted = animationRetargeted;
                 contextCharacter.Write();
             }
-            GUI.enabled = true;            
+            
+            //
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+            
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PhysicMaterial Icon").image, "Enables cloth physics and rebuilds the character physics."),
+                GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+            {
+                Physics.RebuildPhysics(contextCharacter);
+            }
+            GUI.enabled = true;
 
 #if UNITY_ALEMBIC_1_0_7
             GUILayout.Space(ACTION_BUTTON_SPACE);

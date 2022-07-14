@@ -221,11 +221,21 @@ namespace Reallusion.Import
         }
 
         public GameObject AddPhysics()
-        {                        
+        {
+            bool animationMode = AnimationMode.InAnimationMode();
+            if (animationMode) AnimationMode.StopAnimationMode();
+
             AddColliders();
             AddCloth();
 
             return PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
+
+            if (animationMode) AnimationMode.StartAnimationMode();
+        }
+
+        public void RemoveAllPhysics()
+        {
+            Collider[] colliders = prefabInstance.GetComponentsInChildren<Collider>();
         }
 
         private void AddColliders()
@@ -234,16 +244,36 @@ namespace Reallusion.Import
             GameObject g;
             Transform[] objs = prefabInstance.GetComponentsInChildren<Transform>();
             Dictionary<Collider, string> colliderLookup = new Dictionary<Collider, string>();
-
+            Dictionary<Collider, Collider> existingLookup = new Dictionary<Collider, Collider>();
+            
+            // delegates
+            Func<string, Transform> FindBone = (boneName) => Array.Find(objs, o => o.name.Equals(boneName));
+            Func<string, Transform, Collider> FindColliderObj = (colliderName, bone) =>
+            {
+                for (int i = 0; i < bone.childCount; i++)
+                {
+                    Transform child = bone.GetChild(i);
+                    if (child.name == colliderName)
+                    {
+                        return child.GetComponent<Collider>();
+                    }
+                }
+                return null;
+            };
+            
             foreach (CollisionShapeData collider in boneColliders)
             {
+                string colliderName = collider.boneName + "_" + collider.name;
+                Transform bone = FindBone(collider.boneName);
+                Collider existingCollider = FindColliderObj(colliderName, bone);                
+
                 g = new GameObject();
                 g.transform.SetParent(parent.transform);
-                g.name = collider.boneName + "_" + collider.name;
-
+                g.name = colliderName;
+                
                 Transform t = g.transform;
                 t.position = collider.translation * modelScale;
-                t.rotation = collider.rotation;
+                t.rotation = collider.rotation;                
 
                 if (collider.colliderType.Equals(ColliderType.Capsule))
                 {
@@ -252,8 +282,9 @@ namespace Reallusion.Import
                     c.direction = (int)collider.colliderAxis;                    
                     float radius = (collider.radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
                     c.radius = radius;
-                    c.height = collider.length * modelScale + radius * 2f;
+                    c.height = collider.length * modelScale + radius * 2f;                    
                     colliderLookup.Add(c, collider.boneName);
+                    if (existingCollider) existingLookup.Add(c, existingCollider);
                 }
                 else
                 {
@@ -284,6 +315,7 @@ namespace Reallusion.Import
                     c.radius = (radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
                     c.height = height * modelScale;
                     colliderLookup.Add(c, collider.boneName);
+                    if (existingCollider) existingLookup.Add(c, existingCollider);
                 }                
             }
             parent.transform.Rotate(Vector3.left, 90);
@@ -291,24 +323,81 @@ namespace Reallusion.Import
 
             List<Collider> listColliders = new List<Collider>(colliderLookup.Count);
 
+            // revert all existing prefabs overrides...
+            foreach (KeyValuePair<Collider, Collider> collPair in existingLookup)
+            {
+                PrefabUtility.RevertObjectOverride(collPair.Value, InteractionMode.UserAction);
+            }
+
             foreach (KeyValuePair<Collider, string> collPair in colliderLookup)
             {
-                for (int i = 0; i < objs.Length; i++)
+                Collider transformedCollider = collPair.Key;
+                string colliderBone = collPair.Value;
+
+                Transform bone = FindBone(colliderBone);
+                if (bone)
                 {
-                    if (collPair.Value.Equals(objs[i].name))
+                    if (existingLookup.TryGetValue(transformedCollider, out Collider existingCollider))
                     {
-                        collPair.Key.transform.SetParent(objs[i].transform, true);
-                        listColliders.Add(collPair.Key);
+                        // reparent with keep position
+                        transformedCollider.transform.SetParent(bone, true);
+                        // copy the transformed collider to the existing if they match
+                        CopyCollider(transformedCollider, existingCollider);
+                        // delete the transformed collider
+                        GameObject.DestroyImmediate(transformedCollider.gameObject);
+                        // add to list of colliders
+                        listColliders.Add(existingCollider);
+                    }
+                    else
+                    {
+                        // reparent with keep position
+                        transformedCollider.transform.SetParent(bone, true);
+                        // add to list of colliders
+                        listColliders.Add(transformedCollider);
                     }
                 }
             }
-
+            
             // add collider manager to prefab root
             ColliderManager colliderManager = prefabInstance.GetComponent<ColliderManager>();
             if (colliderManager == null) colliderManager = prefabInstance.AddComponent<ColliderManager>();
 
             // add colliders to manager
             if (colliderManager) colliderManager.AddColliders(listColliders);
+
+            GameObject.DestroyImmediate(parent);
+        }
+
+        private bool CopyCollider(Collider from, Collider to)
+        {
+            if (from.GetType() != to.GetType()) return false;
+
+            if (from.GetType() == typeof(CapsuleCollider))
+            {
+                CapsuleCollider ccFrom = (CapsuleCollider)from;
+                CapsuleCollider ccTo = (CapsuleCollider)to;                
+                ccTo.direction = ccFrom.direction;
+                ccTo.radius = ccFrom.radius;
+                ccTo.height = ccFrom.height;
+                ccTo.center = ccFrom.center;
+                ccTo.transform.SetPositionAndRotation(ccFrom.transform.position, ccFrom.transform.rotation);
+                ccTo.transform.localScale = ccFrom.transform.localScale;
+                ccTo.enabled = ccFrom.enabled;                
+                return true;
+            }
+            else if (from.GetType() == typeof(SphereCollider))
+            {
+                SphereCollider ccFrom = (SphereCollider)from;
+                SphereCollider ccTo = (SphereCollider)to;                
+                ccTo.radius = ccFrom.radius;
+                ccTo.center = ccFrom.center;
+                ccTo.transform.SetPositionAndRotation(ccFrom.transform.position, ccFrom.transform.rotation);
+                ccTo.transform.localScale = ccFrom.transform.localScale;
+                ccTo.enabled = ccFrom.enabled;                
+                return true;
+            }
+
+            return false;
         }
 
         private void AddCloth()
@@ -576,9 +665,27 @@ namespace Reallusion.Import
 
             AssetDatabase.WriteImportSettingsIfDirty(path);
         }        
-
         
+        public static void RebuildPhysics(CharacterInfo characterInfo)
+        {
+            GameObject prefabAsset = characterInfo.PrefabAsset;
 
-        
+            if (prefabAsset)
+            {
+                GameObject prefabInstance = (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset);
+                QuickJSON jsonPhysics = characterInfo.PhysicsJsonData;
+
+                if (prefabAsset && prefabInstance && jsonPhysics != null)
+                {
+                    characterInfo.ShaderFlags |= CharacterInfo.ShaderFeatureFlags.ClothPhysics;
+
+                    Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance, jsonPhysics);
+                    physics.AddPhysics();
+                    characterInfo.Write();
+                }
+
+                if (prefabInstance) GameObject.DestroyImmediate(prefabInstance);
+            }
+        }
     }
 }

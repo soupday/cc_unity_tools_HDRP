@@ -161,11 +161,9 @@ namespace Reallusion.Import
                 Util.LogError("Unable to find Json mesh data: " + jsonPath);
 
             jsonPath = characterName + "/Object/" + characterName + "/Physics";
-            jsonPhysicsData = null;
-            if (jsonData.PathExists(jsonPath))
-                jsonPhysicsData = jsonData.GetObjectAtPath(jsonPath);
-            else
-                Util.LogWarn("Unable to find Json physics data: " + jsonPath);
+            jsonPhysicsData = info.PhysicsJsonData;
+            if (jsonPhysicsData == null)
+                Util.LogWarn("Unable to find Json physics data!");
 
             string jsonVersion = jsonData?.GetStringValue(characterName + "/Version");
             if (!string.IsNullOrEmpty(jsonVersion))

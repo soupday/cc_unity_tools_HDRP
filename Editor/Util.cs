@@ -717,13 +717,15 @@ namespace Reallusion.Import
             return clips.ToArray();
         }
         
-        public static GameObject FindCharacterPrefabAsset(GameObject fbxAsset)
+        public static GameObject FindCharacterPrefabAsset(GameObject fbxAsset, bool baked = false)
         { 
             string path = AssetDatabase.GetAssetPath(fbxAsset);
             if (path.iEndsWith(".prefab")) return fbxAsset;
             string folder = Path.GetDirectoryName(path);
             string name = Path.GetFileNameWithoutExtension(path);
-            string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + ".prefab");
+            string searchName = name;
+            if (baked) searchName = name + "_Baked";
+            string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
             if (File.Exists(prefabPath))
                 return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             return null;
