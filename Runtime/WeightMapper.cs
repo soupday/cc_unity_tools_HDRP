@@ -132,6 +132,7 @@ namespace Reallusion.Import
                         if (cc.name.Contains("_Upperarm_")) include = true;
                     }
                     if (cc.name.Contains("_Forearm_")) include = true;
+                    if (cc.name.Contains("_Hand_")) include = true;
                     if (include)
                     {
                         detectedColliders.Add(cc);
@@ -187,8 +188,8 @@ namespace Reallusion.Import
                             if (uniqueVertices.TryGetValue(SpatialHash(vert), out int clothVert))
                             {                                
                                 Vector2 coord = uvs[vertIdx];
-                                x = Mathf.Max(0, Mathf.Min(w, Mathf.FloorToInt(coord.x * w)));
-                                y = Mathf.Max(0, Mathf.Min(h, Mathf.FloorToInt(coord.y * h)));
+                                x = Mathf.Max(0, Mathf.Min(w - 1, Mathf.FloorToInt(coord.x * w)));
+                                y = Mathf.Max(0, Mathf.Min(h - 1, Mathf.FloorToInt(coord.y * h)));
                                 Color32 sample = pixels[x + y * w];
                                 float weight = (Mathf.Pow(sample.g / 255f, data.weightMapPower) + data.weightMapOffset) * data.weightMapScale;
                                 float maxDistance = data.maxDistance * weight * modelScale;

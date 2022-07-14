@@ -14,7 +14,7 @@ namespace Reallusion.Import
         [Serializable]
         public class ColliderSettings
         {
-            public string name;
+            public string name;            
             [Space(8)]
             public Collider collider;
             [Range(-0.5f, 0.5f)]
@@ -54,6 +54,18 @@ namespace Reallusion.Import
                     radius = Vector3.Dot(bc.size, Vector3.one) / 3f;
                     position = bc.center;
                 }
+                else if (collider.GetType() == typeof(SphereCollider))
+                {
+                    SphereCollider sc = (SphereCollider)collider;
+                    radius = sc.radius;
+                    position = sc.center;
+                }
+
+                radiusAdjust = 0f;
+                heightAdjust = 0f;
+                xAdjust = 0f;
+                yAdjust = 0f;
+                zAdjust = 0f;
             }
 
             public void MirrorX(ColliderSettings cs)
@@ -130,7 +142,37 @@ namespace Reallusion.Import
 
         public void RefreshData()
         {
+            Collider[] allColliders = gameObject.GetComponentsInChildren<Collider>();
+            List<Collider> foundColliders = new List<Collider>();
+            foreach (Collider c in allColliders)
+            {
+                if (c.GetType() == typeof(SphereCollider) ||
+                    c.GetType() == typeof(CapsuleCollider))
+                {
+                    foundColliders.Add(c);
+                }
+            }
 
+            List<ColliderSettings> foundColliderSettings = new List<ColliderSettings>();
+            foreach (Collider c in foundColliders)
+            {
+                foundColliderSettings.Add(new ColliderSettings(c));
+            }
+
+            SkinnedMeshRenderer[] renderers = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+            List<GameObject> foundClothMeshes = new List<GameObject>();
+            foreach (SkinnedMeshRenderer smr in renderers)
+            {
+                Cloth cloth = smr.gameObject.GetComponent<Cloth>();
+                if (cloth)
+                {
+                    foundClothMeshes.Add(smr.gameObject);
+                }
+            }
+
+            colliders = foundColliders.ToArray();
+            settings = foundColliderSettings.ToArray();
+            clothMeshes = foundClothMeshes.ToArray();            
         }
 #endif        
     }

@@ -12,7 +12,7 @@ namespace Reallusion.Import
 	{
 		private ColliderManager colliderManager;
 		private ColliderSettings currentCollider;
-		private bool symetrical = true;
+		private bool symmetrical = true;
 
 		const float LABEL_WIDTH = 80f;
 		const float GUTTER = 40f;
@@ -21,14 +21,33 @@ namespace Reallusion.Import
 		private void OnEnable()
 		{
 			colliderManager = (ColliderManager)target;
+			InitCurrentCollider();
+		}
+
+		private void InitCurrentCollider(string name = null)
+        {
+            currentCollider = null;
+
 			if (colliderManager.settings.Length > 0)
-				currentCollider = colliderManager.settings[0];
-			else
-				currentCollider = null;
+            {
+                if (!string.IsNullOrEmpty(name))
+				{
+					foreach (ColliderSettings cs in colliderManager.settings)
+					{
+						if (cs.name == name)
+						{
+							currentCollider = cs;
+							return;
+						}
+					}					
+				}
+
+				currentCollider = colliderManager.settings[0];				
+			}			
 		}
 
 		public override void OnInspectorGUI()
-		{
+		{						
 			base.OnInspectorGUI();
 
 			OnColliderInspectorGUI();
@@ -38,7 +57,7 @@ namespace Reallusion.Import
 		{
 			if (currentCollider == null) return;
 
-			Color background = GUI.backgroundColor;
+			Color background = GUI.backgroundColor;			
 
 			GUILayout.Space(10f);
 
@@ -77,11 +96,14 @@ namespace Reallusion.Import
 			currentCollider.radiusAdjust = EditorGUILayout.Slider(currentCollider.radiusAdjust, -0.1f, 0.1f);
 			GUILayout.EndHorizontal();
 
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(GUTTER);
-			GUILayout.Label("Height", GUILayout.Width(LABEL_WIDTH));
-			currentCollider.heightAdjust = EditorGUILayout.Slider(currentCollider.heightAdjust, -0.1f, 0.1f);
-			GUILayout.EndHorizontal();
+			if (currentCollider.collider.GetType() == typeof(CapsuleCollider))
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Space(GUTTER);
+				GUILayout.Label("Height", GUILayout.Width(LABEL_WIDTH));
+				currentCollider.heightAdjust = EditorGUILayout.Slider(currentCollider.heightAdjust, -0.1f, 0.1f);
+				GUILayout.EndHorizontal();
+			}
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
@@ -104,7 +126,7 @@ namespace Reallusion.Import
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
 			GUILayout.Label("Symetrical", GUILayout.Width(LABEL_WIDTH));
-			symetrical = EditorGUILayout.Toggle(symetrical);
+			symmetrical = EditorGUILayout.Toggle(symmetrical);
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
@@ -113,7 +135,13 @@ namespace Reallusion.Import
 			if (GUILayout.Button("Reset", GUILayout.Width(80f)))
 			{
 				currentCollider.Reset();
-				if (symetrical) UpdateSymetrical();
+				if (symmetrical) UpdateSymmetrical(SymmetricalUpdateType.Reset);
+			}
+			GUILayout.Space(10f);
+			if (GUILayout.Button("Set", GUILayout.Width(80f)))
+			{
+				currentCollider.FetchSettings();
+				if (symmetrical) UpdateSymmetrical(SymmetricalUpdateType.Fetch);
 			}
 			GUILayout.Space(10f);
 			if (GUILayout.Button("Select", GUILayout.Width(80f)))
@@ -122,47 +150,65 @@ namespace Reallusion.Import
             }
 			GUILayout.EndHorizontal();
 
-
 			if (EditorGUI.EndChangeCheck())
 			{
 				currentCollider.Update();
-				if (symetrical) UpdateSymetrical();
+				if (symmetrical) UpdateSymmetrical(SymmetricalUpdateType.Update);
 			}
 
 			GUILayout.EndVertical();
 
 			GUILayout.Space(10f);
+
+			EditorGUILayout.HelpBox("If changing the colliders directly, use the Refresh button to update to the new Collider settings.", MessageType.Info, true);
+
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-
-			if (!EditorApplication.isPlaying)
+			if (GUILayout.Button("Refresh", GUILayout.Width(BUTTON_WIDTH)))
 			{
-				GUI.backgroundColor = Color.Lerp(background, Color.cyan, 0.25f);
-				if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
-				{
-					UpdatePrefab(colliderManager);
-				}
-				EditorGUI.BeginDisabledGroup(!PhysicsSettingsStore.TryFindSettingsObject(out string foundSettingsGuid));
-				GUI.backgroundColor = Color.Lerp(background, Color.yellow, 0.25f);
-				if (GUILayout.Button("Recall Settings", GUILayout.Width(BUTTON_WIDTH)))
-				{
-					PhysicsSettingsStore.RecallColliderSettings(colliderManager);
-				}
-				GUI.backgroundColor = background;
-				EditorGUI.EndDisabledGroup();
+				string currentName = currentCollider.name;
+				colliderManager.RefreshData();
+				InitCurrentCollider(currentName);
 			}
-			else
-			{
-				GUI.backgroundColor = Color.Lerp(background, Color.red, 0.25f);
-				if (GUILayout.Button("Save Settings", GUILayout.Width(BUTTON_WIDTH)))
-				{
-					PhysicsSettingsStore.SaveColliderSettings(colliderManager);
-				}
-				GUI.backgroundColor = background;
-			}
-
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
+
+			GUILayout.Space(10f);
+
+			EditorGUILayout.HelpBox("Settings can be saved in play mode and reloaded after play mode ends.", MessageType.Info, true);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			GUI.backgroundColor = Color.Lerp(background, Color.red, 0.25f);
+			if (GUILayout.Button("Save Settings", GUILayout.Width(BUTTON_WIDTH)))
+			{
+				PhysicsSettingsStore.SaveColliderSettings(colliderManager);
+			}
+			GUI.backgroundColor = background;
+			GUILayout.Space(10f);
+			EditorGUI.BeginDisabledGroup(!PhysicsSettingsStore.TryFindSettingsObject(out string foundSettingsGuid));
+			GUI.backgroundColor = Color.Lerp(background, Color.yellow, 0.25f);
+			if (GUILayout.Button("Recall Settings", GUILayout.Width(BUTTON_WIDTH)))
+			{
+				PhysicsSettingsStore.RecallColliderSettings(colliderManager);
+			}
+			GUI.backgroundColor = background;
+			EditorGUI.EndDisabledGroup();									
+			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();
+
+			GUILayout.Space(10f);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			GUI.backgroundColor = Color.Lerp(background, Color.cyan, 0.25f);
+			if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
+			{
+				UpdatePrefab(colliderManager);
+			}
+			GUI.backgroundColor = background;
+			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();			
 
 			GUILayout.Space(10f);
 
@@ -199,7 +245,7 @@ namespace Reallusion.Import
 				{
 					foreach (ColliderSettings cs in colliderManager.settings)
 					{
-						cs.Reset(true);
+						cs.Reset(true);						
 					}
 				}
 
@@ -208,7 +254,9 @@ namespace Reallusion.Import
 			}
 		}
 
-		private void UpdateSymetrical()
+		enum SymmetricalUpdateType { None, Update, Fetch, Reset }
+
+		private void UpdateSymmetrical(SymmetricalUpdateType type)
 		{
 			string name = currentCollider.name;
 
@@ -236,8 +284,19 @@ namespace Reallusion.Import
 				{
 					if (cs != currentCollider && cs.name.StartsWith(symName))
 					{
-						cs.MirrorX(currentCollider);
-						cs.Update();
+						if (type == SymmetricalUpdateType.Update)
+						{
+							cs.MirrorX(currentCollider);
+							cs.Update();
+						}
+						else if (type == SymmetricalUpdateType.Reset)
+						{
+							cs.Reset();
+						}
+						else if (type == SymmetricalUpdateType.Fetch)
+						{
+							cs.FetchSettings();
+						}
 					}
 				}
 			}
@@ -254,13 +313,24 @@ namespace Reallusion.Import
 				{
 					if (cs != currentCollider && cs.name.StartsWith(symName))
 					{
-						cs.MirrorZ(currentCollider);
-						cs.Update();
+						if (type == SymmetricalUpdateType.Update)
+						{
+							cs.MirrorZ(currentCollider);
+							cs.Update();
+						}
+						else if (type == SymmetricalUpdateType.Reset)
+						{
+							cs.Reset();
+						}
+						else if (type == SymmetricalUpdateType.Fetch)
+						{
+							cs.FetchSettings();
+						}
 					}
 				}
 			}
 
-		}
+		}		
 
 		private void SelectCurrentCollider(object sel)
 		{

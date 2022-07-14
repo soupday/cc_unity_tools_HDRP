@@ -188,7 +188,6 @@ namespace Reallusion.Import
 
 			bool match = true;
 			savedIndex = savedClothSettings.FindIndex(s => s.name.Equals(workingSetting.name));
-			Debug.Log("savedIndex " + savedIndex);
 			if (savedIndex == -1)
 				match = false;
 

@@ -27,7 +27,7 @@ namespace Reallusion.Import
 		}
 
 		public override void OnInspectorGUI()
-		{
+		{ 
 			// Draw default inspector after button...
 			base.OnInspectorGUI();
 
@@ -40,6 +40,8 @@ namespace Reallusion.Import
 
 			GUILayout.Space(10f);
 
+			EditorGUILayout.HelpBox("Recalculate all the cloth constraints from the weight maps and cloth settings. Can be done in play mode.", MessageType.Info, true);			
+
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
 			GUI.backgroundColor = Color.Lerp(background, Color.white, 0.25f);
@@ -49,26 +51,29 @@ namespace Reallusion.Import
 			}
 			GUI.backgroundColor = background;
 			GUILayout.FlexibleSpace();
-			if (!EditorApplication.isPlaying)
+			GUILayout.EndHorizontal();
+
+			GUILayout.Space(10f);
+
+			EditorGUILayout.HelpBox("Settings can be saved in play mode and reloaded after play mode ends.", MessageType.Info, true);			
+
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			GUI.backgroundColor = Color.Lerp(background, Color.red, 0.25f);
+			if (GUILayout.Button("Save Settings", GUILayout.Width(BUTTON_WIDTH)))
 			{
-				EditorGUI.BeginDisabledGroup(!PhysicsSettingsStore.TryFindSettingsObject(out string foundSettingsGuid));
-				GUI.backgroundColor = Color.Lerp(background, Color.yellow, 0.25f);
-				if (GUILayout.Button("Recall Settings", GUILayout.Width(BUTTON_WIDTH)))
-				{
-					PhysicsSettingsStore.RecallClothSettings(weightMapper);
-				}
-				GUI.backgroundColor = background;
-				EditorGUI.EndDisabledGroup();
+				PhysicsSettingsStore.SaveClothSettings(weightMapper);
 			}
-			else
+			GUI.backgroundColor = background;
+			GUILayout.Space(10f);
+			EditorGUI.BeginDisabledGroup(!PhysicsSettingsStore.TryFindSettingsObject(out string foundSettingsGuid));
+			GUI.backgroundColor = Color.Lerp(background, Color.yellow, 0.25f);
+			if (GUILayout.Button("Recall Settings", GUILayout.Width(BUTTON_WIDTH)))
 			{
-				GUI.backgroundColor = Color.Lerp(background, Color.red, 0.25f);
-				if (GUILayout.Button("Save Settings", GUILayout.Width(BUTTON_WIDTH)))
-				{
-					PhysicsSettingsStore.SaveClothSettings(weightMapper);
-				}
-				GUI.backgroundColor = background;
+				PhysicsSettingsStore.RecallClothSettings(weightMapper);
 			}
+			GUI.backgroundColor = background;
+			EditorGUI.EndDisabledGroup();			
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 
@@ -81,7 +86,7 @@ namespace Reallusion.Import
 			{
 				UpdatePrefab(weightMapper);
 			}
-			GUILayout.FlexibleSpace(); 
+			GUILayout.Space(10f);
 			GUI.backgroundColor = Color.Lerp(background, Color.green, 0.25f);
 			if (GUILayout.Button("Collider Manager", GUILayout.Width(BUTTON_WIDTH)))
 			{

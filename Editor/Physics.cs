@@ -257,9 +257,33 @@ namespace Reallusion.Import
                 }
                 else
                 {
-                    BoxCollider b = g.gameObject.AddComponent<BoxCollider>();
-                    b.size = collider.extent * modelScale;
-                    colliderLookup.Add(b, collider.boneName);
+                    //BoxCollider b = g.gameObject.AddComponent<BoxCollider>();
+                    //b.size = collider.extent * modelScale;
+                    //colliderLookup.Add(b, collider.boneName);
+
+                    CapsuleCollider c = g.AddComponent<CapsuleCollider>();
+                    c.direction = (int)collider.colliderAxis;
+                    float radius;
+                    float height;
+                    switch (collider.colliderAxis)
+                    {
+                        case ColliderAxis.X: 
+                            radius = (collider.extent.y + collider.extent.z) / 4f;
+                            height = collider.extent.x;
+                            break;                        
+                        case ColliderAxis.Z:
+                            radius = (collider.extent.x + collider.extent.y) / 4f;
+                            height = collider.extent.z;
+                            break;
+                        case ColliderAxis.Y:
+                        default:
+                            radius = (collider.extent.x + collider.extent.z) / 4f;
+                            height = collider.extent.y;
+                            break;
+                    }
+                    c.radius = (radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
+                    c.height = height * modelScale;
+                    colliderLookup.Add(c, collider.boneName);
                 }                
             }
             parent.transform.Rotate(Vector3.left, 90);
