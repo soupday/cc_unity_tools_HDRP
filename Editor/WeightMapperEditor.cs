@@ -47,7 +47,12 @@ namespace Reallusion.Import
 			GUI.backgroundColor = Color.Lerp(background, Color.white, 0.25f);
 			if (GUILayout.Button("Rebuild Constraints", GUILayout.Width(BUTTON_WIDTH)))
 			{
+				bool animationMode = AnimationMode.InAnimationMode();
+				if (animationMode) AnimationMode.StopAnimationMode();
+
 				weightMapper.ApplyWeightMap(false);
+
+				if (animationMode) AnimationMode.StartAnimationMode();
 			}
 			GUI.backgroundColor = background;
 			GUILayout.FlexibleSpace();

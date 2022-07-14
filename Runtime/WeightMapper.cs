@@ -65,10 +65,7 @@ namespace Reallusion.Import
         public bool includeAllLimbColliders = false;        
 
         public void ApplyWeightMap(bool useAllColliders = true)
-        {
-            bool animationMode = AnimationMode.InAnimationMode();
-            if (animationMode) AnimationMode.StopAnimationMode();
-
+        {            
             GameObject clothTarget = gameObject;
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
             if (!renderer) return;
@@ -204,11 +201,12 @@ namespace Reallusion.Import
 
                                 if (useDetectColliders && modelMax > data.softRigidMargin * modelScale)
                                 {
-                                    Vector3 world = transform.localToWorldMatrix * vert;                                    
+                                    Vector3 world = transform.localToWorldMatrix * vert;
+                                    
                                     for (int ci = 0; ci < colliders.Count; ci++)
                                     {
                                         Collider cc = colliders[ci];
-
+                                        
                                         if (cc.bounds.Contains(world))
                                         {                                            
                                             detectedColliders.Add(cc);
@@ -242,9 +240,7 @@ namespace Reallusion.Import
                     detectedCapsuleColliders.Add((CapsuleCollider)c);
                 }
             }
-            cloth.capsuleColliders = detectedCapsuleColliders.ToArray();
-
-            if (animationMode) AnimationMode.StartAnimationMode();
+            cloth.capsuleColliders = detectedCapsuleColliders.ToArray();            
         }        
 
         private static long SpatialHash(Vector3 v)

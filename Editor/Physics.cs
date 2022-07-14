@@ -228,9 +228,11 @@ namespace Reallusion.Import
             AddColliders();
             AddCloth();
 
-            return PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
+            prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
 
             if (animationMode) AnimationMode.StartAnimationMode();
+
+            return prefabAsset;
         }
 
         public void RemoveAllPhysics()
@@ -319,7 +321,10 @@ namespace Reallusion.Import
                 }                
             }
             parent.transform.Rotate(Vector3.left, 90);
-            parent.transform.localScale = new Vector3(-1f, 1f, 1f);
+            parent.transform.localScale = new Vector3(-1f, 1f, 1f);            
+
+            // as the transforms have moved, need to re-sync the transforms in the physics engine
+            UnityEngine.Physics.SyncTransforms(); 
 
             List<Collider> listColliders = new List<Collider>(colliderLookup.Count);
 
@@ -603,7 +608,7 @@ namespace Reallusion.Import
 
             mapper.settings = settingsList.ToArray();           
 
-            mapper.ApplyWeightMap();
+            mapper.ApplyWeightMap(false);
         }
 
         public void RemoveCloth(GameObject obj)
@@ -668,6 +673,9 @@ namespace Reallusion.Import
         
         public static GameObject RebuildPhysics(CharacterInfo characterInfo)
         {
+            bool animationMode = AnimationMode.InAnimationMode();
+            if (animationMode) AnimationMode.StopAnimationMode();
+
             GameObject prefabAsset = characterInfo.PrefabAsset;
 
             if (prefabAsset)
@@ -686,6 +694,8 @@ namespace Reallusion.Import
 
                 if (prefabInstance) GameObject.DestroyImmediate(prefabInstance);
             }
+
+            if (animationMode) AnimationMode.StartAnimationMode();
 
             return prefabAsset;
         }
