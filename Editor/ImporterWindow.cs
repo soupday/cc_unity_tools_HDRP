@@ -45,6 +45,7 @@ namespace Reallusion.Import
         private bool refreshAfterGUI;
         private bool buildAfterGUI;
         private bool bakeAfterGUI;
+        private bool physicsAfterGUI;
         public enum ImporterWindowMode { Build, Bake, Settings }
         private ImporterWindowMode windowMode = ImporterWindowMode.Build;
 
@@ -317,6 +318,7 @@ namespace Reallusion.Import
             refreshAfterGUI = false;
             buildAfterGUI = false;
             bakeAfterGUI = false;
+            physicsAfterGUI = false;
 
             CheckDragAndDrop();
 
@@ -360,6 +362,10 @@ namespace Reallusion.Import
             else if (bakeAfterGUI)
             {
                 BakeCharacter();
+            }
+            else if (physicsAfterGUI)
+            {
+                RebuildCharacterPhysics();
             }
         }
 
@@ -678,7 +684,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PhysicMaterial Icon").image, "Enables cloth physics and rebuilds the character physics."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                Physics.RebuildPhysics(contextCharacter);
+                physicsAfterGUI = true;
             }
             GUI.enabled = true;
 
@@ -1140,7 +1146,23 @@ namespace Reallusion.Import
             }            
 
             return WindowManager.IsPreviewScene;
-        }                
+        } 
+        
+        void RebuildCharacterPhysics()
+        {
+            GameObject prefabAsset = Physics.RebuildPhysics(contextCharacter);
+
+            if (prefabAsset)
+            {
+                if (UpdatePreviewCharacter(prefabAsset))
+                {
+                    if (WindowManager.showPlayer)
+                        WindowManager.ShowAnimationPlayer();
+                }
+            }
+
+            Repaint();
+        }
 
         public static void ResetAllSceneViewCamera()
         {

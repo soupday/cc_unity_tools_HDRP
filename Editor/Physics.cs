@@ -666,7 +666,7 @@ namespace Reallusion.Import
             AssetDatabase.WriteImportSettingsIfDirty(path);
         }        
         
-        public static void RebuildPhysics(CharacterInfo characterInfo)
+        public static GameObject RebuildPhysics(CharacterInfo characterInfo)
         {
             GameObject prefabAsset = characterInfo.PrefabAsset;
 
@@ -686,6 +686,8 @@ namespace Reallusion.Import
 
                 if (prefabInstance) GameObject.DestroyImmediate(prefabInstance);
             }
+
+            return prefabAsset;
         }
     }
 }
