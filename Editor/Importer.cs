@@ -289,7 +289,7 @@ namespace Reallusion.Import
             bool hairPhysics = (characterInfo.ShaderFlags & CharacterInfo.ShaderFeatureFlags.HairPhysics) > 0;
             if ((clothPhysics || hairPhysics) && jsonPhysicsData != null)
             {
-                Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance, jsonPhysicsData);
+                Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance);
                 prefabAsset = physics.AddPhysics();
             }
 

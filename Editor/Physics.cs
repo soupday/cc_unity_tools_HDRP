@@ -144,7 +144,7 @@ namespace Reallusion.Import
         private GameObject prefabInstance;
         private float modelScale = 0.01f;
         private bool addClothPhysics = false;
-        private bool addHairPhysics = false;
+        private bool addHairPhysics = false;        
 
         private List<CollisionShapeData> boneColliders;
         private List<SoftPhysicsData> softPhysics;
@@ -153,8 +153,10 @@ namespace Reallusion.Import
         private string characterName;
         private string fbxFolder;
         private List<string> textureFolders;
+        private QuickJSON jsonData;
+        private bool aPose;
 
-        public Physics(CharacterInfo info, GameObject prefabAsset, GameObject prefabInstance, QuickJSON physicsJson)
+        public Physics(CharacterInfo info, GameObject prefabAsset, GameObject prefabInstance)
         {
             this.prefabAsset = prefabAsset;
             this.prefabInstance = prefabInstance;
@@ -170,8 +172,12 @@ namespace Reallusion.Import
             string fbmFolder = Path.Combine(fbxFolder, characterName + ".fbm");
             string texFolder = Path.Combine(fbxFolder, "textures", characterName);
             textureFolders = new List<string>() { fbmFolder, texFolder };
+            if (info.CharacterJsonData.PathExists("Bind_Pose"))
+            {
+                if (info.CharacterJsonData.GetStringValue("Bind_Pose") == "APose") aPose = true;
+            }
 
-            ReadPhysicsJson(physicsJson);
+            ReadPhysicsJson(info.PhysicsJsonData);
         }
 
         private void ReadPhysicsJson(QuickJSON physicsJson)
@@ -244,12 +250,12 @@ namespace Reallusion.Import
         {
             GameObject parent = new GameObject();
             GameObject g;
-            Transform[] objs = prefabInstance.GetComponentsInChildren<Transform>();
+            Transform[] objects = prefabInstance.GetComponentsInChildren<Transform>();
             Dictionary<Collider, string> colliderLookup = new Dictionary<Collider, string>();
             Dictionary<Collider, Collider> existingLookup = new Dictionary<Collider, Collider>();
             
             // delegates
-            Func<string, Transform> FindBone = (boneName) => Array.Find(objs, o => o.name.Equals(boneName));
+            Func<string, Transform> FindBone = (boneName) => Array.Find(objects, o => o.name.Equals(boneName));
             Func<string, Transform, Collider> FindColliderObj = (colliderName, bone) =>
             {
                 for (int i = 0; i < bone.childCount; i++)
@@ -321,7 +327,9 @@ namespace Reallusion.Import
                 }                
             }
             parent.transform.Rotate(Vector3.left, 90);
-            parent.transform.localScale = new Vector3(-1f, 1f, 1f);            
+            parent.transform.localScale = new Vector3(-1f, 1f, 1f);
+
+            if (aPose) FixColliderAPose(objects, colliderLookup);
 
             // as the transforms have moved, need to re-sync the transforms in the physics engine
             UnityEngine.Physics.SyncTransforms(); 
@@ -680,14 +688,13 @@ namespace Reallusion.Import
 
             if (prefabAsset)
             {
-                GameObject prefabInstance = (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset);
-                QuickJSON jsonPhysics = characterInfo.PhysicsJsonData;
+                GameObject prefabInstance = (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset);                
 
-                if (prefabAsset && prefabInstance && jsonPhysics != null)
+                if (prefabAsset && prefabInstance && characterInfo.PhysicsJsonData != null)
                 {
                     characterInfo.ShaderFlags |= CharacterInfo.ShaderFeatureFlags.ClothPhysics;
 
-                    Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance, jsonPhysics);
+                    Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance);
                     physics.AddPhysics();
                     characterInfo.Write();
                 }
@@ -699,5 +706,35 @@ namespace Reallusion.Import
 
             return prefabAsset;
         }
+
+        void FixColliderAPose(Transform[] objects, Dictionary<Collider, string> colliderLookup)
+        {
+            Func<string, Transform> FindBone = (boneName) => Array.Find(objects, o => o.name.iEquals(boneName));            
+
+            Transform leftArm = FindBone("CC_Base_L_Upperarm");
+            if (!leftArm) leftArm = FindBone("L_Upperarm");
+
+            Transform rightArm = FindBone("CC_Base_R_Upperarm");
+            if (!leftArm) rightArm = FindBone("R_Upperarm");
+
+            foreach(KeyValuePair<Collider, string> pair in colliderLookup)
+            {
+                Collider c = pair.Key;
+                string boneName = pair.Value;
+                Transform bone = FindBone(boneName);
+                if (bone)
+                {
+                    if (bone == leftArm || bone.IsChildOf(leftArm))
+                    {
+                        c.transform.RotateAround(leftArm.position, Vector3.forward, -30f);
+                    }
+                    else if (bone == rightArm || bone.IsChildOf(rightArm))
+                    {
+                        c.transform.RotateAround(rightArm.position, Vector3.forward, 30f);
+                    }
+                }
+            }
+        }
+
     }
 }

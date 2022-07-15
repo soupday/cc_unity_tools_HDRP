@@ -218,6 +218,28 @@ namespace Reallusion.Import
             }
         }
 
+        public QuickJSON RootJsonData
+        {
+            get
+            {
+                string jsonPath = name;
+                if (JsonData.PathExists(jsonPath))
+                    return JsonData.GetObjectAtPath(jsonPath);
+                return null;
+            }
+        }
+
+        public QuickJSON CharacterJsonData
+        {
+            get
+            {
+                string jsonPath = name + "/Object/" + name;
+                if (JsonData.PathExists(jsonPath))
+                    return JsonData.GetObjectAtPath(jsonPath);
+                return null;
+            }
+        }
+
         public QuickJSON PhysicsJsonData
         {
             get
