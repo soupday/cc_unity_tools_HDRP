@@ -140,6 +140,21 @@ namespace Reallusion.Import
             }
         }
 
+        public static float PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Physics_Weight_Map_Collider_Detect_Threshold"))
+                    return EditorPrefs.GetFloat("RL_Physics_Weight_Map_Collider_Detect_Threshold");
+                return 0.5f;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Physics_Weight_Map_Collider_Detect_Threshold", value);
+            }
+        }
+
         private GameObject prefabAsset;        
         private GameObject prefabInstance;
         private float modelScale = 0.01f;
@@ -603,6 +618,7 @@ namespace Reallusion.Import
                             settings.selfMargin = data.selfMargin;
                             settings.maxDistance = 20f;
                             settings.maxPenetration = 10f;
+                            settings.colliderThreshold = PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD;
 
                             Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
                             if (!weightMap) weightMap = Texture2D.blackTexture;
@@ -616,7 +632,7 @@ namespace Reallusion.Import
 
             mapper.settings = settingsList.ToArray();           
 
-            mapper.ApplyWeightMap(false);
+            mapper.ApplyWeightMap();
         }
 
         public void RemoveCloth(GameObject obj)
@@ -680,10 +696,7 @@ namespace Reallusion.Import
         }        
         
         public static GameObject RebuildPhysics(CharacterInfo characterInfo)
-        {
-            bool animationMode = AnimationMode.InAnimationMode();
-            if (animationMode) AnimationMode.StopAnimationMode();
-
+        {            
             GameObject prefabAsset = characterInfo.PrefabAsset;
 
             if (prefabAsset)
@@ -701,8 +714,6 @@ namespace Reallusion.Import
 
                 if (prefabInstance) GameObject.DestroyImmediate(prefabInstance);
             }
-
-            if (animationMode) AnimationMode.StartAnimationMode();
 
             return prefabAsset;
         }

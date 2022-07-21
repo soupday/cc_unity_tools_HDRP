@@ -884,11 +884,20 @@ namespace Reallusion.Import
 
 
             GUILayout.Space(10f);
-            GUILayout.Label("Physics Collider Shrink (cm)");
+            GUILayout.Label("Physics Collider Shrink");
             GUILayout.Space(ROW_SPACE);
             GUILayout.BeginHorizontal();            
-            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = GUILayout.HorizontalSlider(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS, -2f, 2f);
+            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = GUILayout.HorizontalSlider(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS, -2, 2f);
             GUILayout.Label(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS.ToString(), GUILayout.Width(30f));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(ROW_SPACE);
+
+            GUILayout.Space(10f);
+            GUILayout.Label("Physics Collider Detection Threshold");
+            GUILayout.Space(ROW_SPACE);
+            GUILayout.BeginHorizontal();
+            Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = GUILayout.HorizontalSlider(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD, 0f, 1f);
+            GUILayout.Label(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD.ToString(), GUILayout.Width(30f));
             GUILayout.EndHorizontal();
             GUILayout.Space(ROW_SPACE);
             GUILayout.Space(10f);
@@ -1150,6 +1159,10 @@ namespace Reallusion.Import
         
         void RebuildCharacterPhysics()
         {
+            WindowManager.HideAnimationPlayer(true);
+            WindowManager.HideAnimationRetargeter(true);            
+            if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+
             GameObject prefabAsset = Physics.RebuildPhysics(contextCharacter);
 
             if (prefabAsset)

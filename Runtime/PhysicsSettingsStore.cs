@@ -147,7 +147,7 @@ namespace Reallusion.Import
 							}
 						}
 
-						weightMapper.ApplyWeightMap(false);
+						weightMapper.ApplyWeightMap();
 
 						return savedFile;
 					}

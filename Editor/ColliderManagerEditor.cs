@@ -201,11 +201,13 @@ namespace Reallusion.Import
 
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
+			if (Application.isPlaying) GUI.enabled = false;
 			GUI.backgroundColor = Color.Lerp(background, Color.cyan, 0.25f);
 			if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
 			{
 				UpdatePrefab(colliderManager);
 			}
+			GUI.enabled = true;
 			GUI.backgroundColor = background;
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();			
@@ -236,6 +238,10 @@ namespace Reallusion.Import
 
 		public void UpdatePrefab(Object component)
 		{
+			WindowManager.HideAnimationPlayer(true);
+			WindowManager.HideAnimationRetargeter(true);
+			if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+
 			GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(component);			
 			if (prefabRoot)
 			{									

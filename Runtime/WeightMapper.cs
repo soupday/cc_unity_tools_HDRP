@@ -57,14 +57,18 @@ namespace Reallusion.Import
             [Range(1f, 500f)]
             public float solverFrequency;
             [Range(1f, 50f)]
-            public float stiffnessFrequency;            
+            public float stiffnessFrequency;
+            [Space(8)]
+            [Range(0f, 1f)]            
+            public float colliderThreshold;            
         }                
 
         public PhysicsSettings[] settings;
+        public bool updateColliders = true;
         public bool optimizeColliders = true;
         public bool includeAllLimbColliders = false;        
 
-        public void ApplyWeightMap(bool useAllColliders = true)
+        public void ApplyWeightMap()
         {            
             GameObject clothTarget = gameObject;
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
@@ -109,39 +113,10 @@ namespace Reallusion.Import
             AssetDatabase.Refresh();
 
             List<Collider> colliders = new List<Collider>();
-            List<Collider> detectedColliders;
+            List<Collider> detectedColliders = new List<Collider>(colliders.Count);
             ColliderManager colliderManager = gameObject.GetComponentInParent<ColliderManager>();                        
             if (colliderManager) colliders.AddRange(colliderManager.colliders);
-            else colliders.AddRange(gameObject.transform.parent.GetComponentsInChildren<Collider>());
-            bool useDetectColliders = !useAllColliders && optimizeColliders;            
-            
-            if (useDetectColliders)
-            {                
-                detectedColliders = new List<Collider>(colliders.Count);
-                for (int ci = 0; ci < colliders.Count; ci++)
-                {
-                    Collider cc = colliders[ci];
-                    bool include = false;
-                    if (includeAllLimbColliders)
-                    {
-                        if (cc.name.Contains("_Thigh_")) include = true;
-                        if (cc.name.Contains("_Calf_")) include = true;
-                        if (cc.name.Contains("_Upperarm_")) include = true;
-                    }
-                    if (cc.name.Contains("_Forearm_")) include = true;
-                    if (cc.name.Contains("_Hand_")) include = true;
-                    if (include)
-                    {
-                        detectedColliders.Add(cc);
-                        colliders.Remove(cc);
-                        ci--;
-                    }
-                }
-            }
-            else
-            {
-                detectedColliders = colliders;
-            }
+            else colliders.AddRange(gameObject.transform.parent.GetComponentsInChildren<Collider>());            
 
             // apply weight maps to cloth coefficients and cloth settings
             for (int i = 0; i < mesh.subMeshCount; i++)//
@@ -169,6 +144,42 @@ namespace Reallusion.Import
                         cloth.selfCollisionDistance = data.selfMargin * modelScale;
                         cloth.selfCollisionStiffness = 1f;
 
+                        bool doColliders = updateColliders && data.softRigidCollision;
+
+                        if (doColliders)
+                        {
+                            if (optimizeColliders)
+                            {
+                                for (int ci = 0; ci < colliders.Count; ci++)
+                                {
+                                    Collider cc = colliders[ci];
+                                    bool include = false;
+                                    if (includeAllLimbColliders)
+                                    {
+                                        if (cc.name.Contains("_Thigh_")) include = true;
+                                        if (cc.name.Contains("_Calf_")) include = true;
+                                        if (cc.name.Contains("_Upperarm_")) include = true;
+                                    }
+                                    if (cc.name.Contains("_Forearm_")) include = true;
+                                    if (cc.name.Contains("_Hand_")) include = true;
+                                    if (include && !detectedColliders.Contains(cc))
+                                    {
+                                        detectedColliders.Add(cc);
+                                        colliders.Remove(cc);
+                                        ci--;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (Collider cc in colliders)
+                                {
+                                    if (!detectedColliders.Contains(cc)) detectedColliders.Add(cc);
+                                }
+                                colliders.Clear();
+                            }
+                        }
+
                         Texture2D weightMap = data.weightMap;
                         if (!weightMap) weightMap = Texture2D.blackTexture;
                         Color32[] pixels = weightMap.GetPixels32(0);
@@ -188,7 +199,7 @@ namespace Reallusion.Import
                                 x = Mathf.Max(0, Mathf.Min(w - 1, Mathf.FloorToInt(coord.x * w)));
                                 y = Mathf.Max(0, Mathf.Min(h - 1, Mathf.FloorToInt(coord.y * h)));
                                 Color32 sample = pixels[x + y * w];
-                                float weight = (Mathf.Pow(sample.g / 255f, data.weightMapPower) + data.weightMapOffset) * data.weightMapScale;
+                                float weight = Mathf.Clamp01((Mathf.Pow(sample.g / 255f, data.weightMapPower) + data.weightMapOffset)) * data.weightMapScale;
                                 float maxDistance = data.maxDistance * weight * modelScale;
                                 float maxPenetration = data.maxPenetration * weight * modelScale;
                                 float modelMax = Mathf.Max(maxDistance, maxPenetration);
@@ -199,7 +210,9 @@ namespace Reallusion.Import
                                     coefficients[clothVert].collisionSphereDistance = maxPenetration;
                                 }
 
-                                if (useDetectColliders && modelMax > data.softRigidMargin * modelScale)
+                                if (doColliders && optimizeColliders &&
+                                    weight >= data.colliderThreshold &&
+                                    modelMax > data.softRigidMargin * modelScale)
                                 {
                                     Vector3 world = transform.localToWorldMatrix * vert;
                                     
@@ -224,7 +237,6 @@ namespace Reallusion.Import
                             }
                         }
                     }
-
                 }
             }            
 
@@ -232,15 +244,18 @@ namespace Reallusion.Import
             cloth.coefficients = coefficients;
 
             // set colliders
-            List<CapsuleCollider> detectedCapsuleColliders = new List<CapsuleCollider>();
-            foreach (Collider c in detectedColliders)
+            if (updateColliders)
             {
-                if (c.GetType() == typeof(CapsuleCollider))
+                List<CapsuleCollider> detectedCapsuleColliders = new List<CapsuleCollider>();
+                foreach (Collider c in detectedColliders)
                 {
-                    detectedCapsuleColliders.Add((CapsuleCollider)c);
+                    if (c.GetType() == typeof(CapsuleCollider))
+                    {
+                        detectedCapsuleColliders.Add((CapsuleCollider)c);
+                    }
                 }
+                cloth.capsuleColliders = detectedCapsuleColliders.ToArray();
             }
-            cloth.capsuleColliders = detectedCapsuleColliders.ToArray();            
         }        
 
         private static long SpatialHash(Vector3 v)

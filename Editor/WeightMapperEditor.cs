@@ -50,7 +50,7 @@ namespace Reallusion.Import
 				bool animationMode = AnimationMode.InAnimationMode();
 				if (animationMode) AnimationMode.StopAnimationMode();
 
-				weightMapper.ApplyWeightMap(false);
+				weightMapper.ApplyWeightMap();
 
 				if (animationMode) AnimationMode.StartAnimationMode();
 			}
@@ -86,11 +86,13 @@ namespace Reallusion.Import
 
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
+			if (Application.isPlaying) GUI.enabled = false;
 			GUI.backgroundColor = Color.Lerp(background, Color.cyan, 0.25f);
 			if (GUILayout.Button("Apply to Prefab", GUILayout.Width(BUTTON_WIDTH)))
 			{
 				UpdatePrefab(weightMapper);
 			}
+			GUI.enabled = true;
 			GUILayout.Space(10f);
 			GUI.backgroundColor = Color.Lerp(background, Color.green, 0.25f);
 			if (GUILayout.Button("Collider Manager", GUILayout.Width(BUTTON_WIDTH)))
@@ -104,6 +106,10 @@ namespace Reallusion.Import
 
 		public void UpdatePrefab(Object component)
 		{
+			WindowManager.HideAnimationPlayer(true);
+			WindowManager.HideAnimationRetargeter(true);
+			if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+
 			GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(component);
 			if (prefabRoot)
 			{
