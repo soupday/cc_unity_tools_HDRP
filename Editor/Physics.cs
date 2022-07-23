@@ -94,12 +94,19 @@ namespace Reallusion.Import
             public float softRigidMargin;
             public bool selfCollision;
             public float selfMargin;
-            public float stiffnessFrequency;
+            public float stiffnessFrequency;            
+            public bool isHair;
 
-            public SoftPhysicsData(string mesh, string material, QuickJSON softPhysicsJson)
+            public SoftPhysicsData(string mesh, string material, QuickJSON softPhysicsJson, QuickJSON characterJson)
             {
                 meshName = mesh;
                 materialName = material;
+                isHair = false;
+                QuickJSON objectMaterialJson = characterJson.GetObjectAtPath("Meshes/" + mesh + "/Materials/" + material);
+                if (objectMaterialJson != null && 
+                    objectMaterialJson.PathExists("Custom Shader/Shader Name") &&
+                    objectMaterialJson.GetStringValue("Custom Shader/Shader Name") == "RLHair")
+                    isHair = true;
 
                 if (softPhysicsJson != null)
                 {
@@ -182,6 +189,7 @@ namespace Reallusion.Import
             fbxFolder = info.folder;
             characterName = info.name;
             fbxFolder = info.folder;
+            jsonData = info.JsonData;
             addClothPhysics = (info.ShaderFlags & CharacterInfo.ShaderFeatureFlags.ClothPhysics) > 0;
             addHairPhysics = (info.ShaderFlags & CharacterInfo.ShaderFeatureFlags.HairPhysics) > 0;
             string fbmFolder = Path.Combine(fbxFolder, characterName + ".fbm");
@@ -192,10 +200,10 @@ namespace Reallusion.Import
                 if (info.CharacterJsonData.GetStringValue("Bind_Pose") == "APose") aPose = true;
             }
 
-            ReadPhysicsJson(info.PhysicsJsonData);
+            ReadPhysicsJson(info.PhysicsJsonData, info.CharacterJsonData);
         }
 
-        private void ReadPhysicsJson(QuickJSON physicsJson)
+        private void ReadPhysicsJson(QuickJSON physicsJson, QuickJSON characterJson)
         {
             QuickJSON shapesJson = physicsJson.GetObjectAtPath("Collision Shapes");
             QuickJSON softPhysicsJson = physicsJson.GetObjectAtPath("Soft Physics/Meshes");            
@@ -226,15 +234,15 @@ namespace Reallusion.Import
 
                 foreach (MultiValue meshJson in softPhysicsJson.values)
                 {
-                    string meshName = meshJson.Key;
-                    QuickJSON materialsJson = meshJson.ObjectValue.GetObjectAtPath("Materials");
-                    if (materialsJson != null)
+                    string meshName = meshJson.Key;                    
+                    QuickJSON physicsMaterialsJson = meshJson.ObjectValue.GetObjectAtPath("Materials");
+                    if (physicsMaterialsJson != null)
                     {
-                        foreach (MultiValue matJson in materialsJson.values)
+                        foreach (MultiValue matJson in physicsMaterialsJson.values)
                         {
-                            string materialName = matJson.Key;
+                            string materialName = matJson.Key;                            
                             if (matJson.ObjectValue != null)
-                                softPhysics.Add(new SoftPhysicsData(meshName, materialName, matJson.ObjectValue));
+                                softPhysics.Add(new SoftPhysicsData(meshName, materialName, matJson.ObjectValue, characterJson));
                         }
                     }
                 }
@@ -464,30 +472,13 @@ namespace Reallusion.Import
             {
                 colliderManager.clothMeshes = clothMeshes.ToArray();
             }
-        }
+        }        
 
-        private bool MaterialIsHair(Material mat)
+        private bool CanAddPhysics(SoftPhysicsData data)
         {
-            bool isHair = false;
-
-            if (mat)
-            {                
-                if (mat.shader.name.iContains(Pipeline.SHADER_DEFAULT_HAIR) ||
-                    mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR) ||
-                    mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS) ||
-                    mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR_2ND_PASS) ||
-                    mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
-                    isHair = true;
-            }
-
-            return isHair;
-        }
-
-        private bool CanAddPhysics(Material mat)
-        {
-            if (mat)
+            if (data != null)
             {
-                if (MaterialIsHair(mat))
+                if (data.isHair)
                 {
                     if (addHairPhysics) return true;
                 }
@@ -510,21 +501,7 @@ namespace Reallusion.Import
             {
                 return addClothPhysics;
             }
-        }
-
-        private bool HasHairMaterials(GameObject obj)
-        {
-            SkinnedMeshRenderer renderer = obj.GetComponent<SkinnedMeshRenderer>();
-            if (renderer)
-            {
-                foreach (Material mat in renderer.sharedMaterials)
-                {
-                    if (MaterialIsHair(mat)) return true;
-                }
-            }
-
-            return false;
-        }
+        }        
 
         private List<string> FindHairMeshes()
         {
@@ -543,7 +520,7 @@ namespace Reallusion.Import
 
                     if (meshName == data.meshName)
                     {
-                        if (HasHairMaterials(obj) && !hairMeshNames.Contains(meshName)) 
+                        if (data.isHair && !hairMeshNames.Contains(meshName)) 
                             hairMeshNames.Add(meshName);
                     }
                 }
@@ -570,62 +547,61 @@ namespace Reallusion.Import
 
             WeightMapper mapper = clothTarget.GetComponent<WeightMapper>();
             if (!mapper) mapper = clothTarget.AddComponent<WeightMapper>();
-            List<WeightMapper.PhysicsSettings> settingsList = new List<WeightMapper.PhysicsSettings>();            
+            List<WeightMapper.PhysicsSettings> settingsList = new List<WeightMapper.PhysicsSettings>();
 
             for (int i = 0; i < mesh.subMeshCount; i++)//
             {
                 Material mat = renderer.sharedMaterials[i];
-                if (CanAddPhysics(mat))
+                string sourceName = mat.name;
+                if (sourceName.iContains("_2nd_Pass")) continue;
+                if (sourceName.iContains("_1st_Pass"))
                 {
-                    string sourceName = mat.name;
-                    if (sourceName.iContains("_2nd_Pass")) continue;
-                    if (sourceName.iContains("_1st_Pass"))
-                    {
-                        sourceName = sourceName.Remove(sourceName.IndexOf("_1st_Pass"));
-                    }
+                    sourceName = sourceName.Remove(sourceName.IndexOf("_1st_Pass"));
+                }
 
-                    foreach (SoftPhysicsData data in softPhysics)
+                foreach (SoftPhysicsData data in softPhysics)
+                {
+                    if (data.materialName == sourceName &&
+                        data.meshName == meshName &&
+                        CanAddPhysics(data))
                     {
-                        if (data.materialName == sourceName && data.meshName == meshName)
+                        WeightMapper.PhysicsSettings settings = new WeightMapper.PhysicsSettings();
+
+                        settings.name = sourceName;
+                        settings.activate = data.activate;
+                        settings.gravity = data.gravity;
+                        settings.selfCollision = data.selfCollision;
+                        settings.softRigidCollision = data.softRigidCollision;
+                        settings.softRigidMargin = data.softRigidMargin;
+
+                        if (data.isHair)
                         {
-                            WeightMapper.PhysicsSettings settings = new WeightMapper.PhysicsSettings();
-
-                            settings.name = sourceName;
-                            settings.activate = data.activate;
-                            settings.gravity = data.gravity;
-                            settings.selfCollision = data.selfCollision;
-                            settings.softRigidCollision = data.softRigidCollision;
-                            settings.softRigidMargin = data.softRigidMargin;
-
-                            if (MaterialIsHair(mat))
-                            {
-                                // hair meshes degenerate quickly if less than full stiffness 
-                                // (too dense, too many verts?)
-                                settings.bending = 0f;
-                                settings.stretch = 0f;
-                            }
-                            else
-                            {
-                                settings.bending = data.bending;
-                                settings.stretch = data.stretch;
-                            }
-
-                            settings.solverFrequency = data.solverFrequency;
-                            settings.stiffnessFrequency = data.stiffnessFrequency;
-                            settings.mass = data.mass;
-                            settings.friction = data.friction;
-                            settings.damping = data.damping;
-                            settings.selfMargin = data.selfMargin;
-                            settings.maxDistance = 20f;
-                            settings.maxPenetration = 10f;
-                            settings.colliderThreshold = PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD;
-
-                            Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
-                            if (!weightMap) weightMap = Texture2D.blackTexture;
-                            settings.weightMap = weightMap;
-
-                            settingsList.Add(settings);
+                            // hair meshes degenerate quickly if less than full stiffness 
+                            // (too dense, too many verts?)
+                            settings.bending = 0f;
+                            settings.stretch = 0f;
                         }
+                        else
+                        {
+                            settings.bending = data.bending;
+                            settings.stretch = data.stretch;
+                        }
+
+                        settings.solverFrequency = data.solverFrequency;
+                        settings.stiffnessFrequency = data.stiffnessFrequency;
+                        settings.mass = data.mass;
+                        settings.friction = data.friction;
+                        settings.damping = data.damping;
+                        settings.selfMargin = data.selfMargin;
+                        settings.maxDistance = 20f;
+                        settings.maxPenetration = 10f;
+                        settings.colliderThreshold = PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD;
+
+                        Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
+                        if (!weightMap) weightMap = Texture2D.blackTexture;
+                        settings.weightMap = weightMap;
+
+                        settingsList.Add(settings);
                     }
                 }
             }
