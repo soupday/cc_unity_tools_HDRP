@@ -27,12 +27,12 @@ namespace Reallusion.Import
         public enum ProcessingType { None, Basic, HighQuality }
         public enum EyeQuality { None, Basic, Parallax, Refractive }
         public enum HairQuality { None, Default, TwoPass, Coverage }
-        public enum ShaderFeatureFlags { NoShaderFeatures = 0, Tessellation = 1 } //, Tessellation = ~0 }
+        public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4 } //, SpringBones = 8 }
 
         public string guid;
         public string path;        
-        public string infoPath;
-        public string jsonPath;
+        public string infoFilepath;
+        public string jsonFilepath;
         public string name;
         public string folder;                
           
@@ -66,8 +66,11 @@ namespace Reallusion.Import
             }
         }
 
-        public ShaderFeatureFlags ShaderFlags { get; set; } = ShaderFeatureFlags.NoShaderFeatures;
+        public ShaderFeatureFlags ShaderFlags { get; set; } = ShaderFeatureFlags.NoFeatures;
         public bool FeatureUseTessellation => (ShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
+        public bool FeatureUseClothPhysics => (ShaderFlags & ShaderFeatureFlags.ClothPhysics) > 0;
+        public bool FeatureUseHairPhysics => (ShaderFlags & ShaderFeatureFlags.HairPhysics) > 0;
+        //public bool FeatureUseSpringBones => (ShaderFlags & ShaderFeatureFlags.SpringBones) > 0;
         public bool BasicMaterials => logType == ProcessingType.Basic;
         public bool HQMaterials => logType == ProcessingType.HighQuality;
         public EyeQuality QualEyes { get { return qualEyes; } set { qualEyes = value; } }
@@ -89,7 +92,7 @@ namespace Reallusion.Import
         private bool builtBakeSeparatePrefab = true;
         private bool builtTessellation = false;
 
-        public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoShaderFeatures;
+        public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoFeatures;
         public bool BuiltFeatureTessellation => (BuiltShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool BuiltBasicMaterials => builtLogType == ProcessingType.Basic;
         public bool BuiltHQMaterials => builtLogType == ProcessingType.HighQuality;
@@ -132,11 +135,11 @@ namespace Reallusion.Import
             path = AssetDatabase.GUIDToAssetPath(this.guid);
             name = Path.GetFileNameWithoutExtension(path);
             folder = Path.GetDirectoryName(path);            
-            infoPath = Path.Combine(folder, name + "_ImportInfo.txt");
-            jsonPath = Path.Combine(folder, name + ".json");
+            infoFilepath = Path.Combine(folder, name + "_ImportInfo.txt");
+            jsonFilepath = Path.Combine(folder, name + ".json");
             if (path.iContains("_lod")) isLOD = true;
 
-            if (File.Exists(infoPath))            
+            if (File.Exists(infoFilepath))            
                 Read();
             else
                 Write();            
@@ -168,22 +171,102 @@ namespace Reallusion.Import
             }
         }
 
+        public GameObject PrefabAsset
+        {
+            get
+            {
+                return Util.FindCharacterPrefabAsset(Fbx);
+            }
+        }
+
+        public GameObject BakedPrefabAsset
+        {
+            get
+            {
+                return Util.FindCharacterPrefabAsset(Fbx, true);
+            }
+        }
+
+        public GameObject GetPrefabInstance(bool baked = false)
+        {
+            if (baked)
+            {
+                GameObject bakedPrefabAsset = BakedPrefabAsset;
+                if (bakedPrefabAsset) 
+                    return (GameObject)PrefabUtility.InstantiatePrefab(BakedPrefabAsset);
+            }
+            else
+            {
+                GameObject prefabAsset = PrefabAsset;
+                if (prefabAsset)
+                    return (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset);
+            }
+
+            return null;
+        }
+
         public QuickJSON JsonData
         { 
             get
             {
                 if (jsonData == null)
                 {
-                    jsonData = Util.GetJsonData(jsonPath);
+                    jsonData = Util.GetJsonData(jsonFilepath);
                     Util.LogInfo("CharInfo: " + name + " JsonData Fetched");
                 }
                 return jsonData;
             }
         }
 
+        public QuickJSON RootJsonData
+        {
+            get
+            {
+                string jsonPath = name;
+                if (JsonData.PathExists(jsonPath))
+                    return JsonData.GetObjectAtPath(jsonPath);
+                return null;
+            }
+        }
+
+        public QuickJSON CharacterJsonData
+        {
+            get
+            {
+                string jsonPath = name + "/Object/" + name;
+                if (JsonData.PathExists(jsonPath))
+                    return JsonData.GetObjectAtPath(jsonPath);
+                return null;
+            }
+        }
+
+        public QuickJSON PhysicsJsonData
+        {
+            get
+            {                              
+                string jsonPath = name + "/Object/" + name + "/Physics";
+                if (JsonData.PathExists(jsonPath))
+                    return JsonData.GetObjectAtPath(jsonPath);
+                return null;
+            }
+        }
+
+        private FacialProfile facialProfile;
+        public FacialProfile FaceProfile
+        {
+            get
+            {
+                if (facialProfile.expressionProfile == ExpressionProfile.None && facialProfile.visemeProfile == VisemeProfile.None)
+                {
+                    facialProfile = FacialProfileMapper.GetMeshFacialProfile(Fbx);
+                }
+                return facialProfile;
+            }
+        }
+
         public void Refresh()
         {
-            if (jsonData != null) jsonData = Util.GetJsonData(jsonPath);
+            if (jsonData != null) jsonData = Util.GetJsonData(jsonFilepath);
         }
         
         public BaseGeneration Generation
@@ -192,7 +275,7 @@ namespace Reallusion.Import
             { 
                 if (generation == BaseGeneration.None)
                 {
-                    string gen = Util.GetJsonGenerationString(jsonPath);                    
+                    string gen = Util.GetJsonGenerationString(jsonFilepath);                    
                     generation = RL.GetCharacterGeneration(Fbx, gen);
                     Util.LogInfo("CharInfo: " + name + " Generation " + generation.ToString());
                     Write();
@@ -229,7 +312,7 @@ namespace Reallusion.Import
 
         public void Read()
         {
-            TextAsset infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoPath);
+            TextAsset infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoFilepath);
 
             string[] lineEndings = new string[] { "\r\n", "\r", "\n" };
             char[] propertySplit = new char[] { '=' };
@@ -299,7 +382,7 @@ namespace Reallusion.Import
         public void Write()
         {
             ApplySettings();
-            StreamWriter writer = new StreamWriter(infoPath, false);
+            StreamWriter writer = new StreamWriter(infoFilepath, false);
             writer.WriteLine("logType=" + builtLogType.ToString());
             writer.WriteLine("generation=" + generation.ToString());
             writer.WriteLine("isLOD=" + (isLOD ? "true" : "false"));
@@ -312,7 +395,7 @@ namespace Reallusion.Import
             writer.WriteLine("animationSetup=" + (animationSetup ? "true" : "false"));
             writer.WriteLine("animationRetargeted=" + animationRetargeted.ToString());
             writer.Close();
-            AssetDatabase.ImportAsset(infoPath);            
+            AssetDatabase.ImportAsset(infoFilepath);            
         }
     }
 

@@ -1410,12 +1410,14 @@ namespace Reallusion.Import
             System.IO.File.WriteAllText(path, pathString);
         }
 
-        public static void GenerateCharacterTargetedAnimations(GameObject characterFbx, GameObject characterPrefab, bool replace)
+        public static void GenerateCharacterTargetedAnimations(GameObject characterFbx, 
+            GameObject prefabAsset, bool replace)
         {
             AnimationClip[] clips = Util.GetAllAnimationClipsFromCharacter(characterFbx);            
 
-            if (!characterPrefab) characterPrefab = Util.FindCharacterPrefabAsset(characterFbx);
-            if (!characterPrefab) return;
+            if (!prefabAsset) prefabAsset = Util.FindCharacterPrefabAsset(characterFbx);
+            if (!prefabAsset) return;            
+
             string firstPath = null;
 
             if (clips.Length > 0)
@@ -1427,7 +1429,7 @@ namespace Reallusion.Import
                     if (string.IsNullOrEmpty(firstPath)) firstPath = assetPath;
                     if (File.Exists(assetPath) && !replace) continue;
                     AnimationClip workingClip = AnimPlayerGUI.CloneClip(clip);
-                    RetargetBlendShapes(clip, workingClip, characterPrefab, false);
+                    RetargetBlendShapes(clip, workingClip, prefabAsset, false);
                     AnimationClip asset = WriteAnimationToAssetDatabase(workingClip, assetPath);
                     index++;
                 }

@@ -28,6 +28,7 @@ namespace Reallusion.Import
         private readonly GameObject fbx;
         private readonly QuickJSON jsonData;
         private readonly QuickJSON jsonMeshData;
+        private readonly QuickJSON jsonPhysicsData;
         private readonly string fbxPath;
         private readonly string fbxFolder;
         private readonly string fbmFolder;
@@ -49,7 +50,7 @@ namespace Reallusion.Import
         public const string MATERIALS_FOLDER = "Materials";
         public const string PREFABS_FOLDER = "Prefabs";
 
-        public const float MIPMAP_BIAS = -0.2f;        
+        public const float MIPMAP_BIAS = -0.2f;
         public const float MIPMAP_ALPHA_CLIP_HAIR = 0.6f;
         public const float MIPMAP_ALPHA_CLIP_HAIR_BAKED = 0.8f;
 
@@ -66,7 +67,7 @@ namespace Reallusion.Import
             get
             {
                 if (EditorPrefs.HasKey("RL_Importer_Use_Amplify_Shaders"))
-                    return EditorPrefs.GetBool("RL_Importer_Use_Amplify_Shaders");                
+                    return EditorPrefs.GetBool("RL_Importer_Use_Amplify_Shaders");
                 return true;
             }
 
@@ -75,7 +76,7 @@ namespace Reallusion.Import
                 EditorPrefs.SetBool("RL_Importer_Use_Amplify_Shaders", value);
             }
         }
-        
+
         public static bool ANIMPLAYER_ON_BY_DEFAULT
         {
             get
@@ -96,7 +97,7 @@ namespace Reallusion.Import
             get
             {
                 if (EditorPrefs.HasKey("RL_Importer_Reconstruct_Flow_Normals"))
-                    return EditorPrefs.GetBool("RL_Importer_Reconstruct_Flow_Normals");                
+                    return EditorPrefs.GetBool("RL_Importer_Reconstruct_Flow_Normals");
                 return true;
             }
 
@@ -157,7 +158,12 @@ namespace Reallusion.Import
             if (jsonData.PathExists(jsonPath))
                 jsonMeshData = jsonData.GetObjectAtPath(jsonPath);
             else
-                Util.LogError("Unable to find Json mesh data: " + jsonPath);            
+                Util.LogError("Unable to find Json mesh data: " + jsonPath);
+
+            jsonPath = characterName + "/Object/" + characterName + "/Physics";
+            jsonPhysicsData = info.PhysicsJsonData;
+            if (jsonPhysicsData == null)
+                Util.LogWarn("Unable to find Json physics data!");
 
             string jsonVersion = jsonData?.GetStringValue(characterName + "/Version");
             if (!string.IsNullOrEmpty(jsonVersion))
@@ -174,7 +180,7 @@ namespace Reallusion.Import
 
             bakedDetailMaps = new Dictionary<Material, Texture2D>();
             bakedThicknessMaps = new Dictionary<Material, Texture2D>();
-        }        
+        }
 
         public GameObject Import()
         {
@@ -252,9 +258,10 @@ namespace Reallusion.Import
             {
                 importer.importCameras = false;
                 importer.importLights = false;
-                importer.importVisibility = true;
+                importer.importVisibility = false;
+                importer.useFileUnits = false;
             }
-            
+
             // setup initial animations (only do this once)
             if (!characterInfo.animationSetup)
             {
@@ -265,24 +272,35 @@ namespace Reallusion.Import
             AssetDatabase.WriteImportSettingsIfDirty(fbxPath);
             importAssets.Add(fbxPath);
             AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();            
+            AssetDatabase.Refresh();
 
             // create prefab.
-            GameObject prefab = RL.CreatePrefabFromFbx(characterInfo, fbx);
-
+            GameObject prefabAsset = RL.CreatePrefabFromFbx(characterInfo, fbx, out GameObject prefabInstance);
+            
             // setup 2 pass hair in the prefab.
             if (characterInfo.DualMaterialHair)
             {
                 Util.LogInfo("Extracting 2 Pass hair meshes.");
-                prefab = MeshUtil.Extract2PassHairMeshes(characterInfo, prefab);
+                prefabAsset = MeshUtil.Extract2PassHairMeshes(characterInfo, prefabAsset, prefabInstance);
                 ImporterWindow.TrySetMultiPass(true);
             }
+
+            bool clothPhysics = (characterInfo.ShaderFlags & CharacterInfo.ShaderFeatureFlags.ClothPhysics) > 0;
+            bool hairPhysics = (characterInfo.ShaderFlags & CharacterInfo.ShaderFeatureFlags.HairPhysics) > 0;
+            if ((clothPhysics || hairPhysics) && jsonPhysicsData != null)
+            {
+                Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance);
+                prefabAsset = physics.AddPhysics();
+            }
+
+            // save final prefab instance and remove from scene
+            RL.SaveAndRemovePrefabInstance(prefabAsset, prefabInstance);
 
             // extract and retarget animations if needed.
             int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
             bool replace = characterInfo.animationRetargeted != animationRetargeted;
             if (replace) Util.LogInfo("Retargeting all imported animations.");
-            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbx, prefab, replace);
+            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbx, prefabAsset, replace);
             characterInfo.animationRetargeted = animationRetargeted;
 
             // create default animator if there isn't one.
@@ -290,12 +308,12 @@ namespace Reallusion.Import
 
             Util.LogAlways("Done building materials for character " + characterName + "!");
 
-            Selection.activeObject = prefab;     
+            Selection.activeObject = prefabAsset;
 
             //System.Media.SystemSounds.Asterisk.Play();
 
-            return prefab;
-        }
+            return prefabAsset;
+        }        
 
         void ProcessObjectTreeBuildPass(GameObject obj)
         {

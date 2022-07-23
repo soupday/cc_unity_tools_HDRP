@@ -1061,20 +1061,18 @@ namespace Reallusion.Import
             }            
         }
 
-        public static GameObject Extract2PassHairMeshes(CharacterInfo info, GameObject prefab)
+        public static GameObject Extract2PassHairMeshes(CharacterInfo info, GameObject prefabAsset, GameObject prefabInstance)
         {
-            if (!prefab) return null;
+            if (!prefabInstance) return null;
+
             string name = info.name;
             string fbxFolder = info.folder;
             string materialFolder = Path.Combine(fbxFolder, Importer.MATERIALS_FOLDER, name);
-            string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, name);            
+            string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, name);                                    
 
-            if (!prefab) return null;
-            
-            GameObject clone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             int processCount = 0;
 
-            Renderer[] renderers = clone.GetComponentsInChildren<Renderer>();
+            Renderer[] renderers = prefabInstance.GetComponentsInChildren<Renderer>();
 
             foreach (Renderer r in renderers)
             {
@@ -1236,23 +1234,20 @@ namespace Reallusion.Import
                     }
                 }                
             }
-
-            if (prefab && processCount > 0)
+            
+            if (prefabInstance && processCount > 0)
             {
                 Util.LogInfo("Updating character prefab...");
                 // save the clone as the prefab for this character         
-                string prefabPath = AssetDatabase.GetAssetPath(prefab);
-                prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);                
-                UnityEngine.Object.DestroyImmediate(clone);
+                string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);
+                prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, prefabPath);
             }
             else
             {
                 Util.LogInfo("Nothing to process (or already processed)...");
-            }
+            }            
 
-            if (clone) UnityEngine.Object.DestroyImmediate(clone);
-
-            return prefab;
+            return prefabAsset;
         }
 
         public struct SmoothVertData

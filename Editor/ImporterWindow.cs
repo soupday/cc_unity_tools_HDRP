@@ -45,6 +45,7 @@ namespace Reallusion.Import
         private bool refreshAfterGUI;
         private bool buildAfterGUI;
         private bool bakeAfterGUI;
+        private bool physicsAfterGUI;
         public enum ImporterWindowMode { Build, Bake, Settings }
         private ImporterWindowMode windowMode = ImporterWindowMode.Build;
 
@@ -93,7 +94,7 @@ namespace Reallusion.Import
             if (currentScene.IsValid() && !string.IsNullOrEmpty(currentScene.path))
             {                
                 backScenePath = currentScene.path;
-            }
+            }            
         }
 
         public static void GoBackScene()
@@ -120,6 +121,8 @@ namespace Reallusion.Import
             {
                 if (contextCharacter != null) contextCharacter.Release();
                 contextCharacter = GetCharacterState(guid);
+
+
                 
                 CreateTreeView(oldCharacter != contextCharacter);
 
@@ -301,7 +304,8 @@ namespace Reallusion.Import
             float height = position.height - WINDOW_MARGIN;
             float innerHeight = height - TOP_PADDING;
             float optionHeight = OPTION_HEIGHT;
-            if (Pipeline.isHDRP12) optionHeight += 14f;
+            //if (Pipeline.isHDRP12) optionHeight += 14f;
+            optionHeight += 14f;
 
             Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_WIDTH, innerHeight);
             Rect infoBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, INFO_HEIGHT);
@@ -314,6 +318,7 @@ namespace Reallusion.Import
             refreshAfterGUI = false;
             buildAfterGUI = false;
             bakeAfterGUI = false;
+            physicsAfterGUI = false;
 
             CheckDragAndDrop();
 
@@ -357,6 +362,10 @@ namespace Reallusion.Import
             else if (bakeAfterGUI)
             {
                 BakeCharacter();
+            }
+            else if (physicsAfterGUI)
+            {
+                RebuildCharacterPhysics();
             }
         }
 
@@ -441,6 +450,8 @@ namespace Reallusion.Import
             if (contextCharacter.bakeIsBaked)
                 importType += " + Baked";
 
+            
+
             GUILayout.BeginArea(infoBlock);
 
             GUILayout.BeginHorizontal();
@@ -462,7 +473,10 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label("(" + contextCharacter.Generation.ToString() + ")", boldStyle);
+            GUILayout.Label("(" + contextCharacter.Generation.ToString() + "/"
+                                + contextCharacter.FaceProfile.expressionProfile + "/"
+                                + contextCharacter.FaceProfile.visemeProfile
+                            + ")", boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -538,17 +552,14 @@ namespace Reallusion.Import
                 menu.ShowAsContext();
             }
 
-            int features = 0;
+            int features = 2;
             if (Pipeline.isHDRP12) features++; // tessellation
             if (Pipeline.is3D || Pipeline.isURP) features++; // Amplify
-
-            if (Pipeline.isHDRP12)
-            {
-                if (features == 1)
-                    contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(contextCharacter.ShaderFlags);
-                else if (features > 1)
-                    contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(contextCharacter.ShaderFlags);
-            }
+            
+            if (features == 1)
+                contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(contextCharacter.ShaderFlags);
+            else if (features > 1)
+                contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(contextCharacter.ShaderFlags);
 
             GUI.enabled = true;
 
@@ -664,6 +675,16 @@ namespace Reallusion.Import
                 int animationRetargeted = contextCharacter.DualMaterialHair ? 2 : 1;
                 contextCharacter.animationRetargeted = animationRetargeted;
                 contextCharacter.Write();
+            }
+            
+            //
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+            
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PhysicMaterial Icon").image, "Enables cloth physics and rebuilds the character physics."),
+                GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+            {
+                physicsAfterGUI = true;
             }
             GUI.enabled = true;
 
@@ -860,6 +881,27 @@ namespace Reallusion.Import
             Importer.ANIMPLAYER_ON_BY_DEFAULT = GUILayout.Toggle(Importer.ANIMPLAYER_ON_BY_DEFAULT,
                     new GUIContent("Animation Player On", "Always show the animation player when opening the preview scene."));
             GUILayout.Space(ROW_SPACE);
+
+
+            GUILayout.Space(10f);
+            GUILayout.Label("Physics Collider Shrink");
+            GUILayout.Space(ROW_SPACE);
+            GUILayout.BeginHorizontal();            
+            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = GUILayout.HorizontalSlider(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS, -2, 2f);
+            GUILayout.Label(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS.ToString(), GUILayout.Width(30f));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(ROW_SPACE);
+
+            GUILayout.Space(10f);
+            GUILayout.Label("Physics Collider Detection Threshold");
+            GUILayout.Space(ROW_SPACE);
+            GUILayout.BeginHorizontal();
+            Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = GUILayout.HorizontalSlider(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD, 0f, 1f);
+            GUILayout.Label(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD.ToString(), GUILayout.Width(30f));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(ROW_SPACE);
+            GUILayout.Space(10f);
+
 
 
             string label = "Log Everything";
@@ -1113,7 +1155,27 @@ namespace Reallusion.Import
             }            
 
             return WindowManager.IsPreviewScene;
-        }                
+        } 
+        
+        void RebuildCharacterPhysics()
+        {
+            WindowManager.HideAnimationPlayer(true);
+            WindowManager.HideAnimationRetargeter(true);            
+            if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+
+            GameObject prefabAsset = Physics.RebuildPhysics(contextCharacter);
+
+            if (prefabAsset)
+            {
+                if (UpdatePreviewCharacter(prefabAsset))
+                {
+                    if (WindowManager.showPlayer)
+                        WindowManager.ShowAnimationPlayer();
+                }
+            }
+
+            Repaint();
+        }
 
         public static void ResetAllSceneViewCamera()
         {
