@@ -1,6 +1,15 @@
 Changelog
 =========
 
+### v 1.3.4
+- Cloth physics added
+    - Colliders generated from character JSON data.
+    - Weightmaps used to generate cloth coefficients.
+    - Runtime helper scripts to adjust colliders, weight maps and cloth settings in play mode for real time feedback.
+    - Save and recall feature, so play mode changes can be retained (currently only one character's settings can be saved)
+    - Optimized collider detection.
+    - Collider margin adjust and weightmap based detection threshold settings.
+
 ### v 1.3.3
 - Updates / Additions:
     - Tessellation option added to build settings. (Currently HDRP12 Only)
