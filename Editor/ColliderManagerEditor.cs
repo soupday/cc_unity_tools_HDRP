@@ -18,10 +18,25 @@ namespace Reallusion.Import
 		const float GUTTER = 40f;
 		const float BUTTON_WIDTH = 160f;
 
+		public static string CURRENT_COLLIDER_NAME
+		{
+			get
+			{
+				if (EditorPrefs.HasKey("RL_Current_Collider_Name"))
+					return EditorPrefs.GetString("RL_Current_Collider_Name");
+				return "";
+			}
+
+			set
+			{
+				EditorPrefs.SetString("RL_Current_Collider_Name", value);
+			}
+		}
+
 		private void OnEnable()
 		{
 			colliderManager = (ColliderManager)target;
-			InitCurrentCollider();
+			InitCurrentCollider(CURRENT_COLLIDER_NAME);
 		}
 
 		private void InitCurrentCollider(string name = null)
@@ -43,7 +58,7 @@ namespace Reallusion.Import
 				}
 
 				currentCollider = colliderManager.settings[0];				
-			}			
+			}
 		}
 
 		public override void OnInspectorGUI()
@@ -105,23 +120,47 @@ namespace Reallusion.Import
 				GUILayout.EndHorizontal();
 			}
 
+			GUILayout.Space(8f);
+
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
-			GUILayout.Label("X", GUILayout.Width(LABEL_WIDTH));
+			GUILayout.Label("X (loc)", GUILayout.Width(LABEL_WIDTH));
 			currentCollider.xAdjust = EditorGUILayout.Slider(currentCollider.xAdjust, -0.1f, 0.1f);
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
-			GUILayout.Label("Y", GUILayout.Width(LABEL_WIDTH));
+			GUILayout.Label("Y (loc)", GUILayout.Width(LABEL_WIDTH));
 			currentCollider.yAdjust = EditorGUILayout.Slider(currentCollider.yAdjust, -0.1f, 0.1f);
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
-			GUILayout.Label("Z", GUILayout.Width(LABEL_WIDTH));
+			GUILayout.Label("Z (loc)", GUILayout.Width(LABEL_WIDTH));
 			currentCollider.zAdjust = EditorGUILayout.Slider(currentCollider.zAdjust, -0.1f, 0.1f);
 			GUILayout.EndHorizontal();
+
+			GUILayout.Space(8f);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(GUTTER);
+			GUILayout.Label("X (rot)", GUILayout.Width(LABEL_WIDTH));
+			currentCollider.xRotate = EditorGUILayout.Slider(currentCollider.xRotate, -90f, 90f);
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(GUTTER);
+			GUILayout.Label("Y (rot)", GUILayout.Width(LABEL_WIDTH));
+			currentCollider.yRotate = EditorGUILayout.Slider(currentCollider.yRotate, -90f, 90f);
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(GUTTER);
+			GUILayout.Label("Z (rot)", GUILayout.Width(LABEL_WIDTH));
+			currentCollider.zRotate = EditorGUILayout.Slider(currentCollider.zRotate, -90f, 90f);
+			GUILayout.EndHorizontal();
+
+			GUILayout.Space(8f);
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUTTER);
@@ -143,7 +182,11 @@ namespace Reallusion.Import
 				currentCollider.FetchSettings();
 				if (symmetrical) UpdateSymmetrical(SymmetricalUpdateType.Fetch);
 			}
+			GUILayout.EndHorizontal();
 			GUILayout.Space(10f);
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(GUTTER);
+			GUILayout.Label("", GUILayout.Width(LABEL_WIDTH));			
 			if (GUILayout.Button("Select", GUILayout.Width(80f)))
             {
 				Selection.activeObject = currentCollider.collider;
@@ -160,15 +203,14 @@ namespace Reallusion.Import
 
 			GUILayout.Space(10f);
 
-			EditorGUILayout.HelpBox("If changing the colliders directly, use the Refresh button to update to the new Collider settings.", MessageType.Info, true);
+			EditorGUILayout.HelpBox("If changing the colliders directly, use the Rebuild Settings button to update to the new Collider settings.", MessageType.Info, true);
 
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Refresh", GUILayout.Width(BUTTON_WIDTH)))
+			if (GUILayout.Button("Rebuild Settings", GUILayout.Width(BUTTON_WIDTH)))
 			{
-				string currentName = currentCollider.name;
 				colliderManager.RefreshData();
-				InitCurrentCollider(currentName);
+				InitCurrentCollider(CURRENT_COLLIDER_NAME);
 			}
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
@@ -185,15 +227,13 @@ namespace Reallusion.Import
 				PhysicsSettingsStore.SaveColliderSettings(colliderManager);
 			}
 			GUI.backgroundColor = background;
-			GUILayout.Space(10f);
-			EditorGUI.BeginDisabledGroup(!PhysicsSettingsStore.TryFindSettingsObject(out string foundSettingsGuid));
+			GUILayout.Space(10f);			
 			GUI.backgroundColor = Color.Lerp(background, Color.yellow, 0.25f);
 			if (GUILayout.Button("Recall Settings", GUILayout.Width(BUTTON_WIDTH)))
 			{
 				PhysicsSettingsStore.RecallColliderSettings(colliderManager);
 			}
-			GUI.backgroundColor = background;
-			EditorGUI.EndDisabledGroup();									
+			GUI.backgroundColor = background;			
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 
@@ -341,6 +381,10 @@ namespace Reallusion.Import
 		private void SelectCurrentCollider(object sel)
 		{
 			currentCollider = (ColliderSettings)sel;
+			if (currentCollider != null)
+			{
+				CURRENT_COLLIDER_NAME = currentCollider.name;
+			}
 		}			
 	}
 }

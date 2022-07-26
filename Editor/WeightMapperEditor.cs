@@ -71,14 +71,12 @@ namespace Reallusion.Import
 			}
 			GUI.backgroundColor = background;
 			GUILayout.Space(10f);
-			EditorGUI.BeginDisabledGroup(!PhysicsSettingsStore.TryFindSettingsObject(out string foundSettingsGuid));
 			GUI.backgroundColor = Color.Lerp(background, Color.yellow, 0.25f);
 			if (GUILayout.Button("Recall Settings", GUILayout.Width(BUTTON_WIDTH)))
 			{
 				PhysicsSettingsStore.RecallClothSettings(weightMapper);
 			}
-			GUI.backgroundColor = background;
-			EditorGUI.EndDisabledGroup();			
+			GUI.backgroundColor = background;			
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 

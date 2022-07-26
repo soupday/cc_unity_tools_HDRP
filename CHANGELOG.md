@@ -1,6 +1,13 @@
 Changelog
 =========
 
+### v 1.3.5
+- Fixes
+    - Collider manager now remembers the currently selected collider.
+    - Collider manager editor now has rotation adjustment sliders.
+    - Animation Player is closed on entering Play mode.
+    - Save and Recall physics settings now works correctly in Editor mode and remembers settings per character.
+
 ### v 1.3.4
 - Cloth physics added
     - Colliders generated from character JSON data.
