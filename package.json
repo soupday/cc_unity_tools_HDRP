@@ -1,6 +1,6 @@
 {
   "name": "com.soupday.cc3_unity_tools",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "displayName": "CC/iC Unity Tools HDRP",
   "description": "Unity importer for Character Creator 3 & 4 and iClone 7 and 8.",
   "unity": "2020.3",

@@ -104,6 +104,9 @@ namespace Reallusion.Import
         public bool optimizeColliders = true;
         public bool includeAllLimbColliders = false;
 
+        [HideInInspector]
+        public string characterGUID;
+
         public void ApplyWeightMap()
         {            
             GameObject clothTarget = gameObject;

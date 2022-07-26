@@ -138,7 +138,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Physics_Shrink_Collider_Radius"))
                     return EditorPrefs.GetFloat("RL_Physics_Shrink_Collider_Radius");
-                return 0f;
+                return 0.5f;
             }
 
             set
@@ -153,7 +153,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Physics_Weight_Map_Collider_Detect_Threshold"))
                     return EditorPrefs.GetFloat("RL_Physics_Weight_Map_Collider_Detect_Threshold");
-                return 0.5f;
+                return 0.25f;
             }
 
             set
@@ -403,6 +403,7 @@ namespace Reallusion.Import
             // add colliders to manager
             if (colliderManager)
             {
+                colliderManager.characterGUID = characterGUID;
                 colliderManager.AddColliders(listColliders);
             }
 
@@ -612,7 +613,7 @@ namespace Reallusion.Import
             }
 
             mapper.settings = settingsList.ToArray();
-
+            mapper.characterGUID = characterGUID;
             mapper.ApplyWeightMap();
         }
 

@@ -17,11 +17,31 @@ namespace Reallusion.Import
 
 		private const string settingsDir = "Settings";
 		private const string settingsFileName = "PhysicsSettingsStore";
-		private const string settingsSuffix = ".asset";
+		private const string settingsSuffix = ".asset";		
 
 		private static string GetSettingsStorePath(Object obj)
 		{
-			string characterPath = GetCharacterPath(obj);
+			string guid = null;
+			if (obj.GetType() == typeof(ColliderManager))
+            {
+				guid = ((ColliderManager)obj).characterGUID;
+            }
+			else if (obj.GetType() == typeof(WeightMapper))
+			{
+				guid = ((WeightMapper)obj).characterGUID;
+			}
+
+			string characterPath = null;
+			if (!string.IsNullOrEmpty(guid))
+			{
+				characterPath = AssetDatabase.GUIDToAssetPath(guid);
+            }
+			else
+			{
+				Debug.LogWarning("Unable to determine character physics store path.\nPlease rebuild physics for this character to correct this.");
+				return null;
+			}
+
 			string characterFolder;
 			string characterName;
 			if (!string.IsNullOrEmpty(characterPath))
@@ -35,6 +55,12 @@ namespace Reallusion.Import
 
 		public static string GetCharacterPath(Object sceneObject)
 		{
+			if (EditorApplication.isPlaying)
+			{
+				Debug.LogWarning("Unable to determine character physics store path in Play mode.\nPlease rebuild physics for this character to correct this.");
+				return null;
+			}
+
 			if (PrefabUtility.IsPartOfPrefabInstance(sceneObject))
 			{
 				Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
@@ -69,6 +95,9 @@ namespace Reallusion.Import
 				settings.colliderSettings = workingSettings;
 				EditorUtility.SetDirty(settings);
 				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(settings)));
+
+				Debug.Log("Collider settings stored.");
+
 				return settings;
 			}
 
@@ -96,6 +125,8 @@ namespace Reallusion.Import
 				}
 
 				colliderManager.UpdateColliders();
+
+				Debug.Log("Collider settings recalled.");
 
 				return saved;
 			}
@@ -129,6 +160,9 @@ namespace Reallusion.Import
 				}
 				EditorUtility.SetDirty(settings);
 				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(settings)));
+
+				Debug.Log("Cloth physics settings stored.");
+
 				return settings;
 			}
 
@@ -151,6 +185,8 @@ namespace Reallusion.Import
 				}
 
 				weightMapper.ApplyWeightMap();
+
+				Debug.Log("Cloth physics settings recalled.");
 
 				return savedFile;
 			}
@@ -178,18 +214,25 @@ namespace Reallusion.Import
 
 		public static PhysicsSettingsStore TryFindSettingsObject(Object obj)
 		{
-			string assetPath = GetSettingsStorePath(obj);
-			PhysicsSettingsStore settingsStore = AssetDatabase.LoadAssetAtPath<PhysicsSettingsStore>(assetPath);
-			
-			if (!settingsStore)
+			string assetPath = GetSettingsStorePath(obj);			
+
+			if (!string.IsNullOrEmpty(assetPath))
 			{
-				settingsStore = CreateInstance<PhysicsSettingsStore>();
-				EnsureAssetsFolderExists(Path.GetDirectoryName(assetPath));
-				AssetDatabase.CreateAsset(settingsStore, assetPath);
+				PhysicsSettingsStore settingsStore = AssetDatabase.LoadAssetAtPath<PhysicsSettingsStore>(assetPath);
+
+				if (!settingsStore)
+				{
+					settingsStore = CreateInstance<PhysicsSettingsStore>();
+					EnsureAssetsFolderExists(Path.GetDirectoryName(assetPath));
+					AssetDatabase.CreateAsset(settingsStore, assetPath);					
+				}
+
 				return settingsStore;
 			}
 
-			return settingsStore;
+			Debug.LogError("Unable to open physics settings store for character.");
+
+			return null;
 		}
 
 		private static bool TryGetSavedIndex(List<PhysicsSettings> savedClothSettings, PhysicsSettings workingSetting, out int savedIndex)
