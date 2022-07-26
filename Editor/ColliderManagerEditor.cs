@@ -18,10 +18,25 @@ namespace Reallusion.Import
 		const float GUTTER = 40f;
 		const float BUTTON_WIDTH = 160f;
 
+		public static string CURRENT_COLLIDER_NAME
+		{
+			get
+			{
+				if (EditorPrefs.HasKey("RL_Current_Collider_Name"))
+					return EditorPrefs.GetString("RL_Current_Collider_Name");
+				return "";
+			}
+
+			set
+			{
+				EditorPrefs.SetString("RL_Current_Collider_Name", value);
+			}
+		}
+
 		private void OnEnable()
 		{
 			colliderManager = (ColliderManager)target;
-			InitCurrentCollider();
+			InitCurrentCollider(CURRENT_COLLIDER_NAME);
 		}
 
 		private void InitCurrentCollider(string name = null)
@@ -43,7 +58,7 @@ namespace Reallusion.Import
 				}
 
 				currentCollider = colliderManager.settings[0];				
-			}			
+			}
 		}
 
 		public override void OnInspectorGUI()
@@ -167,7 +182,11 @@ namespace Reallusion.Import
 				currentCollider.FetchSettings();
 				if (symmetrical) UpdateSymmetrical(SymmetricalUpdateType.Fetch);
 			}
+			GUILayout.EndHorizontal();
 			GUILayout.Space(10f);
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(GUTTER);
+			GUILayout.Label("", GUILayout.Width(LABEL_WIDTH));			
 			if (GUILayout.Button("Select", GUILayout.Width(80f)))
             {
 				Selection.activeObject = currentCollider.collider;
@@ -184,15 +203,14 @@ namespace Reallusion.Import
 
 			GUILayout.Space(10f);
 
-			EditorGUILayout.HelpBox("If changing the colliders directly, use the Refresh button to update to the new Collider settings.", MessageType.Info, true);
+			EditorGUILayout.HelpBox("If changing the colliders directly, use the Rebuild Settings button to update to the new Collider settings.", MessageType.Info, true);
 
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Refresh", GUILayout.Width(BUTTON_WIDTH)))
+			if (GUILayout.Button("Rebuild Settings", GUILayout.Width(BUTTON_WIDTH)))
 			{
-				string currentName = currentCollider.name;
 				colliderManager.RefreshData();
-				InitCurrentCollider(currentName);
+				InitCurrentCollider(CURRENT_COLLIDER_NAME);
 			}
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
@@ -363,6 +381,10 @@ namespace Reallusion.Import
 		private void SelectCurrentCollider(object sel)
 		{
 			currentCollider = (ColliderSettings)sel;
+			if (currentCollider != null)
+			{
+				CURRENT_COLLIDER_NAME = currentCollider.name;
+			}
 		}			
 	}
 }
