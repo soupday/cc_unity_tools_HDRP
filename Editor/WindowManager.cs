@@ -19,13 +19,15 @@ namespace Reallusion.Import
         public static bool showPlayer = true;
         public static bool showRetarget = false;
         private static bool eventsAdded = false;
-        
-        static WindowManager()   
-        { 
-            // Even if update is not the most elegant. Using hierarchyWindowChanged for CPU sake will not work in all cases, because when hierarchyWindowChanged is called, Time's values might be all higher than current values. Why? Because current values are set at the first frame. If you keep reloading the same scene, this case happens.
-            EditorApplication.update += WindowManager.MonitorScene; 
+        private static bool showPlayerAfterPlayMode = false;
+        private static bool showRetargetAfterPlayMode = false;
+
+        static WindowManager()
+        {
+            EditorApplication.playModeStateChanged += WindowManager.OnPlayModeStateChanged;
+            EditorApplication.update += WindowManager.MonitorScene;
             showPlayer = Importer.ANIMPLAYER_ON_BY_DEFAULT;
-            currentScene = EditorSceneManager.GetActiveScene();            
+            currentScene = EditorSceneManager.GetActiveScene();
 
             previewScene = PreviewScene.FetchPreviewScene(currentScene);
             if (previewScene.IsValidPreviewScene)
@@ -37,11 +39,31 @@ namespace Reallusion.Import
             {
                 previewScene = default;
                 previewSceneHandle = default;
-            }            
+            }
 
-            if (!eventsAdded)   
-            {                
+            if (!eventsAdded)
+            {
                 AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+            }
+        }
+
+        public static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {            
+            if (state == PlayModeStateChange.EnteredPlayMode)
+            {
+                Debug.Log(state);
+                showPlayerAfterPlayMode = showPlayer;
+                showRetargetAfterPlayMode = showRetarget;
+                showPlayer = false;
+                showRetarget = false;
+                AnimPlayerGUI.ClosePlayer();
+                AnimRetargetGUI.CloseRetargeter();
+            }
+            else if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                Debug.Log(state);
+                showPlayer = showPlayerAfterPlayMode;
+                showRetarget = showRetargetAfterPlayMode;
             }
         }
 

@@ -15,92 +15,112 @@ namespace Reallusion.Import
         public ColliderSettings[] colliderSettings;
         public List<PhysicsSettings> clothSettings;
 
-		private const string settingsDir = "Assets";
+		private const string settingsDir = "Settings";
 		private const string settingsFileName = "PhysicsSettingsStore";
 		private const string settingsSuffix = ".asset";
 
-		public static PhysicsSettingsStore SaveColliderSettings(ColliderManager colliderManager)
+		private static string GetSettingsStorePath(Object obj)
 		{
-			bool settingsObjectFound = TryFindSettingsObject(out string foundSettingsGuid);
-			string settingsPath;
-			if (settingsObjectFound)
+			string characterPath = GetCharacterPath(obj);
+			string characterFolder;
+			string characterName;
+			if (!string.IsNullOrEmpty(characterPath))
 			{
-				settingsPath = AssetDatabase.GUIDToAssetPath(foundSettingsGuid);
-				PhysicsSettingsStore settings = AssetDatabase.LoadAssetAtPath<PhysicsSettingsStore>(settingsPath);
-				settings.colliderSettings = colliderManager.settings;
-				EditorUtility.SetDirty(settings);
-				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(settingsPath));
-				return settings;
+				characterFolder = Path.GetDirectoryName(characterPath);
+				characterName = Path.GetFileNameWithoutExtension(characterPath);
+				return Path.Combine(characterFolder, settingsDir, characterName, settingsFileName + settingsSuffix);
 			}
-			else
-			{
-				settingsPath = settingsDir + "/" + settingsFileName + settingsSuffix;
-				PhysicsSettingsStore settings = CreateInstance<PhysicsSettingsStore>();
-				settings.colliderSettings = colliderManager.settings;
-				AssetDatabase.CreateAsset(settings, settingsPath);
-				return settings;
-			}
+			return null;
 		}
 
-		public static PhysicsSettingsStore RecallColliderSettings(ColliderManager colliderManager)
+		public static string GetCharacterPath(Object sceneObject)
 		{
-			bool settingsObjectFound = TryFindSettingsObject(out string foundSettingsGuid);
-
-			if (settingsObjectFound)
+			if (PrefabUtility.IsPartOfPrefabInstance(sceneObject))
 			{
-				string settingsPath = AssetDatabase.GUIDToAssetPath(foundSettingsGuid);
-				PhysicsSettingsStore saved = AssetDatabase.LoadAssetAtPath<PhysicsSettingsStore>(settingsPath);
-				if (saved)
+				Object instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(sceneObject);
+				if (!instanceRoot) instanceRoot = sceneObject;
+				if (instanceRoot.GetType() == typeof(GameObject))
 				{
-					ColliderSettings[] tmp = saved.colliderSettings;
-					foreach (ColliderSettings c in tmp)
+					Object source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(instanceRoot);
+					if (source)
 					{
-						foreach (ColliderSettings s in colliderManager.settings)
+						if (source.GetType() == typeof(GameObject))
 						{
-							if (s.name == c.name)
-							{
-								s.radius = c.radius;
-								s.height = c.height;
-								s.xAdjust = c.xAdjust;
-								s.yAdjust = c.yAdjust;
-								s.zAdjust = c.zAdjust;
-								s.radiusAdjust = c.radiusAdjust;
-								s.heightAdjust = c.heightAdjust;
-								s.position = c.position;
-								s.Update();
-							}
+							return AssetDatabase.GetAssetPath(source);
 						}
 					}
-
-					colliderManager.UpdateColliders();
-
-					return saved;
 				}
 			}
 
 			return null;
 		}
 
+		public static PhysicsSettingsStore SaveColliderSettings(ColliderManager colliderManager)
+		{
+			ColliderSettings[] workingSettings = new ColliderSettings[colliderManager.settings.Length];
+			for (int i = 0; i < colliderManager.settings.Length; i++)
+			{
+				workingSettings[i] = new ColliderSettings(colliderManager.settings[i]);
+			}
 
+			PhysicsSettingsStore settings = TryFindSettingsObject(colliderManager);			
+			if (settings)
+			{
+				settings.colliderSettings = workingSettings;
+				EditorUtility.SetDirty(settings);
+				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(settings)));
+				return settings;
+			}
+
+			return null;
+		}
+
+		public static PhysicsSettingsStore RecallColliderSettings(ColliderManager colliderManager)
+		{
+			PhysicsSettingsStore saved = TryFindSettingsObject(colliderManager);
+
+			if (saved)
+			{
+				ColliderSettings[] tmp = saved.colliderSettings;
+				foreach (ColliderSettings c in tmp)
+				{
+					foreach (ColliderSettings s in colliderManager.settings)
+					{
+
+						if (s.name == c.name)
+						{
+							s.Copy(c, false);
+							s.Update();
+						}
+					}
+				}
+
+				colliderManager.UpdateColliders();
+
+				return saved;
+			}
+
+			return null;
+		}
 
 		public static PhysicsSettingsStore SaveClothSettings(WeightMapper weightMapper)
 		{
-			string settingsPath;
-
 			PhysicsSettings[] workingSettings = new PhysicsSettings[weightMapper.settings.Length];
-			System.Array.Copy(weightMapper.settings, workingSettings, workingSettings.Length);
-
-			if (TryFindSettingsObject(out string foundSettingsGuid))
+			for (int i = 0; i < weightMapper.settings.Length; i++)
 			{
-				settingsPath = AssetDatabase.GUIDToAssetPath(foundSettingsGuid);
-				PhysicsSettingsStore settings = AssetDatabase.LoadAssetAtPath<PhysicsSettingsStore>(settingsPath);
+				workingSettings[i] = new PhysicsSettings(weightMapper.settings[i]);				
+			}
 
+			PhysicsSettingsStore settings = TryFindSettingsObject(weightMapper);
+
+			if (settings)
+			{				
 				if (settings.clothSettings == null) settings.clothSettings = new List<PhysicsSettings>();
 				foreach (PhysicsSettings s in workingSettings)
 				{
 					if (TryGetSavedIndex(settings.clothSettings, s, out int idx))
 					{
-						settings.clothSettings[idx] = s;
+						settings.clothSettings[idx].Copy(s);
 					}
 					else
 					{
@@ -108,77 +128,68 @@ namespace Reallusion.Import
 					}
 				}
 				EditorUtility.SetDirty(settings);
-				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(settingsPath));
+				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(settings)));
 				return settings;
-			}
-			else
-			{
-				settingsPath = settingsDir + "/" + settingsFileName + settingsSuffix;
-				PhysicsSettingsStore settings = CreateInstance<PhysicsSettingsStore>();
-				AssetDatabase.CreateAsset(settings, settingsPath);
-				settings.clothSettings = new List<PhysicsSettings>();
-				foreach (PhysicsSettings s in workingSettings)
-				{
-					settings.clothSettings.Add(s);
-				}
-				return settings;
-			}
-		}
-
-		public static PhysicsSettingsStore RecallClothSettings(WeightMapper weightMapper)
-		{
-			bool settingsObjectFound = TryFindSettingsObject(out string foundSettingsGuid);
-
-			if (settingsObjectFound)
-			{
-				string settingsPath = AssetDatabase.GUIDToAssetPath(foundSettingsGuid);
-				if ((PhysicsSettingsStore)AssetDatabase.LoadAssetAtPath(settingsPath, typeof(PhysicsSettingsStore)))
-				{
-					PhysicsSettingsStore savedFile = AssetDatabase.LoadAssetAtPath<PhysicsSettingsStore>(settingsPath);
-
-					if (savedFile)
-					{
-						foreach (PhysicsSettings s in savedFile.clothSettings)
-						{
-							int index = weightMapper.settings.ToList().FindIndex(x => x.name.Equals(s.name));
-							if (index != -1)
-							{
-								weightMapper.settings[index] = s;
-							}
-						}
-
-						weightMapper.ApplyWeightMap();
-
-						return savedFile;
-					}
-				}				
 			}
 
 			return null;
 		}
 
-
-
-		public static bool TryFindSettingsObject(out string foundSettingsGuid)
+		public static PhysicsSettingsStore RecallClothSettings(WeightMapper weightMapper)
 		{
-			string[] folders = new string[] { "Assets" };
-			string[] guids = AssetDatabase.FindAssets(settingsFileName, folders);
+			PhysicsSettingsStore savedFile = TryFindSettingsObject(weightMapper);
 
-			foreach (string guid in guids)
+			if (savedFile)
 			{
-				string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-				string assetName = Path.GetFileNameWithoutExtension(assetPath);
-				if (assetName.Equals(settingsFileName, System.StringComparison.InvariantCultureIgnoreCase))
+				foreach (PhysicsSettings s in savedFile.clothSettings)
 				{
-					if (Path.GetExtension(assetPath) != ".cs")
+					int index = weightMapper.settings.ToList().FindIndex(x => x.name.Equals(s.name));
+					if (index != -1)
 					{
-						foundSettingsGuid = guid;
-						return true;
+						weightMapper.settings[index] = s;
 					}
 				}
+
+				weightMapper.ApplyWeightMap();
+
+				return savedFile;
 			}
-			foundSettingsGuid = "Not Found";
+
+			return null;
+		}
+
+		public static bool EnsureAssetsFolderExists(string folder)
+		{
+			if (string.IsNullOrEmpty(folder)) return true;
+			if (AssetDatabase.IsValidFolder(folder)) return true;
+			if (folder.Equals("Assets", System.StringComparison.InvariantCultureIgnoreCase)) return true;
+
+			string parentFolder = Path.GetDirectoryName(folder);
+			string folderName = Path.GetFileName(folder);
+
+			if (EnsureAssetsFolderExists(parentFolder))
+			{
+				AssetDatabase.CreateFolder(parentFolder, folderName);
+				return true;
+			}
+
 			return false;
+		}
+
+		public static PhysicsSettingsStore TryFindSettingsObject(Object obj)
+		{
+			string assetPath = GetSettingsStorePath(obj);
+			PhysicsSettingsStore settingsStore = AssetDatabase.LoadAssetAtPath<PhysicsSettingsStore>(assetPath);
+			
+			if (!settingsStore)
+			{
+				settingsStore = CreateInstance<PhysicsSettingsStore>();
+				EnsureAssetsFolderExists(Path.GetDirectoryName(assetPath));
+				AssetDatabase.CreateAsset(settingsStore, assetPath);
+				return settingsStore;
+			}
+
+			return settingsStore;
 		}
 
 		private static bool TryGetSavedIndex(List<PhysicsSettings> savedClothSettings, PhysicsSettings workingSetting, out int savedIndex)

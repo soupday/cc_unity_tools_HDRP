@@ -60,13 +60,49 @@ namespace Reallusion.Import
             public float stiffnessFrequency;
             [Space(8)]
             [Range(0f, 1f)]            
-            public float colliderThreshold;            
+            public float colliderThreshold;
+
+            public PhysicsSettings()
+            {
+
+            }
+
+            public PhysicsSettings(PhysicsSettings ps)
+            {
+                Copy(ps);
+            }
+
+            public void Copy(PhysicsSettings p)
+            {
+                name = p.name;
+                maxDistance = p.maxDistance;
+                maxPenetration = p.maxPenetration;
+                weightMap = p.weightMap;
+                weightMapPower = p.weightMapPower;
+                weightMapOffset = p.weightMapOffset;
+                weightMapScale = p.weightMapScale;
+                activate = p.activate;
+                gravity = p.gravity;
+                mass = p.mass;
+                friction = p.friction;
+                damping = p.damping;
+                drag = p.drag;
+                stretch = p.stretch;
+                bending = p.bending;
+                softRigidCollision = p.softRigidCollision;
+                softRigidMargin = p.softRigidMargin;
+                selfCollision = p.selfCollision;
+                selfMargin = p.selfMargin;
+                solverFrequency = p.solverFrequency;
+                stiffnessFrequency = p.stiffnessFrequency;
+                colliderThreshold = p.colliderThreshold;
+        }
         }                
 
         public PhysicsSettings[] settings;
         public bool updateColliders = true;
         public bool optimizeColliders = true;
-        public bool includeAllLimbColliders = false;        
+        public bool includeAllLimbColliders = false;
 
         public void ApplyWeightMap()
         {            

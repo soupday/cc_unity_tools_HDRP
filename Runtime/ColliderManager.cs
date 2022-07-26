@@ -22,19 +22,52 @@ namespace Reallusion.Import
             [Range(-0.5f, 0.5f)]
             public float heightAdjust = 0f;
             [Range(-0.5f, 0.5f)]
+            [Space(4)]
             public float xAdjust = 0f;
             [Range(-0.5f, 0.5f)]
             public float yAdjust = 0f;
             [Range(-0.5f, 0.5f)]
             public float zAdjust = 0f;
+            [Range(-0.5f, 0.5f)]
+            [Space(4)]
+            public float xRotate = 0f;
+            [Range(-0.5f, 0.5f)]
+            public float yRotate = 0f;
+            [Range(-0.5f, 0.5f)]
+            public float zRotate = 0f;
+
             public float radius;
             public float height;
             public Vector3 position;
+            public Quaternion rotation;
 
             public ColliderSettings(Collider collider)
             {                
                 this.collider = collider;
                 FetchSettings();
+            }
+
+            public ColliderSettings(ColliderSettings cs)
+            {
+                Copy(cs);
+            }
+
+            public void Copy(ColliderSettings c, bool copyCollider = true)
+            {
+                name = c.name;
+                if (copyCollider) collider = c.collider;
+                radiusAdjust = c.radiusAdjust;
+                heightAdjust = c.heightAdjust;
+                xAdjust = c.xAdjust;
+                yAdjust = c.yAdjust;
+                zAdjust = c.zAdjust;
+                xRotate = c.xRotate;
+                yRotate = c.yRotate;
+                zRotate = c.zRotate;
+                radius = c.radius;
+                height = c.height;
+                position = c.position;
+                rotation = c.rotation;
             }
 
             public void FetchSettings()
@@ -46,19 +79,22 @@ namespace Reallusion.Import
                     CapsuleCollider cc = (CapsuleCollider)collider;
                     radius = cc.radius;
                     height = cc.height;
-                    position = cc.center;
+                    position = cc.transform.localPosition;
+                    rotation = cc.transform.localRotation;
                 }
                 else if (collider.GetType() == typeof(BoxCollider))
                 {
                     BoxCollider bc = (BoxCollider)collider;
                     radius = Vector3.Dot(bc.size, Vector3.one) / 3f;
-                    position = bc.center;
+                    position = bc.transform.localPosition;
+                    rotation = bc.transform.localRotation;
                 }
                 else if (collider.GetType() == typeof(SphereCollider))
                 {
                     SphereCollider sc = (SphereCollider)collider;
                     radius = sc.radius;
-                    position = sc.center;
+                    position = sc.transform.localPosition;
+                    rotation = sc.transform.localRotation;
                 }
 
                 radiusAdjust = 0f;
@@ -66,6 +102,9 @@ namespace Reallusion.Import
                 xAdjust = 0f;
                 yAdjust = 0f;
                 zAdjust = 0f;
+                xRotate = 0f;
+                yRotate = 0f;
+                zRotate = 0f;
             }
 
             public void MirrorX(ColliderSettings cs)
@@ -75,6 +114,9 @@ namespace Reallusion.Import
                 xAdjust = -cs.xAdjust;
                 yAdjust = cs.yAdjust;
                 zAdjust = cs.zAdjust;
+                xRotate = cs.xRotate;
+                yRotate = -cs.yRotate;
+                zRotate = -cs.zRotate;
             }
 
             public void MirrorZ(ColliderSettings cs)
@@ -84,6 +126,9 @@ namespace Reallusion.Import
                 xAdjust = cs.xAdjust;
                 yAdjust = cs.yAdjust;
                 zAdjust = -cs.zAdjust;
+                xRotate = -cs.xRotate;
+                yRotate = cs.yRotate;
+                zRotate = cs.zRotate;
             }
 
             public void Reset(bool fetch = false)
@@ -93,6 +138,9 @@ namespace Reallusion.Import
                 xAdjust = 0f;
                 yAdjust = 0f;
                 zAdjust = 0f;
+                xRotate = 0f;
+                yRotate = 0f;
+                zRotate = 0f;
                 if (fetch) FetchSettings();
             }
 
@@ -102,14 +150,16 @@ namespace Reallusion.Import
                 {
                     CapsuleCollider capsule = (CapsuleCollider)collider;                    
                     capsule.radius = radius + radiusAdjust;
-                    capsule.height = height + heightAdjust;
-                    capsule.center = position + new Vector3(xAdjust, yAdjust, zAdjust);
+                    capsule.height = height + heightAdjust;                    
+                    capsule.transform.localPosition = position + new Vector3(xAdjust, yAdjust, zAdjust);
+                    capsule.transform.localRotation = rotation * Quaternion.Euler(new Vector3(xRotate, yRotate, zRotate));
                 }
                 else if (collider.GetType() == typeof(BoxCollider))
                 {
                     BoxCollider box = (BoxCollider)collider;
                     box.size = new Vector3(radius + radiusAdjust, radius + radiusAdjust, radius + radiusAdjust);
-                    box.center = position + new Vector3(xAdjust, yAdjust, zAdjust);
+                    box.transform.localPosition = position + new Vector3(xAdjust, yAdjust, zAdjust);
+                    box.transform.localRotation = rotation * Quaternion.Euler(new Vector3(xRotate, yRotate, zRotate));
                 }
             }
         }
@@ -119,7 +169,7 @@ namespace Reallusion.Import
         public GameObject[] clothMeshes;
         [HideInInspector]
         public ColliderSettings[] settings;
-
+        
         public void AddColliders(List<Collider> colliders)
         {
             List<ColliderSettings> settings = new List<ColliderSettings>();
