@@ -321,12 +321,38 @@ namespace Reallusion.Import
 			else if (boneName.Contains("_Hip"))
 			{
 				symName = boneName;				
-			}	
-			else if (name == "CC_Base_NeckTwist01_Capsule(1)")
+			}				
+
+			if (!string.IsNullOrEmpty(symName))
+			{
+				foreach (ColliderSettings cs in colliderManager.settings)
+				{
+					if (cs != currentCollider && cs.name.StartsWith(symName))
+					{
+						if (type == SymmetricalUpdateType.Update)
+						{
+							cs.MirrorX(currentCollider);
+							cs.Update();
+						}
+						else if (type == SymmetricalUpdateType.Reset)
+						{
+							cs.Reset();
+						}
+						else if (type == SymmetricalUpdateType.Fetch)
+						{
+							cs.FetchSettings();
+						}
+					}
+				}
+			}
+
+			symName = null;
+
+			if (name == "CC_Base_NeckTwist01_Capsule(1)")
 			{
 				symName = "CC_Base_NeckTwist01_Capsule(2)";
 			}
-			else  if (name == "CC_Base_NeckTwist01_Capsule(2)")
+			else if (name == "CC_Base_NeckTwist01_Capsule(2)")
 			{
 				symName = "CC_Base_NeckTwist01_Capsule(1)";
 			}
@@ -339,7 +365,7 @@ namespace Reallusion.Import
 					{
 						if (type == SymmetricalUpdateType.Update)
 						{
-							cs.MirrorX(currentCollider);
+							cs.MirrorZ(currentCollider);
 							cs.Update();
 						}
 						else if (type == SymmetricalUpdateType.Reset)

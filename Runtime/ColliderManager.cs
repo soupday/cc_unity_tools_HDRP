@@ -123,11 +123,11 @@ namespace Reallusion.Import
             {
                 radiusAdjust = cs.radiusAdjust;
                 heightAdjust = cs.heightAdjust;
-                xAdjust = cs.xAdjust;
+                xAdjust = -cs.xAdjust;
                 yAdjust = cs.yAdjust;
-                zAdjust = -cs.zAdjust;
+                zAdjust = cs.zAdjust;
                 xRotate = -cs.xRotate;
-                yRotate = cs.yRotate;
+                yRotate = -cs.yRotate;
                 zRotate = cs.zRotate;
             }
 
