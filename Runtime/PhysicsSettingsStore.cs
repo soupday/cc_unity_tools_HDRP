@@ -4,14 +4,17 @@ using System.Collections.Generic;
 using UnityEditor;
 using System.IO;
 using System.Linq;
+#if UNITY_EDITOR
 using PhysicsSettings = Reallusion.Import.WeightMapper.PhysicsSettings;
 using ColliderSettings = Reallusion.Import.ColliderManager.ColliderSettings;
+#endif
 
 namespace Reallusion.Import
 {
     [System.Serializable]
     public class PhysicsSettingsStore : ScriptableObject
     {
+#if UNITY_EDITOR
         public ColliderSettings[] colliderSettings;
         public List<PhysicsSettings> clothSettings;
 
@@ -250,5 +253,6 @@ namespace Reallusion.Import
 
 			return false;
 		}
+#endif
 	}
 }
