@@ -1,6 +1,9 @@
 Changelog
 =========
 
+### v 1.3.6
+- Runtime components Build fix.
+
 ### v 1.3.5
 - Fixes
     - Collider manager now remembers the currently selected collider.
