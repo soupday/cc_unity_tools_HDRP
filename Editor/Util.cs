@@ -20,6 +20,7 @@ using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using Object = UnityEngine.Object;
 
 namespace Reallusion.Import
 {
@@ -893,6 +894,13 @@ namespace Reallusion.Import
             {
                 FindSceneObjects(root.GetChild(i), search, found);
             }
+        }
+
+        public static bool AssetPathIsEmpty(string assetPath)
+        {
+            const string emptyGuid = "00000000000000000000000000000000";
+
+            return AssetDatabase.AssetPathToGUID(assetPath).Equals(emptyGuid);
         }
 
         public static void LogInfo(string message)
