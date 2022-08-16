@@ -97,7 +97,11 @@ namespace Reallusion.Import
 			{
 				settings.colliderSettings = workingSettings;
 				EditorUtility.SetDirty(settings);
+#if UNITY_2021_2_OR_NEWER
 				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(settings)));
+#else
+				AssetDatabase.SaveAssets();
+#endif
 
 				Debug.Log("Collider settings stored.");
 
@@ -161,8 +165,14 @@ namespace Reallusion.Import
 						settings.clothSettings.Add(s);
 					}
 				}
+
 				EditorUtility.SetDirty(settings);
+#if UNITY_2021_2_OR_NEWER
 				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(settings)));
+#else
+				AssetDatabase.SaveAssets();
+#endif
+
 
 				Debug.Log("Cloth physics settings stored.");
 
@@ -252,7 +262,7 @@ namespace Reallusion.Import
 				return true;
 
 			return false;
-		}
+		}		
 #endif
-	}
+			}
 }

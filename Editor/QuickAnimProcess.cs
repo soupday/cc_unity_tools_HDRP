@@ -88,7 +88,6 @@ public class QuickAnimProcess : Editor
         return IsModel(Selection.activeObject);
     }
 
-    private static string emptyGuid = "00000000000000000000000000000000";
     private static string[] modelFileExtensions = new string[] { ".fbx", ".blend", ".dae", ".obj" };
 
     public static bool IsModel(Object o)
@@ -224,16 +223,14 @@ public class QuickAnimProcess : Editor
         string animName = SanitizeName(o.name + " - " + animationClip.name);
         string fullOutputPath = workingDirectory + "/" + animName + ".anim";
 
-        if (!AssetDatabase.GUIDFromAssetPath(fullOutputPath).ToString().Equals(emptyGuid))
+        
+        if (AssetPathIsEmpty(fullOutputPath))
         {
             for (int i = 0; i < 999; i++)
             {
                 string extension = string.Format("{0:000}", i);
                 fullOutputPath = workingDirectory + "/" + animName + "." + extension + ".anim";
-                if (AssetDatabase.GUIDFromAssetPath(fullOutputPath).ToString().Equals(emptyGuid))
-                {
-                    break;
-                }
+                if (AssetPathIsEmpty(fullOutputPath)) break;
             }
         }
         Debug.Log("Writing Asset: " + fullOutputPath);
@@ -246,5 +243,12 @@ public class QuickAnimProcess : Editor
         string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
         Regex r = new Regex(string.Format("[{0}]", Regex.Escape(invalid)));
         return r.Replace(inputName, " - ");
+    }
+
+    public static bool AssetPathIsEmpty(string assetPath)
+    {
+        const string emptyGuid = "00000000000000000000000000000000";
+
+        return AssetDatabase.AssetPathToGUID(assetPath).Equals(emptyGuid);
     }
 }

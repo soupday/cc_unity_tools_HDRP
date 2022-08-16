@@ -57,9 +57,7 @@ namespace Reallusion.Import
         private static Vector3 animatorPosition;
         private static Quaternion animatorRotation;
 
-
-        // Function variables
-        const string emptyGuid = "00000000000000000000000000000000";
+        // Function variables        
         public const string ANIM_FOLDER_NAME = "Animations";
         public const string RETARGET_FOLDER_NAME = "Retargeted";
         public const string RETARGET_SOURCE_PREFIX = "Imported";
@@ -1252,13 +1250,13 @@ namespace Reallusion.Import
 
             if (!overwrite)
             {
-                if (!AssetDatabase.GUIDFromAssetPath(assetPath).ToString().Equals(emptyGuid))
+                if (!Util.AssetPathIsEmpty(assetPath))
                 {
                     for (int i = 0; i < 999; i++)
                     {
                         string extension = string.Format("{0:000}", i);
                         assetPath = Path.Combine(animFolder, animName + "_" + extension + ".anim");
-                        if (AssetDatabase.GUIDFromAssetPath(assetPath).ToString().Equals(emptyGuid)) break;
+                        if (Util.AssetPathIsEmpty(assetPath)) break;
                     }
                 }
             }
