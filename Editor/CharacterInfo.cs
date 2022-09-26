@@ -38,6 +38,7 @@ namespace Reallusion.Import
           
         public bool isLOD = false;
         public bool bakeIsBaked = false;
+        public bool tempHairBake = false;
         public bool animationSetup = false;
         public int animationRetargeted = 0;
 
@@ -353,6 +354,9 @@ namespace Reallusion.Import
                     case "bakeIsBaked":
                         bakeIsBaked = value == "true" ? true : false;                        
                         break;
+                    case "tempHairBake":
+                        tempHairBake = value == "true" ? true : false;
+                        break;
                     case "bakeCustomShaders":
                         bakeCustomShaders = value == "true" ? true : false;                        
                         break;
@@ -389,6 +393,7 @@ namespace Reallusion.Import
             writer.WriteLine("qualEyes=" + builtQualEyes.ToString());
             writer.WriteLine("qualHair=" + builtQualHair.ToString());
             writer.WriteLine("bakeIsBaked=" + (bakeIsBaked ? "true" : "false"));
+            writer.WriteLine("tempHairBake=" + (tempHairBake ? "true" : "false"));
             writer.WriteLine("bakeCustomShaders=" + (builtBakeCustomShaders ? "true" : "false"));
             writer.WriteLine("bakeSeparatePrefab=" + (builtBakeSeparatePrefab ? "true" : "false"));
             writer.WriteLine("shaderFlags=" + (int)BuiltShaderFlags);

@@ -40,7 +40,7 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 20000
   updateMode:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   updatePeriod:
     m_OverrideState: 0
@@ -51,19 +51,19 @@ MonoBehaviour:
     m_Value: 0
   top:
     m_OverrideState: 1
-    m_Value: {r: 0.46453363, g: 0.56259733, b: 0.6886792, a: 1}
+    m_Value: {r: 0.7962963, g: 0.8333334, b: 1, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
   middle:
     m_OverrideState: 1
-    m_Value: {r: 0.06931373, g: 0.081196085, b: 0.101, a: 1}
+    m_Value: {r: 0.19168629, g: 0.25490198, b: 0.24723946, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
   bottom:
     m_OverrideState: 1
-    m_Value: {r: 0.46207705, g: 0.5647117, b: 0.68668544, a: 1}
+    m_Value: {r: 0.25, g: 0.21428572, b: 0.1875, a: 1}
     hdr: 1
     showAlpha: 0
     showEyeDropper: 1
@@ -80,7 +80,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
-  m_Name: previewSkyAndFogProfile
+  m_Name: RL_previewSkyAndFogProfile_2
   m_EditorClassIdentifier: 
   components:
   - {fileID: 6742904436121154172}

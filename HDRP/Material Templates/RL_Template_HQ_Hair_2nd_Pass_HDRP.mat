@@ -98,7 +98,7 @@ Material:
     - _DoubleSidedEnable: 1
     - _DoubleSidedNormalMode: 2
     - _DstBlend: 10
-    - _EnableBlendModePreserveSpecularLighting: 1
+    - _EnableBlendModePreserveSpecularLighting: 0
     - _EnableFogOnTransparent: 1
     - _EndColorStrength: 1
     - _FlowMapFlipGreen: 0
@@ -109,6 +109,7 @@ Material:
     - _HighlightBOverlapEnd: 1
     - _HighlightBOverlapInvert: 1
     - _HighlightBStrength: 0
+    - _HighlightBlend: 1
     - _InvertRootMap: 0
     - _NormalStrength: 0.013
     - _OpaqueCullMode: 2

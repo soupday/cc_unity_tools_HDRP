@@ -172,6 +172,7 @@ TEX2D(Specular);
 float4 baseColor, vertexBaseColor;
 float vertexColorStrength, baseColorStrength, diffuseStrength, alphaPower, alphaRemap;
 float globalStrength, rootColorStrength, endColorStrength, invertRootMap;
+float highlightBlend;
 float3 highlightADistribution, highlightBDistribution;
 float highlightAStrength, highlightAOverlapEnd, highlightAOverlapInvert;
 float highlightBStrength, highlightBOverlapEnd, highlightBOverlapInvert;
@@ -1120,14 +1121,14 @@ void RLEyeDiffuse(uint3 id : SV_DispatchThreadID)
     float2 uv = GetUV(id.xy);
     float2 touv = TilingOffset(uv, irisScale, float2(0.5, 0.5));
 
-    float4 color = SAMPLE(CorneaDiffuse, touv);
+    float4 color = SAMPLE(CorneaDiffuse, touv) * sRGBToLinear(irisColor);
     float3 hsv = HSV(color, irisHue, irisSaturation, irisBrightness);
     color = float4(hsv, 1.0);
     float4 colorBlend = SAMPLE(ColorBlend, uv);
     
     float radial = RADIAL(uv);
     float limbusMask = EyeLimbusMask(radial);
-    color = (color * sRGBToLinear(irisColor)) + (sRGBToLinear(irisCloudyColor) * 0.5);
+    color = color + (sRGBToLinear(irisCloudyColor) * 0.5);
     color = lerp(color, color * sRGBToLinear(limbusColor), limbusMask);    
 
     color = BlendMultiply_float4(color, colorBlend, colorBlendStrength);
@@ -1143,7 +1144,7 @@ void RLCorneaSingleDiffuse(uint3 id : SV_DispatchThreadID)
     float2 touvCornea = TilingOffset(uv, irisScale, float2(0.5, 0.5));
     float2 touvSclera = TilingOffset(uv, scleraScale, float2(0.5, 0.5));
 
-    float4 cornea = SAMPLE(CorneaDiffuse, touvCornea);
+    float4 cornea = SAMPLE(CorneaDiffuse, touvCornea) * sRGBToLinear(irisColor);
     float3 hsv = HSV(cornea, irisHue, irisSaturation, irisBrightness);
     cornea = float4(hsv, 1.0);
    
@@ -1158,7 +1159,7 @@ void RLCorneaSingleDiffuse(uint3 id : SV_DispatchThreadID)
     float limbusMask = EyeLimbusMask(radial);
     float irisMask = EyeIrisMask(radial);
 
-    cornea = (cornea * sRGBToLinear(irisColor)) + (sRGBToLinear(irisCloudyColor) * 0.5);
+    cornea = cornea + (sRGBToLinear(irisCloudyColor) * 0.5);
     cornea = lerp(cornea, cornea * sRGBToLinear(limbusColor), limbusMask);
     sclera = lerp(sclera, sclera * sRGBToLinear(cornerShadowColor), shadowMask);
     float4 color = lerp(cornea, sclera, irisMask);
@@ -1289,11 +1290,12 @@ void RLCorneaSubsurfaceMask(uint3 id : SV_DispatchThreadID)
     Result[id.xy] = sss;
 }
 
-float4 RootEndBlend(float4 color, float rootMask) 
+float4 RootEndBlend(float4 baseColor, float rootMask) 
 {    
-    float globalMask = globalStrength * (((1.0 - rootMask) * rootColorStrength) + (rootMask * endColorStrength));    
-    rootMask = lerp(rootMask, 1.0 - rootMask, invertRootMap);
-    float4 rootEnd = lerp(sRGBToLinearApprox(rootColor), sRGBToLinearApprox(endColor), rootMask);
+    float modRootMask = lerp(rootMask, 1 - rootMask, invertRootMap);
+    float4 color = lerp(float4(1.0, 1.0, 1.0, 0.0), baseColor, baseColorStrength);    
+    float4 rootEnd = lerp(sRGBToLinearApprox(rootColor), sRGBToLinearApprox(endColor), modRootMask);
+    float globalMask = lerp(rootColorStrength, endColorStrength, modRootMask) * globalStrength;    
     return lerp(color, rootEnd, globalMask);
 }
 
@@ -1303,9 +1305,9 @@ float4 HighlightBlend(float4 color, float idMap, float rootMask, float4 highligh
     float lower = smoothstep(distribution.x, distribution.y, idMap);
     float upper = 1.0 - smoothstep(distribution.y, distribution.z, idMap);
     float highlightMask = strength * lerp(lower, upper, step(distribution.y, idMap));
-    float invertedRootMask = lerp(rootMask, 1.0 - rootMask, 1.0 - invert);
-    float overlappedInvertedRootMask = 1.0 - ((1.0 - invertedRootMask) * overlap);
-    highlightMask = saturate(highlightMask * overlappedInvertedRootMask);
+    float invertedRootMask = lerp(rootMask, 1.0 - rootMask, invert);
+    float overlappedInvertedRootMask = 1.0 - (invertedRootMask * overlap);
+    highlightMask = saturate(highlightMask * overlappedInvertedRootMask * highlightBlend);
     return lerp(color, sRGBToLinearApprox(highlightColor), highlightMask);
 }
 
@@ -1322,9 +1324,8 @@ void RLHairColoredDiffuse(uint3 id : SV_DispatchThreadID)
 
     float ao = INVERTED_SCALE(mask.g, aoStrength);
     float alpha = pow(saturate((diffuse.a / alphaRemap)), alphaPower);
-
-    float4 color = lerp(float4(1.0, 1.0, 1.0, 1.0), diffuse, baseColorStrength);
-    color = RootEndBlend(color, rootMap.g);
+    
+    float4 color = RootEndBlend(diffuse, rootMap.g);
     color = HighlightBlend(color, idMap.g, rootMap.g, highlightAColor, highlightADistribution,
                            highlightAStrength, highlightAOverlapEnd, highlightAOverlapInvert);
     color = HighlightBlend(color, idMap.g, rootMap.g, highlightBColor, highlightBDistribution,
@@ -1332,7 +1333,7 @@ void RLHairColoredDiffuse(uint3 id : SV_DispatchThreadID)
 
     color = color * diffuseStrength;
     color = lerp(color, color * depthBlend, colorBlendStrength);
-    color = lerp(color, color * ao, aoOccludeAll * 0.5);
+    color = lerp(color, color * ao, aoOccludeAll);
     
     color = LinearTosRGB(color);
     color.a = alpha;
@@ -1353,7 +1354,7 @@ void RLHairDiffuse(uint3 id : SV_DispatchThreadID)
     float alpha = saturate(pow(saturate((diffuse.a / alphaRemap)), alphaPower));
     
     float4 color = diffuse * diffuseStrength;
-    color = lerp(color, color * depthBlend, colorBlendStrength);   
+    color = lerp(color, color * depthBlend, colorBlendStrength);
     color = lerp(color, color * ao, aoOccludeAll * 0.5);
     
     color = LinearTosRGB(color);
@@ -1372,10 +1373,10 @@ void RLHairMask(uint3 id : SV_DispatchThreadID)
         
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = (specular.r + specular.g + specular.b) / 3.0;
+    float spec = specular.g;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = lerp(smoothness, smoothness * ao, aoOccludeAll);
-    float4 packed = float4(metallic, ao, detailMask, smoothness);
+    float4 packed = float4(metallic, ao, spec, smoothness);
 
     Result[id.xy] = packed;
 }

@@ -78,10 +78,10 @@ Material:
     - _AOOccludeAll: 0
     - _AOStrength: 1
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.15
+    - _AlphaClip: 0.05
     - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 10
-    - _AlphaPower: 1
+    - _AlphaPower: 0.7
     - _AlphaRemap: 1
     - _AlphaSrcBlend: 1
     - _AlphaToMask: 1
@@ -92,8 +92,8 @@ Material:
     - _CullMode: 0
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
-    - _DepthPostpass: 0.2
-    - _DepthPrepass: 0.514
+    - _DepthPostpass: 0.15
+    - _DepthPrepass: 0.666
     - _DiffuseStrength: 1
     - _DoubleSidedEnable: 1
     - _DoubleSidedNormalMode: 2
@@ -110,6 +110,7 @@ Material:
     - _HighlightBOverlapEnd: 1
     - _HighlightBOverlapInvert: 1
     - _HighlightBStrength: 0
+    - _HighlightBlend: 1
     - _InvertRootMap: 0
     - _NormalStrength: 1
     - _OpaqueCullMode: 2
@@ -122,7 +123,7 @@ Material:
     - _SecondarySmoothness: 0.625
     - _SecondarySpecularMultiplier: 0.05
     - _SecondarySpecularShift: 0
-    - _ShadowClip: 0.15
+    - _ShadowClip: 0.35
     - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
     - _SmoothnessPower: 1
