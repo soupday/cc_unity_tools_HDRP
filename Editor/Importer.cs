@@ -1107,8 +1107,9 @@ namespace Reallusion.Import
                 mat.SetFloatIf("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
                 mat.SetFloatIf("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));                
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
-                float smoothnessMax = Util.CombineSpecularToSmoothness(specular, 1f);
-                mat.SetFloatIf("_SmoothnessMax", smoothnessMax);                
+                float smoothnessMax = Util.CombineSpecularToSmoothness(specular, ValueByPipeline(1f, 0.9f, 1f));
+                mat.SetFloatIf("_SmoothnessMax", smoothnessMax);
+                // URP's lights affect the AMP SSS more than 3D or HDRP
                 mat.SetFloatIf("_SubsurfaceScale", matJson.GetFloatValue("Subsurface Scatter/Lerp"));                
                 mat.SetFloatIf("_MicroSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale"));
                 mat.SetFloatIf("_UnmaskedSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Unmasked Roughness Scale"));
@@ -1476,7 +1477,7 @@ namespace Reallusion.Import
             float smoothnessPowerMod = ValueByPipeline(1f, 1f, 1f);
             float specularPowerMod = ValueByPipeline(0.5f, 0.5f, 0.33f);
             float specularMin = ValueByPipeline(0.05f, 0f, 0f);
-            float specularMax = ValueByPipeline(0.5f, 0.45f, 0.5f);
+            float specularMax = ValueByPipeline(0.5f, 0.4f, 0.65f);
 
             if (isFacialHair)
             {
@@ -1532,7 +1533,7 @@ namespace Reallusion.Import
                     SetFloatPowerRange(mat, "_SecondarySpecularMultiplier", specMapStrength * specStrength2, 0.0125f, 0.125f, specularPowerMod);
                     // set by template
                     //mat.SetFloatIf("_SecondarySmoothness", 0.5f);
-                    mat.SetFloatIf("_RimTransmissionIntensity", 4f * rimTransmission);
+                    mat.SetFloatIf("_RimTransmissionIntensity", 2f * rimTransmission);
                     mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                         matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
                     mat.SetFloatIf("_SpecularShiftMin", 
@@ -1546,7 +1547,7 @@ namespace Reallusion.Import
                     {
                         SetFloatPowerRange(mat, "_SmoothnessMin", smoothnessStrength, 0f, smoothnessMax, smoothnessPowerMod);
                         SetFloatPowerRange(mat, "_SpecularMultiplier", specMapStrength * specStrength, specularMin, specularMax, specularPowerMod);
-                        mat.SetFloatIf("_RimTransmissionIntensity", 75f * rimTransmission);
+                        mat.SetFloatIf("_RimTransmissionIntensity", ValueByPipeline(2f, 50f, 50f) * rimTransmission);
                         mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                             matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
                         mat.SetFloatIf("_SpecularShiftMin", -0.25f +

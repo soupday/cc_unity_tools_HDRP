@@ -1105,10 +1105,10 @@ namespace Reallusion.Import
                             // with the two material system.
                             if (isFacialObject)
                             {
-                                oldMat.SetFloatIf("_AlphaClip", 0.75f);
-                                oldMat.SetFloatIf("_AlphaClip2", 0.75f);
+                                oldMat.SetFloatIf("_AlphaClip", 0.666f);
+                                oldMat.SetFloatIf("_AlphaClip2", 0.666f);
                                 oldMat.SetFloatIf("_AlphaPower", 1.5f);
-                                oldMat.SetFloatIf("_ShadowClip", 0.35f);
+                                oldMat.SetFloatIf("_ShadowClip", 0.5f);
                                 oldMat.SetFloatIf("_AlphaRemap", 1.0f);
                             }
                             else
@@ -1116,7 +1116,7 @@ namespace Reallusion.Import
                                 oldMat.SetFloatIf("_AlphaClip", 0.666f);
                                 oldMat.SetFloatIf("_AlphaClip2", 0.666f);
                                 oldMat.SetFloatIf("_AlphaPower", 0.7f);
-                                oldMat.SetFloatIf("_ShadowClip", 0.3f);
+                                oldMat.SetFloatIf("_ShadowClip", 0.5f);
                                 oldMat.SetFloatIf("_AlphaRemap", 1.0f);
                             }
                         }
