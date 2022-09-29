@@ -902,8 +902,6 @@ namespace Reallusion.Import
                 else
                 {
                     mat.SetFloatIf("_Metallic", 0f);                    
-                    mat.SetFloatIf("_Smoothness", 0.5f);
-                    mat.SetFloatIf("_GlossMapScale", 0.5f);
                 }
 
                 ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
@@ -935,14 +933,19 @@ namespace Reallusion.Import
                 }
                 else
                 {
-                    mat.SetFloatIf("_Smoothness", 0.897f);
-                    mat.SetFloatIf("_GlossMapScale", 0.897f);
+                    // eyelash and scalp should keep the template smoothness
+                    if (materialType != MaterialType.Scalp && materialType != MaterialType.Eyelash)
+                    {
+                        mat.SetFloatIf("_Smoothness", 0.897f);
+                        mat.SetFloatIf("_GlossMapScale", 0.897f);
+                    }
                 }
             }
 
             // All
             if (matJson != null)
             {
+                // Roughness_Value from Blender pipeline (instead of baking a small value texture)
                 if (matJson.PathExists("Roughness_Value"))
                 {
                     if (RP == RenderPipeline.Builtin)
@@ -952,6 +955,7 @@ namespace Reallusion.Import
                     
                 }
 
+                // Metallic_Value from Blender pipeline (instead of baking a small value texture)
                 if (matJson.PathExists("Metallic_Value"))
                 {
                     mat.SetFloatIf("_Metallic", matJson.GetFloatValue("Metallic_Value"));
