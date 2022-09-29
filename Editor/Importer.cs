@@ -678,19 +678,19 @@ namespace Reallusion.Import
         private void ProcessTextures(GameObject obj, string sourceName, Material sharedMat, Material mat, 
             MaterialType materialType, QuickJSON matJson)
         {
-            string shaderName = mat.shader.name;            
+            string shaderName = mat.shader.name;
 
             if (shaderName.iContains(Pipeline.SHADER_DEFAULT))
             {
                 ConnectDefaultMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
-            
+
             else if (shaderName.iContains(Pipeline.SHADER_DEFAULT_HAIR))
             {
                 ConnectDefaultHairMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.iContains(Pipeline.SHADER_HQ_SKIN) || 
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_SKIN) ||
                      shaderName.iContains(Pipeline.SHADER_HQ_HEAD))
             {
                 ConnectHQSkinMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
@@ -706,7 +706,7 @@ namespace Reallusion.Import
                 ConnectHQTongueMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
-            else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_REFRACTIVE) || 
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_REFRACTIVE) ||
                      shaderName.iContains(Pipeline.SHADER_HQ_CORNEA) ||
                      shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
                      shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE))
@@ -716,7 +716,7 @@ namespace Reallusion.Import
 
             else if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR) ||
                      shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
-            { 
+            {
                 ConnectHQHairMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
@@ -728,7 +728,12 @@ namespace Reallusion.Import
             else if (shaderName.iContains(Pipeline.SHADER_HQ_TEARLINE))
             {
                 ConnectHQTearlineMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
-            }            
+            }
+
+            else
+            {
+                ConnectDefaultMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
+            }
 
             Pipeline.ResetMaterial(mat);
         }
@@ -889,8 +894,17 @@ namespace Reallusion.Import
                     }
                 }
 
-                ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
-                    matJson, "Textures/MetallicAlpha");              
+                if (ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
+                    matJson, "Textures/MetallicAlpha"))
+                {
+                    mat.SetFloatIf("_Metallic", 1f);                    
+                }
+                else
+                {
+                    mat.SetFloatIf("_Metallic", 0f);                    
+                    mat.SetFloatIf("_Smoothness", 0.5f);
+                    mat.SetFloatIf("_GlossMapScale", 0.5f);
+                }
 
                 ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
                     matJson, "Textures/AO");
@@ -912,7 +926,7 @@ namespace Reallusion.Import
                 ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");            
 
             // override smoothness for basic material skin
-            if (RP != RenderPipeline.HDRP && mat.GetTexture("_MetallicGlossMap"))
+            if (RP != RenderPipeline.HDRP && mat.GetTextureIf("_MetallicGlossMap"))
             {
                 if (customShader == "RLHead" || customShader == "RLSkin")
                 {
@@ -944,24 +958,24 @@ namespace Reallusion.Import
                 }
 
                 if (RP != RenderPipeline.Builtin)
-                    mat.SetColor("_BaseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
+                    mat.SetColorIf("_BaseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
                 else
-                    mat.SetColor("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
+                    mat.SetColorIf("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
 
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
                 {
                     if (RP == RenderPipeline.HDRP)
-                        mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
+                        mat.SetColorIf("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                     else
-                        mat.SetColor("_EmissionColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
+                        mat.SetColorIf("_EmissionColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 }
 
                 if (matJson.PathExists("Textures/Normal/Strength"))
                 {
                     if (RP == RenderPipeline.HDRP)
-                        mat.SetFloat("_NormalScale", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
+                        mat.SetFloatIf("_NormalScale", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
                     else
-                        mat.SetFloat("_BumpScale", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
+                        mat.SetFloatIf("_BumpScale", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
                 }
             }
 
@@ -1398,7 +1412,7 @@ namespace Reallusion.Import
                 }
 
                 mat.SetFloatIf("_IrisSmoothness", 0f); // 1f - matJson.GetFloatValue("Custom Shader/Variable/_Iris Roughness"));
-                mat.SetFloatIf("_IrisBrightness", 1.0f * matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));                                
+                mat.SetFloatIf("_IrisBrightness", 1.5f * matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));                                
                 mat.SetFloatIf("_IOR", matJson.GetFloatValue("Custom Shader/Variable/_IoR"));
                 float irisScale = matJson.GetFloatValue("Custom Shader/Variable/Iris UV Radius") / 0.16f;
                 mat.SetFloatIf("_IrisScale", irisScale);

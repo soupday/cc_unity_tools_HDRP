@@ -122,12 +122,7 @@ namespace Reallusion.Import
                 qualEyes = EyeQuality.Parallax;
 
             if (qualHair == HairQuality.Coverage && Pipeline.isHDRP)
-                qualHair = HairQuality.Default;
-
-            if (!Pipeline.isHDRP && (ShaderFlags & ShaderFeatureFlags.Tessellation) > 0)
-            {
-                ShaderFlags = ShaderFlags & (~ShaderFeatureFlags.Tessellation);
-            }
+                qualHair = HairQuality.Default;            
         }
 
         public CharacterInfo(string guid)

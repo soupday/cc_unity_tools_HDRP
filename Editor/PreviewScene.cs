@@ -202,7 +202,7 @@ namespace Reallusion.Import
                 if (skybox)
                 {
                     RenderSettings.skybox = skybox;
-                    if (Pipeline.is3D) RenderSettings.ambientIntensity = 1.25f;
+                    if (Pipeline.is3D) RenderSettings.ambientIntensity = 1.0f;
                 }
             }
 
