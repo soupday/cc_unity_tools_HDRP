@@ -37,6 +37,7 @@ namespace Reallusion.Import
         private readonly string bakeFolder;
         private readonly string characterFolder;
         private readonly string texturesFolder;
+        private readonly string sourceMaterialsFolder;
         private readonly string materialsFolder;
         private readonly string fbmFolder;
         private readonly string texFolder;
@@ -74,6 +75,8 @@ namespace Reallusion.Import
             characterFolder = Util.CreateFolder(bakeFolder, characterName);
             texturesFolder = Util.CreateFolder(characterFolder, TEXTURES_FOLDER);
             materialsFolder = Util.CreateFolder(characterFolder, MATERIALS_FOLDER);
+            string parentSourceMaterialsFolder = Util.CreateFolder(fbxFolder, MATERIALS_FOLDER);
+            sourceMaterialsFolder = Util.CreateFolder(parentSourceMaterialsFolder, characterName);            
 
             fbmFolder = Path.Combine(fbxFolder, characterName + ".fbm");
             texFolder = Path.Combine(fbxFolder, "textures", characterName);            
@@ -271,7 +274,7 @@ namespace Reallusion.Import
         {
             if (Util.IsCC3Character(fbx))
             {
-                CopyToClone();
+                if (!CopyToClone()) return null;
 
                 BakeMaterials();
 
@@ -279,14 +282,50 @@ namespace Reallusion.Import
                 AssetDatabase.Refresh();
 
                 return SaveAsPrefab();
-
-                //System.Media.SystemSounds.Asterisk.Play();
             }
 
             return null;
-        }        
+        }
 
-        public void BakeMaterials()
+        public GameObject BakeHQHair()
+        {
+            if (Util.IsCC3Character(fbx) && prefab)
+            {
+                if (!CopyToClone(true)) return null;
+
+                BakeMaterials(true);
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+
+                PrefabUtility.ApplyPrefabInstance(clone, InteractionMode.UserAction);
+                GameObject.DestroyImmediate(clone);
+
+                return prefab;
+            }
+
+            return null;
+        }
+
+        public GameObject RestoreHQHair()
+        {
+            if (Util.IsCC3Character(fbx) && prefab)
+            {
+                if (!CopyToClone(true)) return null;                
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+
+                PrefabUtility.ApplyPrefabInstance(clone, InteractionMode.UserAction);
+                GameObject.DestroyImmediate(clone);
+
+                return prefab;
+            }
+
+            return null;
+        }
+
+        public void BakeMaterials(bool hairOnly = false)
         {
             Renderer[] renderers = clone.GetComponentsInChildren<Renderer>();
             List<Material> processed = new List<Material>(renderers.Length);
@@ -308,28 +347,32 @@ namespace Reallusion.Import
                         Material firstPass = null;
                         Material secondPass = null;
 
-                        if (shaderName.iContains(Pipeline.SHADER_HQ_SKIN))
-                            bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
+                        if (!hairOnly)
+                        {
+                            if (shaderName.iContains(Pipeline.SHADER_HQ_SKIN))
+                                bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
 
-                        else if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH))
-                            bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
+                            else if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH))
+                                bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
 
-                        else if (shaderName.iContains(Pipeline.SHADER_HQ_TONGUE))
-                            bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
+                            else if (shaderName.iContains(Pipeline.SHADER_HQ_TONGUE))
+                                bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
 
-                        else if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR) ||
-                                 shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS) ||
-                                 shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
-                            bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);
-
-                        else if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA) ||
+                            else if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA) ||
                                  shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
                                  shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE) ||
                                  shaderName.iContains(Pipeline.SHADER_HQ_EYE_REFRACTIVE))
-                            bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);                        
+                                bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
 
-                        else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION))
-                            bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);                                               
+                            else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION))
+                                bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);
+                        }
+
+                        if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR) ||
+                            shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS) ||
+                            shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
+
+                            bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);                        
 
                         if (firstPass && secondPass)
                         {
@@ -370,16 +413,28 @@ namespace Reallusion.Import
             }
         }
 
-        public void CopyToClone()
+        public bool CopyToClone(bool hairOnly = false)
         {
-            // don't link the prefab as a variant to the original prefabs as updating the original causes the variants to be reset.
-            if (prefab)
-                clone = GameObject.Instantiate<GameObject>(prefab);                
-                //clone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            if (!hairOnly)
+            {
+                // don't link the prefab as a variant to the original prefabs as updating the original causes the variants to be reset.
+                if (prefab)
+                    clone = GameObject.Instantiate<GameObject>(prefab);                
+                else
+                    clone = GameObject.Instantiate<GameObject>(fbx);
+            }
             else
-                clone = GameObject.Instantiate<GameObject>(fbx);
-                //clone = (GameObject)PrefabUtility.InstantiatePrefab(fbx);
-            //PrefabUtility.UnpackPrefabInstance(clone, PrefabUnpackMode.Completely, InteractionMode.UserAction);
+            {
+                if (prefab)
+                    clone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                else
+                    clone = null;                
+            }
+
+            // put any HQ materials back if replaced by baked materials...
+            if (clone) RestoreHQMaterials(clone);
+
+            return clone != null;
         }
 
         public GameObject SaveAsPrefab()
@@ -410,6 +465,48 @@ namespace Reallusion.Import
                 GameObject.DestroyImmediate(clone);
                 return variant;
             }            
+        }
+
+        private void RestoreHQMaterials(GameObject prefabInstance)
+        {
+            Renderer[] renderers = clone.GetComponentsInChildren<Renderer>();
+            List<Material> processed = new List<Material>(renderers.Length);
+            string[] folders = new string[] { sourceMaterialsFolder };
+
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer)
+                {
+                    Material[] sharedMats = renderer.sharedMaterials;
+                    bool replaced = false;
+
+                    for (int i = 0; i < sharedMats.Length; i++)
+                    {
+                        Material sharedMat = sharedMats[i];                        
+
+                        // don't process duplicates...
+                        if (processed.Contains(sharedMat)) continue;
+                        processed.Add(sharedMat);
+
+                        string shaderName = Util.GetShaderName(sharedMat);
+
+                        Action<Material, int> ReplaceMat = (m, j) =>
+                        {
+                            Material hqMat = Util.FindMaterial(m.name, folders);
+                            if (hqMat && hqMat != m)
+                            {
+                                sharedMats[j] = hqMat;
+                                replaced = true;
+                            }
+                        };
+
+                        if (shaderName.iContains("_baked_"))
+                            ReplaceMat(sharedMat, i);
+                    }
+
+                    if (replaced) renderer.sharedMaterials = sharedMats;
+                }
+            }
         }
 
         private void CopyAMPSubsurface(Material source, Material dest)
@@ -1141,6 +1238,7 @@ namespace Reallusion.Import
             float rootColorStrength = mat.GetFloatIf("_RootColorStrength");
             float endColorStrength = mat.GetFloatIf("_EndColorStrength");
             float invertRootMap = mat.GetFloatIf("_InvertRootMap");
+            float highlightBlend = mat.GetFloatIf("_HighlightBlend", 1.0f);
             float highlightAStrength = mat.GetFloatIf("_HighlightAStrength");
             float highlightAOverlapEnd = mat.GetFloatIf("_HighlightAOverlapEnd");
             float highlightAOverlapInvert = mat.GetFloatIf("_HighlightAOverlapInvert");
@@ -1194,7 +1292,7 @@ namespace Reallusion.Import
                 bakedBaseMap = BakeHairDiffuseMap(diffuse, blend, id, root, mask,
                     diffuseStrength, alphaPower, alphaRemap, aoStrength, (useAmplify ? 0f : aoOccludeAll),
                     rootColor, rootColorStrength, endColor, endColorStrength, globalStrength,
-                    invertRootMap, baseColorStrength,
+                    invertRootMap, baseColorStrength, highlightBlend,
                     highlightAColor, highlightADistribution, highlightAOverlapEnd,
                     highlightAOverlapInvert, highlightAStrength,
                     highlightBColor, highlightBDistribution, highlightBOverlapEnd,
@@ -1213,7 +1311,7 @@ namespace Reallusion.Import
             if (IS_HDRP)
             {
                 bakedMaskMap = BakeHairMaskMap(mask, specular,
-                    aoStrength, (useAmplify ? 0f : aoOccludeAll),                     
+                    aoStrength, 0f,
                     smoothnessMin, smoothnessMax, smoothnessPower,
                     sourceName + "_Mask", "RLHairMask");
             }
@@ -1255,7 +1353,7 @@ namespace Reallusion.Import
                     bakeMat.SetFloatIf("_SpecularShiftMax", specularShiftMax);
                     bakeMat.SetFloatIf("_SpecularMix", specularMix);
                     bakeMat.SetFloatIf("_SecondarySpecularMultiplier", secondarySpecularMultiplier);
-                    bakeMat.SetFloatIf("_SecondarySpecularShiftMin", secondarySpecularShift);
+                    bakeMat.SetFloatIf("_SecondarySpecularShift", secondarySpecularShift);
                     bakeMat.SetFloatIf("_SecondarySmoothness", secondarySmoothness);
                     bakeMat.SetColorIf("_BaseColor", diffuseColor);
                     bakeMat.SetColorIf("_Color", diffuseColor);
@@ -1341,7 +1439,7 @@ namespace Reallusion.Import
                     return result;
                 }
             }
-            else
+            else // Non Custom Shaders
             {
                 Action<Material> SetBasic = (bakeMat) =>
                 {
@@ -2510,7 +2608,7 @@ namespace Reallusion.Import
         private Texture2D BakeHairDiffuseMap(Texture2D diffuse, Texture2D blend, Texture2D id, Texture2D root, Texture2D mask,
                         float diffuseStrength, float alphaPower, float alphaRemap, float aoStrength, float aoOccludeAll,
                         Color rootColor, float rootColorStrength, Color endColor, float endColorStrength, float globalStrength, 
-                        float invertRootMap, float baseColorStrength,
+                        float invertRootMap, float baseColorStrength, float highlightBlend,
                         Color highlightAColor, Vector4 highlightADistribution, float highlightAOverlapEnd, 
                         float highlightAOverlapInvert, float highlightAStrength,
                         Color highlightBColor, Vector4 highlightBDistribution, float highlightBOverlapEnd, 
@@ -2549,6 +2647,7 @@ namespace Reallusion.Import
                 bakeShader.SetFloat("endColorStrength", endColorStrength);
                 bakeShader.SetFloat("globalStrength", globalStrength);
                 bakeShader.SetFloat("invertRootMap", invertRootMap);
+                bakeShader.SetFloat("highlightBlend", highlightBlend);
                 bakeShader.SetFloat("baseColorStrength", baseColorStrength);
                 bakeShader.SetFloat("highlightAOverlapEnd", highlightAOverlapEnd);
                 bakeShader.SetFloat("highlightAOverlapInvert", highlightAOverlapInvert);

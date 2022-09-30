@@ -1,6 +1,14 @@
 Changelog
 =========
 
+### v 1.3.8
+- Added tessellation shaders and templates to 3D and URP pipelines.
+- Upgraded to Amplify 1.9 shaders in 3D and URP pipelines.
+- Fixed some issues with hair shaders in 3D and URP.
+- Updated Hair shaders and eye shaders.
+- Added Hair Bake preview button.
+- Updated preview scene lighting presets, should all look roughly the same lighting across all three pipelines.
+
 ### v 1.3.7
 - Backported function to mid release 2020.3 and 2021.1 SaveAssetIfDirty removed.
 - GUIDFromAssetPath Unity 2019 fix for built-in pipeline.

@@ -151,7 +151,8 @@ namespace Reallusion.Import
                 GameObject clone = PrefabUtility.InstantiatePrefab(prefabAsset ? prefabAsset : fbxAsset, character.transform) as GameObject;
                 if (clone)
                 {
-                    Selection.activeGameObject = clone;
+                    Selection.activeGameObject = clone;                    
+
                     return clone;
                 }
             }
@@ -201,7 +202,7 @@ namespace Reallusion.Import
                 if (skybox)
                 {
                     RenderSettings.skybox = skybox;
-                    if (Pipeline.is3D) RenderSettings.ambientIntensity = 1.25f;
+                    if (Pipeline.is3D) RenderSettings.ambientIntensity = 1.0f;
                 }
             }
 

@@ -23,7 +23,6 @@ Material:
   m_Name: RL_Template_Baked_HairCustom_1st_Pass_HDRP
   m_Shader: {fileID: -6465566751694194690, guid: 34039396b8fa97342b7bb1b05267a5d3, type: 3}
   m_ShaderKeywords: _ALPHATEST_ON _ALPHATOMASK_ON _DISABLE_SSR_TRANSPARENT _DOUBLESIDED_ON
-    _ENUMCLIPQUALITY_ON_STANDARD
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
@@ -89,7 +88,7 @@ Material:
     - _CullModeForward: 0
     - _DepthOffsetEnable: 0
     - _DoubleSidedEnable: 1
-    - _DoubleSidedNormalMode: 0
+    - _DoubleSidedNormalMode: 2
     - _DstBlend: 0
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
@@ -135,7 +134,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 0}
-    - _DoubleSidedConstants: {r: -1, g: -1, b: -1, a: 0}
+    - _DoubleSidedConstants: {r: 1, g: 1, b: 1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _SpecularTint: {r: 1, g: 1, b: 1, a: 1}

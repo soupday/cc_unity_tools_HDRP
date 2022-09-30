@@ -45,6 +45,8 @@ namespace Reallusion.Import
         private bool refreshAfterGUI;
         private bool buildAfterGUI;
         private bool bakeAfterGUI;
+        private bool bakeHairAfterGUI;
+        private bool restoreHairAfterGUI;
         private bool physicsAfterGUI;
         public enum ImporterWindowMode { Build, Bake, Settings }
         private ImporterWindowMode windowMode = ImporterWindowMode.Build;
@@ -71,6 +73,8 @@ namespace Reallusion.Import
         private static Texture2D iconBaked;
         private static Texture2D iconMixed;
         private static Texture2D iconActionBake;
+        private static Texture2D iconActionBakeHair;
+        private static Texture2D iconActionRestoreHair;
         private static Texture2D iconActionPreview;
         private static Texture2D iconActionRefresh;
         private static Texture2D iconActionAnims;
@@ -168,6 +172,8 @@ namespace Reallusion.Import
             iconBaked = Util.FindTexture(folders, "RLIcon_BakedChar");
             iconMixed = Util.FindTexture(folders, "RLIcon_MixedChar");
             iconActionBake = Util.FindTexture(folders, "RLIcon_ActionBake");
+            iconActionBakeHair = Util.FindTexture(folders, "RLIcon_ActionBakeHair");
+            iconActionRestoreHair = Util.FindTexture(folders, "RLIcon_ActionRestoreHair");
             iconActionPreview = Util.FindTexture(folders, "RLIcon_ActionPreview");
             iconActionRefresh = Util.FindTexture(folders, "RLIcon_ActionRefresh");
             iconAction2Pass = Util.FindTexture(folders, "RLIcon_Action2Pass");
@@ -318,6 +324,8 @@ namespace Reallusion.Import
             refreshAfterGUI = false;
             buildAfterGUI = false;
             bakeAfterGUI = false;
+            bakeHairAfterGUI = false;
+            restoreHairAfterGUI = false;
             physicsAfterGUI = false;
 
             CheckDragAndDrop();
@@ -362,6 +370,14 @@ namespace Reallusion.Import
             else if (bakeAfterGUI)
             {
                 BakeCharacter();
+            }
+            else if (bakeHairAfterGUI)
+            {
+                BakeCharacterHair();
+            }
+            else if (restoreHairAfterGUI)
+            {
+                RestoreCharacterHair();
             }
             else if (physicsAfterGUI)
             {
@@ -661,6 +677,27 @@ namespace Reallusion.Import
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 bakeAfterGUI = true;
+            }
+            GUI.enabled = true;
+
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+
+            if (contextCharacter.BuiltBasicMaterials) GUI.enabled = false;
+            if (contextCharacter.tempHairBake)
+            {
+                if (GUILayout.Button(new GUIContent(iconActionRestoreHair, "Restore Hair materials."),
+                    GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+                {
+                    restoreHairAfterGUI = true;
+                }
+            }
+            else
+            {
+                if (GUILayout.Button(new GUIContent(iconActionBakeHair, "Bake hair materials."),
+                    GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+                {
+                    bakeHairAfterGUI = true;
+                }
             }
             GUI.enabled = true;
 
@@ -1140,6 +1177,39 @@ namespace Reallusion.Import
                 {
                     ShowBakedCharacter(bakedAsset);
                 }
+
+            }
+        }
+
+        private void BakeCharacterHair()
+        {
+            if (contextCharacter.HQMaterials)
+            {
+                Util.LogInfo("Baking hair materials:");
+
+                WindowManager.HideAnimationPlayer(true);
+
+                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
+                GameObject bakedAsset = baker.BakeHQHair();
+
+                contextCharacter.tempHairBake = true;
+                contextCharacter.Write();
+            }
+        }
+
+        private void RestoreCharacterHair()
+        {
+            if (contextCharacter.HQMaterials)
+            {
+                Util.LogInfo("Restoring hair materials:");
+
+                WindowManager.HideAnimationPlayer(true);
+
+                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
+                GameObject bakedAsset = baker.RestoreHQHair();
+
+                contextCharacter.tempHairBake = false;
+                contextCharacter.Write();
             }
         }
 
@@ -1188,11 +1258,13 @@ namespace Reallusion.Import
 
                     if (root)
                     {
-                        GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_Spine02", "Spine02");
+                        //GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_Spine02", "Spine02");
+                        //GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head", "Head");
+                        GameObject hips = MeshUtil.FindCharacterBone(root, "CC_Base_NeckTwist01", "NeckTwist01");
                         GameObject head = MeshUtil.FindCharacterBone(root, "CC_Base_Head", "Head");
                         if (hips && head)
                         {
-                            Vector3 lookAt = (hips.transform.position + head.transform.position) / 2f;
+                            Vector3 lookAt = (hips.transform.position + head.transform.position * 2f) / 3f;
                             Quaternion lookBackRot = new Quaternion();
                             Vector3 euler = lookBackRot.eulerAngles;
                             euler.y = -180f;
@@ -1200,7 +1272,7 @@ namespace Reallusion.Import
 
                             foreach (SceneView sv in SceneView.sceneViews)
                             {
-                                sv.LookAt(lookAt, lookBackRot, 0.5f);
+                                sv.LookAt(lookAt, lookBackRot, 0.25f);
                             }
                         }
                     }

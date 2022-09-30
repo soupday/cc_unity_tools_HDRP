@@ -465,9 +465,10 @@ namespace Reallusion.Import
             AdjustBlink(blinkVal);
         }
 
-        public static void ResetFaceViewCamera()
+        public static void ResetFaceViewCamera(Object obj = null)
         {
-            Object obj = AnimPlayerGUI.CharacterAnimator.gameObject;
+            if (obj == null && CharacterAnimator) obj = CharacterAnimator.gameObject;
+            if (obj == null) return;
             GameObject root = Util.GetScenePrefabInstanceRoot(obj);
 
             if (root)

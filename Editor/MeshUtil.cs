@@ -1044,7 +1044,7 @@ namespace Reallusion.Import
                 secondPass.SetFloat("_TransparentDepthPostpassEnable", 0f);
                 secondPass.SetFloat("_TransparentDepthPrepassEnable", 0f);
                 // preserve specular lighting
-                secondPass.SetFloat("_EnableBlendModePreserveSpecularLighting", 0f);
+                //secondPass.SetFloat("_EnableBlendModePreserveSpecularLighting", 0f);
                 // Z test (opaque and transparent): Less
                 secondPass.SetFloat("_ZTestDepthEqualForOpaque", 2f);
                 secondPass.SetFloat("_ZTestTransparent", 2f);
@@ -1105,16 +1105,18 @@ namespace Reallusion.Import
                             // with the two material system.
                             if (isFacialObject)
                             {
-                                oldMat.SetFloatIf("_AlphaClip", 0.75f);
-                                oldMat.SetFloatIf("_AlphaClip2", 0.75f);
+                                oldMat.SetFloatIf("_AlphaClip", 0.666f);
+                                oldMat.SetFloatIf("_AlphaClip2", 0.666f);
                                 oldMat.SetFloatIf("_AlphaPower", 1.5f);
+                                oldMat.SetFloatIf("_ShadowClip", 0.5f);
                                 oldMat.SetFloatIf("_AlphaRemap", 1.0f);
                             }
                             else
                             {
-                                oldMat.SetFloatIf("_AlphaClip", 0.5f);
-                                oldMat.SetFloatIf("_AlphaClip2", 0.5f);
-                                oldMat.SetFloatIf("_AlphaPower", 1.0f);
+                                oldMat.SetFloatIf("_AlphaClip", 0.666f);
+                                oldMat.SetFloatIf("_AlphaClip2", 0.666f);
+                                oldMat.SetFloatIf("_AlphaPower", 0.7f);
+                                oldMat.SetFloatIf("_ShadowClip", 0.5f);
                                 oldMat.SetFloatIf("_AlphaRemap", 1.0f);
                             }
                         }
