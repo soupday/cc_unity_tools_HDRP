@@ -771,7 +771,7 @@ namespace Reallusion.Import
 
                 if (!diffuseAlpha)
                 {
-                    if (diffuse && opacity && diffuse != opacity)
+                    if ((diffuse || opacity) && diffuse != opacity)
                     {
                         Util.LogInfo("Baking DiffuseAlpha texture for " + sourceName);
                         folder = Util.GetAssetFolder(diffuse, opacity);

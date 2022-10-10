@@ -40,7 +40,7 @@ namespace Reallusion.Import
 
     public static class Pipeline
     {
-        public const string VERSION = "1.3.8";
+        public const string VERSION = "1.3.9";
 
 #if HDRP_10_5_0_OR_NEWER
         // version
@@ -433,6 +433,11 @@ namespace Reallusion.Import
 #else
         public static bool isHDRP12 => false;
 #endif
+#if URP_12_0_0_OR_NEWER
+        public static bool isURP12 => true;
+#else
+        public static bool isURP12 => false;
+#endif
 
 
         public static RenderPipeline GetRenderPipeline()
@@ -455,7 +460,7 @@ namespace Reallusion.Import
 
         public static void AddDiffusionProfilesHDRP()
         {
-#if HDRP_10_5_0_OR_NEWER                        
+#if HDRP_10_5_0_OR_NEWER
 #if HDRP_12_0_0_OR_NEWER
             RenderPipelineGlobalSettings pipelineSettings = GraphicsSettings.GetSettingsForRenderPipeline<HDRenderPipeline>();
             if (!pipelineSettings) return;
@@ -660,9 +665,9 @@ namespace Reallusion.Import
             string customTemplateName;
             Material customTemplate = null;
             Material foundTemplate = null;
-            bool foundHDRP12 = false;
+            bool foundHDRPorURP12 = false;
             
-            if (isHDRP12)
+            if (isHDRP12 || isURP12)
             {
                 customTemplateName = templateName + "12";
                 foundTemplate = Util.FindMaterial(customTemplateName);
@@ -670,18 +675,34 @@ namespace Reallusion.Import
                 {
                     templateName = customTemplateName;
                     customTemplate = foundTemplate;
-                    foundHDRP12 = true;
+                    foundHDRPorURP12 = true;
                 }
             }
 
             if (useAmplify)
             {
-                customTemplateName = templateName + "_Amplify";
-                foundTemplate = Util.FindMaterial(customTemplateName);
-                if (foundTemplate)
+                // There are cases where there is an URP12_Amplify shader but no corresponding URP12 base shader
+                if (isURP12 && !foundHDRPorURP12)
                 {
-                    templateName = customTemplateName;
-                    customTemplate = foundTemplate;
+                    customTemplateName = templateName + "12_Amplify";
+                    foundTemplate = Util.FindMaterial(customTemplateName);
+                    if (foundTemplate)
+                    {
+                        templateName = customTemplateName;
+                        customTemplate = foundTemplate;
+                        foundHDRPorURP12 = true;
+                    }
+                }
+
+                if (!foundTemplate)
+                {
+                    customTemplateName = templateName + "_Amplify";
+                    foundTemplate = Util.FindMaterial(customTemplateName);
+                    if (foundTemplate)
+                    {
+                        templateName = customTemplateName;
+                        customTemplate = foundTemplate;
+                    }
                 }
             }
 
@@ -689,15 +710,16 @@ namespace Reallusion.Import
             {
                 foundTemplate = null;
 
-                if (isHDRP12 && !foundHDRP12)
-                {                    
+                // There are cases where there is an HDRP12_T shader but no corresponding HDRP12 base shader
+                if (isHDRP12 && !foundHDRPorURP12)
+                {
                     customTemplateName = templateName + "12_T";
                     foundTemplate = Util.FindMaterial(customTemplateName);
                     if (foundTemplate)
                     {
                         templateName = customTemplateName;
                         customTemplate = foundTemplate;
-                        foundHDRP12 = true;
+                        foundHDRPorURP12 = true;
                     }
                 }
 

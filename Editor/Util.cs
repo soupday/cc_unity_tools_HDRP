@@ -359,9 +359,9 @@ namespace Reallusion.Import
         {
             Material template = null;
             Material foundTemplate = null;
-            bool foundHDRP12 = false;
+            bool foundHDRPorURP12 = false;
 
-            if (Pipeline.isHDRP12)
+            if (Pipeline.isHDRP12 || Pipeline.isURP12)
             {
                 string templateName = name + "12";
                 foundTemplate = FindMaterial(templateName, folders);
@@ -369,18 +369,34 @@ namespace Reallusion.Import
                 {
                     name = templateName;
                     template = foundTemplate;
-                    foundHDRP12 = true;
+                    foundHDRPorURP12 = true;
                 }
             }
 
             if (Importer.USE_AMPLIFY_SHADER)
             {
-                string templateName = name + "_Amplify";
-                foundTemplate = FindMaterial(templateName, folders);
-                if (foundTemplate)
+                // There are cases where there is an URP12_Amplify shader but no corresponding URP12 base shader
+                if (Pipeline.isURP12 && !foundHDRPorURP12)
                 {
-                    name = templateName;
-                    template = foundTemplate;
+                    string templateName = name + "12_Amplify";
+                    foundTemplate = FindMaterial(templateName, folders);
+                    if (foundTemplate)
+                    {
+                        name = templateName;
+                        template = foundTemplate;
+                        foundHDRPorURP12 = true;
+                    }
+                }
+
+                if (!foundTemplate)
+                {
+                    string templateName = name + "_Amplify";
+                    foundTemplate = FindMaterial(templateName, folders);
+                    if (foundTemplate)
+                    {
+                        name = templateName;
+                        template = foundTemplate;
+                    }
                 }
             }
 
@@ -388,7 +404,8 @@ namespace Reallusion.Import
             {
                 foundTemplate = null;
 
-                if (Pipeline.isHDRP12 && !foundHDRP12)
+                // There are cases where there is an HDRP12_T shader but no corresponding HDRP12 base shader
+                if (Pipeline.isHDRP12 && !foundHDRPorURP12)
                 {
                     string templateName = name + "12_T";
                     foundTemplate = FindMaterial(templateName, folders);
@@ -396,7 +413,7 @@ namespace Reallusion.Import
                     {
                         name = templateName;
                         template = foundTemplate;
-                        foundHDRP12 = true;
+                        foundHDRPorURP12 = true;
                     }
                 }
                 

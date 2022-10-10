@@ -1,6 +1,11 @@
 Changelog
 =========
 
+### v 1.3.9
+- Due to shader incompatibilities between URP10 and URP12, the URP package must be split into 2 versions.
+    - URP10 for the Univeral Render Pipeline version 10 and 11: Unity 2020.3 upto 2021.1
+    - URP12 for the Univeral Render Pipeline version 12 and 13: Unity 2021.2 upwards.
+
 ### v 1.3.8
 - Added tessellation shaders and templates to 3D and URP pipelines.
 - Upgraded to Amplify 1.9 shaders in 3D and URP pipelines.
