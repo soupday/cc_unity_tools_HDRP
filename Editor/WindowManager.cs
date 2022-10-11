@@ -22,6 +22,10 @@ namespace Reallusion.Import
         private static bool showPlayerAfterPlayMode = false;
         private static bool showRetargetAfterPlayMode = false;
 
+        public delegate void OnTimer();
+        public static OnTimer onTimer;
+        private static float timer = 0f;
+
         static WindowManager()
         {
             EditorApplication.playModeStateChanged += WindowManager.OnPlayModeStateChanged;
@@ -110,6 +114,16 @@ namespace Reallusion.Import
                 
         private static void MonitorScene()  
         {                        
+            if (timer > 0f)
+            {
+                timer -= Time.deltaTime;
+                if (timer <= 0f)
+                {
+                    timer = 0f;
+                    onTimer();
+                }
+            }
+
             Scene activeScene = EditorSceneManager.GetActiveScene();
             if (currentScene != activeScene)
             {
@@ -359,5 +373,10 @@ namespace Reallusion.Import
                     AnimationMode.StartAnimationMode();
             }
         }        
+
+        public static void StartTimer(float delay)
+        {
+            timer = delay;
+        }
     }
 }

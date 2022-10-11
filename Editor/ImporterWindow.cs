@@ -1111,7 +1111,7 @@ namespace Reallusion.Import
             }
         }        
 
-        bool UpdatePreviewCharacter(GameObject prefabAsset)
+        public bool UpdatePreviewCharacter(GameObject prefabAsset)
         {
             if (WindowManager.IsPreviewScene)
             {
