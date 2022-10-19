@@ -1,6 +1,10 @@
 Changelog
 =========
 
+### v 1.4.0
+- Initial DemoTeam strand hair auto setup implemented, on Blender 3.3 Hair curve exports from Blender Tools.
+- Limbus dark ring corrected, iris should look brighter, clearer and less fuzzy at the edges.
+
 ### v 1.3.9
 - Due to shader incompatibilities between URP10 and URP12, the URP package must be split into 2 versions.
     - URP10 for the Univeral Render Pipeline version 10 and 11: Unity 2020.3 upto 2021.1

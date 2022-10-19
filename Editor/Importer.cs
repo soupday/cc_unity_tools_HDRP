@@ -1421,10 +1421,12 @@ namespace Reallusion.Import
                 float irisScale = matJson.GetFloatValue("Custom Shader/Variable/Iris UV Radius") / 0.16f;
                 mat.SetFloatIf("_IrisScale", irisScale);
                 mat.SetFloatIf("_IrisRadius", 0.15f * irisScale);                
-                mat.SetFloatIf("_LimbusWidth", matJson.GetFloatValue("Custom Shader/Variable/Limbus UV Width Color"));                
+                mat.SetFloatIf("_LimbusWidth", matJson.GetFloatValue("Custom Shader/Variable/Limbus UV Width Color"));
                 float limbusDarkScale = matJson.GetFloatValue("Custom Shader/Variable/Limbus Dark Scale");
-                float limbusDarkT = Mathf.InverseLerp(0f, 10f, limbusDarkScale);
-                mat.SetFloatIf("_LimbusDarkRadius", Mathf.Lerp(0.145f, 0.075f, limbusDarkT));
+                float ds = Mathf.Pow(0.01f, 0.2f) / limbusDarkScale;
+                float dm = Mathf.Pow(0.5f, 0.2f) / limbusDarkScale;
+                mat.SetFloatIf("_LimbusDarkRadius", ds);
+                mat.SetFloatIf("_LimbusDarkWidth", 2f * (dm - ds));
                 //mat.SetFloatIf("_LimbusDarkWidth", 0.035f);
                 float scleraBrightnessPower = 0.65f;
                 if (Pipeline.isHDRP) scleraBrightnessPower = 0.75f;
