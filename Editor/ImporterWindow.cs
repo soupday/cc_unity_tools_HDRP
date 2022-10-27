@@ -466,7 +466,7 @@ namespace Reallusion.Import
             if (contextCharacter.bakeIsBaked)
                 importType += " + Baked";
 
-            
+            contextCharacter.CheckGeneration();            
 
             GUILayout.BeginArea(infoBlock);
 

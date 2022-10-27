@@ -33,7 +33,8 @@ namespace Reallusion.Import
         G1,
         G3,
         G3Plus,
-        ActorCore
+        ActorCore,
+        ActorBuild
     };
 
     /// <summary>
@@ -53,10 +54,10 @@ namespace Reallusion.Import
             { "RL_CharacterCreator_Base_Std_G3", BaseGeneration.G3 },
             { "RL_G6_Standard_Series", BaseGeneration.G1 },
             { "NonStdLookAtDataCopyFromCCBase", BaseGeneration.ActorCore },
-            { "ActorBuild", BaseGeneration.ActorCore },
+            { "ActorBuild", BaseGeneration.ActorBuild },
             { "ActorScan", BaseGeneration.ActorCore }
         };
-
+        
         public static BaseGeneration GetCharacterGeneration(GameObject fbx, string generationString)
         {
             if (!string.IsNullOrEmpty(generationString))
@@ -139,7 +140,8 @@ namespace Reallusion.Import
             #region HumanBoneDescription
             if (generation == BaseGeneration.G3 || 
                 generation == BaseGeneration.G3Plus || 
-                generation == BaseGeneration.ActorCore)
+                generation == BaseGeneration.ActorCore ||
+                generation == BaseGeneration.ActorBuild)
             {
                 human.human = new[] {
                         Bone("Chest", "CC_Base_Spine01"),
@@ -502,7 +504,7 @@ namespace Reallusion.Import
             if (noMotion)
             {
                 // Set the Prefab
-                if (info.path.iContains("_lod"))
+                if (info.path.iContains("_lod") && CountLODs(fbx) > 1)
                 {                    
                     return CreateOneLODPrefabFromModel(info, fbx, "", out sceneInstance);
                 }
@@ -552,6 +554,31 @@ namespace Reallusion.Import
             return prefab;
         }
 
+        public static int CountLODs(GameObject fbx)
+        {
+            List<int> levels = new List<int>(5);
+            Renderer[] renderers = fbx.GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer r in renderers)
+            {
+                int index = r.name.LastIndexOf("_LOD");                
+                if (index >= 0 && r.name.Length - index == 5 && char.IsDigit(r.name[r.name.Length - 1]))
+                {
+                    // any mesh with a _LOD<N> suffix is a LOD level
+                    string levelString = r.name.Substring(r.name.Length - 1, 1);
+                    if (int.TryParse(levelString, out int level))
+                    {
+                        if (!levels.Contains(level)) levels.Add(level);
+                    }
+                }
+                else
+                {
+                    // assume any mesh without a _LOD<N> suffix is the original model (LOD0)
+                    int level = 0;
+                    if (!levels.Contains(level)) levels.Add(level);
+                }
+            }
+            return levels.Count;
+        }
         
         public static GameObject CreateOneLODPrefabFromModel(CharacterInfo info, GameObject fbx, string suffix, out GameObject sceneLODInstance)
         {

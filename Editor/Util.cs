@@ -185,7 +185,7 @@ namespace Reallusion.Import
                 }
             }
 
-            return "Unknown";
+            return "";
         }
 
         public static List<string> GetValidCharacterGUIDS()
@@ -911,6 +911,19 @@ namespace Reallusion.Import
             {
                 FindSceneObjects(root.GetChild(i), search, found);
             }
+        }
+
+        public static Transform FindChildRecursive(Transform root, string search)
+        {
+            if (root.name.iEquals(search)) return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform found = FindChildRecursive(root.GetChild(i), search);
+                if (found) return found;
+            }
+
+            return null;
         }
 
         public static bool AssetPathIsEmpty(string assetPath)

@@ -442,7 +442,7 @@ namespace Reallusion.Import
             string prefabFolder = Util.CreateFolder(fbxFolder, Importer.PREFABS_FOLDER);
             //string namedPrefabFolder = Util.CreateFolder(prefabFolder, characterName);            
 
-            if (characterInfo.isLOD)
+            if (characterInfo.isLOD && RL.CountLODs(clone) > 1)
             {
                 string lodPrefabPath = Path.Combine(prefabFolder, characterName + "_LODModels.prefab");
                 GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, lodPrefabPath);

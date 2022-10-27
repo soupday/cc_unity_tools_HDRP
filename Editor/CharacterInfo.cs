@@ -167,6 +167,11 @@ namespace Reallusion.Import
             }
         }
 
+        public bool FbxLoaded
+        {
+            get { return fbx != null; }
+        }
+
         public GameObject PrefabAsset
         {
             get
@@ -213,6 +218,8 @@ namespace Reallusion.Import
                 return jsonData;
             }
         }
+
+        public bool JsonLoaded { get { return jsonData != null; } }
 
         public QuickJSON RootJsonData
         {
@@ -271,15 +278,24 @@ namespace Reallusion.Import
             { 
                 if (generation == BaseGeneration.None)
                 {
-                    string gen = Util.GetJsonGenerationString(jsonFilepath);                    
-                    generation = RL.GetCharacterGeneration(Fbx, gen);
-                    Util.LogInfo("CharInfo: " + name + " Generation " + generation.ToString());
-                    Write();
-                }
+                    CheckGeneration();
+                }                
 
                 return generation;
             } 
-        }            
+        }
+
+        public void CheckGeneration()
+        {
+            BaseGeneration oldGen = generation;
+            string gen = Util.GetJsonGenerationString(jsonFilepath);
+            generation = RL.GetCharacterGeneration(Fbx, gen);            
+            if (generation != oldGen)
+            {
+                Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
+                Write();
+            }
+        }
 
         public void Release()
         {
@@ -298,6 +314,7 @@ namespace Reallusion.Import
                     case BaseGeneration.G3:
                     case BaseGeneration.G3Plus:
                     case BaseGeneration.GameBase:
+                    case BaseGeneration.ActorBuild:
                         return true;
                     default:
                         return false;
