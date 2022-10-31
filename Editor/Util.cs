@@ -683,7 +683,7 @@ namespace Reallusion.Import
 
         public static GameObject GetCharacterSourceFbx(GameObject scenePrefab)
         {
-            GameObject sourceFbx = null;
+            GameObject sourceFbx;
             if (scenePrefab.name.iContains("_lod") && scenePrefab.transform.childCount == 1)
                 sourceFbx = FindRootPrefabAssetFromSceneObject(scenePrefab.transform.GetChild(0).gameObject);
             else

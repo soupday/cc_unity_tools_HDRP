@@ -39,12 +39,14 @@ namespace Reallusion.Import
             Selection.activeObject = lodPrefab;
         }        
 
-        public GameObject MakeLODPrefab(Object[] objects)
+        public GameObject MakeLODPrefab(Object[] objects, string name = "")
         {
             if (objects.Length > 0)
             {
                 // determine character name and prefab folder path
                 characterName = objects[0].name;
+                string prefabName = characterName + "_LOD.prefab";
+                if (!string.IsNullOrEmpty(name)) prefabName = name + ".prefab";
                 folder = Path.GetDirectoryName(AssetDatabase.GetAssetPath(objects[0]));
 
                 // create LOD group and add lod instances
@@ -66,7 +68,7 @@ namespace Reallusion.Import
                 // Clean up
                 CleanUp();
 
-                string prefabPath = Path.Combine(folder, characterName + "_LodGroup.prefab");
+                string prefabPath = Path.Combine(folder, prefabName);
                 GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(lodRoot, prefabPath);
 
                 GameObject.DestroyImmediate(lodRoot);
@@ -309,7 +311,7 @@ namespace Reallusion.Import
             }
         }
 
-        public int CountPolys(GameObject asset)
+        public static int CountPolys(GameObject asset)
         {
             MeshFilter[] meshFilters = asset.GetComponentsInChildren<MeshFilter>();
             SkinnedMeshRenderer[] skinnedMeshRenderers = asset.GetComponentsInChildren<SkinnedMeshRenderer>();
@@ -330,6 +332,9 @@ namespace Reallusion.Import
 
             return count;
         }
+
+
+
 
         private void CleanUp()
         {            
