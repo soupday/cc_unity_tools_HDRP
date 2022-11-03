@@ -49,6 +49,7 @@ namespace Reallusion.Import
 
         public const string MATERIALS_FOLDER = "Materials";
         public const string PREFABS_FOLDER = "Prefabs";
+        public const string BAKE_SUFFIX = "_Baked";
 
         public const float MIPMAP_BIAS = 0f;
         public const float MIPMAP_BIAS_HAIR_ID_MAP = -1f;

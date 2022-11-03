@@ -16,8 +16,7 @@ namespace Reallusion.Import
         private List<GameObject> lodInstances;
         private int numLevels;
         private Dictionary<string, Transform> boneMap;        
-        private string folder;
-        private List<Object> cleanUp = new List<Object>();
+        private string folder;        
 
         public struct LODObject
         {
@@ -37,7 +36,7 @@ namespace Reallusion.Import
                 WindowManager.previewScene.ShowPreviewCharacter(lodPrefab);
             }
             Selection.activeObject = lodPrefab;
-        }        
+        }
 
         public GameObject MakeLODPrefab(Object[] objects, string name = "")
         {
@@ -45,7 +44,7 @@ namespace Reallusion.Import
             {
                 // determine character name and prefab folder path
                 characterName = objects[0].name;
-                string prefabName = characterName + "_LOD.prefab";
+                string prefabName = characterName + "_LODGroup.prefab";
                 if (!string.IsNullOrEmpty(name)) prefabName = name + ".prefab";
                 folder = Path.GetDirectoryName(AssetDatabase.GetAssetPath(objects[0]));
 
@@ -169,10 +168,7 @@ namespace Reallusion.Import
                     if (lod0Container)
                     {
                         AddLODObject(lod0Container, lodObj);                        
-                    }
-
-                    // remove any 
-                    if (lod0Container != lodObj) cleanUp.Add(lodObj);
+                    }                    
                 }
 
             }
@@ -249,6 +245,7 @@ namespace Reallusion.Import
                 {
                     RemapLODMesh(r.gameObject);
                     lodRenderers.Add(r);
+                    r.gameObject.transform.parent = lodRoot.transform;
                 }
                 processedPolys += lob.polyCount;
                 // distribute transition sizes by the square root of processed polygon density
@@ -337,28 +334,11 @@ namespace Reallusion.Import
 
 
         private void CleanUp()
-        {            
-            // remove the bones from all other lod objects
-            for (int i = 1; i < lodObjects.Count; i++)
-            {
-                // make sure not to delete the lod0 bone root
-                if (lodObjects[i].boneRoot && lodObjects[i].boneRoot != lod0BoneRoot)
-                {
-                    GameObject.DestroyImmediate(lodObjects[i].boneRoot.gameObject);
-                }
-            }
-
-            // remove all animators from the lod objects
+        {   
+            // remove all the old lod object containers
             foreach (LODObject lob in lodObjects)
             {
-                Animator lodAnimator = lob.lodObject.GetComponentInChildren<Animator>();
-                if (lodAnimator) Component.DestroyImmediate(lodAnimator);
-            }
-
-            // remove any objects designated for deletion
-            foreach (Object o in cleanUp)
-            {
-                GameObject.DestroyImmediate(o);
+                GameObject.DestroyImmediate(lob.lodObject);
             }
         }
     }

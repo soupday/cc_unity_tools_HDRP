@@ -29,7 +29,7 @@ namespace Reallusion.Import
                 window.BuildModelPrefabDict(Selection.objects);
 
             window.minSize = new Vector2(300f, 300f);
-        }        
+        }
 
         private string mainUxmlName = "rl-lod-array-main-grid";
         //private string listBoxUxmlName = "rl-lod-array-list-box";
@@ -85,7 +85,9 @@ namespace Reallusion.Import
             boxStyle.fixedWidth = 100f;
 
             GUIStyle selectedBoxStyle = new GUIStyle(boxStyle);
-            selectedBoxStyle.normal.background = TextureColor(Color.green * 0.85f);
+            selectedBoxStyle.normal.background = TextureColor(new Color(0.506f, 0.745f, 0.063f));
+            GUIStyle selectedBakedBoxStyle = new GUIStyle(boxStyle);
+            selectedBakedBoxStyle.normal.background = TextureColor(new Color(1.0f, 0.745f, 0.063f));
 
             Rect posRect = new Rect(0f, 0f, main.contentRect.width, main.contentRect.height);
 
@@ -105,9 +107,24 @@ namespace Reallusion.Import
             {
                 GUILayout.BeginArea(boxRect);
                 GUILayout.BeginVertical();
-                if (GUILayout.Button(new GUIContent(model.Icon, ""), model.Selected ? selectedBoxStyle : boxStyle))
+                if (GUILayout.Button(new GUIContent(model.Icon, ""), 
+                                     model.Selected ? 
+                                        (model.Baked ? selectedBakedBoxStyle : selectedBoxStyle) : boxStyle))
                 {
                     model.Selected = !model.Selected;
+                    if (model.Selected)
+                    {
+                        if (model.Baked)
+                        {
+                            GridModel sgm = GetBakedSourceModel(model);
+                            if (sgm != null) sgm.Selected = false;
+                        }
+                        else
+                        {
+                            GridModel bgm = GetBakedModel(model);
+                            if (bgm != null) bgm.Selected = false;
+                        }
+                    }
                 }
                 //GUILayout.FlexibleSpace();
                 GUILayout.Label(model.Name);
@@ -126,15 +143,18 @@ namespace Reallusion.Import
 
         void CreateButtonCallback()
         {
-            Object[] objects = new Object[modelList.Count];
-            for (int i = 0; i < modelList.Count; i++)
+            List<Object> objects = new List<Object>();            
+            foreach (GridModel model in modelList)
             {
-                objects[i] = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(modelList[i].Guid));
+                if (model.Selected)
+                {
+                    objects.Add(model.GetAsset());
+                }
             }
 
             WindowManager.HideAnimationPlayer(true);
             Lodify l = new Lodify();
-            GameObject lodPrefab = l.MakeLODPrefab(objects, nameField.text);
+            GameObject lodPrefab = l.MakeLODPrefab(objects.ToArray(), nameField.text);
             if (lodPrefab && WindowManager.IsPreviewScene)
             {
                 WindowManager.previewScene.ShowPreviewCharacter(lodPrefab);
@@ -179,50 +199,121 @@ namespace Reallusion.Import
             string search = "t:Prefab";
             string[] results = AssetDatabase.FindAssets(search, folders);
             int largest = 0;
+            const string pathSuffix = Importer.BAKE_SUFFIX + ".prefab";
 
             foreach (string guid in results)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
-                string assetName = Path.GetFileNameWithoutExtension(path);
+                string assetName = Path.GetFileNameWithoutExtension(path);                
 
-                GameObject o = (GameObject)AssetDatabase.LoadAssetAtPath(path, typeof(GameObject));
-                Object src = Util.FindRootPrefabAsset(o);
-
-                if (Util.IsCC3Character(src))
+                if (path.iEndsWith(".prefab"))
                 {
-                    //modelDict.Add(guid, assetName);
-                    GridModel g = new GridModel();
-                    g.Guid = guid;
-                    g.Name = assetName;
-                    //g.Icon = (Texture2D)AssetDatabase.GetCachedIcon(path);
-                    g.Icon = AssetPreview.GetAssetPreview(o);
-                    if (Selection.objects.ToList().Contains(o))
-                        g.Selected = true;
-                    g.Tris = Lodify.CountPolys(o);
-                    if (g.Tris > largest)
+                    bool baked = false;
+                    if (path.iEndsWith(pathSuffix))
                     {
-                        largest = g.Tris;
-                        nameHint = o.name;
+                        path = path.Substring(0, path.Length - pathSuffix.Length) + ".prefab";
+                        baked = true;
+                    }                    
+                    
+                    GameObject o = (GameObject)AssetDatabase.LoadAssetAtPath(path, typeof(GameObject));
+                    Object src = Util.FindRootPrefabAsset(o);
+
+                    if (Util.IsCC3Character(src))
+                    {
+                        //modelDict.Add(guid, assetName);
+                        GridModel g = new GridModel();
+                        g.Guid = guid;
+                        g.Name = assetName;
+                        //g.Icon = (Texture2D)AssetDatabase.GetCachedIcon(path);
+                        g.Icon = AssetPreview.GetAssetPreview(o);
+                        //if (Selection.objects.ToList().Contains(o)) g.Selected = true;
+                        g.Selected = false;
+                        g.Baked = baked;
+                        g.Tris = Lodify.CountPolys(o);
+                        if (g.Tris > largest)
+                        {
+                            largest = g.Tris;
+                            nameHint = o.name;
+                        }
+                        modelList.Add(g);
                     }
-                    modelList.Add(g);
                 }
             }
 
-            nameField.SetValueWithoutNotify(nameHint + "_LOD");
+            nameField.SetValueWithoutNotify(nameHint + "_LODGroup");
+
+            AutoSelect();
+        }
+
+        private void AutoSelect()
+        {
+            // select everything
+            foreach (GridModel gm in modelList) gm.Selected = true;
+
+            // deselect all baked source models
+            foreach (GridModel gm in modelList)
+            {
+                if (gm.Baked)
+                {
+                    GridModel sgm = GetBakedSourceModel(gm);
+                    if (sgm != null) sgm.Selected = false;
+                }
+            }
+        }
+
+        private GridModel GetBakedModel(GridModel sgm)
+        {
+            string name = sgm.Name;
+            if (name.iEndsWith(Importer.BAKE_SUFFIX)) return sgm;
+
+            string bakedName = name + Importer.BAKE_SUFFIX;
+            foreach (GridModel bgm in modelList)
+            {
+                if (bgm.Name == bakedName) return bgm;
+            }            
+
+            return null;
+        }
+
+        private GridModel GetBakedSourceModel(GridModel bgm)
+        {
+            string bakedName = bgm.Name;
+            if (bakedName.iEndsWith(Importer.BAKE_SUFFIX))
+            {
+                string name = bakedName.Substring(0, bakedName.Length - Importer.BAKE_SUFFIX.Length);
+                foreach (GridModel sgm in modelList)
+                {
+                    if (sgm.Name == name) return sgm;
+                }
+
+                return null;
+            }
+            else
+            {
+                return bgm;
+            }
         }
 
         private void BuildModelPrefabDict(Object[] objects)
         {            
             modelList = new List<GridModel>();
             int largest = 0;
+            const string pathSuffix = Importer.BAKE_SUFFIX + ".prefab";
 
             foreach (Object obj in objects)
             {
                 string path = AssetDatabase.GetAssetPath(obj);
+                string guid = AssetDatabase.AssetPathToGUID(path);
+                string assetName = Path.GetFileNameWithoutExtension(path);
+
                 if (path.iEndsWith(".prefab"))
                 {
-                    string guid = AssetDatabase.AssetPathToGUID(path);
-                    string assetName = Path.GetFileNameWithoutExtension(path);
+                    bool baked = false;
+                    if (path.iEndsWith(pathSuffix))
+                    {
+                        path = path.Substring(0, path.Length - pathSuffix.Length) + ".prefab";
+                        baked = true;
+                    }
 
                     GameObject o = (GameObject)AssetDatabase.LoadAssetAtPath(path, typeof(GameObject));
                     Object src = Util.FindRootPrefabAsset(o);
@@ -235,8 +326,8 @@ namespace Reallusion.Import
                         g.Name = assetName;
                         //g.Icon = (Texture2D)AssetDatabase.GetCachedIcon(path);
                         g.Icon = AssetPreview.GetAssetPreview(o);
-                        if (Selection.objects.ToList().Contains(o))
-                            g.Selected = true;
+                        g.Selected = true;
+                        g.Baked = baked;
                         g.Tris = Lodify.CountPolys(o);
                         if (g.Tris > largest)
                         {
@@ -249,6 +340,8 @@ namespace Reallusion.Import
             }
 
             nameField.SetValueWithoutNotify(nameHint + "_LOD");
+
+            AutoSelect();
         }        
 
         private Editor MakeEditor(string guid)
@@ -284,6 +377,8 @@ namespace Reallusion.Import
             public Texture2D Icon { get; set; }
             public bool Selected { get; set; }
             public int Tris { get; set; }
+            public bool Baked { get; set; }
+
             public GridModel()
             {
                 Guid = "";
@@ -291,6 +386,18 @@ namespace Reallusion.Import
                 Icon = (Texture2D)EditorGUIUtility.IconContent("HumanTemplate Icon").image;
                 Selected = false;
                 Tris = 0;
+                Baked = false;
+            }
+
+            public string GetPath()
+            {
+                return AssetDatabase.GUIDToAssetPath(Guid);
+            }
+
+            public Object GetAsset()
+            {
+                string path = GetPath();
+                return AssetDatabase.LoadAssetAtPath<Object>(path);
             }
         }
     }

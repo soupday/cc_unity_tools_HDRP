@@ -742,7 +742,7 @@ namespace Reallusion.Import
             string folder = Path.GetDirectoryName(path);
             string name = Path.GetFileNameWithoutExtension(path);
             string searchName = name;
-            if (baked) searchName = name + "_Baked";
+            if (baked) searchName = name + Importer.BAKE_SUFFIX;
             string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
             if (File.Exists(prefabPath))
                 return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
@@ -755,7 +755,7 @@ namespace Reallusion.Import
             string folder = Path.GetDirectoryName(path);
             string name = Path.GetFileNameWithoutExtension(path);
             string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + ".prefab");
-            string bakedPrefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + "_Baked.prefab");
+            string bakedPrefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + Importer.BAKE_SUFFIX + ".prefab");
 
             mainPrefab = null;
             bakedPrefab = null;

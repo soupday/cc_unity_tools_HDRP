@@ -448,7 +448,7 @@ namespace Reallusion.Import
                 GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, lodPrefabPath);
                 GameObject.DestroyImmediate(clone);
                 GameObject bakedPrefab = RL.CreateOneLODPrefabFromModel(characterInfo, variant, 
-                    characterInfo.BakeSeparatePrefab ? "_Baked" : "", out GameObject prefabInstance);
+                    characterInfo.BakeSeparatePrefab ? Importer.BAKE_SUFFIX : "", out GameObject prefabInstance);
                 GameObject.DestroyImmediate(prefabInstance);
                 return bakedPrefab;
             }
@@ -456,7 +456,7 @@ namespace Reallusion.Import
             {
                 string prefabPath;
                 if (characterInfo.BakeSeparatePrefab)
-                    prefabPath = Path.Combine(prefabFolder, characterName + "_Baked.prefab");
+                    prefabPath = Path.Combine(prefabFolder, characterName + Importer.BAKE_SUFFIX + ".prefab");
                 else
                     prefabPath = Path.Combine(prefabFolder, characterName + ".prefab");
 

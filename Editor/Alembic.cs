@@ -72,7 +72,7 @@ namespace Reallusion.Import
 
                 foreach (GameObject sourcePrefab in sourcePrefabs)
                 {
-                    string suffix = (sourcePrefab.name.Contains("_Baked")) ? "_Alembic_Baked" : "_Alembic";
+                    string suffix = (sourcePrefab.name.Contains(Importer.BAKE_SUFFIX)) ? "_Alembic" + Importer.BAKE_SUFFIX : "_Alembic";
                     List<MaterialMeshPair> materialMeshes;
                     Dictionary<string, Material> sourceMaterials = GetSourceMaterials(sourcePrefab, out materialMeshes);
 

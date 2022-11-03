@@ -464,7 +464,7 @@ namespace Reallusion.Import
         {
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
             string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
-            string prefabBakedPath = Path.Combine(prefabFolder, info.name + "_Baked.prefab");
+            string prefabBakedPath = Path.Combine(prefabFolder, info.name + Importer.BAKE_SUFFIX + ".prefab");
 
             if (controller)
             {
