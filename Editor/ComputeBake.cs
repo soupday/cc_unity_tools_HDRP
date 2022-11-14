@@ -810,7 +810,7 @@ namespace Reallusion.Import
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 1.0f, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName,
-                Pipeline.GetTemplateMaterial(MaterialType.Skin,
+                Pipeline.GetTemplateMaterial(sourceName, MaterialType.Skin,
                             MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
@@ -918,7 +918,7 @@ namespace Reallusion.Import
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName,
-                Pipeline.GetTemplateMaterial(MaterialType.Teeth,
+                Pipeline.GetTemplateMaterial(sourceName, MaterialType.Teeth,
                             MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
@@ -1016,7 +1016,7 @@ namespace Reallusion.Import
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName, 
-                Pipeline.GetTemplateMaterial(MaterialType.Tongue, 
+                Pipeline.GetTemplateMaterial(sourceName, MaterialType.Tongue, 
                             MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
@@ -1165,9 +1165,9 @@ namespace Reallusion.Import
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 1f, microNormalTiling, microNormalStrength, emissiveColor,
-                sourceName, isCornea ? Pipeline.GetTemplateMaterial(MaterialType.Cornea, 
+                sourceName, isCornea ? Pipeline.GetTemplateMaterial(sourceName, MaterialType.Cornea, 
                                             MaterialQuality.Baked, characterInfo, useAmplify, useTessellation) 
-                                     : Pipeline.GetTemplateMaterial(MaterialType.Eye, 
+                                     : Pipeline.GetTemplateMaterial(sourceName, MaterialType.Eye, 
                                             MaterialQuality.Baked, characterInfo));
 
             CopyAMPSubsurface(mat, result);
@@ -1408,14 +1408,14 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS, 
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS, 
                             MaterialQuality.Baked, useAmplify, useTessellation));
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName.Replace("_1st_Pass", "_2nd_Pass"),
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS, 
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS, 
                             MaterialQuality.Baked, useAmplify, useTessellation));
 
                     // multi material pass hair is custom baked shader only:
@@ -1432,7 +1432,7 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetTemplateMaterial(MaterialType.Hair,
+                        Pipeline.GetTemplateMaterial(sourceName, MaterialType.Hair,
                                     MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
                     SetCustom(result);
@@ -1465,13 +1465,13 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation));                    
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation));                    
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName.Replace("_1st_Pass", "_2nd_Pass"),
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
 
                     SetBasic(firstPass);
                     alphaClip = 0.01f;
@@ -1486,7 +1486,7 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetTemplateMaterial(MaterialType.Hair,
+                        Pipeline.GetTemplateMaterial(sourceName, MaterialType.Hair,
                                     MaterialQuality.Baked, characterInfo));
 
                     SetBasic(result);
@@ -1545,7 +1545,7 @@ namespace Reallusion.Import
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap, 
                 1f, 1f, 1f, Color.black,
-                sourceName, Pipeline.GetTemplateMaterial(MaterialType.EyeOcclusion,
+                sourceName, Pipeline.GetTemplateMaterial(sourceName, MaterialType.EyeOcclusion,
                                             MaterialQuality.Baked, characterInfo, false, useTessellation));
 
             result.SetFloatIf("_ExpandOut", expandOut);

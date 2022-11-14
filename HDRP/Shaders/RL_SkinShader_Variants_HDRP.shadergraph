@@ -10,12 +10,6 @@
             "m_Id": "0dbd8f4e7dbe4735b7420287b8cbdfd6"
         },
         {
-            "m_Id": "e31101d048044951bdf13cbddcd0f930"
-        },
-        {
-            "m_Id": "7089c3af8c734661957df22d8b965d0c"
-        },
-        {
             "m_Id": "4ef79e9b5e3e473abf150852f1ee2eaa"
         },
         {
@@ -35,12 +29,6 @@
         },
         {
             "m_Id": "0ba2430cc19d47f8a409f527a6dc78ee"
-        },
-        {
-            "m_Id": "2cc11af55d6b4faea215407e60307db4"
-        },
-        {
-            "m_Id": "be9afefb417e4737b75985dc8aaa3962"
         },
         {
             "m_Id": "6d2408803a794f2e9368d5529b79a574"
@@ -67,25 +55,13 @@
             "m_Id": "b66279fd77db4f28b7414848d2fdf803"
         },
         {
-            "m_Id": "da213d6a9621401f9a5ffc93e4383f77"
+            "m_Id": "8ae276b25df3462c87feec02def3e6ba"
         },
         {
-            "m_Id": "3ddb1de457ce4a0d84f7586eaac11b9a"
-        },
-        {
-            "m_Id": "d2788286d5f347d4ad6c739e7a423501"
-        },
-        {
-            "m_Id": "5172aa37e7034721a702d02156b0c3a6"
+            "m_Id": "2e0b13ed9e8b4125b1039d3595bb895c"
         },
         {
             "m_Id": "500ba94d31a4430589839a4ee489195e"
-        },
-        {
-            "m_Id": "056e224982a4418783cc9a754ebd4920"
-        },
-        {
-            "m_Id": "11d663a4721749668b26f021655222e3"
         },
         {
             "m_Id": "18e7067ff74c497eb92e133c7111aef2"
@@ -103,24 +79,6 @@
             "m_Id": "73d5befbcccc4534aa3c49586ca61402"
         },
         {
-            "m_Id": "167f8d77ee5e478ab5c3c33cb26ad3c0"
-        },
-        {
-            "m_Id": "4bbc052da7aa4bb59c0765662e464374"
-        },
-        {
-            "m_Id": "8f920b195f6f4ae79f14b6daf5d7a75d"
-        },
-        {
-            "m_Id": "f0d88fda47be4d4b9b1614b6313411df"
-        },
-        {
-            "m_Id": "e8cdc35a911841ea94f4e76dc4ec9395"
-        },
-        {
-            "m_Id": "f72531ddf88f4deeb7706f3ee8563193"
-        },
-        {
             "m_Id": "1b299f10f9db46719d10fb61b53094c1"
         },
         {
@@ -136,10 +94,46 @@
             "m_Id": "c12e83169aaf40a39eef85aea07d238b"
         },
         {
-            "m_Id": "e55f9a75fb6b42608280338c0f6f0543"
+            "m_Id": "a0dea5230a33428cb6bffe7ab816e628"
         },
         {
-            "m_Id": "f9cefb04dde84a5eb85a204200a3f7ca"
+            "m_Id": "e31101d048044951bdf13cbddcd0f930"
+        },
+        {
+            "m_Id": "7089c3af8c734661957df22d8b965d0c"
+        },
+        {
+            "m_Id": "2cc11af55d6b4faea215407e60307db4"
+        },
+        {
+            "m_Id": "be9afefb417e4737b75985dc8aaa3962"
+        },
+        {
+            "m_Id": "da213d6a9621401f9a5ffc93e4383f77"
+        },
+        {
+            "m_Id": "3ddb1de457ce4a0d84f7586eaac11b9a"
+        },
+        {
+            "m_Id": "d2788286d5f347d4ad6c739e7a423501"
+        },
+        {
+            "m_Id": "5172aa37e7034721a702d02156b0c3a6"
+        },
+        {
+            "m_Id": "056e224982a4418783cc9a754ebd4920"
+        },
+        {
+            "m_Id": "8f920b195f6f4ae79f14b6daf5d7a75d"
+        },
+        {
+            "m_Id": "f0d88fda47be4d4b9b1614b6313411df"
+        },
+        {
+            "m_Id": "e8cdc35a911841ea94f4e76dc4ec9395"
+        },
+        {
+            "m_Id": "f72531ddf88f4deeb7706f3ee8563193"
         },
         {
             "m_Id": "bb4fd70018f64db2a8ce8eb4c3f1fc66"
@@ -154,13 +148,19 @@
             "m_Id": "3a7a76a7000244e4b3de2b879f66a390"
         },
         {
-            "m_Id": "a0dea5230a33428cb6bffe7ab816e628"
+            "m_Id": "11d663a4721749668b26f021655222e3"
         },
         {
-            "m_Id": "8ae276b25df3462c87feec02def3e6ba"
+            "m_Id": "167f8d77ee5e478ab5c3c33cb26ad3c0"
         },
         {
-            "m_Id": "2e0b13ed9e8b4125b1039d3595bb895c"
+            "m_Id": "4bbc052da7aa4bb59c0765662e464374"
+        },
+        {
+            "m_Id": "e55f9a75fb6b42608280338c0f6f0543"
+        },
+        {
+            "m_Id": "f9cefb04dde84a5eb85a204200a3f7ca"
         }
     ],
     "m_Keywords": [
@@ -3875,7 +3875,7 @@
     "m_Guid": {
         "m_GuidSerialized": "b66fda54-ec55-4ec2-8f9e-c6601e0efbc3"
     },
-    "m_Name": "CFULC Mask",
+    "m_Name": "CFULC Mask (Head)",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_CFULCMask",
     "m_GeneratePropertyBlock": true,
@@ -4731,7 +4731,7 @@
     "m_Guid": {
         "m_GuidSerialized": "d4acc844-d4cb-4a78-a48f-4e786abe1516"
     },
-    "m_Name": "Upper Lid/B Smoothness Mod",
+    "m_Name": "B (Upper Lid) Smoothness Mod",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_BSmoothnessMod",
     "m_GeneratePropertyBlock": true,
@@ -4852,7 +4852,7 @@
     "m_Guid": {
         "m_GuidSerialized": "2f169b8d-56f7-40ec-bbe0-cccbf9fbd1c2"
     },
-    "m_Name": "Ear Neck Mask",
+    "m_Name": "Ear Neck Mask (Head)",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_EarNeckMask",
     "m_GeneratePropertyBlock": true,
@@ -5731,7 +5731,7 @@
     "m_Guid": {
         "m_GuidSerialized": "8cfbdc60-52ad-4df3-a4f1-be09fb3d2d54"
     },
-    "m_Name": "Nose/R Smoothness Mod",
+    "m_Name": "R (Nose) Smoothness Mod",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_RSmoothnessMod",
     "m_GeneratePropertyBlock": true,
@@ -6612,7 +6612,7 @@
     "m_Guid": {
         "m_GuidSerialized": "e4cf905b-6998-4808-8f8a-23912148240b"
     },
-    "m_Name": "Upper Lid/B Scatter Scale",
+    "m_Name": "B (Upper Lid) Scatter Scale",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_BScatterScale",
     "m_GeneratePropertyBlock": true,
@@ -10082,8 +10082,8 @@
     "m_ObjectId": "5afd5b10bac94af98e61ab4df0f1d432",
     "m_Title": "Micro Smoothness & Scatter Mask Combine",
     "m_Position": {
-        "x": -3924.0,
-        "y": 277.0
+        "x": -3862.000244140625,
+        "y": 188.0
     }
 }
 
@@ -10179,7 +10179,7 @@
     "m_Guid": {
         "m_GuidSerialized": "1a48d4ed-570f-462b-86dd-91a71e85496a"
     },
-    "m_Name": "Mouth/G Scatter Scale",
+    "m_Name": "G (Mouth) Scatter Scale",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_GScatterScale",
     "m_GeneratePropertyBlock": true,
@@ -11814,7 +11814,7 @@
     "m_Guid": {
         "m_GuidSerialized": "e8a8dce4-b19d-40e3-b9f2-b699418c6650"
     },
-    "m_Name": "Inner Lid/A Smoothness Mod",
+    "m_Name": "A (Inner Lid) Smoothness Mod",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_ASmoothnessMod",
     "m_GeneratePropertyBlock": true,
@@ -14179,7 +14179,7 @@
     "m_Guid": {
         "m_GuidSerialized": "0668444d-e8f6-4194-9d68-56ac9be39282"
     },
-    "m_Name": "Nose/R Scatter Scale",
+    "m_Name": "R (Nose) Scatter Scale",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_RScatterScale",
     "m_GeneratePropertyBlock": true,
@@ -17051,7 +17051,7 @@
     "m_Guid": {
         "m_GuidSerialized": "e3f0749c-9b5a-4f0b-b799-174a5c0b6a9b"
     },
-    "m_Name": "Inner Lid/A Scatter Scale",
+    "m_Name": "A (Inner Lid) Scatter Scale",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_AScatterScale",
     "m_GeneratePropertyBlock": true,
@@ -20769,7 +20769,7 @@
     "m_Guid": {
         "m_GuidSerialized": "728c82ea-4205-4fa8-8a1c-afa2d4d2d176"
     },
-    "m_Name": "Mouth/G Smoothness Mod",
+    "m_Name": "G (Mouth) Smoothness Mod",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_GSmoothnessMod",
     "m_GeneratePropertyBlock": true,

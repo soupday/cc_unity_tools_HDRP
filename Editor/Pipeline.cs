@@ -33,7 +33,7 @@ namespace Reallusion.Import
     public enum MaterialType
     {
         None, Skin, Head, Eye, Cornea, EyeOcclusion, Tearline, Hair, Scalp,
-        Eyelash, Teeth, Tongue, DefaultOpaque, DefaultAlpha
+        Eyelash, Teeth, Tongue, DefaultOpaque, DefaultAlpha, SSS
     }
 
     public enum MaterialQuality { None, Default, High, Baked }
@@ -63,6 +63,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_HDRP";
         public const string SHADER_HQ_ALPHACLIP = "HDRP/Lit";
         public const string SHADER_HQ_OPAQUE = "HDRP/Lit";
+        public const string SHADER_HQ_SSS = "HDRP/Lit";
         // eye types
         public const string SHADER_HQ_CORNEA_PARALLAX = "RL_CorneaShaderParallax_HDRP";
         public const string SHADER_HQ_EYE_PARALLAX = "RL_EyeShaderParallax_Dummy_HDRP"; // Dummy shader (unlit no textures)
@@ -88,6 +89,7 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_HDRP";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_HDRP";
+        public const string MATERIAL_HQ_SSS = "RL_Template_Default_SSS_HDRP";
         // variants
         public const string MATERIAL_HQ_CORNEA_PARALLAX = "RL_Template_HQ_CorneaParallax_HDRP";
         public const string MATERIAL_HQ_CORNEA_REFRACTIVE = "RL_Template_HQ_CorneaRefractive_HDRP";
@@ -112,7 +114,8 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_TEETH = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_TONGUE = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
-        public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_HDRP";        
+        public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_HDRP";
+        public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_HDRP";
 
         // Baked Materials
         // Note: Non custom materials must bake to HDRP default shaders
@@ -131,6 +134,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_HDRP";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
+        public const string MATERIAL_BAKED_SSS = "";
         // variants (that differ from the defaults above)
         public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Baked_CorneaBasicCustom_HDRP";                
         public const string MATERIAL_BAKED_CORNEA_PARALLAX_CUSTOM = "RL_Template_Baked_CorneaParallaxCustom_HDRP";
@@ -371,6 +375,7 @@ namespace Reallusion.Import
             { MaterialType.Tongue, SHADER_HQ_TONGUE },
             { MaterialType.DefaultAlpha, SHADER_HQ_ALPHACLIP },
             { MaterialType.DefaultOpaque, SHADER_HQ_OPAQUE },
+            { MaterialType.SSS, SHADER_HQ_SSS },
         };
 
         private static Dictionary<MaterialType, string> DICT_MATERIALS_DEFAULT = new Dictionary<MaterialType, string>
@@ -388,6 +393,7 @@ namespace Reallusion.Import
             { MaterialType.Tongue, MATERIAL_DEFAULT_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_DEFAULT_ALPHACLIP },
             { MaterialType.DefaultOpaque, MATERIAL_DEFAULT_OPAQUE },
+            { MaterialType.SSS, MATERIAL_DEFAULT_SSS },
         };
 
         private static Dictionary<MaterialType, string> DICT_MATERIALS_HQ = new Dictionary<MaterialType, string>
@@ -405,6 +411,7 @@ namespace Reallusion.Import
             { MaterialType.Tongue, MATERIAL_HQ_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_HQ_ALPHACLIP },
             { MaterialType.DefaultOpaque, MATERIAL_HQ_OPAQUE },
+            { MaterialType.SSS, MATERIAL_HQ_SSS },
         };
 
         private static Dictionary<MaterialType, string> DICT_MATERIALS_BAKED = new Dictionary<MaterialType, string>
@@ -422,6 +429,7 @@ namespace Reallusion.Import
             { MaterialType.Tongue, MATERIAL_BAKED_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_BAKED_ALPHACLIP },
             { MaterialType.DefaultOpaque, MATERIAL_BAKED_OPAQUE },
+            { MaterialType.SSS, MATERIAL_BAKED_SSS },
         };
 
         public static RenderPipeline RP => GetRenderPipeline();
@@ -541,16 +549,16 @@ namespace Reallusion.Import
             return DICT_MATERIALS_DEFAULT;
         }
 
-        public static Material GetQualityMaterial(MaterialType materialType, MaterialQuality quality, CharacterInfo info)
+        public static Material GetQualityMaterial(string sourceName, MaterialType materialType, MaterialQuality quality, CharacterInfo info)
         {
-            string materialName = GetQualityMaterialName(materialType, quality, info);
+            string materialName = GetQualityMaterialName(sourceName, materialType, quality, info);
             return Util.FindMaterial(materialName);
         }
 
-        public static string GetQualityMaterialName(MaterialType materialType, MaterialQuality quality, CharacterInfo info)
+        public static string GetQualityMaterialName(string sourceName, MaterialType materialType, MaterialQuality quality, CharacterInfo info)
         {            
             if (info.Generation == BaseGeneration.ActorCore)
-                return MATERIAL_DEFAULT_SINGLE_MATERIAL;
+                return MATERIAL_DEFAULT_SINGLE_MATERIAL;            
 
             if (quality == MaterialQuality.High) // option overrides for high quality materials
             {
@@ -611,12 +619,18 @@ namespace Reallusion.Import
                 }                
             }
 
+            // override game base SSS skin with default skin for correct diffusion profile
+            if (materialType == MaterialType.SSS && sourceName.iContains("Ga_Skin_"))
+            {
+                return MATERIAL_DEFAULT_SKIN;
+            }
+
             // fetch the material dictionary for this quality setting:
             Dictionary<MaterialType, string> materialDictionary = GetMaterialDictionary(quality);
 
             // return the material named in the dictionary...
             if (materialDictionary != null && materialDictionary.ContainsKey(materialType))
-            {
+            {                                
                 return materialDictionary[materialType];
             }
 
@@ -640,9 +654,9 @@ namespace Reallusion.Import
             return null;
         }
 
-        public static string GetTemplateMaterialName(MaterialType materialType, MaterialQuality quality, CharacterInfo info)
+        public static string GetTemplateMaterialName(string sourceName, MaterialType materialType, MaterialQuality quality, CharacterInfo info)
         {
-            string templateName = GetQualityMaterialName(materialType, quality, info);
+            string templateName = GetQualityMaterialName(sourceName, materialType, quality, info);
             
             if (string.IsNullOrEmpty(templateName))
                 templateName = GetDefaultMaterialName(quality);
@@ -653,14 +667,14 @@ namespace Reallusion.Import
             return templateName;
         }        
 
-        public static Material GetTemplateMaterial(MaterialType materialType, MaterialQuality quality, CharacterInfo info, bool useAmplify = false, bool useTessellation = false)
+        public static Material GetTemplateMaterial(string sourceName, MaterialType materialType, MaterialQuality quality, CharacterInfo info, bool useAmplify = false, bool useTessellation = false)
         {
-            string templateName = GetTemplateMaterialName(materialType, quality, info);
+            string templateName = GetTemplateMaterialName(sourceName, materialType, quality, info);
 
-            return GetCustomTemplateMaterial(templateName, quality, useAmplify, useTessellation);
+            return GetCustomTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation);
         }
 
-        public static Material GetCustomTemplateMaterial(string templateName, MaterialQuality quality, bool useAmplify, bool useTessellation)
+        public static Material GetCustomTemplateMaterial(string sourceName, string templateName, MaterialQuality quality, bool useAmplify, bool useTessellation)
         {
             string customTemplateName;
             Material customTemplate = null;

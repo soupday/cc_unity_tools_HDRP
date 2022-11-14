@@ -29,6 +29,8 @@ namespace Reallusion.Import
         public enum HairQuality { None, Default, TwoPass, Coverage }
         public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4 } //, SpringBones = 8 }
 
+        public enum RigOverride { None = 0, Generic, Humanoid }
+
         public string guid;
         public string path;        
         public string infoFilepath;
@@ -46,6 +48,7 @@ namespace Reallusion.Import
         private ProcessingType logType = ProcessingType.None;
         private EyeQuality qualEyes = EyeQuality.Parallax;
         private HairQuality qualHair = HairQuality.TwoPass;
+        public RigOverride UnknownRigType { get; set; }
         private bool bakeCustomShaders = true;
         private bool bakeSeparatePrefab = true;
         private bool useTessellation = false;        
@@ -289,11 +292,21 @@ namespace Reallusion.Import
         {
             BaseGeneration oldGen = generation;
             string gen = Util.GetJsonGenerationString(jsonFilepath);
-            generation = RL.GetCharacterGeneration(Fbx, gen);            
+            generation = RL.GetCharacterGeneration(Fbx, gen);
+            CheckOverride();
             if (generation != oldGen)
             {
                 Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
                 Write();
+            }
+        }
+
+        public void CheckOverride()
+        {
+            if (UnknownRigType == RigOverride.None)
+            {
+                if (generation == BaseGeneration.Unknown) UnknownRigType = RigOverride.Generic;
+                else UnknownRigType = RigOverride.Humanoid;
             }
         }
 
@@ -315,6 +328,7 @@ namespace Reallusion.Import
                     case BaseGeneration.G3Plus:
                     case BaseGeneration.GameBase:
                     case BaseGeneration.ActorBuild:
+                    case BaseGeneration.Unknown:
                         return true;
                     default:
                         return false;
@@ -390,6 +404,9 @@ namespace Reallusion.Import
                     case "animationRetargeted":
                         animationRetargeted = int.Parse(value);
                         break;
+                    case "rigOverride":
+                        UnknownRigType = (RigOverride)System.Enum.Parse(typeof(RigOverride), value);
+                        break;
                 }
             }
             ApplySettings();
@@ -411,6 +428,7 @@ namespace Reallusion.Import
             writer.WriteLine("shaderFlags=" + (int)BuiltShaderFlags);
             writer.WriteLine("animationSetup=" + (animationSetup ? "true" : "false"));
             writer.WriteLine("animationRetargeted=" + animationRetargeted.ToString());
+            writer.WriteLine("rigOverride=" + UnknownRigType.ToString());
             writer.Close();
             AssetDatabase.ImportAsset(infoFilepath);            
         }

@@ -217,8 +217,9 @@ namespace Reallusion.Import
                     
                     GameObject o = (GameObject)AssetDatabase.LoadAssetAtPath(path, typeof(GameObject));
                     Object src = Util.FindRootPrefabAsset(o);
+                    LODGroup lg = o.GetComponentInChildren<LODGroup>();
 
-                    if (Util.IsCC3Character(src))
+                    if (lg || Util.IsCC3Character(src))
                     {
                         //modelDict.Add(guid, assetName);
                         GridModel g = new GridModel();
@@ -317,8 +318,9 @@ namespace Reallusion.Import
 
                     GameObject o = (GameObject)AssetDatabase.LoadAssetAtPath(path, typeof(GameObject));
                     Object src = Util.FindRootPrefabAsset(o);
+                    LODGroup lg = o.GetComponentInChildren<LODGroup>();
 
-                    if (Util.IsCC3Character(src))
+                    if (lg || Util.IsCC3Character(src))
                     {
                         //modelDict.Add(guid, assetName);
                         GridModel g = new GridModel();

@@ -453,6 +453,40 @@ namespace Reallusion.Import
             return null;
         }
 
+        public static AnimationClip FindAnimation(string[] folders, string search, bool exactMatch = true, bool matchStart = true)
+        {
+            string[] guids;
+
+            guids = AssetDatabase.FindAssets(search + " t:animation", folders);
+
+            foreach (string guid in guids)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                string animName = Path.GetFileNameWithoutExtension(assetPath);
+                if (string.IsNullOrEmpty(search))
+                {
+                    return AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                }
+                else if (exactMatch)
+                {
+                    if (animName.iEquals(search)) return AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                }
+                else
+                {
+                    if (matchStart)
+                    {
+                        if (animName.iStartsWith(search)) return AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                    }
+                    else
+                    {
+                        if (animName.iContains(search)) return AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public static Object FindAsset(string search, string[] folders = null)
         {
             if (folders == null) folders = new string[] { "Assets", "Packages" };
@@ -679,18 +713,7 @@ namespace Reallusion.Import
             {
                 GameObject.DestroyImmediate(child);
             }
-        }                
-
-        public static GameObject GetCharacterSourceFbx(GameObject scenePrefab)
-        {
-            GameObject sourceFbx;
-            if (scenePrefab.name.iContains("_lod") && scenePrefab.transform.childCount == 1)
-                sourceFbx = FindRootPrefabAssetFromSceneObject(scenePrefab.transform.GetChild(0).gameObject);
-            else
-                sourceFbx = FindRootPrefabAssetFromSceneObject(scenePrefab);
-
-            return sourceFbx;
-        }
+        }        
         
         public static AnimationClip GetFirstAnimationClipFromCharacter(GameObject sourceFbx)
         {
@@ -708,6 +731,40 @@ namespace Reallusion.Import
                         // try to return the first non T-Pose.
                         if (!found.name.iContains("T-Pose")) return found;
                     }
+                }
+
+                // if that didn't work, then the prefab is a non-variant derivative (probably LODGroup)                
+                string name = sourceFbx.name;
+                string path = AssetDatabase.GetAssetPath(sourceFbx);
+                string prefabFolder = Path.GetDirectoryName(path);
+                string prefabAnimationFolder = Path.Combine(prefabFolder, "Animations");
+                string parentFolder = Path.GetDirectoryName(prefabFolder);
+                string parentAnimationFolder = Path.Combine(parentFolder, "Animations");
+                List<string> folders = new List<string>();
+                if (AssetDatabase.IsValidFolder(parentAnimationFolder)) folders.Add(parentAnimationFolder);
+                if (AssetDatabase.IsValidFolder(prefabAnimationFolder)) folders.Add(prefabAnimationFolder);
+                if (AssetDatabase.IsValidFolder(parentFolder)) folders.Add(parentFolder);
+                folders.Add(prefabFolder);
+                string[] f = folders.ToArray();
+
+                // first look for an animation that matches the prefab name
+                found = FindAnimation(f, name, false, true);
+
+                // then look for an animation that matches the base name of the character (before any _LodSomething)
+                if (!found)
+                {
+                    int index = name.IndexOf("_Lod", System.StringComparison.InvariantCultureIgnoreCase);
+                    if (index > 0)
+                    {
+                        name = name.Substring(0, index);
+                        found = FindAnimation(f, name, false, true);
+                    }
+                }
+
+                // then just try and find the first available animation
+                if (!found)
+                {
+                    found = FindAnimation(f, "");
                 }
             }
 
@@ -738,14 +795,17 @@ namespace Reallusion.Import
         public static GameObject FindCharacterPrefabAsset(GameObject fbxAsset, bool baked = false)
         { 
             string path = AssetDatabase.GetAssetPath(fbxAsset);
-            if (path.iEndsWith(".prefab")) return fbxAsset;
-            string folder = Path.GetDirectoryName(path);
-            string name = Path.GetFileNameWithoutExtension(path);
-            string searchName = name;
-            if (baked) searchName = name + Importer.BAKE_SUFFIX;
-            string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
-            if (File.Exists(prefabPath))
-                return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (!string.IsNullOrEmpty(path))
+            {
+                if (path.iEndsWith(".prefab")) return fbxAsset;
+                string folder = Path.GetDirectoryName(path);
+                string name = Path.GetFileNameWithoutExtension(path);
+                string searchName = name;
+                if (baked) searchName = name + Importer.BAKE_SUFFIX;
+                string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
+                if (File.Exists(prefabPath))
+                    return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            }
             return null;
         }
 

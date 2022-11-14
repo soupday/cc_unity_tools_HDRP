@@ -125,9 +125,7 @@ namespace Reallusion.Import
             {
                 if (contextCharacter != null) contextCharacter.Release();
                 contextCharacter = GetCharacterState(guid);
-
-
-                
+                contextCharacter.CheckGeneration();
                 CreateTreeView(oldCharacter != contextCharacter);
 
                 if (Pipeline.isHDRP && contextCharacter.BuiltDualMaterialHair) characterTreeView.EnableMultiPass();
@@ -311,6 +309,7 @@ namespace Reallusion.Import
             float innerHeight = height - TOP_PADDING;
             float optionHeight = OPTION_HEIGHT;
             //if (Pipeline.isHDRP12) optionHeight += 14f;
+            if (contextCharacter.Generation == BaseGeneration.Unknown) optionHeight += 14f;
             optionHeight += 14f;
 
             Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_WIDTH, innerHeight);
@@ -466,8 +465,6 @@ namespace Reallusion.Import
             if (contextCharacter.bakeIsBaked)
                 importType += " + Baked";
 
-            contextCharacter.CheckGeneration();            
-
             GUILayout.BeginArea(infoBlock);
 
             GUILayout.BeginHorizontal();
@@ -520,6 +517,22 @@ namespace Reallusion.Import
             GUILayout.FlexibleSpace();
 
             GUILayout.BeginVertical();            
+
+            if (contextCharacter.Generation == BaseGeneration.Unknown)
+            {                
+                if (EditorGUILayout.DropdownButton(
+                    content: new GUIContent("Rig Type: " + contextCharacter.UnknownRigType.ToString()),
+                    focusType: FocusType.Passive))
+                {
+                    GenericMenu menu = new GenericMenu();
+                    menu.AddItem(new GUIContent("Rig Type: None"), contextCharacter.UnknownRigType == CharacterInfo.RigOverride.None, RigOptionSelected, CharacterInfo.RigOverride.None);
+                    menu.AddItem(new GUIContent("Rig Type: Humanoid"), contextCharacter.UnknownRigType == CharacterInfo.RigOverride.Humanoid, RigOptionSelected, CharacterInfo.RigOverride.Humanoid);                    
+                    menu.AddItem(new GUIContent("Rig Type: Generic"), contextCharacter.UnknownRigType == CharacterInfo.RigOverride.Generic, RigOptionSelected, CharacterInfo.RigOverride.Generic);
+                    menu.ShowAsContext();
+                }
+
+                GUILayout.Space(1f);
+            }
 
             if (EditorGUILayout.DropdownButton(
                 content: new GUIContent(contextCharacter.BasicMaterials ? "Basic Materials" : "High Quality Materials"),
@@ -972,6 +985,11 @@ namespace Reallusion.Import
         private void EyeOptionSelected(object sel)
         {            
             contextCharacter.QualEyes = (CharacterInfo.EyeQuality)sel;
+        }
+
+        private void RigOptionSelected(object sel)
+        {
+            contextCharacter.UnknownRigType = (CharacterInfo.RigOverride)sel;
         }
 
         private void HairOptionSelected(object sel)

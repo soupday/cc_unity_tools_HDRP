@@ -51,6 +51,20 @@ namespace Reallusion.Import
             return false;
         }
 
+        public static bool GetRemapRange(this Material mat, string shaderRef, out float from, out float to)
+        {
+            from = 0f;
+            to = 1f;
+            if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
+            {
+                Color range = mat.GetColor(shaderRef);
+                from = range.r;
+                to = range.g;
+                return true;
+            }
+            return false;
+        }
+
         public static bool SetTextureIf(this Material mat, string shaderRef, Texture2D tex)
         {
             if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)

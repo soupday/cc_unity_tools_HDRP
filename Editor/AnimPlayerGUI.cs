@@ -95,13 +95,14 @@ namespace Reallusion.Import
 
         public static void SetCharacter(GameObject scenePrefab)
         {
-            if (WindowManager.IsPreviewScene)
+            if (!scenePrefab && WindowManager.IsPreviewScene)
                 scenePrefab = WindowManager.GetPreviewScene().GetPreviewCharacter();
 
             if (scenePrefab)  
             {                                
                 Animator animator = scenePrefab.GetComponent<Animator>();
-                GameObject sceneFbx = Util.GetCharacterSourceFbx(scenePrefab);
+                if (!animator) animator = scenePrefab.GetComponentInChildren<Animator>();
+                GameObject sceneFbx = Util.FindRootPrefabAssetFromSceneObject(scenePrefab);
                 AnimationClip clip = Util.GetFirstAnimationClipFromCharacter(sceneFbx);
                 if (sceneFbx && clip)
                     clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(sceneFbx, clip);

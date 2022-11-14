@@ -1465,5 +1465,74 @@ namespace Reallusion.Import
             }
         }
 
+        public static int GetPrimaryBoneIndex(SkinnedMeshRenderer smr, int skip = 1)
+        {
+            Mesh mesh = smr.sharedMesh;
+            int index = 0;
+
+            if (mesh)
+            {
+                BoneWeight[] boneWeights = mesh.boneWeights;
+                float[] boneTotals = new float[smr.bones.Length];
+                for (int i = 0; i < boneTotals.Length; i++) boneTotals[i] = 0f;
+
+                for (int i = 0; i < mesh.boneWeights.Length; i += skip)
+                {
+                    BoneWeight bw = boneWeights[i];
+                    boneTotals[bw.boneIndex0] += bw.weight0;
+                    boneTotals[bw.boneIndex1] += bw.weight1;
+                    boneTotals[bw.boneIndex2] += bw.weight2;
+                    boneTotals[bw.boneIndex3] += bw.weight3;
+                }
+                
+                float weight = boneTotals[index];
+                for (int i = 1; i < boneTotals.Length; i++)
+                {
+                    if (boneTotals[i] > weight)
+                    {
+                        index = i;
+                        weight = boneTotals[i];
+                    }
+                }
+            }
+
+            return index;
+        }
+
+        public static int GetBoneIndex(SkinnedMeshRenderer smr, string name, string name2 = "", string name3 = "")
+        {
+            bool hasName2 = !string.IsNullOrEmpty(name2);
+            bool hasName3 = !string.IsNullOrEmpty(name3);
+            for (int i = 0; i < smr.bones.Length; i++)
+            {
+                Transform t = smr.bones[i];
+                if (t.name.iContains(name)) return i;
+                if (hasName2 && t.name.iContains(name2)) return i;
+                if (hasName3 && t.name.iContains(name3)) return i;
+            }
+
+            return -1;
+        }
+
+        public static void FixSkinnedMeshBounds(GameObject prefabInstance)
+        {
+            SkinnedMeshRenderer[] renderers = prefabInstance.GetComponentsInChildren<SkinnedMeshRenderer>();
+
+            foreach (SkinnedMeshRenderer smr in renderers)
+            {
+                int primaryBoneIndex = -1;
+                if (RL.IsBodyMesh(smr)) primaryBoneIndex = GetBoneIndex(smr, "CC_Base_Waist", "spine_01");
+                if (RL.IsHairMesh(smr)) primaryBoneIndex = GetBoneIndex(smr, "CC_Base_Head", "head");
+                if (primaryBoneIndex == -1) primaryBoneIndex = GetPrimaryBoneIndex(smr, 5);
+                smr.rootBone = smr.bones[primaryBoneIndex];
+                smr.updateWhenOffscreen = true;
+                Bounds bounds = new Bounds();
+                bounds.center = smr.localBounds.center;
+                bounds.extents = smr.localBounds.extents;
+                smr.updateWhenOffscreen = false;
+                smr.localBounds = bounds;
+            }
+        }
+
     }
 }
