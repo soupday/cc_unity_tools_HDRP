@@ -55,7 +55,7 @@ namespace Reallusion.Import
         const float WINDOW_MARGIN = 4f;
         const float TOP_PADDING = 16f;
         const float ACTION_BUTTON_SIZE = 40f;
-        const float WEE_BUTTON_SIZE = 28f;
+        const float WEE_BUTTON_SIZE = 32f;
         const float ACTION_BUTTON_SPACE = 4f;
         const float BUTTON_HEIGHT = 40f;
         const float INFO_HEIGHT = 80f;
@@ -73,16 +73,23 @@ namespace Reallusion.Import
         private static Texture2D iconBaked;
         private static Texture2D iconMixed;
         private static Texture2D iconActionBake;
+        private static Texture2D iconActionBakeOn;
         private static Texture2D iconActionBakeHair;
-        private static Texture2D iconActionRestoreHair;
+        private static Texture2D iconActionBakeHairOn;
         private static Texture2D iconActionPreview;
+        private static Texture2D iconActionPreviewOn;
         private static Texture2D iconActionRefresh;
         private static Texture2D iconActionAnims;
+        private static Texture2D iconActionPhysics;
         private static Texture2D iconAction2Pass;
         private static Texture2D iconAlembic;
         private static Texture2D iconActionAnimPlayer;
+        private static Texture2D iconActionAnimPlayerOn;
         private static Texture2D iconActionAvatarAlign;
-        private static Texture2D iconSettings;        
+        private static Texture2D iconActionAvatarAlignOn;
+        private static Texture2D iconSettings;
+        private static Texture2D iconLighting;
+        private static Texture2D iconCamera;
 
         // SerializeField is used to ensure the view state is written to the window 
         // layout file. This means that the state survives restarting Unity as long as the window
@@ -170,16 +177,23 @@ namespace Reallusion.Import
             iconBaked = Util.FindTexture(folders, "RLIcon_BakedChar");
             iconMixed = Util.FindTexture(folders, "RLIcon_MixedChar");
             iconActionBake = Util.FindTexture(folders, "RLIcon_ActionBake");
+            iconActionBakeOn = Util.FindTexture(folders, "RLIcon_ActionBake_Sel");
             iconActionBakeHair = Util.FindTexture(folders, "RLIcon_ActionBakeHair");
-            iconActionRestoreHair = Util.FindTexture(folders, "RLIcon_ActionRestoreHair");
+            iconActionBakeHairOn = Util.FindTexture(folders, "RLIcon_ActionBakeHair_Sel");
             iconActionPreview = Util.FindTexture(folders, "RLIcon_ActionPreview");
+            iconActionPreviewOn = Util.FindTexture(folders, "RLIcon_ActionPreview_Sel");
             iconActionRefresh = Util.FindTexture(folders, "RLIcon_ActionRefresh");
             iconAction2Pass = Util.FindTexture(folders, "RLIcon_Action2Pass");
             iconAlembic = Util.FindTexture(folders, "RLIcon_Alembic");
             iconActionAnims = Util.FindTexture(folders, "RLIcon_ActionAnims");
+            iconActionPhysics = Util.FindTexture(folders, "RLIcon_ActionPhysics");
             iconActionAnimPlayer = Util.FindTexture(folders, "RLIcon_AnimPlayer");
             iconActionAvatarAlign = Util.FindTexture(folders, "RLIcon_AvatarAlign");
+            iconActionAnimPlayerOn = Util.FindTexture(folders, "RLIcon_AnimPlayer_Sel");
+            iconActionAvatarAlignOn = Util.FindTexture(folders, "RLIcon_AvatarAlign_Sel");
             iconSettings = Util.FindTexture(folders, "RLIcon_Settings");
+            iconLighting = Util.FindTexture(folders, "RLIcon_Lighting");
+            iconCamera = Util.FindTexture(folders, "RLIcon_Camera");
             currentWindow = this;
 
             RefreshCharacterList();
@@ -664,7 +678,8 @@ namespace Reallusion.Import
                 GUILayout.Space(ACTION_BUTTON_SPACE);
             }                        
 
-            if (GUILayout.Button(new GUIContent(iconActionPreview, "View the current character in a preview scene."), 
+
+            if (GUILayout.Button(new GUIContent(WindowManager.IsPreviewScene ? iconActionPreviewOn : iconActionPreview, "View the current character in a preview scene."), 
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 previewCharacterAfterGUI = true;
@@ -686,7 +701,7 @@ namespace Reallusion.Import
             GUILayout.Space(ACTION_BUTTON_SPACE + 11f);
 
             if (contextCharacter.BuiltBasicMaterials) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(iconActionBake, "Bake high quality materials down to compatible textures for the default shaders. i.e. HDRP/Lit, URP/Lut or Standard shader."),
+            if (GUILayout.Button(new GUIContent(contextCharacter.bakeIsBaked ? iconActionBakeOn : iconActionBake, "Bake high quality materials down to compatible textures for the default shaders. i.e. HDRP/Lit, URP/Lut or Standard shader."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 bakeAfterGUI = true;
@@ -698,7 +713,7 @@ namespace Reallusion.Import
             if (contextCharacter.BuiltBasicMaterials) GUI.enabled = false;
             if (contextCharacter.tempHairBake)
             {
-                if (GUILayout.Button(new GUIContent(iconActionRestoreHair, "Restore Hair materials."),
+                if (GUILayout.Button(new GUIContent(iconActionBakeHairOn, "Restore Hair materials."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
                     restoreHairAfterGUI = true;
@@ -731,7 +746,7 @@ namespace Reallusion.Import
 
             GUILayout.Space(ACTION_BUTTON_SPACE);
             
-            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PhysicMaterial Icon").image, "Enables cloth physics and rebuilds the character physics."),
+            if (GUILayout.Button(new GUIContent(iconActionPhysics, "Enables cloth physics and rebuilds the character physics."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 physicsAfterGUI = true;
@@ -770,7 +785,7 @@ namespace Reallusion.Import
             GUILayout.Space(ACTION_BUTTON_SPACE * 2f + 11f);
 
             if (contextCharacter == null) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(iconActionAnimPlayer, "Show animation preview player."),
+            if (GUILayout.Button(new GUIContent(AnimPlayerGUI.IsPlayerShown() ? iconActionAnimPlayerOn : iconActionAnimPlayer, "Show animation preview player."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 if (AnimPlayerGUI.IsPlayerShown())
@@ -789,7 +804,7 @@ namespace Reallusion.Import
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
             if (contextCharacter == null) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(iconActionAvatarAlign, "Animation Adjustment & Retargeting."),
+            if (GUILayout.Button(new GUIContent(AnimRetargetGUI.IsPlayerShown() ? iconActionAvatarAlignOn : iconActionAvatarAlign, "Animation Adjustment & Retargeting."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 if (AnimRetargetGUI.IsPlayerShown())
@@ -810,7 +825,7 @@ namespace Reallusion.Import
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (!WindowManager.IsPreviewScene) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PointLight Gizmo").image, "Cycle Lighting."),
+            if (GUILayout.Button(new GUIContent(iconLighting, "Cycle Lighting."),
                 GUILayout.Width(WEE_BUTTON_SIZE), GUILayout.Height(WEE_BUTTON_SIZE)))
             {
                 PreviewScene.CycleLighting();
@@ -823,7 +838,7 @@ namespace Reallusion.Import
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (!WindowManager.IsPreviewScene) GUI.enabled = false;
-            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Camera Icon").image, "Match main camera to scene view."),
+            if (GUILayout.Button(new GUIContent(iconCamera, "Match main camera to scene view."),
                 GUILayout.Width(WEE_BUTTON_SIZE), GUILayout.Height(WEE_BUTTON_SIZE)))
             {
                 WindowManager.DoMatchSceneCameraOnce();

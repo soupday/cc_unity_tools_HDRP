@@ -132,7 +132,7 @@ namespace Reallusion.Import
             handImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Hand");
             blendshapeImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Masks");
             saveImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Save");
-            resetImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Refresh");
+            resetImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_ActionReset");
             lockedImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Locked");
             unlockedImage = Reallusion.Import.Util.FindTexture(folders, "RLIcon_Unlocked");
 
