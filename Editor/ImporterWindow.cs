@@ -88,8 +88,10 @@ namespace Reallusion.Import
         private static Texture2D iconActionAvatarAlign;
         private static Texture2D iconActionAvatarAlignOn;
         private static Texture2D iconSettings;
+        private static Texture2D iconSettingsOn;
         private static Texture2D iconLighting;
         private static Texture2D iconCamera;
+        private static Texture2D iconBuildMaterials;
 
         // SerializeField is used to ensure the view state is written to the window 
         // layout file. This means that the state survives restarting Unity as long as the window
@@ -192,8 +194,10 @@ namespace Reallusion.Import
             iconActionAnimPlayerOn = Util.FindTexture(folders, "RLIcon_AnimPlayer_Sel");
             iconActionAvatarAlignOn = Util.FindTexture(folders, "RLIcon_AvatarAlign_Sel");
             iconSettings = Util.FindTexture(folders, "RLIcon_Settings");
+            iconSettingsOn = Util.FindTexture(folders, "RLIcon_Settings_Sel");
             iconLighting = Util.FindTexture(folders, "RLIcon_Lighting");
             iconCamera = Util.FindTexture(folders, "RLIcon_Camera");
+            iconBuildMaterials = Util.FindTexture(folders, "RLIcon_ActionBuildMaterials");
             currentWindow = this;
 
             RefreshCharacterList();
@@ -640,15 +644,20 @@ namespace Reallusion.Import
             //
             GUIContent buildContent;
             if (contextCharacter.BasicMaterials)
-                buildContent = new GUIContent("Build Materials", "Setup materials to use the default shaders.");
+                buildContent = new GUIContent("Build Materials", iconBuildMaterials, "Setup materials to use the default shaders.");
             else
-                buildContent = new GUIContent("Build Materials", "Setup materials to use the high quality shaders.");
+                buildContent = new GUIContent("Build Materials", iconBuildMaterials, "Setup materials to use the high quality shaders.");
 
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
             if (GUILayout.Button(buildContent,                
-                GUILayout.Height(BUTTON_HEIGHT)))
+                GUILayout.Height(BUTTON_HEIGHT), GUILayout.Width(160f)))
             {
                 buildAfterGUI = true;
             }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
             
             GUILayout.EndVertical();
 
@@ -855,7 +864,7 @@ namespace Reallusion.Import
             if (windowMode != ImporterWindowMode.Settings)
                 settingsIconGC = new GUIContent(iconSettings, "Settings.");
             else
-                settingsIconGC = EditorGUIUtility.IconContent("back@2x");
+                settingsIconGC = new GUIContent(iconSettingsOn, "Back.");
             if (GUILayout.Button(settingsIconGC, 
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
