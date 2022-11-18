@@ -387,12 +387,12 @@ namespace Reallusion.Import
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 if (Path.GetExtension(path).Equals(ext, System.StringComparison.InvariantCultureIgnoreCase))
-                {
-                    Debug.Log("Found " + name);
+                {                    
                     return path;
                 }
             }
-            Debug.LogWarning("Asset " + name + " NOT found.");
+
+            Debug.LogError("Asset " + name + " NOT found.");
             return "no";
         }
 
