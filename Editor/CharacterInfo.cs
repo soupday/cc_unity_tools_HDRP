@@ -175,6 +175,11 @@ namespace Reallusion.Import
             get { return fbx != null; }
         }
 
+        public string GetPrefabsFolder()
+        {
+            return Path.Combine(folder, Importer.PREFABS_FOLDER);
+        }
+
         public GameObject PrefabAsset
         {
             get

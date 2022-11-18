@@ -24,6 +24,7 @@ using UnityEditor.IMGUI.Controls;
 using System;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace Reallusion.Import
 {
@@ -35,9 +36,8 @@ namespace Reallusion.Import
         private static CharacterInfo contextCharacter;
         private static List<CharacterInfo> validCharacters;
         private static string backScenePath;
-        private static Mode mode;
-        private static ImporterWindow currentWindow;        
-        public static ImporterWindow Current { get { return currentWindow; } }        
+        private static Mode mode;        
+        public static ImporterWindow Current { get; private set; }        
         public CharacterInfo Character { get { return contextCharacter; } }        
                         
         private Vector2 iconScrollView;
@@ -66,32 +66,33 @@ namespace Reallusion.Import
         const float TITLE_SPACE = 12f;
         const float ROW_SPACE = 4f;
 
-        private static GUIStyle logStyle, mainStyle, buttonStyle, labelStyle, boldStyle, iconStyle;
-        private static Texture2D iconUnprocessed;
-        private static Texture2D iconBasic;
-        private static Texture2D iconHQ;
-        private static Texture2D iconBaked;
-        private static Texture2D iconMixed;
-        private static Texture2D iconActionBake;
-        private static Texture2D iconActionBakeOn;
-        private static Texture2D iconActionBakeHair;
-        private static Texture2D iconActionBakeHairOn;
-        private static Texture2D iconActionPreview;
-        private static Texture2D iconActionPreviewOn;
-        private static Texture2D iconActionRefresh;
-        private static Texture2D iconActionAnims;
-        private static Texture2D iconActionPhysics;
-        private static Texture2D iconAction2Pass;
-        private static Texture2D iconAlembic;
-        private static Texture2D iconActionAnimPlayer;
-        private static Texture2D iconActionAnimPlayerOn;
-        private static Texture2D iconActionAvatarAlign;
-        private static Texture2D iconActionAvatarAlignOn;
-        private static Texture2D iconSettings;
-        private static Texture2D iconSettingsOn;
-        private static Texture2D iconLighting;
-        private static Texture2D iconCamera;
-        private static Texture2D iconBuildMaterials;
+        private GUIStyle logStyle, mainStyle, buttonStyle, labelStyle, boldStyle, iconStyle;
+        private Texture2D iconUnprocessed;
+        private Texture2D iconBasic;
+        private Texture2D iconHQ;
+        private Texture2D iconBaked;
+        private Texture2D iconMixed;
+        private Texture2D iconActionBake;
+        private Texture2D iconActionBakeOn;
+        private Texture2D iconActionBakeHair;
+        private Texture2D iconActionBakeHairOn;
+        private Texture2D iconActionPreview;
+        private Texture2D iconActionPreviewOn;
+        private Texture2D iconActionRefresh;
+        private Texture2D iconActionAnims;
+        private Texture2D iconActionPhysics;
+        private Texture2D iconActionLOD;
+        private Texture2D iconAction2Pass;
+        private Texture2D iconAlembic;
+        private Texture2D iconActionAnimPlayer;
+        private Texture2D iconActionAnimPlayerOn;
+        private Texture2D iconActionAvatarAlign;
+        private Texture2D iconActionAvatarAlignOn;
+        private Texture2D iconSettings;
+        private Texture2D iconSettingsOn;
+        private Texture2D iconLighting;
+        private Texture2D iconCamera;
+        private Texture2D iconBuildMaterials;
 
         // SerializeField is used to ensure the view state is written to the window 
         // layout file. This means that the state survives restarting Unity as long as the window
@@ -149,7 +150,7 @@ namespace Reallusion.Import
             Type hwt = Type.GetType("UnityEditor.SceneHierarchyWindow, UnityEditor.dll");
             ImporterWindow window = GetWindow<ImporterWindow>(windowTitle, hwt);
             window.minSize = new Vector2(300f, 500f);
-            currentWindow = window;
+            Current = window;
 
             ClearAllData();
             window.SetActiveCharacter(characterObject, windowMode);
@@ -189,6 +190,7 @@ namespace Reallusion.Import
             iconAlembic = Util.FindTexture(folders, "RLIcon_Alembic");
             iconActionAnims = Util.FindTexture(folders, "RLIcon_ActionAnims");
             iconActionPhysics = Util.FindTexture(folders, "RLIcon_ActionPhysics");
+            iconActionLOD = Util.FindTexture(folders, "RLIcon_ActionLOD");
             iconActionAnimPlayer = Util.FindTexture(folders, "RLIcon_AnimPlayer");
             iconActionAvatarAlign = Util.FindTexture(folders, "RLIcon_AvatarAlign");
             iconActionAnimPlayerOn = Util.FindTexture(folders, "RLIcon_AnimPlayer_Sel");
@@ -198,11 +200,43 @@ namespace Reallusion.Import
             iconLighting = Util.FindTexture(folders, "RLIcon_Lighting");
             iconCamera = Util.FindTexture(folders, "RLIcon_Camera");
             iconBuildMaterials = Util.FindTexture(folders, "RLIcon_ActionBuildMaterials");
-            currentWindow = this;
+            Current = this;
 
             RefreshCharacterList();
 
-            MakeStyle();
+            logStyle = new GUIStyle();
+            logStyle.wordWrap = true;
+            logStyle.fontStyle = FontStyle.Italic;
+            logStyle.normal.textColor = Color.grey;
+
+            mainStyle = new GUIStyle();
+            mainStyle.wordWrap = false;
+            mainStyle.fontStyle = FontStyle.Normal;
+            mainStyle.normal.textColor = Color.white;
+
+            iconStyle = new GUIStyle();
+            iconStyle.wordWrap = false;
+            iconStyle.fontStyle = FontStyle.Normal;
+            iconStyle.normal.textColor = Color.white;
+            iconStyle.alignment = TextAnchor.MiddleCenter;
+
+            boldStyle = new GUIStyle();
+            boldStyle.alignment = TextAnchor.UpperLeft;
+            boldStyle.wordWrap = false;
+            boldStyle.fontStyle = FontStyle.Bold;
+            boldStyle.normal.textColor = Color.white;
+
+            labelStyle = new GUIStyle();
+            labelStyle.alignment = TextAnchor.UpperLeft;
+            labelStyle.wordWrap = false;
+            labelStyle.fontStyle = FontStyle.Normal;
+            labelStyle.normal.textColor = Color.white;
+
+            buttonStyle = new GUIStyle();
+            buttonStyle.wordWrap = false;
+            buttonStyle.fontStyle = FontStyle.Normal;
+            buttonStyle.normal.textColor = Color.white;
+            buttonStyle.alignment = TextAnchor.MiddleCenter;
 
             if (titleContent.text != windowTitle) titleContent.text = windowTitle;
         }
@@ -791,6 +825,17 @@ namespace Reallusion.Import
             GUI.enabled = true;
             */
 
+            GUILayout.Space(ACTION_BUTTON_SPACE);
+
+            if (GUILayout.Button(new GUIContent(iconActionLOD, "Run the LOD combining tool on the prefabs associated with this character."),
+                GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+            {
+                string prefabsFolder = contextCharacter.GetPrefabsFolder();
+                Selection.activeObject = AssetDatabase.LoadAssetAtPath(prefabsFolder, typeof(Object)) as Object;
+                LodSelectionWindow.InitTool();
+            }
+            GUI.enabled = true;
+
             GUILayout.Space(ACTION_BUTTON_SPACE * 2f + 11f);
 
             if (contextCharacter == null) GUI.enabled = false;
@@ -1041,7 +1086,7 @@ namespace Reallusion.Import
 
         public static void TrySetMultiPass(bool state)
         {
-            ImporterWindow window = ImporterWindow.currentWindow;
+            ImporterWindow window = ImporterWindow.Current;
 
             if (window && window.characterTreeView != null)
             {
@@ -1074,62 +1119,14 @@ namespace Reallusion.Import
 
             if (validCharacters != null) validCharacters.Clear();
             validCharacters = null;
-            
-            logStyle = null;
-            mainStyle = null;
-            buttonStyle = null;
-            labelStyle = null;
-            boldStyle = null;
-
-            iconUnprocessed = null;
-            iconBasic = null;
-            iconHQ = null;
-            iconBaked = null;
-
-            currentWindow = null;
+                        
+            Current = null;
         }
 
         private void OnDestroy()
         {            
             ClearAllData();            
-        }        
-
-        private static void MakeStyle()
-        {
-            logStyle = new GUIStyle();
-            logStyle.wordWrap = true;
-            logStyle.fontStyle = FontStyle.Italic;
-            logStyle.normal.textColor = Color.grey;
-
-            mainStyle = new GUIStyle();
-            mainStyle.wordWrap = false;
-            mainStyle.fontStyle = FontStyle.Normal;
-            mainStyle.normal.textColor = Color.white;
-
-            iconStyle = new GUIStyle();
-            iconStyle.wordWrap = false;
-            iconStyle.fontStyle = FontStyle.Normal;
-            iconStyle.normal.textColor = Color.white;
-            iconStyle.alignment = TextAnchor.MiddleCenter;
-
-            boldStyle = new GUIStyle();
-            boldStyle.alignment = TextAnchor.UpperLeft;
-            boldStyle.wordWrap = false;
-            boldStyle.fontStyle = FontStyle.Bold;
-            boldStyle.normal.textColor = Color.white;
-
-            labelStyle = new GUIStyle();
-            labelStyle.alignment = TextAnchor.UpperLeft;
-            labelStyle.wordWrap = false;
-            labelStyle.fontStyle = FontStyle.Normal;
-            labelStyle.normal.textColor = Color.white;
-
-            buttonStyle = new GUIStyle();
-            buttonStyle.wordWrap = false;
-            buttonStyle.fontStyle = FontStyle.Normal;
-            buttonStyle.normal.textColor = Color.white;
-            buttonStyle.alignment = TextAnchor.MiddleCenter;
-        }        
+        }           
 
         public void CheckDragAndDrop()
         {

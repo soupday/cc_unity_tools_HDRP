@@ -73,12 +73,18 @@ namespace Reallusion.Import
 
         public static void OnBeforeAssemblyReload()
         {
-            if (AnimationMode.InAnimationMode())
+            if (AnimationMode.InAnimationMode())  
             { 
                 Util.LogInfo("Disabling Animation Mode on editor assembly reload.");
                 AnimationMode.StopAnimationMode();
             }
-        }        
+
+            if (LodSelectionWindow.Current)
+            {
+                Util.LogInfo("Closing Lod Selection Window on editor assembly reload.");
+                LodSelectionWindow.Current.Close();
+            }
+        }
 
         public static PreviewScene OpenPreviewScene(GameObject prefab)
         {
