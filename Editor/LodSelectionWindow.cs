@@ -167,8 +167,8 @@ namespace Reallusion.Import
                 //GUILayout.FlexibleSpace();
                 GUILayout.Label(model.Name, boldStyle);
                 string triCount;
-                if (model.Tris >= 1000000) triCount = ((int)(model.Tris / 1000000)).ToString() + "M";
-                else if (model.Tris >= 1000) triCount = ((int)(model.Tris / 1000)).ToString() + "K";
+                if (model.Tris >= 1000000) triCount = ((float)model.Tris / 1000000f).ToString("0.0") + "M";
+                else if (model.Tris >= 1000) triCount = ((float)model.Tris / 1000f).ToString("0.0") + "K";
                 else triCount = ((int)(model.Tris)).ToString();
                 GUILayout.Label("(" + triCount + " Triangles)", countStyle);
                 GUILayout.EndVertical();
