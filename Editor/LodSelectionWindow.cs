@@ -254,7 +254,7 @@ namespace Reallusion.Import
 
             nameField.SetValueWithoutNotify(nameHint + "_LODGroup");
 
-            AutoSelect();
+            SortAndAutoSelect();
         }
 
         private void BuildModelPrefabDict(Object[] objects)
@@ -272,9 +272,9 @@ namespace Reallusion.Import
                 AssetToModelList(bakedPathSuffix, path, guid, assetName, ref largest);
             }
 
-            nameField.SetValueWithoutNotify(nameHint + "_LOD");
+            nameField.SetValueWithoutNotify(nameHint + "_LOD");            
 
-            AutoSelect();
+            SortAndAutoSelect();
         }
 
         private void AssetToModelList(string bakedPathSuffix, string path, string guid, string assetName, ref int largest)
@@ -321,8 +321,10 @@ namespace Reallusion.Import
             }            
         }
 
-        private void AutoSelect()
+        private void SortAndAutoSelect()
         {
+            modelList = modelList.OrderByDescending(o => o.Tris).ToList();             
+
             // select everything
             foreach (GridModel gm in modelList) gm.Selected = true;
 
