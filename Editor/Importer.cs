@@ -244,13 +244,13 @@ namespace Reallusion.Import
             //       So the *worst case* scenario is that the fbx/blend file is only re-imported three
             //       times, rather than potentially hundreds if caught in a recursive import loop.            
 
-            // set up import settings in preparation for baking default and/or blender textures.
+            // set up import settings in preparation for baking default and/or blender textures.            
             ProcessObjectTreePrepass(fbx);
 
-            // bake additional default or unity packed textures from blender export.
+            // bake additional default or unity packed textures from blender export.            
             ProcessObjectTreeBakePass(fbx);
 
-            // create / apply materials and shaders with supplied or baked texures.
+            // create / apply materials and shaders with supplied or baked texures.            
             ProcessObjectTreeBuildPass(fbx);
 
             characterInfo.tempHairBake = false;
@@ -330,25 +330,17 @@ namespace Reallusion.Import
             doneTextureGUIDS.Clear();
             processedBuildMaterials.Clear();
 
-            int childCount = obj.transform.childCount;
-            for (int i = 0; i < childCount; i++) 
-            {
-                GameObject child = obj.transform.GetChild(i).gameObject;
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
 
-                if (child.GetComponent<Renderer>() != null)
-                {
-                    ProcessObjectBuildPass(child);
-                }
-                else
-                {
-                    ProcessObjectTreeBuildPass(child);
-                }
-            }
+            foreach (Renderer renderer in renderers)
+            {
+                ProcessObjectBuildPass(renderer);
+            }            
         }
 
-        private void ProcessObjectBuildPass(GameObject obj)
+        private void ProcessObjectBuildPass(Renderer renderer)
         {
-            Renderer renderer = obj.GetComponent<Renderer>();
+            GameObject obj = renderer.gameObject;
 
             if (renderer)
             {
@@ -392,19 +384,11 @@ namespace Reallusion.Import
             doneTextureGUIDS.Clear();
             processedBuildMaterials.Clear();
 
-            int childCount = obj.transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                GameObject child = obj.transform.GetChild(i).gameObject;
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
 
-                if (child.GetComponent<Renderer>() != null)
-                {
-                    ProcessObjectPrepass(child);
-                }
-                else
-                {
-                    ProcessObjectTreePrepass(child);
-                }
+            foreach (Renderer renderer in renderers)
+            {
+                ProcessObjectPrepass(renderer);
             }
             
             AssetDatabase.WriteImportSettingsIfDirty(fbxPath);            
@@ -412,9 +396,9 @@ namespace Reallusion.Import
             AssetDatabase.Refresh();
         }
 
-        private void ProcessObjectPrepass(GameObject obj)
+        private void ProcessObjectPrepass(Renderer renderer)
         {
-            Renderer renderer = obj.GetComponent<Renderer>();
+            GameObject obj = renderer.gameObject;
 
             if (renderer)
             {
@@ -452,29 +436,21 @@ namespace Reallusion.Import
             doneTextureGUIDS.Clear();
             processedBuildMaterials.Clear();
 
-            int childCount = obj.transform.childCount;
-            for (int i = 0; i < childCount; i++)
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+
+            foreach (Renderer renderer in renderers)
             {
-                GameObject child = obj.transform.GetChild(i).gameObject;
-
-                if (child.GetComponent<Renderer>() != null)
-                {
-                    ProcessObjectBakePass(child);
-                }
-                else
-                {
-                    ProcessObjectTreeBakePass(child);
-                }
+                ProcessObjectBakePass(renderer);
             }
-
+            
             AssetDatabase.WriteImportSettingsIfDirty(fbxPath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
 
-        private void ProcessObjectBakePass(GameObject obj)
+        private void ProcessObjectBakePass(Renderer renderer)
         {
-            Renderer renderer = obj.GetComponent<Renderer>();
+            GameObject obj = renderer.gameObject;
 
             if (renderer)
             {
@@ -491,8 +467,7 @@ namespace Reallusion.Import
                             if (blenderProject)
                                 BakeBlenderTextures(sourceName, matJson);
 
-                            if ((materialType == MaterialType.SSS || characterInfo.BasicMaterials) && 
-                                Pipeline.isHDRP)
+                            if (materialType == MaterialType.SSS || characterInfo.BasicMaterials)
                             {
                                 if (materialType == MaterialType.Skin || 
                                     materialType == MaterialType.Head || 
@@ -501,8 +476,11 @@ namespace Reallusion.Import
                                     BakeDefaultMap(sharedMat, sourceName, "_ThicknessMap", "TransMap",
                                         matJson, "Custom Shader/Image/Transmission Map");
 
-                                    BakeDefaultMap(sharedMat, sourceName, "_DetailMap", "MicroN",
-                                        matJson, "Custom Shader/Image/MicroNormal");
+                                    if (RP == RenderPipeline.HDRP) // only HDRP uses the packed detail map
+                                    {
+                                        BakeDefaultMap(sharedMat, sourceName, "_DetailMap", "MicroN",
+                                            matJson, "Custom Shader/Image/MicroNormal");
+                                    }
                                 }
                             }
                         }
@@ -702,9 +680,14 @@ namespace Reallusion.Import
         {
             string shaderName = mat.shader.name;
 
-            if (shaderName.iContains(Pipeline.SHADER_DEFAULT) || shaderName.iContains(Pipeline.SHADER_HQ_SSS))
+            if (shaderName.iContains(Pipeline.SHADER_DEFAULT))
             {
                 ConnectDefaultMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
+            }
+
+            if (shaderName.iContains(Pipeline.SHADER_HQ_SSS))
+            {
+                ConnectSSSMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
             else if (shaderName.iContains(Pipeline.SHADER_DEFAULT_HAIR))
@@ -934,7 +917,7 @@ namespace Reallusion.Import
                     FLAG_NORMAL);
 
                 ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
-                    matJson, "Textures/Glow");
+                    matJson, "Textures/Glow");                
             }
 
             // reconstruct any missing packed texture maps from Blender source maps.
@@ -1004,53 +987,85 @@ namespace Reallusion.Import
                         mat.SetFloatIf("_BumpScale", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
                 }
             }
-
-            // connecting default HDRP materials:
-            if (RP == RenderPipeline.HDRP && !string.IsNullOrEmpty(customShader))
+            
+            // Subsurface default materials
+            if (!string.IsNullOrEmpty(customShader))
             {
                 // for skin and head materials:
                 if (customShader == "RLHead" || customShader == "RLSkin" || customShader == "RLSSS")
                 {
                     ConnectTextureTo(sourceName, mat, "_SubsurfaceMaskMap", "SSSMap",
-                        matJson, "Custom Shader/Image/SSS Map");
-
-                    // use the baked thickness and details maps...
-                    mat.SetTextureIf("_ThicknessMap", GetCachedBakedMap(sharedMat, "_ThicknessMap"));
-                    mat.SetTextureIf("_DetailMap", GetCachedBakedMap(sharedMat, "_DetailMap"));
+                        matJson, "Custom Shader/Image/SSS Map");                    
 
                     float microNormalTiling = 20f;
                     float microNormalStrength = 0.5f;
                     float microRoughnessMod = 0.0f;
+                    Color sssFalloff = Color.white;
+                    float subsurfaceScale = 0.85f;
+
                     if (matJson != null)
                     {
+                        sssFalloff = matJson.GetColorValue("Subsurface Scatter/Falloff");
                         microNormalTiling = matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling");
                         microNormalStrength = matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength");
                         microRoughnessMod = matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale");
+                        subsurfaceScale = matJson.GetFloatValue("Subsurface Scatter/Lerp");
                     }
-                    mat.SetFloatIf("_SmoothnessRemapMin", 0f - microRoughnessMod);
-                    mat.SetTextureScaleIf("_DetailMap", new Vector2(microNormalTiling, microNormalTiling));
-                    mat.SetFloatIf("_DetailNormalScale", microNormalStrength);
-                    mat.SetFloatIf("_Thickness", 0.4f);
-                    if (sourceName.iContains("Ga_Skin_"))
-                    {
-                        mat.SetRemapRange("_ThicknessRemap", 0.4f, 1f);
 
-                    }
-                    else if (customShader == "RLSSS")
+                    if (RP == RenderPipeline.HDRP)
                     {
-                        mat.SetRemapRange("_ThicknessRemap", 0.0f, 1f);
+                        // HDRP uses the baked thickness and packed detail map                        
+                        mat.SetTextureIf("_ThicknessMap", GetCachedBakedMap(sharedMat, "_ThicknessMap"));
+                        mat.SetTextureIf("_DetailMap", GetCachedBakedMap(sharedMat, "_DetailMap"));
+                        mat.SetTextureScaleIf("_DetailMap", new Vector2(microNormalTiling, microNormalTiling));
+                        mat.SetFloatIf("_DetailNormalScale", microNormalStrength);
                     }
                     else
                     {
+                        ConnectTextureTo(sourceName, mat, "_ThicknessMap", "TransMap",
+                        matJson, "Custom Shader/Image/Transmission Map");
+
+                        // 3D uses the micro normal mask and map directly
+                        ConnectTextureTo(sourceName, mat, "_DetailMask", "MicroNMask",
+                        matJson, "Custom Shader/Image/MicroNormalMask");
+
+                        ConnectTextureTo(sourceName, mat, "_DetailNormalMap", "MicroN",
+                            matJson, "Custom Shader/Image/MicroNormal", FLAG_NORMAL);
+
+                        mat.SetTextureScaleIf("_DetailNormalMap", new Vector2(microNormalTiling, microNormalTiling));
+                        mat.SetFloatIf("_DetailNormalMapScale", microNormalStrength);
+                        mat.SetColorIf("_SubsurfaceFalloff", sssFalloff);                        
+                    }                    
+                    
+                    mat.SetFloatIf("_SmoothnessRemapMin", 0f - microRoughnessMod);
+                    
+                    if (sourceName.iContains("Ga_Skin_") || customShader == "RLSkin" || customShader == "RLHead")
+                    {
                         mat.SetRemapRange("_ThicknessRemap", 0.4f, 1f);
+                        mat.SetFloatIf("_Thickness", 0.4f);
+                        mat.SetFloatIf("_SubsurfaceMask", subsurfaceScale * 0.4f);
+
                     }
+                    else //if (customShader == "RLSSS")
+                    {
+                        mat.SetRemapRange("_ThicknessRemap", 0.0f, 1f);
+                        mat.SetFloatIf("_Thickness", 1f);
+                        mat.SetFloatIf("_SubsurfaceMask", subsurfaceScale);
+                    }                    
                 }
             }            
         }
 
+        private void ConnectSSSMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
+            MaterialType materialType, QuickJSON matJson)
+        {
+            // for now the SSS implementation is incomplete, treat as default material with extra steps
+            ConnectDefaultMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);            
+        }
+
         // HDRP only
-        private void ConnectDefaultHairMaterial(GameObject obj, string sourceName, Material sharedMat, 
-            Material mat, MaterialType materialType, QuickJSON matJson)
+        private void ConnectDefaultHairMaterial(GameObject obj, string sourceName, Material sharedMat,
+        Material mat, MaterialType materialType, QuickJSON matJson)
         {
             //bool isFacialHair = FacialProfileMapper.MeshHasFacialBlendShapes(obj) != FacialProfile.None;
 
@@ -1073,7 +1088,7 @@ namespace Reallusion.Import
             // reconstruct any missing packed texture maps from Blender source maps.
             if (RP == RenderPipeline.HDRP)
                 ConnectBlenderTextures(sourceName, mat, matJson, "_BaseColorMap", "_MaskMap", "");
-            
+
             if (matJson != null)
             {
                 float diffuseStrength = matJson.GetFloatValue("Custom Shader/Variable/Diffuse Strength");
@@ -1501,9 +1516,15 @@ namespace Reallusion.Import
             ConnectTextureTo(sourceName, mat, "_AOMap", "ao",
                 matJson, "Textures/AO");
 
-            ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
+            if (!ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
                 matJson, "Textures/Normal",
-                FLAG_NORMAL);
+                FLAG_NORMAL))
+            {
+                if (RECONSTRUCT_FLOW_NORMALS)
+                {
+                    BakeHairFlowToNormalMap(mat, sourceName, matJson);
+                }
+            }    
 
             ConnectTextureTo(sourceName, mat, "_BlendMap", "blend_multiply",
                 matJson, "Textures/Blend");
@@ -1647,12 +1668,7 @@ namespace Reallusion.Import
                 mat.SetVectorIf("_HighlightBDistribution", (1f / 255f) * matJson.GetVector3Value("Custom Shader/Variable/_2nd Dye Distribution from Grayscale"));
                 mat.SetFloatIf("_HighlightBOverlapEnd", matJson.GetFloatValue("Custom Shader/Variable/Mask 2nd Dye by RootMap"));
                 mat.SetFloatIf("_HighlightBOverlapInvert", matJson.GetFloatValue("Custom Shader/Variable/Invert 2nd Dye RootMap Mask"));                
-            }
-
-            if (mat.GetTexture("_NormalMap") == null)
-            {
-                BakeHairFlowToNormalMap(mat, sourceName, matJson);
-            }
+            }            
         }
 
         private void ConnectHQEyeOcclusionMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
@@ -1990,12 +2006,17 @@ namespace Reallusion.Import
                     mat.SetTextureOffset(shaderRef, offset);
                     mat.SetTextureScale(shaderRef, tiling);
 
-                    Util.LogInfo("        Connected texture: " + tex.name);
+                    Util.LogInfo("        Connecting texture: " + tex.name);
 
                     if (!DoneTexture(tex)) SetTextureImport(tex, name, flags);
                 }
                 else
                 {
+                    if (!string.IsNullOrEmpty(jsonTexturePath))
+                    {
+                        Util.LogError("Unable to locate texture defined in Json: " + jsonTexturePath + "\nMaterial: " + materialName);
+                    }
+
                     mat.SetTexture(shaderRef, null);
                 }
             }

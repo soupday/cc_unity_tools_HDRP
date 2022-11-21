@@ -48,7 +48,7 @@ namespace Reallusion.Import
             InitLodSelector();
         }
 
-        public static void InitLodSelector()
+        public static LodSelectionWindow InitLodSelector()
         {
             LodSelectionWindow window = GetWindow<LodSelectionWindow>("LOD Combining Tool");
 
@@ -59,6 +59,9 @@ namespace Reallusion.Import
                 window.BuildModelPrefabDict(Selection.objects);
                         
             window.minSize = new Vector2(boxW * 3f + 8f, boxH * 2f + 24f);
+            window.Show();
+
+            return window;
         }
 
         private void OnDestroy()

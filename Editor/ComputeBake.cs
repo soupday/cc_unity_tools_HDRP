@@ -1617,6 +1617,7 @@ namespace Reallusion.Import
                 ao = CheckMask(ao);
                 roughness = CheckGray(roughness);
                 microNormalMask = CheckMask(microNormalMask);
+                smoothnessLUT = CheckGray(smoothnessLUT);
 
                 int kernel = bakeShader.FindKernel("RLHDRPMask");
                 bakeTarget.Create(bakeShader, kernel);
@@ -1643,8 +1644,9 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
-                metallic = CheckBlank(metallic);                
-                roughness = CheckGray(roughness);                
+                metallic = CheckBlank(metallic);
+                roughness = CheckGray(roughness);
+                smoothnessLUT = CheckGray(smoothnessLUT);
 
                 int kernel = bakeShader.FindKernel("RLURPMetallicGloss");
                 bakeTarget.Create(bakeShader, kernel);
@@ -2009,6 +2011,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 subsurface = CheckMask(subsurface);
                 RGBA = CheckBlank(RGBA);
 
@@ -2136,6 +2139,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 subsurface = CheckMask(subsurface);
 
                 int kernel = bakeShader.FindKernel(kernelName);
@@ -2167,6 +2171,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 thickness = CheckMask(thickness);
 
                 int kernel = bakeShader.FindKernel(kernelName);
@@ -2263,6 +2268,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 gumsMask = CheckMask(gumsMask);                
 
                 int kernel = bakeShader.FindKernel("RLTeethSubsurface");
@@ -2289,6 +2295,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 gumsMask = CheckMask(gumsMask);
 
                 int kernel = bakeShader.FindKernel(kernelName);
@@ -2384,6 +2391,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                cornea = CheckDiffuse(cornea);
                 sclera = CheckDiffuse(sclera);
                 colorBlend = CheckOverlay(colorBlend);
 
@@ -2588,7 +2596,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
-                CheckDiffuse(baseMap);
+                baseMap = CheckDiffuse(baseMap);
 
                 int kernel = bakeShader.FindKernel("RLCorneaSubsurfaceMask");
                 bakeTarget.Create(bakeShader, kernel);
@@ -2630,6 +2638,7 @@ namespace Reallusion.Import
                 blend = CheckMask(blend);
                 id = CheckOverlay(id);
                 root = CheckMask(root);
+                mask = CheckMask(mask);
 
                 int kernel = bakeShader.FindKernel("RLHairColoredDiffuse");
                 bakeTarget.Create(bakeShader, kernel);
@@ -2688,6 +2697,7 @@ namespace Reallusion.Import
             {
                 diffuse = CheckDiffuse(diffuse);
                 blend = CheckMask(blend);
+                mask = CheckMask(mask);
 
                 int kernel = bakeShader.FindKernel("RLHairDiffuse");
                 bakeTarget.Create(bakeShader, kernel);
@@ -2802,6 +2812,8 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                flowMap = CheckNormal(flowMap);
+
                 int kernel = bakeShader.FindKernel("RLFlowToNormal");
                 bakeTarget.Create(bakeShader, kernel);
                 bakeShader.SetTexture(kernel, "Flow", flowMap);

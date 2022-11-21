@@ -83,54 +83,50 @@ namespace Reallusion.Import
         {
             int mDepth = 0;
 
+            Renderer[] renderers = transform.GetComponentsInChildren<Renderer>();
+
             //applicable objects
-            foreach (Transform child in transform)
+            foreach (Renderer renderer in renderers)
             {
-                if (child.gameObject.GetComponent<Renderer>() != null)
+                Transform child = renderer.transform;
+
+                mDepth = 1;//1st tier
+
+                objList.Add(child);
+                allItems.Add(new TreeViewItem { id = mId++, depth = mDepth, displayName = child.name, icon = (Texture2D)EditorGUIUtility.IconContent("Mesh Icon").image });
+
+                foreach (Material m in child.gameObject.GetComponent<Renderer>().sharedMaterials)
                 {
-                    mDepth = 1;//1st tier
+                    mDepth = 2;//2nd tier
 
-                    objList.Add(child);
-                    allItems.Add(new TreeViewItem { id = mId++, depth = mDepth, displayName = child.name, icon = (Texture2D)EditorGUIUtility.IconContent("Mesh Icon").image });
+                    string sourceName = Util.GetSourceMaterialName(assetPath, m);
+                    string shaderName = Util.GetShaderName(m);
+                    int linkedIndex = Util.GetLinkedMaterialIndex(sourceName, shaderName);
+                    if (linkedIndex >= 0)
+                        linkedIndices[linkedIndex].Add(mId);
 
-                    foreach (Material m in child.gameObject.GetComponent<Renderer>().sharedMaterials)
+                    objList.Add(m);
+                    allItems.Add(new TreeViewItem { id = mId++, depth = mDepth, displayName = m.name, icon = (Texture2D)EditorGUIUtility.IconContent("Material Icon").image });
+
+                    int props = m.shader.GetPropertyCount();
+                    for (int i = 0; i < props; i++)
                     {
-                        mDepth = 2;//2nd tier
+                        int flagValue = (int)m.shader.GetPropertyFlags(i);
+                        int checkBit = 0x00000001; //bit for UnityEngine.Rendering.ShaderPropertyFlags.HideInInspector
+                        int flagHasBit = (flagValue & checkBit);
 
-                        string sourceName = Util.GetSourceMaterialName(assetPath, m);
-                        string shaderName = Util.GetShaderName(m);
-                        int linkedIndex = Util.GetLinkedMaterialIndex(sourceName, shaderName);
-                        if (linkedIndex >= 0)
-                            linkedIndices[linkedIndex].Add(mId);
-
-                        objList.Add(m);
-                        allItems.Add(new TreeViewItem { id = mId++, depth = mDepth, displayName = m.name, icon = (Texture2D)EditorGUIUtility.IconContent("Material Icon").image });
-
-                        int props = m.shader.GetPropertyCount();
-                        for (int i = 0; i < props; i++)
+                        if (flagHasBit == 0 && m.shader.GetPropertyType(i).Equals(UnityEngine.Rendering.ShaderPropertyType.Texture))
                         {
-                            int flagValue = (int)m.shader.GetPropertyFlags(i);
-                            int checkBit = 0x00000001; //bit for UnityEngine.Rendering.ShaderPropertyFlags.HideInInspector
-                            int flagHasBit = (flagValue & checkBit);
-
-                            if (flagHasBit == 0 && m.shader.GetPropertyType(i).Equals(UnityEngine.Rendering.ShaderPropertyType.Texture))
+                            if (m.GetTexture(m.shader.GetPropertyName(i)) != null)
                             {
-                                if (m.GetTexture(m.shader.GetPropertyName(i)) != null)
-                                {
-                                    mDepth = 3;//3rd tier  
+                                mDepth = 3;//3rd tier  
 
-                                    objList.Add(m.GetTexture(m.shader.GetPropertyName(i)));
-                                    allItems.Add(new TreeViewItem { id = mId++, depth = mDepth, displayName = m.shader.GetPropertyDescription(i), icon = (Texture2D)EditorGUIUtility.IconContent("Image Icon").image });
-                                }
+                                objList.Add(m.GetTexture(m.shader.GetPropertyName(i)));
+                                allItems.Add(new TreeViewItem { id = mId++, depth = mDepth, displayName = m.shader.GetPropertyDescription(i), icon = (Texture2D)EditorGUIUtility.IconContent("Image Icon").image });
                             }
                         }
                     }
                 }
-                else if (child.name.iContains("_LOD0"))
-                {
-                    DoThing(child, allItems, ref mId);
-                }
-
             }
         }
 

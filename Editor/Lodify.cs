@@ -25,6 +25,7 @@ namespace Reallusion.Import
             public Transform boneRoot;
         }
 
+        /*
         [MenuItem("Reallusion/LOD Groups/Make LOD Prefab", priority = 1)]
         public static void MenuMakeLodPrefab()
         {
@@ -37,6 +38,7 @@ namespace Reallusion.Import
             }
             Selection.activeObject = lodPrefab;
         }
+        */
 
         public GameObject MakeLODPrefab(Object[] objects, string name = "")
         {
