@@ -1,19 +1,19 @@
 /* 
  * Copyright (C) 2021 Victor Soupday
- * This file is part of CC3_Unity_Tools <https://github.com/soupday/cc3_unity_tools>
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
  * 
- * CC3_Unity_Tools is free software: you can redistribute it and/or modify
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * CC3_Unity_Tools is distributed in the hope that it will be useful,
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with CC3_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using System.IO;
@@ -606,7 +606,7 @@ namespace Reallusion.Import
             // identify linked materials by shader name:
             if ((shaderName.iContains(Pipeline.SHADER_HQ_HEAD) || 
                  shaderName.iContains(Pipeline.SHADER_HQ_SKIN)) && 
-                !sourceName.iContains("Std_Nails")) return CharacterTreeView.LINKED_INDEX_SKIN;
+                !sourceName.iContains("_Nails")) return CharacterTreeView.LINKED_INDEX_SKIN;
 
             if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) ||
                 shaderName.iContains(Pipeline.SHADER_HQ_EYE_PARALLAX)) return CharacterTreeView.LINKED_INDEX_EYE;
@@ -623,13 +623,13 @@ namespace Reallusion.Import
                 shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE)) return CharacterTreeView.LINKED_INDEX_HAIR;
 
             // then try by source material name:
-            if (sourceName.iContains("Std_Skin_Head") || sourceName.iContains("Std_Skin_Body") ||
-                sourceName.iContains("Std_Skin_Arm") || sourceName.iContains("Std_Skin_Leg"))
+            if (sourceName.iContains("_Skin_Head") || sourceName.iContains("_Skin_Body") ||
+                sourceName.iContains("_Skin_Arm") || sourceName.iContains("_Skin_Leg"))
                 return CharacterTreeView.LINKED_INDEX_SKIN;            
-            if (sourceName.iContains("Std_Eye_Occlusion_")) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
-            if (sourceName.iContains("Std_Tearline_")) return CharacterTreeView.LINKED_INDEX_TEARLINE;
-            if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;            
-            if (sourceName.iContains("Std_Upper_Teeth") || sourceName.iContains("Std_Lower_Teeth")) return CharacterTreeView.LINKED_INDEX_TEETH;
+            if (sourceName.iContains("_Eye_Occlusion_")) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
+            if (sourceName.iContains("_Tearline_")) return CharacterTreeView.LINKED_INDEX_TEARLINE;
+            if (sourceName.iContains("_Eye_") || sourceName.iContains("_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;            
+            if (sourceName.iContains("_Upper_Teeth") || sourceName.iContains("_Lower_Teeth")) return CharacterTreeView.LINKED_INDEX_TEETH;
 
             return -1;
         }

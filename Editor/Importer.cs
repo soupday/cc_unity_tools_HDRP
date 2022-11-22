@@ -1,19 +1,19 @@
 /* 
  * Copyright (C) 2021 Victor Soupday
- * This file is part of CC3_Unity_Tools <https://github.com/soupday/cc3_unity_tools>
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
  * 
- * CC3_Unity_Tools is free software: you can redistribute it and/or modify
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * CC3_Unity_Tools is distributed in the hope that it will be useful,
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with CC3_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using System.Collections.Generic;
@@ -903,10 +903,28 @@ namespace Reallusion.Import
                     matJson, "Textures/MetallicAlpha"))
                 {
                     mat.SetFloatIf("_Metallic", 1f);                    
+
+                    if (customShader == "RLHead" || customShader == "RLSkin" || sourceName.iContains("Ga_Skin_"))
+                    {
+                        mat.SetFloatIf("_GlossMapScale", 0.65f);
+                        mat.SetFloatIf("_Smoothness", 0.65f);
+                    }
+                    else if (materialType == MaterialType.Scalp && materialType == MaterialType.Eyelash)
+                    {
+                        mat.SetFloatIf("_GlossMapScale", 0.25f);
+                        mat.SetFloatIf("_Smoothness", 0.25f);
+                    }
+                    else
+                    {
+                        mat.SetFloatIf("_GlossMapScale", 0.897f);
+                        mat.SetFloatIf("_Smoothness", 0.897f);
+                    }
                 }
                 else
                 {
-                    mat.SetFloatIf("_Metallic", 0f);                    
+                    mat.SetFloatIf("_Metallic", 0f);
+                    mat.SetFloatIf("_GlossMapScale", 0.5f);
+                    mat.SetFloatIf("_Smoothness", 0.5f);
                 }
 
                 ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
@@ -928,36 +946,14 @@ namespace Reallusion.Import
             else
                 ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");            
 
-            // override smoothness for basic material skin
-            if (RP != RenderPipeline.HDRP && mat.GetTextureIf("_MetallicGlossMap"))
-            {
-                if (customShader == "RLHead" || customShader == "RLSkin")
-                {
-                    mat.SetFloatIf("_Smoothness", 0.7f);
-                    mat.SetFloatIf("_GlossMapScale", 0.7f);
-                }
-                else
-                {
-                    // eyelash and scalp should keep the template smoothness
-                    if (materialType != MaterialType.Scalp && materialType != MaterialType.Eyelash)
-                    {
-                        mat.SetFloatIf("_Smoothness", 0.897f);
-                        mat.SetFloatIf("_GlossMapScale", 0.897f);
-                    }
-                }
-            }
-
             // All
             if (matJson != null)
             {
                 // Roughness_Value from Blender pipeline (instead of baking a small value texture)
                 if (matJson.PathExists("Roughness_Value"))
-                {
-                    if (RP == RenderPipeline.Builtin)
-                        mat.SetFloatIf("_Glossiness", 1f - matJson.GetFloatValue("Roughness_Value"));
-                    else
-                        mat.SetFloatIf("_Smoothness", 1f - matJson.GetFloatValue("Roughness_Value"));
-                    
+                {                    
+                    mat.SetFloatIf("_Smoothness", 1f - matJson.GetFloatValue("Roughness_Value"));                    
+                    mat.SetFloatIf("_GlossMapScale", 1f - matJson.GetFloatValue("Roughness_Value"));
                 }
 
                 // Metallic_Value from Blender pipeline (instead of baking a small value texture)
@@ -1042,7 +1038,10 @@ namespace Reallusion.Import
                     if (sourceName.iContains("Ga_Skin_") || customShader == "RLSkin" || customShader == "RLHead")
                     {
                         mat.SetRemapRange("_ThicknessRemap", 0.4f, 1f);
-                        mat.SetFloatIf("_Thickness", 0.4f);
+                        if (RP == RenderPipeline.URP)
+                            mat.SetFloatIf("_Thickness", 0.04f);
+                        else
+                            mat.SetFloatIf("_Thickness", 0.4f);
                         mat.SetFloatIf("_SubsurfaceMask", subsurfaceScale * 0.4f);
 
                     }
