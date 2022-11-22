@@ -101,7 +101,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Importer_Reconstruct_Flow_Normals"))
                     return EditorPrefs.GetBool("RL_Importer_Reconstruct_Flow_Normals");
-                return true;
+                return false;
             }
 
             set
