@@ -744,8 +744,8 @@ namespace Reallusion.Import
                 bakedSubsurfaceMap = BakeHeadSubsurfaceMap(subsurface, RGBAMask, CFULCMask, EarNeckMask,
                     subsurfaceScale,
                     rSS, gSS, bSS, aSS, earSS, neckSS, cheekSS, foreheadSS, upperLipSS, chinSS, unmaskedSS,                    
-                    subsurfaceFalloff, 
-                    IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap,
+                    Color.white, 
+                    Texture2D.whiteTexture,
                     sourceName + "_SSSMap");
             }
             else
@@ -785,8 +785,8 @@ namespace Reallusion.Import
                 bakedSubsurfaceMap = BakeSkinSubsurfaceMap(subsurface, RGBAMask,
                     subsurfaceScale,
                     rSS, gSS, bSS, aSS, unmaskedSS,
-                    subsurfaceFalloff, 
-                    IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap,
+                    Color.white, 
+                    Texture2D.whiteTexture,
                     sourceName + "_SSSMap");
             }
 
@@ -801,8 +801,8 @@ namespace Reallusion.Import
                     sourceName + "_DetailMask");
 
             bakedThicknessMap = BakeThicknessMap(thickness,
-                0f, 1.0f, subsurfaceFalloff, 
-                IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap, 
+                0f, 1.0f, Color.white, 
+                Texture2D.whiteTexture, 
                 IS_HDRP ? true : false,
                 sourceName + "_Thickness");
 
@@ -817,8 +817,10 @@ namespace Reallusion.Import
 
             result.SetColorIf("_BaseColor", diffuseColor);
             result.SetColorIf("_Color", diffuseColor);
-            result.SetFloatIf("_SubsurfaceMask", 1.0f);
+            // skin shaders have translucency wrap of 0.2, LitSSS is 0.5, 0.4 = 0.2 / 0.5
+            result.SetFloatIf("_SubsurfaceMask", 0.4f);
             result.SetFloatIf("_Thickness", thicknessScale);
+            result.SetColorIf("_SubsurfaceFalloff", subsurfaceFalloff);
             result.SetRemapRange("_ThicknessRemap", thicknessScaleMin, thicknessScale);
 
             return result;

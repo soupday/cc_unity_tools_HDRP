@@ -171,7 +171,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_URP";
         public const string SHADER_HQ_ALPHACLIP = "Universal Render Pipeline/Lit";
         public const string SHADER_HQ_OPAQUE = "Universal Render Pipeline/Lit";
-        public const string SHADER_HQ_SSS = "RL_SSS_URP";
+        public const string SHADER_HQ_SSS = "LitSSS";
         // eye types
         public const string SHADER_HQ_CORNEA_PARALLAX = "RL_CorneaShaderParallax_URP";
         public const string SHADER_HQ_EYE_PARALLAX = "RL_EyeShaderParallax_Dummy_URP"; // Dummy shader (unlit no textures)
@@ -242,7 +242,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_URP";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
-        public const string MATERIAL_BAKED_SSS = "";
+        public const string MATERIAL_BAKED_SSS = "RL_Template_Baked_SSS_URP";
         // variants (that differ from the defaults above)
         public const string MATERIAL_BAKED_CORNEA_CUSTOM = "RL_Template_Baked_CorneaBasicCustom_URP";
         public const string MATERIAL_BAKED_CORNEA_PARALLAX_CUSTOM = "RL_Template_Baked_CorneaParallaxCustom_URP";
@@ -279,7 +279,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_3D";
         public const string SHADER_HQ_ALPHACLIP = "Universal Render Pipeline/Lit";
         public const string SHADER_HQ_OPAQUE = "Universal Render Pipeline/Lit";
-        public const string SHADER_HQ_SSS = "RL_SSS_3D";
+        public const string SHADER_HQ_SSS = "LitSSS";
         // eye types
         public const string SHADER_HQ_CORNEA_PARALLAX = "RL_CorneaShaderParallax_3D";
         public const string SHADER_HQ_EYE_PARALLAX = "RL_EyeShaderParallax_Dummy_3D"; // Dummy shader (unlit no textures)

@@ -86,7 +86,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Importer_Animation_Player_On"))
                     return EditorPrefs.GetBool("RL_Importer_Animation_Player_On");
-                return true;
+                return false;
             }
 
             set
