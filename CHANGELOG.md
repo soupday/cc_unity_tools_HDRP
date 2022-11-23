@@ -2,21 +2,28 @@ Changelog
 =========
 
 ### v 1.4.0
-- (WIP) Initial DemoTeam strand hair auto setup implemented, on Blender 3.3 Hair curve exports from Blender Tools.
-- Limbus dark ring corrected, iris should look brighter, clearer and less fuzzy at the edges.
-- Lod combining function added.
-- Fix to Instalod merged material characters detection.
-- ActorBuild detection separated from ActorCore (ActorBuild can have more advanced materials)
-- Animation player chooses from available animations when none found in character.
-- Rig animation type override for non-standard characters.
-- Better detection of non-standard characters.
-- SSS shader added.
-- GameBase and ActorBuild SSS skin material detection.
-- Material setup fix for non character objects (e.g. props from iClone)
-- Bone LOD characters characters supported.
-- Blender to Unity imports fix for bounding box root bone issue.
-- Shader properties arrangement pass.
-- New icons added.
+- Import & Setup
+    - ActorBuild detection separated from ActorCore (ActorBuild can have more advanced materials)
+    - Fix to Instalod merged material characters detection.
+    - Better detection of non-standard characters.
+        - Rig animation type override (Humanoid / Generic) for non-standard characters.
+    - Bone LOD characters reduced skeleton avatar generation fixed.
+    - Animation player chooses from available animations when none found in character.
+    - Blender to Unity imports fix for bounding box root bone issue.
+    - Character Tree view shows all child renderer meshes regardless of depth.
+- Materials & Shaders
+    - Lit SSS shader added for URP and 3D pipelines.
+    - SSS material support added.
+    - Traditional material support added.
+    - Shader properties arrangement pass.
+    - Material setup fix for non character objects (e.g. props from iClone)
+    - Additional missing texture checks added to character bake function.
+    - Amplify shaders recompiled with ASE 1.9.1.2.
+    - Limbus dark ring corrected, iris should look brighter, clearer and less fuzzy at the edges.
+- Other
+    - LOD combining function added.
+        - Characters and LOD variants must be in same folder.
+    - New icons added.
 
 ### v 1.3.9
 - Due to shader incompatibilities between URP10 and URP12, the URP package must be split into 2 versions.
