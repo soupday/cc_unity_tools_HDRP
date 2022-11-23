@@ -69,6 +69,25 @@ namespace Reallusion.Import
             return false;
         }
 
+        /// <summary>
+        ///     e.g. mat.SetMinMaxRange("_SmoothnessRemap", 0f, 1f);
+        /// </summary>        
+        public static bool SetMinMaxRange(this Material mat, string shaderRef, float min, float max)
+        {
+            string shaderRefMin = shaderRef + "Min";
+            string shaderRefMax = shaderRef + "Max";
+
+            if (mat.shader && 
+                mat.shader.FindPropertyIndex(shaderRefMin) >= 0 &&
+                mat.shader.FindPropertyIndex(shaderRefMax) >= 0)
+            {
+                mat.SetFloat(shaderRefMin, min);
+                mat.SetFloat(shaderRefMax, max);
+                return true;
+            }
+            return false;
+        }
+
         public static bool GetRemapRange(this Material mat, string shaderRef, out float from, out float to)
         {
             from = 0f;
