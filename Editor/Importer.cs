@@ -566,6 +566,8 @@ namespace Reallusion.Import
                 }
 
                 string customShader = matJson?.GetStringValue("Custom Shader/Shader Name");
+                string defaultType = matJson?.GetStringValue("Material Type");
+
                 switch (customShader)
                 {
                     case "RLEyeOcclusion": return MaterialType.EyeOcclusion;
@@ -578,10 +580,8 @@ namespace Reallusion.Import
                     case "RLEye": return MaterialType.Cornea;
                     case "RLSSS": return MaterialType.SSS;
                     default:
-                        if (hasOpacity)
-                            return MaterialType.DefaultOpaque;
-                        else
-                            return MaterialType.DefaultAlpha;
+                        if (hasOpacity) return MaterialType.DefaultAlpha;
+                        else return MaterialType.DefaultOpaque;
                 }
             }
             else
@@ -868,6 +868,25 @@ namespace Reallusion.Import
             string customShader = matJson?.GetStringValue("Custom Shader/Shader Name");
             string jsonMaterialType = matJson?.GetStringValue("Material Type");
 
+            if (jsonMaterialType.iEquals("Tra"))
+            {
+                if (RP == RenderPipeline.HDRP)
+                {
+                    mat.SetFloatIf("_MaterialID", 4f);
+                    mat.EnableKeyword("_MATERIAL_FEATURE_SPECULAR_COLOR");
+                }
+                else if (RP == RenderPipeline.URP)
+                {
+                    mat.SetFloatIf("_WorkflowMode", 0f);
+                    mat.EnableKeyword("_SPECULAR_SETUP");
+                }
+                else
+                {
+                    Shader specShader = Shader.Find("Standard (Specular setup)");
+                    mat.shader = specShader;
+                }
+            }
+
             // these default materials should *not* attach any textures:
             if (customShader == "RLEyeTearline" || customShader == "RLEyeOcclusion") return;
 
@@ -882,12 +901,24 @@ namespace Reallusion.Import
                         FLAG_SRGB);
                 }
 
+                ConnectTextureTo(sourceName, mat, "_SpecularColorMap", "Specular",
+                    matJson, "Textures/Specular");                
+
                 ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
                     matJson, "Textures/HDRP");                
 
-                ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
+                if (ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
                     matJson, "Textures/Normal",
-                    FLAG_NORMAL);
+                    FLAG_NORMAL))
+                {
+                    mat.EnableKeyword("_NORMALMAP");
+                    mat.EnableKeyword("_NORMALMAP_TANGENT_SPACE");
+                }
+                else
+                {
+                    mat.DisableKeyword("_NORMALMAP");
+                    mat.DisableKeyword("_NORMALMAP_TANGENT_SPACE");
+                }                
 
                 ConnectTextureTo(sourceName, mat, "_EmissiveColorMap", "Glow",
                     matJson, "Textures/Glow");                
@@ -917,18 +948,56 @@ namespace Reallusion.Import
                     }
                 }
 
-                ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
-                    matJson, "Textures/MetallicAlpha");
+                if (ConnectTextureTo(sourceName, mat, "_SpecGlossMap", "Specular",
+                    matJson, "Textures/Specular"))
+                {
+                    mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                    mat.EnableKeyword("_SPECGLOSSMAP");
+                    
+                }
+                else
+                {
+                    mat.DisableKeyword("_METALLICSPECGLOSSMAP");
+                    mat.DisableKeyword("_SPECGLOSSMAP");
+                }
+
+                if (ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
+                    matJson, "Textures/MetallicAlpha"))
+                {
+                    mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                }
+                else
+                {
+                    mat.DisableKeyword("_METALLICSPECGLOSSMAP");
+                }
                 
-                ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
-                    matJson, "Textures/AO");
+                if (ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
+                    matJson, "Textures/AO"))
+                {
+                    mat.EnableKeyword("_OCCLUSIONMAP");
+                }
+                else
+                {
+                    mat.DisableKeyword("_OCCLUSIONMAP");
+                }
 
-                ConnectTextureTo(sourceName, mat, "_BumpMap", "Normal",
+                if (ConnectTextureTo(sourceName, mat, "_BumpMap", "Normal",
                     matJson, "Textures/Normal",
-                    FLAG_NORMAL);
+                    FLAG_NORMAL))
+                {
+                    mat.EnableKeyword("_NORMALMAP");
+                }
+                else
+                {
+                    mat.DisableKeyword("_NORMALMAP");
+                }
 
-                ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
-                    matJson, "Textures/Glow");                
+                if (ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
+                    matJson, "Textures/Glow"))
+                {
+                    mat.globalIlluminationFlags = mat.globalIlluminationFlags | MaterialGlobalIlluminationFlags.AnyEmissive;
+                    mat.EnableKeyword("_EMISSION");
+                }                
             }
 
             // reconstruct any missing packed texture maps from Blender source maps.
@@ -937,8 +1006,8 @@ namespace Reallusion.Import
             else if (RP == RenderPipeline.URP)
                 ConnectBlenderTextures(sourceName, mat, matJson, "_BaseMap", "", "_MetallicGlossMap");
             else
-                ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");            
-
+                ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");
+            
             // All
             if (matJson != null)
             {                
@@ -960,6 +1029,11 @@ namespace Reallusion.Import
                     mat.SetColorIf("_BaseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
                 else
                     mat.SetColorIf("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
+
+                if (RP == RenderPipeline.HDRP)
+                    mat.SetColorIf("_SpecularColor", 0.2f * Util.LinearTosRGB(matJson.GetColorValue("Specular Color")));
+                else
+                    mat.SetColorIf("_SpecColor", 0.2f * Util.LinearTosRGB(matJson.GetColorValue("Specular Color")));
 
                 // Emission
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
@@ -1092,6 +1166,7 @@ namespace Reallusion.Import
             {
                 mat.SetFloatIf("_Smoothness", 0.5f);
                 mat.SetFloatIf("_GlossMapScale", 0.5f);
+                mat.SetFloatIf("_Glossiness", 0.5f);
                 mat.SetMinMaxRange("_SmoothnessRemap", 0f, 0.5f);
             }
         }
