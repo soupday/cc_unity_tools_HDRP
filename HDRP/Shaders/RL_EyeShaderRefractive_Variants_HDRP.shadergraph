@@ -1,5 +1,5 @@
 {
-    "m_SGVersion": 2,
+    "m_SGVersion": 3,
     "m_Type": "UnityEditor.ShaderGraph.GraphData",
     "m_ObjectId": "f85a4e4b91df4a7db442a14fde53ed87",
     "m_Properties": [
@@ -121,6 +121,12 @@
     "m_Keywords": [
         {
             "m_Id": "9d63910b86f7439f9642f08926860a8e"
+        }
+    ],
+    "m_Dropdowns": [],
+    "m_CategoryData": [
+        {
+            "m_Id": "18eb1eaa42454be99364b0b076520801"
         }
     ],
     "m_Nodes": [
@@ -3013,10 +3019,11 @@
         "serializedMesh": {
             "m_SerializedMesh": "{\"mesh\":{\"instanceID\":0}}",
             "m_Guid": ""
-        }
+        },
+        "preventRotation": false
     },
     "m_Path": "Shader Graphs",
-    "m_ConcretePrecision": 0,
+    "m_GraphPrecision": 0,
     "m_PreviewMode": 2,
     "m_OutputNode": {
         "m_Id": ""
@@ -3111,7 +3118,8 @@
             "m_Id": "df0ba3ae175741e3a29aeabdd7f3f88d"
         }
     ],
-    "m_CustomEditorGUI": ""
+    "m_CustomEditorGUI": "",
+    "m_SupportVFX": false
 }
 
 {
@@ -3516,7 +3524,8 @@
         "m_SerializableColors": []
     },
     "m_TextureType": 0,
-    "m_NormalMapSpace": 0
+    "m_NormalMapSpace": 0,
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -3759,9 +3768,13 @@
         "m_GuidSerialized": "9a0e7f8b-8d54-4d5c-9da3-d89855959ebd"
     },
     "m_Name": "Iris Color",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_IrisColor",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -3772,6 +3785,7 @@
         "b": 1.0,
         "a": 1.0
     },
+    "isMainColor": false,
     "m_ColorMode": 0
 }
 
@@ -3877,81 +3891,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
-    "m_ObjectId": "0b76dd0645a142199522222d072da6e5",
-    "m_Name": "",
-    "m_ChildObjectList": [
-        {
-            "m_Id": "cb42572a46a74a588ef3935f3a667eb7"
-        },
-        {
-            "m_Id": "66cc0b010f5647d5bf80ded4825cab7c"
-        },
-        {
-            "m_Id": "769181578f94433984a73faf6e153757"
-        },
-        {
-            "m_Id": "e25a1c81f1374f178c8f27b6264a5f1b"
-        },
-        {
-            "m_Id": "0132cd9db49941618ed4bec849f97956"
-        },
-        {
-            "m_Id": "3345a7b9279a48b7ba4602df55d812ac"
-        },
-        {
-            "m_Id": "daa99c4f268449b8a4e69fdaeafcfe49"
-        },
-        {
-            "m_Id": "a1eb91167291491694bf1bdf8d2f3e16"
-        },
-        {
-            "m_Id": "229e12ce054c4003affcf25346b88151"
-        },
-        {
-            "m_Id": "94ca5b7030dd47cf8a414dd9fee0ecde"
-        },
-        {
-            "m_Id": "e971c94b58c140859c5fca2ee518edf2"
-        },
-        {
-            "m_Id": "8a49d2f872e946d4a29e2030ee291584"
-        },
-        {
-            "m_Id": "b6b8e6115b8e4da2814c109def81f544"
-        },
-        {
-            "m_Id": "6d2408803a794f2e9368d5529b79a574"
-        },
-        {
-            "m_Id": "c70d342b1a0b4d6bbf1ff3c98fd338ea"
-        },
-        {
-            "m_Id": "c4024195aefa495695710ffb5997a875"
-        },
-        {
-            "m_Id": "f2b01f7d31244bfb85b8e2dbef37c961"
-        },
-        {
-            "m_Id": "9f45cc9cad0b4aadb41967e6a8d2186d"
-        },
-        {
-            "m_Id": "2adde9b6c89f49aa838e8cfc38e04353"
-        },
-        {
-            "m_Id": "ddd87d19404f41b8bbbd24232f4338ac"
-        },
-        {
-            "m_Id": "fd115c5a3bec4b6eabfabdb2fdf437e6"
-        },
-        {
-            "m_Id": "5c361a69f33347c7ab73885bd203d4fe"
-        }
-    ]
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.GroupData",
     "m_ObjectId": "0ca230dd81f04c0ba5af42953674323c",
     "m_Title": "Radial Gradient",
@@ -3969,9 +3908,13 @@
         "m_GuidSerialized": "952a961a-d57d-42a9-94d4-433e00db7cfa"
     },
     "m_Name": "Cornea Diffuse Map",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_CorneaDiffuseMap",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -3980,6 +3923,8 @@
         "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
         "m_Guid": ""
     },
+    "isMainTexture": false,
+    "useTilingAndOffset": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -4419,9 +4364,13 @@
         "m_GuidSerialized": "d5986d33-a844-43ca-b102-b2817c8ba9fd"
     },
     "m_Name": "Iris Depth",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_IrisDepth",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -4570,9 +4519,13 @@
         "m_GuidSerialized": "70ec8fdc-f80f-4d8d-8502-083fd39104ce"
     },
     "m_Name": "Emission Map",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_EmissionMap",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -4581,6 +4534,8 @@
         "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
         "m_Guid": ""
     },
+    "isMainTexture": false,
+    "useTilingAndOffset": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -4903,6 +4858,132 @@
 }
 
 {
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
+    "m_ObjectId": "18eb1eaa42454be99364b0b076520801",
+    "m_Name": "",
+    "m_ChildObjectList": [
+        {
+            "m_Id": "cb42572a46a74a588ef3935f3a667eb7"
+        },
+        {
+            "m_Id": "55bf621ad2394320a2ab49a3c7b34fe1"
+        },
+        {
+            "m_Id": "451cc7559488456fb2d601ba459f41da"
+        },
+        {
+            "m_Id": "410287977f3941ae86357b91bb50c332"
+        },
+        {
+            "m_Id": "82fed9724f34448392b89bdd38fe7517"
+        },
+        {
+            "m_Id": "2fe3d3e44e8646f3a00409c36bc1a98e"
+        },
+        {
+            "m_Id": "ed1d6ae0d0e14a009081ff66d328aa52"
+        },
+        {
+            "m_Id": "8200a5c208dd40fabbab6b6aca910116"
+        },
+        {
+            "m_Id": "f529da1a611a46cda7c335f575a5999b"
+        },
+        {
+            "m_Id": "b0ec1f6d5bd0419796b5090e7dffabf7"
+        },
+        {
+            "m_Id": "0cbea652f4bf4177942231f39b7c2eea"
+        },
+        {
+            "m_Id": "85e5e0cd46aa44fc8e9f720d375bec49"
+        },
+        {
+            "m_Id": "6106c8c4dc85475886881929b289ae65"
+        },
+        {
+            "m_Id": "e2d236b8f7c740b1920bd65df0cef00f"
+        },
+        {
+            "m_Id": "b618279ad2eb41bd9df25d9f412e0eb1"
+        },
+        {
+            "m_Id": "4e48a718329c454b8a46be0bc9bf8802"
+        },
+        {
+            "m_Id": "0991612ac20a4db88f764fc952c75125"
+        },
+        {
+            "m_Id": "aa328367e88846d38454c6b8cc094c28"
+        },
+        {
+            "m_Id": "13125e3e576e4c76b403dab13948fd74"
+        },
+        {
+            "m_Id": "424271c2190c4f42b931a851e201c75d"
+        },
+        {
+            "m_Id": "596515c1061c4119b6831a17bd392746"
+        },
+        {
+            "m_Id": "a71b2a13bfe64b8fbb07597467c80fb2"
+        },
+        {
+            "m_Id": "99ad21e27a3f4d3cb1b1736abc28020d"
+        },
+        {
+            "m_Id": "308a2ce997744f8cb41204c209af692a"
+        },
+        {
+            "m_Id": "cbcbb78812d84a3ea2eab90a08ba2f3b"
+        },
+        {
+            "m_Id": "5f410167b9c14d43bc4da4f27fdd220a"
+        },
+        {
+            "m_Id": "195319a2066f492abb03e4f9fb29acfb"
+        },
+        {
+            "m_Id": "3345a7b9279a48b7ba4602df55d812ac"
+        },
+        {
+            "m_Id": "daa99c4f268449b8a4e69fdaeafcfe49"
+        },
+        {
+            "m_Id": "ab45ac5b088b42518d305de12d5f3763"
+        },
+        {
+            "m_Id": "7a4f18355ba84582a3d56ed6b8c69762"
+        },
+        {
+            "m_Id": "3a3f4cc5a3574e32b762b0cb62cd67cf"
+        },
+        {
+            "m_Id": "8a49d2f872e946d4a29e2030ee291584"
+        },
+        {
+            "m_Id": "9be1515fae6d42c09957951f4f4fd357"
+        },
+        {
+            "m_Id": "cd32d6c896b4474aa36ec555723b81ef"
+        },
+        {
+            "m_Id": "14e401d52fb34c7cb2fa95ca45b72210"
+        },
+        {
+            "m_Id": "f4805aec61284d8188631ee8d13ca13c"
+        },
+        {
+            "m_Id": "526ce229950b48d0b6c7cdd0b66dd1e6"
+        },
+        {
+            "m_Id": "9d63910b86f7439f9642f08926860a8e"
+        }
+    ]
+}
+
+{
     "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
     "m_ObjectId": "195319a2066f492abb03e4f9fb29acfb",
@@ -4910,9 +4991,13 @@
         "m_GuidSerialized": "f766b3a7-886a-42c4-b340-a2b551b0639d"
     },
     "m_Name": "Color Blend Strength",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_195319a2066f492abb03e4f9fb29acfb",
     "m_OverrideReferenceName": "_ColorBlendStrength",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -6216,9 +6301,13 @@
         "m_GuidSerialized": "790d7842-1738-458e-9df2-9be5de05085d"
     },
     "m_Name": "Shadow Radius",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_2fe3d3e44e8646f3a00409c36bc1a98e",
     "m_OverrideReferenceName": "_ShadowRadius",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -6239,9 +6328,13 @@
         "m_GuidSerialized": "e58405f8-10e7-4c76-a323-5d60d1cf4415"
     },
     "m_Name": "Limbus Dark Width",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_308a2ce997744f8cb41204c209af692a",
     "m_OverrideReferenceName": "_LimbusDarkWidth",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -6489,9 +6582,13 @@
         "m_GuidSerialized": "11573659-5da7-4813-a954-c0a0d3d0de68"
     },
     "m_Name": "Mask Map",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Texture2D_3345a7b9279a48b7ba4602df55d812ac",
     "m_OverrideReferenceName": "_MaskMap",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -6500,6 +6597,8 @@
         "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
         "m_Guid": ""
     },
+    "isMainTexture": false,
+    "useTilingAndOffset": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -6935,9 +7034,13 @@
         "m_GuidSerialized": "eea42818-ed87-4721-86fe-cdc624288d38"
     },
     "m_Name": "Cornea Smoothness",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_CorneaSmoothness",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -7382,144 +7485,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
-    "m_ObjectId": "3e0a2b926ce7448988fe619b25649164",
-    "m_Name": "",
-    "m_ChildObjectList": [
-        {
-            "m_Id": "cb42572a46a74a588ef3935f3a667eb7"
-        },
-        {
-            "m_Id": "55bf621ad2394320a2ab49a3c7b34fe1"
-        },
-        {
-            "m_Id": "451cc7559488456fb2d601ba459f41da"
-        },
-        {
-            "m_Id": "410287977f3941ae86357b91bb50c332"
-        },
-        {
-            "m_Id": "82fed9724f34448392b89bdd38fe7517"
-        },
-        {
-            "m_Id": "0cbea652f4bf4177942231f39b7c2eea"
-        },
-        {
-            "m_Id": "85e5e0cd46aa44fc8e9f720d375bec49"
-        },
-        {
-            "m_Id": "6106c8c4dc85475886881929b289ae65"
-        },
-        {
-            "m_Id": "e2d236b8f7c740b1920bd65df0cef00f"
-        },
-        {
-            "m_Id": "b618279ad2eb41bd9df25d9f412e0eb1"
-        },
-        {
-            "m_Id": "4e48a718329c454b8a46be0bc9bf8802"
-        },
-        {
-            "m_Id": "211ca272cd524d5098b5288942e1374b"
-        },
-        {
-            "m_Id": "30234a2ec51e43279321e35ffc60083e"
-        },
-        {
-            "m_Id": "a71b2a13bfe64b8fbb07597467c80fb2"
-        },
-        {
-            "m_Id": "99ad21e27a3f4d3cb1b1736abc28020d"
-        },
-        {
-            "m_Id": "308a2ce997744f8cb41204c209af692a"
-        },
-        {
-            "m_Id": "cbcbb78812d84a3ea2eab90a08ba2f3b"
-        },
-        {
-            "m_Id": "2fe3d3e44e8646f3a00409c36bc1a98e"
-        },
-        {
-            "m_Id": "ed1d6ae0d0e14a009081ff66d328aa52"
-        },
-        {
-            "m_Id": "8200a5c208dd40fabbab6b6aca910116"
-        },
-        {
-            "m_Id": "d0ef53e49de84105aac4f730278802d0"
-        },
-        {
-            "m_Id": "f5b469bad51849d1831c6acedbe7d5be"
-        },
-        {
-            "m_Id": "4238e02f0b7849e0ab81381125a954b9"
-        },
-        {
-            "m_Id": "3345a7b9279a48b7ba4602df55d812ac"
-        },
-        {
-            "m_Id": "daa99c4f268449b8a4e69fdaeafcfe49"
-        },
-        {
-            "m_Id": "ab45ac5b088b42518d305de12d5f3763"
-        },
-        {
-            "m_Id": "3a3f4cc5a3574e32b762b0cb62cd67cf"
-        },
-        {
-            "m_Id": "5f410167b9c14d43bc4da4f27fdd220a"
-        },
-        {
-            "m_Id": "195319a2066f492abb03e4f9fb29acfb"
-        },
-        {
-            "m_Id": "8a49d2f872e946d4a29e2030ee291584"
-        },
-        {
-            "m_Id": "9be1515fae6d42c09957951f4f4fd357"
-        },
-        {
-            "m_Id": "cd32d6c896b4474aa36ec555723b81ef"
-        },
-        {
-            "m_Id": "14e401d52fb34c7cb2fa95ca45b72210"
-        },
-        {
-            "m_Id": "f4805aec61284d8188631ee8d13ca13c"
-        },
-        {
-            "m_Id": "596515c1061c4119b6831a17bd392746"
-        },
-        {
-            "m_Id": "13125e3e576e4c76b403dab13948fd74"
-        },
-        {
-            "m_Id": "b0ec1f6d5bd0419796b5090e7dffabf7"
-        },
-        {
-            "m_Id": "859cfaa3765a443d891a115d38d963bd"
-        },
-        {
-            "m_Id": "40f2fea490ef4e5999f154a042e89495"
-        },
-        {
-            "m_Id": "424271c2190c4f42b931a851e201c75d"
-        },
-        {
-            "m_Id": "526ce229950b48d0b6c7cdd0b66dd1e6"
-        },
-        {
-            "m_Id": "dd7cb286b7e9414187bd609c181e5df4"
-        },
-        {
-            "m_Id": "9d63910b86f7439f9642f08926860a8e"
-        }
-    ]
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "3e1e74cd69784bce98955b9cc58c2b70",
     "m_Id": 0,
@@ -7749,9 +7714,13 @@
         "m_GuidSerialized": "3cfb40c6-754d-4909-b812-a16a145a6a93"
     },
     "m_Name": "Sclera Saturation",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_410287977f3941ae86357b91bb50c332",
     "m_OverrideReferenceName": "_ScleraSaturation",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -7772,9 +7741,13 @@
         "m_GuidSerialized": "77cf6243-66d3-41f0-b3fd-5d821cd6d1ce"
     },
     "m_Name": "Pupil Outer Radius",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_DepthRadius",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -8012,9 +7985,13 @@
         "m_GuidSerialized": "c89f899d-e213-482e-ae96-a031053cff9a"
     },
     "m_Name": "Sclera Hue",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_451cc7559488456fb2d601ba459f41da",
     "m_OverrideReferenceName": "_ScleraHue",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -8525,9 +8502,13 @@
         "m_GuidSerialized": "f2c7ead8-1119-4b60-90b6-25d5065da726"
     },
     "m_Name": "Iris Radius",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_IrisRadius",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -8829,9 +8810,13 @@
         "m_GuidSerialized": "57191268-66f8-404b-9a60-922c962905a0"
     },
     "m_Name": "IsLeftEye",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Boolean_526ce229950b48d0b6c7cdd0b66dd1e6",
     "m_OverrideReferenceName": "_IsLeftEye",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -9022,9 +9007,13 @@
         "m_GuidSerialized": "a442da55-b5f4-4a93-8e32-f02731bcb853"
     },
     "m_Name": "Sclera Scale",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_55bf621ad2394320a2ab49a3c7b34fe1",
     "m_OverrideReferenceName": "_ScleraScale",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -9167,9 +9156,13 @@
         "m_GuidSerialized": "a668ef77-b686-4cf0-b08a-76a517528ff3"
     },
     "m_Name": "Pupil Scale",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_PupilScale",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -9482,8 +9475,16 @@
     "m_SupportLodCrossFade": false,
     "m_DoubleSidedMode": 0,
     "m_DOTSInstancing": false,
-    "m_Version": 0,
-    "m_FirstTimeMigrationExecuted": true,
+    "m_CustomVelocity": false,
+    "m_Tessellation": false,
+    "m_TessellationMode": 0,
+    "m_TessellationFactorMinDistance": 20.0,
+    "m_TessellationFactorMaxDistance": 50.0,
+    "m_TessellationFactorTriangleSize": 100.0,
+    "m_TessellationShapeFactor": 0.75,
+    "m_TessellationBackFaceCullEpsilon": -0.25,
+    "m_TessellationMaxDisplacement": 0.009999999776482582,
+    "m_Version": 1,
     "inspectorFoldoutMask": 11
 }
 
@@ -9560,9 +9561,13 @@
         "m_GuidSerialized": "4e8de280-ae9a-4cd0-bcb4-c38ce1060b4b"
     },
     "m_Name": "Color Blend Map",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Texture2D_5f410167b9c14d43bc4da4f27fdd220a",
     "m_OverrideReferenceName": "_ColorBlendMap",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -9571,6 +9576,8 @@
         "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
         "m_Guid": ""
     },
+    "isMainTexture": false,
+    "useTilingAndOffset": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -9657,7 +9664,8 @@
         "m_SerializableColors": []
     },
     "m_TextureType": 0,
-    "m_NormalMapSpace": 0
+    "m_NormalMapSpace": 0,
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -9731,9 +9739,13 @@
         "m_GuidSerialized": "b150a3ed-778e-4e12-91c5-0764371d1582"
     },
     "m_Name": "Iris Hue",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_IrisHue",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -11351,7 +11363,8 @@
         "m_SerializableColors": []
     },
     "m_TextureType": 1,
-    "m_NormalMapSpace": 0
+    "m_NormalMapSpace": 0,
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -11473,9 +11486,13 @@
         "m_GuidSerialized": "e29101e0-3265-4088-9aec-3e0d859daf8b"
     },
     "m_Name": "Iris Smoothness",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_IrisSmoothness",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -12056,9 +12073,13 @@
         "m_GuidSerialized": "e5d26f4f-5767-47a9-921c-52d228191ee7"
     },
     "m_Name": "Corner Shadow Color",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Color_8200a5c208dd40fabbab6b6aca910116",
     "m_OverrideReferenceName": "_CornerShadowColor",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -12069,6 +12090,7 @@
         "b": 0.6980392336845398,
         "a": 0.0
     },
+    "isMainColor": false,
     "m_ColorMode": 0
 }
 
@@ -12128,9 +12150,13 @@
         "m_GuidSerialized": "8b328558-7863-4ba1-bbf2-2bdaad38e3fa"
     },
     "m_Name": "Sclera Brightness",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_82fed9724f34448392b89bdd38fe7517",
     "m_OverrideReferenceName": "_ScleraBrightness",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -12372,9 +12398,13 @@
         "m_GuidSerialized": "25d1ad42-2b6a-4ab3-b172-f5e2c2e8c800"
     },
     "m_Name": "Iris Scale",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_85e5e0cd46aa44fc8e9f720d375bec49",
     "m_OverrideReferenceName": "_IrisScale",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -12466,6 +12496,7 @@
     "m_TransparentWritesMotionVec": false,
     "m_AlphaToMask": true,
     "m_DepthOffset": false,
+    "m_ConservativeDepthOffset": false,
     "m_TransparencyFog": true,
     "m_AlphaTestShadow": true,
     "m_BackThenFrontRendering": false,
@@ -12515,9 +12546,13 @@
         "m_GuidSerialized": "79f607da-c2f1-46b1-8320-f91a0aef3386"
     },
     "m_Name": "Sclera Micro Normal Map",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Texture2D_8a49d2f872e946d4a29e2030ee291584",
     "m_OverrideReferenceName": "_ScleraNormalMap",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -12526,6 +12561,8 @@
         "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
         "m_Guid": ""
     },
+    "isMainTexture": false,
+    "useTilingAndOffset": false,
     "m_Modifiable": true,
     "m_DefaultType": 3
 }
@@ -13654,180 +13691,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
-    "m_ObjectId": "970a5dda42614f9f9d402927df42123c",
-    "m_Name": "",
-    "m_ChildObjectList": [
-        {
-            "m_Id": "cb42572a46a74a588ef3935f3a667eb7"
-        },
-        {
-            "m_Id": "0dbd8f4e7dbe4735b7420287b8cbdfd6"
-        },
-        {
-            "m_Id": "4ef79e9b5e3e473abf150852f1ee2eaa"
-        },
-        {
-            "m_Id": "daa99c4f268449b8a4e69fdaeafcfe49"
-        },
-        {
-            "m_Id": "833ac99096aa4e25ac67e1440763f977"
-        },
-        {
-            "m_Id": "229e12ce054c4003affcf25346b88151"
-        },
-        {
-            "m_Id": "90d2f8ddb28645b0bddff4de92e61369"
-        },
-        {
-            "m_Id": "8a49d2f872e946d4a29e2030ee291584"
-        },
-        {
-            "m_Id": "0ba2430cc19d47f8a409f527a6dc78ee"
-        },
-        {
-            "m_Id": "6d2408803a794f2e9368d5529b79a574"
-        },
-        {
-            "m_Id": "c70d342b1a0b4d6bbf1ff3c98fd338ea"
-        },
-        {
-            "m_Id": "c4024195aefa495695710ffb5997a875"
-        },
-        {
-            "m_Id": "40ad0182bb1c42b9b661c6e1e59e3b8e"
-        },
-        {
-            "m_Id": "a6dd3195bd6d4a298423e889b02d7c82"
-        },
-        {
-            "m_Id": "6a6959874a9c4ee382311d4d6f1c7f76"
-        },
-        {
-            "m_Id": "45aabf6161ff4a45a137dd21f95c2d3c"
-        },
-        {
-            "m_Id": "b66279fd77db4f28b7414848d2fdf803"
-        },
-        {
-            "m_Id": "8ae276b25df3462c87feec02def3e6ba"
-        },
-        {
-            "m_Id": "2e0b13ed9e8b4125b1039d3595bb895c"
-        },
-        {
-            "m_Id": "500ba94d31a4430589839a4ee489195e"
-        },
-        {
-            "m_Id": "18e7067ff74c497eb92e133c7111aef2"
-        },
-        {
-            "m_Id": "23347c24053e478b8cfdb9644cccccaf"
-        },
-        {
-            "m_Id": "f59399cdc25c46fc8f26233a7f05270f"
-        },
-        {
-            "m_Id": "0f24de491c834c9e804aa21dd58f65af"
-        },
-        {
-            "m_Id": "73d5befbcccc4534aa3c49586ca61402"
-        },
-        {
-            "m_Id": "1b299f10f9db46719d10fb61b53094c1"
-        },
-        {
-            "m_Id": "971eb675ce25417c8f423a316a778a4a"
-        },
-        {
-            "m_Id": "5c244cc3e1824793bbb81324a733903c"
-        },
-        {
-            "m_Id": "2aff406bc0ff49feab0b75f503b042f0"
-        },
-        {
-            "m_Id": "c12e83169aaf40a39eef85aea07d238b"
-        },
-        {
-            "m_Id": "a0dea5230a33428cb6bffe7ab816e628"
-        },
-        {
-            "m_Id": "e31101d048044951bdf13cbddcd0f930"
-        },
-        {
-            "m_Id": "7089c3af8c734661957df22d8b965d0c"
-        },
-        {
-            "m_Id": "2cc11af55d6b4faea215407e60307db4"
-        },
-        {
-            "m_Id": "be9afefb417e4737b75985dc8aaa3962"
-        },
-        {
-            "m_Id": "da213d6a9621401f9a5ffc93e4383f77"
-        },
-        {
-            "m_Id": "3ddb1de457ce4a0d84f7586eaac11b9a"
-        },
-        {
-            "m_Id": "d2788286d5f347d4ad6c739e7a423501"
-        },
-        {
-            "m_Id": "5172aa37e7034721a702d02156b0c3a6"
-        },
-        {
-            "m_Id": "056e224982a4418783cc9a754ebd4920"
-        },
-        {
-            "m_Id": "8f920b195f6f4ae79f14b6daf5d7a75d"
-        },
-        {
-            "m_Id": "f0d88fda47be4d4b9b1614b6313411df"
-        },
-        {
-            "m_Id": "e8cdc35a911841ea94f4e76dc4ec9395"
-        },
-        {
-            "m_Id": "f72531ddf88f4deeb7706f3ee8563193"
-        },
-        {
-            "m_Id": "bb4fd70018f64db2a8ce8eb4c3f1fc66"
-        },
-        {
-            "m_Id": "43ccb360c88d4573b568d5486e4504e5"
-        },
-        {
-            "m_Id": "0cae67e06abe458f8f01660cbb4221de"
-        },
-        {
-            "m_Id": "3a7a76a7000244e4b3de2b879f66a390"
-        },
-        {
-            "m_Id": "11d663a4721749668b26f021655222e3"
-        },
-        {
-            "m_Id": "167f8d77ee5e478ab5c3c33cb26ad3c0"
-        },
-        {
-            "m_Id": "4bbc052da7aa4bb59c0765662e464374"
-        },
-        {
-            "m_Id": "e55f9a75fb6b42608280338c0f6f0543"
-        },
-        {
-            "m_Id": "f9cefb04dde84a5eb85a204200a3f7ca"
-        },
-        {
-            "m_Id": "4479b5f90a784db6b7291eba881239a9"
-        },
-        {
-            "m_Id": "b532e2b778d5417197d7a00f989b8394"
-        }
-    ]
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.ColorRGBMaterialSlot",
     "m_ObjectId": "97120e33ff604c9caae2e84e58df1aa9",
     "m_Id": 0,
@@ -14053,9 +13916,13 @@
         "m_GuidSerialized": "8fbe50ee-42d2-4cb1-8019-b8e5df5a5274"
     },
     "m_Name": "Limbus Dark Radius",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_99ad21e27a3f4d3cb1b1736abc28020d",
     "m_OverrideReferenceName": "_LimbusDarkRadius",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -14235,9 +14102,13 @@
         "m_GuidSerialized": "13430cdf-5441-4beb-a06f-dc1285c3c91d"
     },
     "m_Name": "Sclera Normal Strength",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_9be1515fae6d42c09957951f4f4fd357",
     "m_OverrideReferenceName": "_ScleraNormalStrength",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -14361,19 +14232,24 @@
 }
 
 {
-    "m_SGVersion": 0,
+    "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
     "m_ObjectId": "9d63910b86f7439f9642f08926860a8e",
     "m_Guid": {
         "m_GuidSerialized": "5ef0060d-37c5-49f1-a2d1-d8a505fe9d09"
     },
     "m_Name": "IsCornea",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "BOOLEAN_9D63910B86F7439F9642F08926860A8E_ON",
     "m_OverrideReferenceName": "BOOLEAN_ISCORNEA_ON",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_KeywordType": 0,
     "m_KeywordDefinition": 0,
     "m_KeywordScope": 0,
+    "m_KeywordStages": 63,
     "m_Entries": [],
     "m_Value": 0,
     "m_IsEditable": true
@@ -14530,7 +14406,8 @@
     "m_CustomColors": {
         "m_SerializableColors": []
     },
-    "m_Space": 0
+    "m_Space": 0,
+    "m_PositionSource": 0
 }
 
 {
@@ -14570,99 +14447,6 @@
         "z": 0.0,
         "w": 0.0
     }
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
-    "m_ObjectId": "a1fd1e5e6eb74b2196db039b2129a52d",
-    "m_Name": "",
-    "m_ChildObjectList": [
-        {
-            "m_Id": "cb42572a46a74a588ef3935f3a667eb7"
-        },
-        {
-            "m_Id": "66cc0b010f5647d5bf80ded4825cab7c"
-        },
-        {
-            "m_Id": "769181578f94433984a73faf6e153757"
-        },
-        {
-            "m_Id": "1550f5487be34993bc1704c8c3d8ba14"
-        },
-        {
-            "m_Id": "fb85416d2e4d4df7b227e0bc2bdd6a71"
-        },
-        {
-            "m_Id": "e25a1c81f1374f178c8f27b6264a5f1b"
-        },
-        {
-            "m_Id": "554e041e04cb41379e9bbb0c5e80d80c"
-        },
-        {
-            "m_Id": "0132cd9db49941618ed4bec849f97956"
-        },
-        {
-            "m_Id": "fea586edf5974ba687a3f05c3d4b6623"
-        },
-        {
-            "m_Id": "3345a7b9279a48b7ba4602df55d812ac"
-        },
-        {
-            "m_Id": "daa99c4f268449b8a4e69fdaeafcfe49"
-        },
-        {
-            "m_Id": "a1eb91167291491694bf1bdf8d2f3e16"
-        },
-        {
-            "m_Id": "9db112a4470c459291db3ebb90f3670b"
-        },
-        {
-            "m_Id": "229e12ce054c4003affcf25346b88151"
-        },
-        {
-            "m_Id": "94ca5b7030dd47cf8a414dd9fee0ecde"
-        },
-        {
-            "m_Id": "8a49d2f872e946d4a29e2030ee291584"
-        },
-        {
-            "m_Id": "2a08ac9ee7884f04b8fe6bf44db761b5"
-        },
-        {
-            "m_Id": "6d2408803a794f2e9368d5529b79a574"
-        },
-        {
-            "m_Id": "c70d342b1a0b4d6bbf1ff3c98fd338ea"
-        },
-        {
-            "m_Id": "c4024195aefa495695710ffb5997a875"
-        },
-        {
-            "m_Id": "7442cacc555044c4be11c43f444ca339"
-        },
-        {
-            "m_Id": "a2e989f8520948e490acedb7088d1307"
-        },
-        {
-            "m_Id": "221c3eb893034a10a0e04ad5230e2bb0"
-        },
-        {
-            "m_Id": "2adde9b6c89f49aa838e8cfc38e04353"
-        },
-        {
-            "m_Id": "ddd87d19404f41b8bbbd24232f4338ac"
-        },
-        {
-            "m_Id": "fd115c5a3bec4b6eabfabdb2fdf437e6"
-        },
-        {
-            "m_Id": "3c380077c517483f8c6dbb95eb0de6b7"
-        },
-        {
-            "m_Id": "24ddd326603248d28d6b20f5ce446d90"
-        }
-    ]
 }
 
 {
@@ -14926,9 +14710,13 @@
         "m_GuidSerialized": "e0c7e921-f77e-4ee2-9217-d54cca974110"
     },
     "m_Name": "Limbus Width",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_a71b2a13bfe64b8fbb07597467c80fb2",
     "m_OverrideReferenceName": "_LimbusWidth",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -15069,9 +14857,13 @@
         "m_GuidSerialized": "b1c1af41-1e8e-43ad-9afc-b2434e9f5d1e"
     },
     "m_Name": "Iris Cloudy Color",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_IrisCloudyColor",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -15082,6 +14874,7 @@
         "b": 0.0,
         "a": 0.0
     },
+    "isMainColor": false,
     "m_ColorMode": 0
 }
 
@@ -15181,9 +14974,13 @@
         "m_GuidSerialized": "703d6dbf-878a-41a3-a336-e855c6045dad"
     },
     "m_Name": "Sclera Smoothness",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_ab45ac5b088b42518d305de12d5f3763",
     "m_OverrideReferenceName": "_ScleraSmoothness",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -15584,7 +15381,8 @@
         "m_SerializableColors": []
     },
     "m_TextureType": 0,
-    "m_NormalMapSpace": 0
+    "m_NormalMapSpace": 0,
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -15619,9 +15417,13 @@
         "m_GuidSerialized": "f6a8c263-b63d-48bc-86ec-13f1edcc87e4"
     },
     "m_Name": "Cornea IOR",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_b0ec1f6d5bd0419796b5090e7dffabf7",
     "m_OverrideReferenceName": "_IOR",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -16000,7 +15802,8 @@
     "m_CustomColors": {
         "m_SerializableColors": []
     },
-    "m_Space": 0
+    "m_Space": 0,
+    "m_PositionSource": 0
 }
 
 {
@@ -16011,9 +15814,13 @@
         "m_GuidSerialized": "10c1754f-6c68-4a79-9899-af50832769ae"
     },
     "m_Name": "Iris Brightness",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_IrisBrightness",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -16772,7 +16579,8 @@
         "m_SerializableColors": []
     },
     "m_TextureType": 0,
-    "m_NormalMapSpace": 0
+    "m_NormalMapSpace": 0,
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -17216,7 +17024,8 @@
         "m_SerializableColors": []
     },
     "m_TextureType": 0,
-    "m_NormalMapSpace": 0
+    "m_NormalMapSpace": 0,
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -17462,9 +17271,13 @@
         "m_GuidSerialized": "36af1c96-8f78-4132-a591-a5b10a01324f"
     },
     "m_Name": "Sclera Diffuse Map",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Texture2D_cb42572a46a74a588ef3935f3a667eb7",
     "m_OverrideReferenceName": "_ScleraDiffuseMap",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -17473,6 +17286,8 @@
         "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
         "m_Guid": ""
     },
+    "isMainTexture": false,
+    "useTilingAndOffset": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -17545,9 +17360,13 @@
         "m_GuidSerialized": "106b70aa-16d9-4889-890d-7244a695a9dc"
     },
     "m_Name": "Limbus Color",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_LimbusColor",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -17558,6 +17377,7 @@
         "b": 0.0,
         "a": 0.0
     },
+    "isMainColor": false,
     "m_ColorMode": 0
 }
 
@@ -17593,9 +17413,13 @@
         "m_GuidSerialized": "5a26b99b-14f5-430c-883e-4d012db00a41"
     },
     "m_Name": "Sclera Normal Tiling",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_cd32d6c896b4474aa36ec555723b81ef",
     "m_OverrideReferenceName": "_ScleraNormalTiling",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -18397,9 +18221,13 @@
         "m_GuidSerialized": "b78117bf-f0d9-48f7-8c0e-59b04f502b60"
     },
     "m_Name": "Ambient Occlusion Strength",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_daa99c4f268449b8a4e69fdaeafcfe49",
     "m_OverrideReferenceName": "_AOStrength",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -18989,9 +18817,13 @@
         "m_GuidSerialized": "dbde8c57-8676-4367-91e9-21b08eba46a7"
     },
     "m_Name": "Iris Saturation",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_IrisSaturation",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -19466,9 +19298,13 @@
         "m_GuidSerialized": "fe2a54fe-e53e-4e1c-b122-fecc79b1a9c6"
     },
     "m_Name": "Shadow Hardness",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_ed1d6ae0d0e14a009081ff66d328aa52",
     "m_OverrideReferenceName": "_ShadowHardness",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -19785,9 +19621,13 @@
         "m_GuidSerialized": "848615b5-a794-45c9-b07f-1347c72736b9"
     },
     "m_Name": "Emissive Color",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "",
     "m_OverrideReferenceName": "_EmissiveColor",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -19798,6 +19638,7 @@
         "b": 0.0,
         "a": 0.0
     },
+    "isMainColor": false,
     "m_ColorMode": 1
 }
 
@@ -19832,9 +19673,13 @@
         "m_GuidSerialized": "8aac5897-d30d-4c67-bfa4-a29e1cfe6bac"
     },
     "m_Name": "Refraction Thickness",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_f529da1a611a46cda7c335f575a5999b",
     "m_OverrideReferenceName": "_RefractionThickness",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -20043,144 +19888,6 @@
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
     "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
-    "m_ObjectId": "f8b5235742144f79b8d42a715347cc77",
-    "m_Name": "",
-    "m_ChildObjectList": [
-        {
-            "m_Id": "cb42572a46a74a588ef3935f3a667eb7"
-        },
-        {
-            "m_Id": "55bf621ad2394320a2ab49a3c7b34fe1"
-        },
-        {
-            "m_Id": "451cc7559488456fb2d601ba459f41da"
-        },
-        {
-            "m_Id": "410287977f3941ae86357b91bb50c332"
-        },
-        {
-            "m_Id": "82fed9724f34448392b89bdd38fe7517"
-        },
-        {
-            "m_Id": "d0ef53e49de84105aac4f730278802d0"
-        },
-        {
-            "m_Id": "4238e02f0b7849e0ab81381125a954b9"
-        },
-        {
-            "m_Id": "2fe3d3e44e8646f3a00409c36bc1a98e"
-        },
-        {
-            "m_Id": "ed1d6ae0d0e14a009081ff66d328aa52"
-        },
-        {
-            "m_Id": "8200a5c208dd40fabbab6b6aca910116"
-        },
-        {
-            "m_Id": "b0ec1f6d5bd0419796b5090e7dffabf7"
-        },
-        {
-            "m_Id": "0cbea652f4bf4177942231f39b7c2eea"
-        },
-        {
-            "m_Id": "85e5e0cd46aa44fc8e9f720d375bec49"
-        },
-        {
-            "m_Id": "6106c8c4dc85475886881929b289ae65"
-        },
-        {
-            "m_Id": "e2d236b8f7c740b1920bd65df0cef00f"
-        },
-        {
-            "m_Id": "b618279ad2eb41bd9df25d9f412e0eb1"
-        },
-        {
-            "m_Id": "4e48a718329c454b8a46be0bc9bf8802"
-        },
-        {
-            "m_Id": "211ca272cd524d5098b5288942e1374b"
-        },
-        {
-            "m_Id": "30234a2ec51e43279321e35ffc60083e"
-        },
-        {
-            "m_Id": "f5b469bad51849d1831c6acedbe7d5be"
-        },
-        {
-            "m_Id": "13125e3e576e4c76b403dab13948fd74"
-        },
-        {
-            "m_Id": "424271c2190c4f42b931a851e201c75d"
-        },
-        {
-            "m_Id": "596515c1061c4119b6831a17bd392746"
-        },
-        {
-            "m_Id": "859cfaa3765a443d891a115d38d963bd"
-        },
-        {
-            "m_Id": "40f2fea490ef4e5999f154a042e89495"
-        },
-        {
-            "m_Id": "a71b2a13bfe64b8fbb07597467c80fb2"
-        },
-        {
-            "m_Id": "99ad21e27a3f4d3cb1b1736abc28020d"
-        },
-        {
-            "m_Id": "308a2ce997744f8cb41204c209af692a"
-        },
-        {
-            "m_Id": "cbcbb78812d84a3ea2eab90a08ba2f3b"
-        },
-        {
-            "m_Id": "5f410167b9c14d43bc4da4f27fdd220a"
-        },
-        {
-            "m_Id": "195319a2066f492abb03e4f9fb29acfb"
-        },
-        {
-            "m_Id": "3345a7b9279a48b7ba4602df55d812ac"
-        },
-        {
-            "m_Id": "daa99c4f268449b8a4e69fdaeafcfe49"
-        },
-        {
-            "m_Id": "ab45ac5b088b42518d305de12d5f3763"
-        },
-        {
-            "m_Id": "3a3f4cc5a3574e32b762b0cb62cd67cf"
-        },
-        {
-            "m_Id": "8a49d2f872e946d4a29e2030ee291584"
-        },
-        {
-            "m_Id": "9be1515fae6d42c09957951f4f4fd357"
-        },
-        {
-            "m_Id": "cd32d6c896b4474aa36ec555723b81ef"
-        },
-        {
-            "m_Id": "14e401d52fb34c7cb2fa95ca45b72210"
-        },
-        {
-            "m_Id": "f4805aec61284d8188631ee8d13ca13c"
-        },
-        {
-            "m_Id": "9d63910b86f7439f9642f08926860a8e"
-        },
-        {
-            "m_Id": "526ce229950b48d0b6c7cdd0b66dd1e6"
-        },
-        {
-            "m_Id": "3e9c449fb15c408ea1e77adb625ffec5"
-        }
-    ]
 }
 
 {

@@ -13,16 +13,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 12
+  hdPluginSubTargetMaterialVersions:
+    m_Keys: []
+    m_Values: 
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: RL_Template_HQ_CorneaParallax_HDRP_T
-  m_Shader: {fileID: -6465566751694194690, guid: 4bddaf4ee5135794fb0884ce0fa3997f, type: 3}
-  m_ShaderKeywords: _DISABLE_SSR_TRANSPARENT
+  m_Shader: {fileID: -6465566751694194690, guid: 4bddaf4ee5135794fb0884ce0fa3997f,
+    type: 3}
+  m_ValidKeywords:
+  - BOOLEAN_ISCORNEA_ON
+  - _DISABLE_SSR_TRANSPARENT
+  - _TESSELLATION_PHONG
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -74,6 +82,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - BOOLEAN_ISCORNEA: 1
     - _AOStrength: 0.2
@@ -85,6 +94,7 @@ Material:
     - _AlphaToMaskInspectorValue: 1
     - _BlendMode: 0
     - _ColorBlendStrength: 0.2
+    - _ConservativeDepthOffsetEnable: 0
     - _CorneaSmoothness: 1
     - _CullMode: 2
     - _CullModeForward: 2
@@ -92,6 +102,7 @@ Material:
     - _DepthRadius: 0.8
     - _DiffusionProfileHash: 3.3750906
     - _DoubleSidedEnable: 0
+    - _DoubleSidedGIMode: 0
     - _DoubleSidedNormalMode: 2
     - _DstBlend: 0
     - _EnableBlendModePreserveSpecularLighting: 1
@@ -142,7 +153,14 @@ Material:
     - _SubsurfaceThickness: 0.4
     - _SupportDecals: 1
     - _SurfaceType: 0
+    - _TessellationBackFaceCullEpsilon: -0.25
     - _TessellationFactor: 8
+    - _TessellationFactorMaxDistance: 50
+    - _TessellationFactorMinDistance: 20
+    - _TessellationFactorTriangleSize: 100
+    - _TessellationMaxDisplacement: 0.01
+    - _TessellationMode: 1
+    - _TessellationShapeFactor: 0.75
     - _TransparentBackfaceEnable: 0
     - _TransparentCullMode: 2
     - _TransparentDepthPostpassEnable: 0
@@ -157,7 +175,8 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _CornerShadowColor: {r: 1, g: 0.7333333, b: 0.6980392, a: 0}
-    - _DiffusionProfileAsset: {r: -2.1948957e-10, g: -1.1787802e+22, b: 526403400, a: 5.395903e-11}
+    - _DiffusionProfileAsset: {r: -2.1948957e-10, g: -1.1787802e+22, b: 526403400,
+        a: 5.395903e-11}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}

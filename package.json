@@ -3,7 +3,7 @@
   "version": "1.4.0",
   "displayName": "CC/iC Unity Tools HDRP",
   "description": "Unity importer for Character Creator 3 & 4 and iClone 7 and 8.",
-  "unity": "2020.3",
+  "unity": "2021.2",
   "documentationUrl": "https://soupday.github.io/cc_unity_tools/index.html",
   "changelogUrl": "https://github.com/soupday/CHANGELOG.md",
   "licensesUrl": "https://github.com/soupday/cc_unity_tools/blob/stable/LICENSE",
