@@ -350,15 +350,17 @@ namespace Reallusion.Import
             return count;
         }
 
-
-
-
         private void CleanUp()
         {   
             // remove all the old lod object containers
             foreach (LODObject lob in lodObjects)
             {
                 GameObject.DestroyImmediate(lob.lodObject);
+            }
+
+            foreach (GameObject obj in lodInstances)
+            {
+                GameObject.DestroyImmediate(obj);
             }
         }
     }

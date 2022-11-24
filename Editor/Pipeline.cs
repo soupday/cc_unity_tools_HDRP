@@ -687,9 +687,7 @@ namespace Reallusion.Import
             string customTemplateName;
             Material customTemplate = null;
             Material foundTemplate = null;
-            bool foundAmplify = false;
-            bool foundTessellation = false;            
-
+            
             if (useAmplify)
             {
                 customTemplateName = templateName + "_Amplify";
@@ -698,7 +696,6 @@ namespace Reallusion.Import
                 {
                     templateName = customTemplateName;
                     customTemplate = foundTemplate;
-                    foundAmplify = true;
                 }
             }
 
@@ -709,8 +706,7 @@ namespace Reallusion.Import
                 if (foundTemplate)
                 {
                     templateName = customTemplateName;
-                    customTemplate = foundTemplate;
-                    foundTessellation = true;
+                    customTemplate = foundTemplate;                    
                 }
             }
 
