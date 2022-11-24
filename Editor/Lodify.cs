@@ -360,6 +360,11 @@ namespace Reallusion.Import
             {
                 GameObject.DestroyImmediate(lob.lodObject);
             }
+
+            foreach (GameObject obj in lodInstances)
+            {
+                GameObject.DestroyImmediate(obj);
+            }
         }
     }
 }
