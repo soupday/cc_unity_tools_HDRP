@@ -24,9 +24,12 @@ Changelog
     - LOD combining function added.
         - Characters and LOD variants must be in same folder.
     - New icons added.
+    - To maintain consistency across Unity versions, the HDRP package will be split into 2 versions:
+        - HDRP10 for the High Definition Render Pipeline version 10 and 11: Unity 2020.3 upto 2021.1
+        - HDRP12 for the High Definition Render Pipeline version 12 and 13: Unity 2021.2 upwards.
 
 ### v 1.3.9
-- Due to shader incompatibilities between URP10 and URP12, the URP package must be split into 2 versions.
+- Due to shader incompatibilities between URP10 and URP12, the URP package must be split into 2 versions:
     - URP10 for the Univeral Render Pipeline version 10 and 11: Unity 2020.3 upto 2021.1
     - URP12 for the Univeral Render Pipeline version 12 and 13: Unity 2021.2 upwards.
 
