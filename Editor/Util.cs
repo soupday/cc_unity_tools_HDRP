@@ -1,19 +1,19 @@
 /* 
  * Copyright (C) 2021 Victor Soupday
- * This file is part of CC3_Unity_Tools <https://github.com/soupday/cc3_unity_tools>
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
  * 
- * CC3_Unity_Tools is free software: you can redistribute it and/or modify
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * CC3_Unity_Tools is distributed in the hope that it will be useful,
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with CC3_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using System.IO;
@@ -185,7 +185,7 @@ namespace Reallusion.Import
                 }
             }
 
-            return "Unknown";
+            return "";
         }
 
         public static List<string> GetValidCharacterGUIDS()
@@ -359,9 +359,9 @@ namespace Reallusion.Import
         {
             Material template = null;
             Material foundTemplate = null;
-            bool foundHDRP12 = false;
+            bool foundHDRPorURP12 = false;
 
-            if (Pipeline.isHDRP12)
+            if (Pipeline.isHDRP12 || Pipeline.isURP12)
             {
                 string templateName = name + "12";
                 foundTemplate = FindMaterial(templateName, folders);
@@ -369,18 +369,34 @@ namespace Reallusion.Import
                 {
                     name = templateName;
                     template = foundTemplate;
-                    foundHDRP12 = true;
+                    foundHDRPorURP12 = true;
                 }
             }
 
             if (Importer.USE_AMPLIFY_SHADER)
             {
-                string templateName = name + "_Amplify";
-                foundTemplate = FindMaterial(templateName, folders);
-                if (foundTemplate)
+                // There are cases where there is an URP12_Amplify shader but no corresponding URP12 base shader
+                if (Pipeline.isURP12 && !foundHDRPorURP12)
                 {
-                    name = templateName;
-                    template = foundTemplate;
+                    string templateName = name + "12_Amplify";
+                    foundTemplate = FindMaterial(templateName, folders);
+                    if (foundTemplate)
+                    {
+                        name = templateName;
+                        template = foundTemplate;
+                        foundHDRPorURP12 = true;
+                    }
+                }
+
+                if (!foundTemplate)
+                {
+                    string templateName = name + "_Amplify";
+                    foundTemplate = FindMaterial(templateName, folders);
+                    if (foundTemplate)
+                    {
+                        name = templateName;
+                        template = foundTemplate;
+                    }
                 }
             }
 
@@ -388,7 +404,8 @@ namespace Reallusion.Import
             {
                 foundTemplate = null;
 
-                if (Pipeline.isHDRP12 && !foundHDRP12)
+                // There are cases where there is an HDRP12_T shader but no corresponding HDRP12 base shader
+                if (Pipeline.isHDRP12 && !foundHDRPorURP12)
                 {
                     string templateName = name + "12_T";
                     foundTemplate = FindMaterial(templateName, folders);
@@ -396,7 +413,7 @@ namespace Reallusion.Import
                     {
                         name = templateName;
                         template = foundTemplate;
-                        foundHDRP12 = true;
+                        foundHDRPorURP12 = true;
                     }
                 }
                 
@@ -430,6 +447,40 @@ namespace Reallusion.Import
                 if (texName.iEquals(search))
                 {
                     return AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
+                }
+            }
+
+            return null;
+        }
+
+        public static AnimationClip FindAnimation(string[] folders, string search, bool exactMatch = true, bool matchStart = true)
+        {
+            string[] guids;
+
+            guids = AssetDatabase.FindAssets(search + " t:animation", folders);
+
+            foreach (string guid in guids)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                string animName = Path.GetFileNameWithoutExtension(assetPath);
+                if (string.IsNullOrEmpty(search))
+                {
+                    return AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                }
+                else if (exactMatch)
+                {
+                    if (animName.iEquals(search)) return AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                }
+                else
+                {
+                    if (matchStart)
+                    {
+                        if (animName.iStartsWith(search)) return AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                    }
+                    else
+                    {
+                        if (animName.iContains(search)) return AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+                    }
                 }
             }
 
@@ -519,13 +570,13 @@ namespace Reallusion.Import
             // between 0 and a root curve function of the specular value: i.e. specularSmoothness = smoothness * pow(specular, P)
             // this power function must range from f(0) = 0 to f(1) = 1 and achieve 0.897 maximum smoothness at 0.5 specular
             // (0.5 specular being the default specular value for base max smoothness, visually detected as ~0.88 smoothness)
-            // specular values from 0.5 to 1.0 will generate a max smoothness of 0.88 to 1.0.
+            // specular values from 0.5 to 1.0 will generate a max smoothness of 0.897 to 1.0.
             // Thus: P = ln(0.897) / ln(0.5) = 0.184424571f
             // This should approximate the specular mask for specular values > 0.2
-            const float smoothnessStdMax = 0.897f;
+            const float smoothnessStdMax = Importer.MAX_SMOOTHNESS;
             const float specularMid = 0.5f;
             float P = Mathf.Log(smoothnessStdMax) / Mathf.Log(specularMid);
-            return smoothness * Mathf.Clamp(Mathf.Pow(specular, P), 0f, 0.897f);
+            return smoothness * Mathf.Clamp(Mathf.Pow(specular, P), 0f, smoothnessStdMax);
         }        
 
         public static string GetShaderName(Material mat)
@@ -555,7 +606,7 @@ namespace Reallusion.Import
             // identify linked materials by shader name:
             if ((shaderName.iContains(Pipeline.SHADER_HQ_HEAD) || 
                  shaderName.iContains(Pipeline.SHADER_HQ_SKIN)) && 
-                !sourceName.iContains("Std_Nails")) return CharacterTreeView.LINKED_INDEX_SKIN;
+                !sourceName.iContains("_Nails")) return CharacterTreeView.LINKED_INDEX_SKIN;
 
             if (shaderName.iContains(Pipeline.SHADER_HQ_EYE) ||
                 shaderName.iContains(Pipeline.SHADER_HQ_EYE_PARALLAX)) return CharacterTreeView.LINKED_INDEX_EYE;
@@ -572,13 +623,13 @@ namespace Reallusion.Import
                 shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE)) return CharacterTreeView.LINKED_INDEX_HAIR;
 
             // then try by source material name:
-            if (sourceName.iContains("Std_Skin_Head") || sourceName.iContains("Std_Skin_Body") ||
-                sourceName.iContains("Std_Skin_Arm") || sourceName.iContains("Std_Skin_Leg"))
+            if (sourceName.iContains("_Skin_Head") || sourceName.iContains("_Skin_Body") ||
+                sourceName.iContains("_Skin_Arm") || sourceName.iContains("_Skin_Leg"))
                 return CharacterTreeView.LINKED_INDEX_SKIN;            
-            if (sourceName.iContains("Std_Eye_Occlusion_")) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
-            if (sourceName.iContains("Std_Tearline_")) return CharacterTreeView.LINKED_INDEX_TEARLINE;
-            if (sourceName.iContains("Std_Eye_") || sourceName.iContains("Std_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;            
-            if (sourceName.iContains("Std_Upper_Teeth") || sourceName.iContains("Std_Lower_Teeth")) return CharacterTreeView.LINKED_INDEX_TEETH;
+            if (sourceName.iContains("_Eye_Occlusion_")) return CharacterTreeView.LINKED_INDEX_EYE_OCCLUSION;
+            if (sourceName.iContains("_Tearline_")) return CharacterTreeView.LINKED_INDEX_TEARLINE;
+            if (sourceName.iContains("_Eye_") || sourceName.iContains("_Cornea_")) return CharacterTreeView.LINKED_INDEX_CORNEA;            
+            if (sourceName.iContains("_Upper_Teeth") || sourceName.iContains("_Lower_Teeth")) return CharacterTreeView.LINKED_INDEX_TEETH;
 
             return -1;
         }
@@ -662,18 +713,7 @@ namespace Reallusion.Import
             {
                 GameObject.DestroyImmediate(child);
             }
-        }                
-
-        public static GameObject GetCharacterSourceFbx(GameObject scenePrefab)
-        {
-            GameObject sourceFbx = null;
-            if (scenePrefab.name.iContains("_lod") && scenePrefab.transform.childCount == 1)
-                sourceFbx = FindRootPrefabAssetFromSceneObject(scenePrefab.transform.GetChild(0).gameObject);
-            else
-                sourceFbx = FindRootPrefabAssetFromSceneObject(scenePrefab);
-
-            return sourceFbx;
-        }
+        }        
         
         public static AnimationClip GetFirstAnimationClipFromCharacter(GameObject sourceFbx)
         {
@@ -691,6 +731,40 @@ namespace Reallusion.Import
                         // try to return the first non T-Pose.
                         if (!found.name.iContains("T-Pose")) return found;
                     }
+                }
+
+                // if that didn't work, then the prefab is a non-variant derivative (probably LODGroup)                
+                string name = sourceFbx.name;
+                string path = AssetDatabase.GetAssetPath(sourceFbx);
+                string prefabFolder = Path.GetDirectoryName(path);
+                string prefabAnimationFolder = Path.Combine(prefabFolder, "Animations");
+                string parentFolder = Path.GetDirectoryName(prefabFolder);
+                string parentAnimationFolder = Path.Combine(parentFolder, "Animations");
+                List<string> folders = new List<string>();
+                if (AssetDatabase.IsValidFolder(parentAnimationFolder)) folders.Add(parentAnimationFolder);
+                if (AssetDatabase.IsValidFolder(prefabAnimationFolder)) folders.Add(prefabAnimationFolder);
+                if (AssetDatabase.IsValidFolder(parentFolder)) folders.Add(parentFolder);
+                folders.Add(prefabFolder);
+                string[] f = folders.ToArray();
+
+                // first look for an animation that matches the prefab name
+                found = FindAnimation(f, name, false, true);
+
+                // then look for an animation that matches the base name of the character (before any _LodSomething)
+                if (!found)
+                {
+                    int index = name.IndexOf("_Lod", System.StringComparison.InvariantCultureIgnoreCase);
+                    if (index > 0)
+                    {
+                        name = name.Substring(0, index);
+                        found = FindAnimation(f, name, false, true);
+                    }
+                }
+
+                // then just try and find the first available animation
+                if (!found)
+                {
+                    found = FindAnimation(f, "");
                 }
             }
 
@@ -721,14 +795,17 @@ namespace Reallusion.Import
         public static GameObject FindCharacterPrefabAsset(GameObject fbxAsset, bool baked = false)
         { 
             string path = AssetDatabase.GetAssetPath(fbxAsset);
-            if (path.iEndsWith(".prefab")) return fbxAsset;
-            string folder = Path.GetDirectoryName(path);
-            string name = Path.GetFileNameWithoutExtension(path);
-            string searchName = name;
-            if (baked) searchName = name + "_Baked";
-            string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
-            if (File.Exists(prefabPath))
-                return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (!string.IsNullOrEmpty(path))
+            {
+                if (path.iEndsWith(".prefab")) return fbxAsset;
+                string folder = Path.GetDirectoryName(path);
+                string name = Path.GetFileNameWithoutExtension(path);
+                string searchName = name;
+                if (baked) searchName = name + Importer.BAKE_SUFFIX;
+                string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
+                if (File.Exists(prefabPath))
+                    return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            }
             return null;
         }
 
@@ -738,7 +815,7 @@ namespace Reallusion.Import
             string folder = Path.GetDirectoryName(path);
             string name = Path.GetFileNameWithoutExtension(path);
             string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + ".prefab");
-            string bakedPrefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + "_Baked.prefab");
+            string bakedPrefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, name + Importer.BAKE_SUFFIX + ".prefab");
 
             mainPrefab = null;
             bakedPrefab = null;
@@ -894,6 +971,19 @@ namespace Reallusion.Import
             {
                 FindSceneObjects(root.GetChild(i), search, found);
             }
+        }
+
+        public static Transform FindChildRecursive(Transform root, string search)
+        {
+            if (root.name.iEquals(search)) return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform found = FindChildRecursive(root.GetChild(i), search);
+                if (found) return found;
+            }
+
+            return null;
         }
 
         public static bool AssetPathIsEmpty(string assetPath)

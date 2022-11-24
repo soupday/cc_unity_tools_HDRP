@@ -1,3 +1,21 @@
+/* 
+ * Copyright (C) 2021 Victor Soupday
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
+ * 
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,11 +40,17 @@ namespace Reallusion.Import
         private static bool showPlayerAfterPlayMode = false;
         private static bool showRetargetAfterPlayMode = false;
 
+        public delegate void OnTimer();
+        public static OnTimer onTimer;
+        private static float timer = 0f;
+
         static WindowManager()
         {
             EditorApplication.playModeStateChanged += WindowManager.OnPlayModeStateChanged;
             EditorApplication.update += WindowManager.MonitorScene;
-            showPlayer = Importer.ANIMPLAYER_ON_BY_DEFAULT;
+
+            // Animation mode is a bit unpredictable, so leave it off by default for now
+            showPlayer = false; // Importer.ANIMPLAYER_ON_BY_DEFAULT;
             currentScene = EditorSceneManager.GetActiveScene();
 
             previewScene = PreviewScene.FetchPreviewScene(currentScene);
@@ -69,12 +93,18 @@ namespace Reallusion.Import
 
         public static void OnBeforeAssemblyReload()
         {
-            if (AnimationMode.InAnimationMode())
+            if (AnimationMode.InAnimationMode())  
             { 
                 Util.LogInfo("Disabling Animation Mode on editor assembly reload.");
                 AnimationMode.StopAnimationMode();
             }
-        }        
+
+            if (LodSelectionWindow.Current)
+            {
+                Util.LogInfo("Closing Lod Selection Window on editor assembly reload.");
+                LodSelectionWindow.Current.Close();
+            }
+        }
 
         public static PreviewScene OpenPreviewScene(GameObject prefab)
         {
@@ -110,6 +140,16 @@ namespace Reallusion.Import
                 
         private static void MonitorScene()  
         {                        
+            if (timer > 0f)
+            {
+                timer -= Time.deltaTime;
+                if (timer <= 0f)
+                {
+                    timer = 0f;
+                    onTimer();
+                }
+            }
+
             Scene activeScene = EditorSceneManager.GetActiveScene();
             if (currentScene != activeScene)
             {
@@ -290,12 +330,10 @@ namespace Reallusion.Import
 
         public static void ShowAnimationPlayer()
         {
-            GameObject scenePrefab;
+            GameObject scenePrefab = null;
 
-            if (IsPreviewScene)
-                scenePrefab = GetPreviewScene().GetPreviewCharacter();
-            else
-                scenePrefab = Selection.activeGameObject;
+            if (IsPreviewScene) scenePrefab = GetPreviewScene().GetPreviewCharacter();            
+            if (!scenePrefab) scenePrefab = Selection.activeGameObject;
 
             AnimPlayerGUI.OpenPlayer(scenePrefab);
             openedInPreviewScene = IsPreviewScene;
@@ -359,5 +397,10 @@ namespace Reallusion.Import
                     AnimationMode.StartAnimationMode();
             }
         }        
+
+        public static void StartTimer(float delay)
+        {
+            timer = delay;
+        }
     }
 }

@@ -1,19 +1,19 @@
 ﻿/* 
  * Copyright (C) 2021 Victor Soupday
- * This file is part of CC3_Unity_Tools <https://github.com/soupday/cc3_unity_tools>
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
  * 
- * CC3_Unity_Tools is free software: you can redistribute it and/or modify
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * CC3_Unity_Tools is distributed in the hope that it will be useful,
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with CC3_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using System.IO;
@@ -28,6 +28,8 @@ namespace Reallusion.Import
         public enum EyeQuality { None, Basic, Parallax, Refractive }
         public enum HairQuality { None, Default, TwoPass, Coverage }
         public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4 } //, SpringBones = 8 }
+
+        public enum RigOverride { None = 0, Generic, Humanoid }
 
         public string guid;
         public string path;        
@@ -46,6 +48,7 @@ namespace Reallusion.Import
         private ProcessingType logType = ProcessingType.None;
         private EyeQuality qualEyes = EyeQuality.Parallax;
         private HairQuality qualHair = HairQuality.TwoPass;
+        public RigOverride UnknownRigType { get; set; }
         private bool bakeCustomShaders = true;
         private bool bakeSeparatePrefab = true;
         private bool useTessellation = false;        
@@ -167,6 +170,16 @@ namespace Reallusion.Import
             }
         }
 
+        public bool FbxLoaded
+        {
+            get { return fbx != null; }
+        }
+
+        public string GetPrefabsFolder()
+        {
+            return Path.Combine(folder, Importer.PREFABS_FOLDER);
+        }
+
         public GameObject PrefabAsset
         {
             get
@@ -213,6 +226,8 @@ namespace Reallusion.Import
                 return jsonData;
             }
         }
+
+        public bool JsonLoaded { get { return jsonData != null; } }
 
         public QuickJSON RootJsonData
         {
@@ -271,15 +286,34 @@ namespace Reallusion.Import
             { 
                 if (generation == BaseGeneration.None)
                 {
-                    string gen = Util.GetJsonGenerationString(jsonFilepath);                    
-                    generation = RL.GetCharacterGeneration(Fbx, gen);
-                    Util.LogInfo("CharInfo: " + name + " Generation " + generation.ToString());
-                    Write();
-                }
+                    CheckGeneration();
+                }                
 
                 return generation;
             } 
-        }            
+        }
+
+        public void CheckGeneration()
+        {
+            BaseGeneration oldGen = generation;
+            string gen = Util.GetJsonGenerationString(jsonFilepath);
+            generation = RL.GetCharacterGeneration(Fbx, gen);
+            CheckOverride();
+            if (generation != oldGen)
+            {
+                Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
+                Write();
+            }
+        }
+
+        public void CheckOverride()
+        {
+            if (UnknownRigType == RigOverride.None)
+            {
+                if (generation == BaseGeneration.Unknown) UnknownRigType = RigOverride.Generic;
+                else UnknownRigType = RigOverride.Humanoid;
+            }
+        }
 
         public void Release()
         {
@@ -298,6 +332,8 @@ namespace Reallusion.Import
                     case BaseGeneration.G3:
                     case BaseGeneration.G3Plus:
                     case BaseGeneration.GameBase:
+                    case BaseGeneration.ActorBuild:
+                    case BaseGeneration.Unknown:
                         return true;
                     default:
                         return false;
@@ -373,6 +409,9 @@ namespace Reallusion.Import
                     case "animationRetargeted":
                         animationRetargeted = int.Parse(value);
                         break;
+                    case "rigOverride":
+                        UnknownRigType = (RigOverride)System.Enum.Parse(typeof(RigOverride), value);
+                        break;
                 }
             }
             ApplySettings();
@@ -394,6 +433,7 @@ namespace Reallusion.Import
             writer.WriteLine("shaderFlags=" + (int)BuiltShaderFlags);
             writer.WriteLine("animationSetup=" + (animationSetup ? "true" : "false"));
             writer.WriteLine("animationRetargeted=" + animationRetargeted.ToString());
+            writer.WriteLine("rigOverride=" + UnknownRigType.ToString());
             writer.Close();
             AssetDatabase.ImportAsset(infoFilepath);            
         }

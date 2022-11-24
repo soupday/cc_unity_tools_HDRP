@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="main-view" style="flex-grow: 1;" />
+    <ui:VisualElement style="flex-direction: row; height: 30px;">
+        <ui:TextField picking-mode="Ignore" label="LOD Group Name" name="name-field" style="justify-content: flex-start; align-items: stretch; -unity-text-align: middle-center; width: 320px;" />
+        <ui:VisualElement style="flex-grow: 1;" />
+        <ui:Button text="Create" display-tooltip-when-elided="true" name="create-button" />
+    </ui:VisualElement>
+</ui:UXML>

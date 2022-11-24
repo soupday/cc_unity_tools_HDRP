@@ -1,21 +1,20 @@
 /* 
  * Copyright (C) 2021 Victor Soupday
- * This file is part of CC3_Unity_Tools <https://github.com/soupday/cc3_unity_tools>
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
  * 
- * CC3_Unity_Tools is free software: you can redistribute it and/or modify
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * CC3_Unity_Tools is distributed in the hope that it will be useful,
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with CC3_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 using UnityEngine;
 using UnityEditor;
@@ -442,13 +441,13 @@ namespace Reallusion.Import
             string prefabFolder = Util.CreateFolder(fbxFolder, Importer.PREFABS_FOLDER);
             //string namedPrefabFolder = Util.CreateFolder(prefabFolder, characterName);            
 
-            if (characterInfo.isLOD)
+            if (characterInfo.isLOD && RL.CountLODs(clone) > 1)
             {
                 string lodPrefabPath = Path.Combine(prefabFolder, characterName + "_LODModels.prefab");
                 GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, lodPrefabPath);
                 GameObject.DestroyImmediate(clone);
                 GameObject bakedPrefab = RL.CreateOneLODPrefabFromModel(characterInfo, variant, 
-                    characterInfo.BakeSeparatePrefab ? "_Baked" : "", out GameObject prefabInstance);
+                    characterInfo.BakeSeparatePrefab ? Importer.BAKE_SUFFIX : "", out GameObject prefabInstance);
                 GameObject.DestroyImmediate(prefabInstance);
                 return bakedPrefab;
             }
@@ -456,7 +455,7 @@ namespace Reallusion.Import
             {
                 string prefabPath;
                 if (characterInfo.BakeSeparatePrefab)
-                    prefabPath = Path.Combine(prefabFolder, characterName + "_Baked.prefab");
+                    prefabPath = Path.Combine(prefabFolder, characterName + Importer.BAKE_SUFFIX + ".prefab");
                 else
                     prefabPath = Path.Combine(prefabFolder, characterName + ".prefab");
 
@@ -744,8 +743,8 @@ namespace Reallusion.Import
                 bakedSubsurfaceMap = BakeHeadSubsurfaceMap(subsurface, RGBAMask, CFULCMask, EarNeckMask,
                     subsurfaceScale,
                     rSS, gSS, bSS, aSS, earSS, neckSS, cheekSS, foreheadSS, upperLipSS, chinSS, unmaskedSS,                    
-                    subsurfaceFalloff, 
-                    IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap,
+                    Color.white, 
+                    Texture2D.whiteTexture,
                     sourceName + "_SSSMap");
             }
             else
@@ -785,8 +784,8 @@ namespace Reallusion.Import
                 bakedSubsurfaceMap = BakeSkinSubsurfaceMap(subsurface, RGBAMask,
                     subsurfaceScale,
                     rSS, gSS, bSS, aSS, unmaskedSS,
-                    subsurfaceFalloff, 
-                    IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap,
+                    Color.white, 
+                    Texture2D.whiteTexture,
                     sourceName + "_SSSMap");
             }
 
@@ -801,8 +800,8 @@ namespace Reallusion.Import
                     sourceName + "_DetailMask");
 
             bakedThicknessMap = BakeThicknessMap(thickness,
-                0f, 1.0f, subsurfaceFalloff, 
-                IS_HDRP ? Texture2D.whiteTexture : bakedBaseMap, 
+                0f, 1.0f, Color.white, 
+                Texture2D.whiteTexture, 
                 IS_HDRP ? true : false,
                 sourceName + "_Thickness");
 
@@ -810,15 +809,17 @@ namespace Reallusion.Import
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 1.0f, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName,
-                Pipeline.GetTemplateMaterial(MaterialType.Skin,
+                Pipeline.GetTemplateMaterial(sourceName, MaterialType.Skin,
                             MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
 
             result.SetColorIf("_BaseColor", diffuseColor);
             result.SetColorIf("_Color", diffuseColor);
-            result.SetFloatIf("_SubsurfaceMask", 1.0f);
+            // skin shaders have translucency wrap of 0.2, LitSSS is 0.5, 0.4 = 0.2 / 0.5
+            result.SetFloatIf("_SubsurfaceMask", 0.4f);
             result.SetFloatIf("_Thickness", thicknessScale);
+            result.SetColorIf("_SubsurfaceFalloff", subsurfaceFalloff);
             result.SetRemapRange("_ThicknessRemap", thicknessScaleMin, thicknessScale);
 
             return result;
@@ -918,7 +919,7 @@ namespace Reallusion.Import
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName,
-                Pipeline.GetTemplateMaterial(MaterialType.Teeth,
+                Pipeline.GetTemplateMaterial(sourceName, MaterialType.Teeth,
                             MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
@@ -1016,7 +1017,7 @@ namespace Reallusion.Import
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 normalStrength, microNormalTiling, microNormalStrength, emissiveColor,
                 sourceName, 
-                Pipeline.GetTemplateMaterial(MaterialType.Tongue, 
+                Pipeline.GetTemplateMaterial(sourceName, MaterialType.Tongue, 
                             MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
             CopyAMPSubsurface(mat, result);
@@ -1165,9 +1166,9 @@ namespace Reallusion.Import
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap,
                 1f, microNormalTiling, microNormalStrength, emissiveColor,
-                sourceName, isCornea ? Pipeline.GetTemplateMaterial(MaterialType.Cornea, 
+                sourceName, isCornea ? Pipeline.GetTemplateMaterial(sourceName, MaterialType.Cornea, 
                                             MaterialQuality.Baked, characterInfo, useAmplify, useTessellation) 
-                                     : Pipeline.GetTemplateMaterial(MaterialType.Eye, 
+                                     : Pipeline.GetTemplateMaterial(sourceName, MaterialType.Eye, 
                                             MaterialQuality.Baked, characterInfo));
 
             CopyAMPSubsurface(mat, result);
@@ -1408,14 +1409,14 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS, 
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS, 
                             MaterialQuality.Baked, useAmplify, useTessellation));
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName.Replace("_1st_Pass", "_2nd_Pass"),
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS, 
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS, 
                             MaterialQuality.Baked, useAmplify, useTessellation));
 
                     // multi material pass hair is custom baked shader only:
@@ -1432,7 +1433,7 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetTemplateMaterial(MaterialType.Hair,
+                        Pipeline.GetTemplateMaterial(sourceName, MaterialType.Hair,
                                     MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
 
                     SetCustom(result);
@@ -1465,13 +1466,13 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation));                    
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation));                    
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName.Replace("_1st_Pass", "_2nd_Pass"),
-                        Pipeline.GetCustomTemplateMaterial(Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
 
                     SetBasic(firstPass);
                     alphaClip = 0.01f;
@@ -1486,7 +1487,7 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetTemplateMaterial(MaterialType.Hair,
+                        Pipeline.GetTemplateMaterial(sourceName, MaterialType.Hair,
                                     MaterialQuality.Baked, characterInfo));
 
                     SetBasic(result);
@@ -1545,7 +1546,7 @@ namespace Reallusion.Import
             Material result = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                 bakedDetailMask, bakedDetailMap, bakedSubsurfaceMap, bakedThicknessMap, emissionMap, 
                 1f, 1f, 1f, Color.black,
-                sourceName, Pipeline.GetTemplateMaterial(MaterialType.EyeOcclusion,
+                sourceName, Pipeline.GetTemplateMaterial(sourceName, MaterialType.EyeOcclusion,
                                             MaterialQuality.Baked, characterInfo, false, useTessellation));
 
             result.SetFloatIf("_ExpandOut", expandOut);
@@ -1617,6 +1618,7 @@ namespace Reallusion.Import
                 ao = CheckMask(ao);
                 roughness = CheckGray(roughness);
                 microNormalMask = CheckMask(microNormalMask);
+                smoothnessLUT = CheckGray(smoothnessLUT);
 
                 int kernel = bakeShader.FindKernel("RLHDRPMask");
                 bakeTarget.Create(bakeShader, kernel);
@@ -1643,8 +1645,9 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
-                metallic = CheckBlank(metallic);                
-                roughness = CheckGray(roughness);                
+                metallic = CheckBlank(metallic);
+                roughness = CheckGray(roughness);
+                smoothnessLUT = CheckGray(smoothnessLUT);
 
                 int kernel = bakeShader.FindKernel("RLURPMetallicGloss");
                 bakeTarget.Create(bakeShader, kernel);
@@ -2009,6 +2012,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 subsurface = CheckMask(subsurface);
                 RGBA = CheckBlank(RGBA);
 
@@ -2136,6 +2140,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 subsurface = CheckMask(subsurface);
 
                 int kernel = bakeShader.FindKernel(kernelName);
@@ -2167,6 +2172,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 thickness = CheckMask(thickness);
 
                 int kernel = bakeShader.FindKernel(kernelName);
@@ -2263,6 +2269,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 gumsMask = CheckMask(gumsMask);                
 
                 int kernel = bakeShader.FindKernel("RLTeethSubsurface");
@@ -2289,6 +2296,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                baseMap = CheckDiffuse(baseMap);
                 gumsMask = CheckMask(gumsMask);
 
                 int kernel = bakeShader.FindKernel(kernelName);
@@ -2384,6 +2392,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                cornea = CheckDiffuse(cornea);
                 sclera = CheckDiffuse(sclera);
                 colorBlend = CheckOverlay(colorBlend);
 
@@ -2588,7 +2597,7 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
-                CheckDiffuse(baseMap);
+                baseMap = CheckDiffuse(baseMap);
 
                 int kernel = bakeShader.FindKernel("RLCorneaSubsurfaceMask");
                 bakeTarget.Create(bakeShader, kernel);
@@ -2630,6 +2639,7 @@ namespace Reallusion.Import
                 blend = CheckMask(blend);
                 id = CheckOverlay(id);
                 root = CheckMask(root);
+                mask = CheckMask(mask);
 
                 int kernel = bakeShader.FindKernel("RLHairColoredDiffuse");
                 bakeTarget.Create(bakeShader, kernel);
@@ -2688,6 +2698,7 @@ namespace Reallusion.Import
             {
                 diffuse = CheckDiffuse(diffuse);
                 blend = CheckMask(blend);
+                mask = CheckMask(mask);
 
                 int kernel = bakeShader.FindKernel("RLHairDiffuse");
                 bakeTarget.Create(bakeShader, kernel);
@@ -2802,6 +2813,8 @@ namespace Reallusion.Import
             ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
             if (bakeShader)
             {
+                flowMap = CheckNormal(flowMap);
+
                 int kernel = bakeShader.FindKernel("RLFlowToNormal");
                 bakeTarget.Create(bakeShader, kernel);
                 bakeShader.SetTexture(kernel, "Flow", flowMap);

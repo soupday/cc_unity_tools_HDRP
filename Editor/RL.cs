@@ -1,19 +1,19 @@
 /* 
  * Copyright (C) 2021 Victor Soupday
- * This file is part of CC3_Unity_Tools <https://github.com/soupday/cc3_unity_tools>
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
  * 
- * CC3_Unity_Tools is free software: you can redistribute it and/or modify
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * CC3_Unity_Tools is distributed in the hope that it will be useful,
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with CC3_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using System.Collections.Generic;
@@ -33,7 +33,8 @@ namespace Reallusion.Import
         G1,
         G3,
         G3Plus,
-        ActorCore
+        ActorCore,
+        ActorBuild
     };
 
     /// <summary>
@@ -53,10 +54,10 @@ namespace Reallusion.Import
             { "RL_CharacterCreator_Base_Std_G3", BaseGeneration.G3 },
             { "RL_G6_Standard_Series", BaseGeneration.G1 },
             { "NonStdLookAtDataCopyFromCCBase", BaseGeneration.ActorCore },
-            { "ActorBuild", BaseGeneration.ActorCore },
+            { "ActorBuild", BaseGeneration.ActorBuild },
             { "ActorScan", BaseGeneration.ActorCore }
         };
-
+        
         public static BaseGeneration GetCharacterGeneration(GameObject fbx, string generationString)
         {
             if (!string.IsNullOrEmpty(generationString))
@@ -76,6 +77,11 @@ namespace Reallusion.Import
                         if (objectName.iContains("CC_Base_L_Pinky3")) return BaseGeneration.G3;
                         if (objectName.iContains("pinky_03_l")) return BaseGeneration.GameBase;
                         if (objectName.iContains("CC_Base_L_Finger42")) return BaseGeneration.G1;
+                        if (objectName.iContains("RL_BoneRoot"))
+                        {
+                            if (child.Find("CC_Base_Hip"))
+                                return BaseGeneration.G3;
+                        }
                     }
 
                     foreach (Transform child in children)
@@ -101,16 +107,13 @@ namespace Reallusion.Import
                                     return BaseGeneration.GameBase;
                             }
                         }
-
-                    }                    
-
-                    return BaseGeneration.G3;
+                    }
                 }                
             }
             return BaseGeneration.Unknown;
         }
 
-        public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, string characterName, BaseGeneration generation, QuickJSON jsonData)
+        public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, string characterName, BaseGeneration generation, CharacterInfo.RigOverride rigOverride, QuickJSON jsonData)
         {
             importer.importNormals = ModelImporterNormals.Calculate;
             //importer.importNormals = ModelImporterNormals.Import;
@@ -125,7 +128,21 @@ namespace Reallusion.Import
             if (generation == BaseGeneration.Unknown)
             {
                 if (!characterName.Contains("_Motion"))
-                    importer.animationType = ModelImporterAnimationType.Generic;
+                {
+                    switch (rigOverride)
+                    {
+                        case CharacterInfo.RigOverride.None:
+                            importer.animationType = ModelImporterAnimationType.None;
+                            break;                        
+                        case CharacterInfo.RigOverride.Humanoid:
+                            importer.animationType = ModelImporterAnimationType.Human;
+                            break;
+                        case CharacterInfo.RigOverride.Generic:
+                        default:
+                            importer.animationType = ModelImporterAnimationType.Generic;
+                            break;
+                    }                    
+                }
                 return;
             }
 
@@ -135,13 +152,15 @@ namespace Reallusion.Import
                 humanName = humanName,
                 boneName = boneName
             };
+            List<HumanBone> boneList = new List<HumanBone>();
 
             #region HumanBoneDescription
             if (generation == BaseGeneration.G3 || 
                 generation == BaseGeneration.G3Plus || 
-                generation == BaseGeneration.ActorCore)
+                generation == BaseGeneration.ActorCore ||
+                generation == BaseGeneration.ActorBuild)
             {
-                human.human = new[] {
+                boneList = new List<HumanBone> {                 
                         Bone("Chest", "CC_Base_Spine01"),
                         Bone("Head", "CC_Base_Head"),
                         Bone("Hips", "CC_Base_Hip"),
@@ -201,7 +220,7 @@ namespace Reallusion.Import
             }
             else if (generation == BaseGeneration.G1)
             {
-                human.human = new[] {
+                boneList = new List<HumanBone> {
                         Bone("Chest", "CC_Base_Spine01"),
                         Bone("Head", "CC_Base_Head"),
                         Bone("Hips", "CC_Base_Hip"),
@@ -261,7 +280,7 @@ namespace Reallusion.Import
             }
             else if (generation == BaseGeneration.GameBase)
             {
-                human.human = new[] {
+                boneList = new List<HumanBone> {
                         Bone("Chest", "spine_02"),
                         Bone("Head", "head"),
                         Bone("Hips", "pelvis"),
@@ -319,6 +338,20 @@ namespace Reallusion.Import
                         Bone("UpperChest", "spine_03"),
                     };
             }
+
+            // clean up bone list for missing bones (from bone LOD exports)
+            for (int b = 0; b < boneList.Count; b++)
+            {
+                if (Util.FindChildRecursive(fbx.transform, boneList[b].boneName) == null)
+                {
+                    //Debug.LogWarning("Missing bone: " + boneList[b].boneName);
+                    boneList.RemoveAt(b--);
+                }
+            }
+            
+            if (boneList.Count > 0)
+                human.human = boneList.ToArray();
+
             #endregion
 
             for (int i = 0; i < human.human.Length; ++i)
@@ -462,7 +495,7 @@ namespace Reallusion.Import
         {
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
             string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
-            string prefabBakedPath = Path.Combine(prefabFolder, info.name + "_Baked.prefab");
+            string prefabBakedPath = Path.Combine(prefabFolder, info.name + Importer.BAKE_SUFFIX + ".prefab");
 
             if (controller)
             {
@@ -502,7 +535,7 @@ namespace Reallusion.Import
             if (noMotion)
             {
                 // Set the Prefab
-                if (info.path.iContains("_lod"))
+                if (info.path.iContains("_lod") && CountLODs(fbx) > 1)
                 {                    
                     return CreateOneLODPrefabFromModel(info, fbx, "", out sceneInstance);
                 }
@@ -552,6 +585,31 @@ namespace Reallusion.Import
             return prefab;
         }
 
+        public static int CountLODs(GameObject fbx)
+        {
+            List<int> levels = new List<int>(5);
+            Renderer[] renderers = fbx.GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer r in renderers)
+            {
+                int index = r.name.LastIndexOf("_LOD");                
+                if (index >= 0 && r.name.Length - index == 5 && char.IsDigit(r.name[r.name.Length - 1]))
+                {
+                    // any mesh with a _LOD<N> suffix is a LOD level
+                    string levelString = r.name.Substring(r.name.Length - 1, 1);
+                    if (int.TryParse(levelString, out int level))
+                    {
+                        if (!levels.Contains(level)) levels.Add(level);
+                    }
+                }
+                else
+                {
+                    // assume any mesh without a _LOD<N> suffix is the original model (LOD0)
+                    int level = 0;
+                    if (!levels.Contains(level)) levels.Add(level);
+                }
+            }
+            return levels.Count;
+        }
         
         public static GameObject CreateOneLODPrefabFromModel(CharacterInfo info, GameObject fbx, string suffix, out GameObject sceneLODInstance)
         {
@@ -649,5 +707,35 @@ namespace Reallusion.Import
 
             return prefab;
         }        
+        
+        public static bool IsBodyMesh(SkinnedMeshRenderer smr)
+        {
+            string meshName = smr.gameObject.name;
+
+            if (meshName.iEquals("CC_Base_Body")) return true;
+            if (meshName.iEquals("CC_Game_Body")) return true;
+
+            foreach (Material mat in smr.sharedMaterials)
+            {
+                if (mat.name.iContains("Std_Skin_")) return true;
+                if (mat.shader.name.iContains(Pipeline.SHADER_HQ_HEAD) ||
+                    mat.shader.name.iContains(Pipeline.SHADER_HQ_SKIN)) return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsHairMesh(SkinnedMeshRenderer smr)
+        {
+            string meshName = smr.gameObject.name;
+
+            foreach (Material mat in smr.sharedMaterials)
+            {
+                if (mat.name.iContains("Hair") && mat.name.iContains("Transparency")) return true;
+                if (mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR)) return true;
+            }
+
+            return false;
+        }
     }
 }

@@ -1,3 +1,21 @@
+/* 
+ * Copyright (C) 2021 Victor Soupday
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
+ * 
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
@@ -72,7 +90,7 @@ namespace Reallusion.Import
 
                 foreach (GameObject sourcePrefab in sourcePrefabs)
                 {
-                    string suffix = (sourcePrefab.name.Contains("_Baked")) ? "_Alembic_Baked" : "_Alembic";
+                    string suffix = (sourcePrefab.name.Contains(Importer.BAKE_SUFFIX)) ? "_Alembic" + Importer.BAKE_SUFFIX : "_Alembic";
                     List<MaterialMeshPair> materialMeshes;
                     Dictionary<string, Material> sourceMaterials = GetSourceMaterials(sourcePrefab, out materialMeshes);
 

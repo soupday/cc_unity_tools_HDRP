@@ -57,7 +57,7 @@
 //
 #define SAMPLE(tex,coord) tex.SampleLevel (sampler##tex,coord, 0)
 #define SAMPLE_NORMAL(tex, coord) UnpackNormal(tex.SampleLevel (sampler##tex,coord, 0))
-#define UPACK(comp) ((comp + 1.0) * 0.5)
+#define UPACK(comp) (min(1.0, max(0.0, (comp + 1.0) * 0.5)))
 #define INVERTED_SCALE(val, fac) (1.0 - ((1.0 - val) * fac))
 #define INVERTED_POWER_SCALE(val, power, fac) (1.0 - ((1.0 - pow(val, power)) * fac))
 #define RADIAL(uv) (length(uv - float2(0.5, 0.5)))

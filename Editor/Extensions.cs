@@ -1,3 +1,21 @@
+/* 
+ * Copyright (C) 2021 Victor Soupday
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
+ * 
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -46,6 +64,39 @@ namespace Reallusion.Import
                 range.b = 0f;
                 range.a = 0f;
                 mat.SetColor(shaderRef, range);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        ///     e.g. mat.SetMinMaxRange("_SmoothnessRemap", 0f, 1f);
+        /// </summary>        
+        public static bool SetMinMaxRange(this Material mat, string shaderRef, float min, float max)
+        {
+            string shaderRefMin = shaderRef + "Min";
+            string shaderRefMax = shaderRef + "Max";
+
+            if (mat.shader && 
+                mat.shader.FindPropertyIndex(shaderRefMin) >= 0 &&
+                mat.shader.FindPropertyIndex(shaderRefMax) >= 0)
+            {
+                mat.SetFloat(shaderRefMin, min);
+                mat.SetFloat(shaderRefMax, max);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool GetRemapRange(this Material mat, string shaderRef, out float from, out float to)
+        {
+            from = 0f;
+            to = 1f;
+            if (mat.shader && mat.shader.FindPropertyIndex(shaderRef) >= 0)
+            {
+                Color range = mat.GetColor(shaderRef);
+                from = range.r;
+                to = range.g;
                 return true;
             }
             return false;

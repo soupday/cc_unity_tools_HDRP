@@ -1,19 +1,19 @@
 /* 
  * Copyright (C) 2021 Victor Soupday
- * This file is part of CC3_Unity_Tools <https://github.com/soupday/cc3_unity_tools>
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
  * 
- * CC3_Unity_Tools is free software: you can redistribute it and/or modify
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * CC3_Unity_Tools is distributed in the hope that it will be useful,
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with CC3_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using System.Collections.Generic;
@@ -40,7 +40,7 @@ namespace Reallusion.Import
         private readonly ModelImporter importer;
         private readonly List<string> importAssets = new List<string>();
         private CharacterInfo characterInfo;
-        private List<string> processedSourceMaterials;
+        private List<string> processedBuildMaterials;
         private List<string> doneTextureGUIDS = new List<string>();
         private Dictionary<Material, Texture2D> bakedDetailMaps;
         private Dictionary<Material, Texture2D> bakedThicknessMaps;
@@ -49,8 +49,8 @@ namespace Reallusion.Import
 
         public const string MATERIALS_FOLDER = "Materials";
         public const string PREFABS_FOLDER = "Prefabs";
-
-        public const float MIPMAP_BIAS = 0f;
+        public const string BAKE_SUFFIX = "_Baked";
+        
         public const float MIPMAP_BIAS_HAIR_ID_MAP = -1f;
         public const float MIPMAP_ALPHA_CLIP_HAIR = 0.6f;
         public const float MIPMAP_ALPHA_CLIP_HAIR_BAKED = 0.8f;
@@ -63,6 +63,23 @@ namespace Reallusion.Import
         public const int FLAG_ALPHA_DATA = 32;
         public const int FLAG_HAIR_ID = 64;
         public const int FLAG_WRAP_CLAMP = 1024;
+
+        public const float MAX_SMOOTHNESS = 0.897f;
+
+        public static float MIPMAP_BIAS
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Mipmap_Bias"))
+                    return EditorPrefs.GetFloat("RL_Importer_Mipmap_Bias");
+                return 0f;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Importer_Mipmap_Bias", value);
+            }
+        }
 
         public static bool USE_AMPLIFY_SHADER
         {
@@ -85,7 +102,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Importer_Animation_Player_On"))
                     return EditorPrefs.GetBool("RL_Importer_Animation_Player_On");
-                return true;
+                return false;
             }
 
             set
@@ -100,7 +117,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Importer_Reconstruct_Flow_Normals"))
                     return EditorPrefs.GetBool("RL_Importer_Reconstruct_Flow_Normals");
-                return true;
+                return false;
             }
 
             set
@@ -178,7 +195,7 @@ namespace Reallusion.Import
             // this is used to re-import everything in one batch after it has all been setup.
             // (calling a re-import on sub-materials or sub-objects will trigger a re-import of the entire fbx each time...)
             importAssets = new List<string>(); // { fbxPath };
-            processedSourceMaterials = new List<string>();
+            processedBuildMaterials = new List<string>();
 
             bakedDetailMaps = new Dictionary<Material, Texture2D>();
             bakedThicknessMaps = new Dictionary<Material, Texture2D>();
@@ -243,13 +260,13 @@ namespace Reallusion.Import
             //       So the *worst case* scenario is that the fbx/blend file is only re-imported three
             //       times, rather than potentially hundreds if caught in a recursive import loop.            
 
-            // set up import settings in preparation for baking default and/or blender textures.
+            // set up import settings in preparation for baking default and/or blender textures.            
             ProcessObjectTreePrepass(fbx);
 
-            // bake additional default or unity packed textures from blender export.
+            // bake additional default or unity packed textures from blender export.            
             ProcessObjectTreeBakePass(fbx);
 
-            // create / apply materials and shaders with supplied or baked texures.
+            // create / apply materials and shaders with supplied or baked texures.            
             ProcessObjectTreeBuildPass(fbx);
 
             characterInfo.tempHairBake = false;
@@ -257,13 +274,13 @@ namespace Reallusion.Import
             Util.LogInfo("Writing changes to asset database.");
 
             // set humanoid animation type
-            RL.HumanoidImportSettings(fbx, importer, characterName, generation, jsonData);
+            RL.HumanoidImportSettings(fbx, importer, characterName, generation, characterInfo.UnknownRigType, jsonData);
             if (blenderProject)
             {
                 importer.importCameras = false;
                 importer.importLights = false;
-                importer.importVisibility = false;
-                importer.useFileUnits = false;
+                importer.importVisibility = true;
+                importer.useFileUnits = true;
             }
 
             // setup initial animations (only do this once)
@@ -297,6 +314,11 @@ namespace Reallusion.Import
                 prefabAsset = physics.AddPhysics();
             }
 
+            if (blenderProject)
+            {
+                MeshUtil.FixSkinnedMeshBounds(prefabInstance);
+            }
+
             // save final prefab instance and remove from scene
             RL.SaveAndRemovePrefabInstance(prefabAsset, prefabInstance);
 
@@ -322,26 +344,19 @@ namespace Reallusion.Import
         void ProcessObjectTreeBuildPass(GameObject obj)
         {
             doneTextureGUIDS.Clear();
+            processedBuildMaterials.Clear();
 
-            int childCount = obj.transform.childCount;
-            for (int i = 0; i < childCount; i++) 
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+
+            foreach (Renderer renderer in renderers)
             {
-                GameObject child = obj.transform.GetChild(i).gameObject;
-
-                if (child.GetComponent<Renderer>() != null)
-                {
-                    ProcessObjectBuildPass(child);
-                }
-                else if (child.name.iContains("_LOD0"))
-                {
-                    ProcessObjectTreeBuildPass(child);
-                }
-            }
+                ProcessObjectBuildPass(renderer);
+            }            
         }
 
-        private void ProcessObjectBuildPass(GameObject obj)
+        private void ProcessObjectBuildPass(Renderer renderer)
         {
-            Renderer renderer = obj.GetComponent<Renderer>();
+            GameObject obj = renderer.gameObject;
 
             if (renderer)
             {
@@ -353,37 +368,11 @@ namespace Reallusion.Import
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
 
                     // if the material has already been processed, it is already in the remap list and should be connected automatically.
-                    if (!processedSourceMaterials.Contains(sourceName))
+                    if (!processedBuildMaterials.Contains(sourceName))
                     {
                         // fetch the json parent for this material.
                         // the json data for the material contains custom shader names, parameters and texture paths.
-                        QuickJSON matJson = null;
-                        string objName = obj.name;
-                        string jsonPath = "";
-                        if (jsonMeshData != null)
-                        {
-                            jsonPath = objName + "/Materials/" + sourceName;
-                            if (jsonMeshData.PathExists(jsonPath))
-                            {
-                                matJson = jsonMeshData.GetObjectAtPath(jsonPath);
-                            }
-                            else
-                            {
-                                // there is a bug where a space in name causes the name to be truncated on export from CC3/4
-                                if (objName.Contains(" ")) 
-                                {
-                                    Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly.");
-                                    string[] split = objName.Split(' ');
-                                    objName = split[0];
-                                    jsonPath = objName + "/Materials/" + sourceName;
-                                    if (jsonMeshData.PathExists(jsonPath))
-                                    {                                        
-                                        matJson = jsonMeshData.GetObjectAtPath(jsonPath);
-                                    }                                    
-                                }                                
-                            }
-                        }    
-                        if (matJson == null) Util.LogError("Unable to find json material data: " + jsonPath);
+                        QuickJSON matJson = GetMatJson(obj, sourceName);
 
                         // determine the material type, this dictates the shader and template material.
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
@@ -396,7 +385,7 @@ namespace Reallusion.Import
                         // connect the textures.
                         if (mat) ProcessTextures(obj, sourceName, sharedMat, mat, materialType, matJson);
 
-                        processedSourceMaterials.Add(sourceName);
+                        processedBuildMaterials.Add(sourceName);
                     }
                     else
                     {
@@ -409,20 +398,13 @@ namespace Reallusion.Import
         void ProcessObjectTreePrepass(GameObject obj)
         {
             doneTextureGUIDS.Clear();
+            processedBuildMaterials.Clear();
 
-            int childCount = obj.transform.childCount;
-            for (int i = 0; i < childCount; i++)
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+
+            foreach (Renderer renderer in renderers)
             {
-                GameObject child = obj.transform.GetChild(i).gameObject;
-
-                if (child.GetComponent<Renderer>() != null)
-                {
-                    ProcessObjectPrepass(child);
-                }
-                else if (child.name.iContains("_LOD0"))
-                {
-                    ProcessObjectTreePrepass(child);
-                }
+                ProcessObjectPrepass(renderer);
             }
             
             AssetDatabase.WriteImportSettingsIfDirty(fbxPath);            
@@ -430,32 +412,34 @@ namespace Reallusion.Import
             AssetDatabase.Refresh();
         }
 
-        private void ProcessObjectPrepass(GameObject obj)
+        private void ProcessObjectPrepass(Renderer renderer)
         {
-            Renderer renderer = obj.GetComponent<Renderer>();
+            GameObject obj = renderer.gameObject;
 
             if (renderer)
             {
                 foreach (Material sharedMat in renderer.sharedMaterials)
                 {
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
-                    QuickJSON matJson = null;
-                    MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
-                    string jsonPath = obj.name + "/Materials/" + sourceName;
-                    if (jsonMeshData != null && jsonMeshData.PathExists(jsonPath))
-                        matJson = jsonMeshData.GetObjectAtPath(jsonPath);
-
-                    if (matJson != null)
+                    if (!processedBuildMaterials.Contains(sourceName))
                     {
-                        if (blenderProject)
-                            PrepBlenderTextures(sourceName, matJson);
+                        QuickJSON matJson = GetMatJson(obj, sourceName);
+                        MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
 
-                        if (characterInfo.BasicMaterials && Pipeline.isHDRP)
+                        if (matJson != null)
                         {
-                            if (materialType == MaterialType.Skin || materialType == MaterialType.Head)
+                            if (blenderProject)
+                                PrepBlenderTextures(sourceName, matJson);
+
+                            if ((materialType == MaterialType.SSS || characterInfo.BasicMaterials) && Pipeline.isHDRP)
                             {
-                                PrepDefaultMap(sourceName, "TransMap", matJson, "Custom Shader/Image/Transmission Map");
-                                PrepDefaultMap(sourceName, "MicroN", matJson, "Custom Shader/Image/MicroNormal");
+                                if (materialType == MaterialType.Skin || 
+                                    materialType == MaterialType.Head ||
+                                    materialType == MaterialType.SSS)
+                                {
+                                    PrepDefaultMap(sourceName, "TransMap", matJson, "Custom Shader/Image/Transmission Map");
+                                    PrepDefaultMap(sourceName, "MicroN", matJson, "Custom Shader/Image/MicroNormal", FLAG_NORMAL);
+                                }
                             }
                         }
                     }
@@ -466,56 +450,54 @@ namespace Reallusion.Import
         void ProcessObjectTreeBakePass(GameObject obj)
         {
             doneTextureGUIDS.Clear();
+            processedBuildMaterials.Clear();
 
-            int childCount = obj.transform.childCount;
-            for (int i = 0; i < childCount; i++)
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+
+            foreach (Renderer renderer in renderers)
             {
-                GameObject child = obj.transform.GetChild(i).gameObject;
-
-                if (child.GetComponent<Renderer>() != null)
-                {
-                    ProcessObjectBakePass(child);
-                }
-                else if (child.name.iContains("_LOD0"))
-                {
-                    ProcessObjectTreeBakePass(child);
-                }
+                ProcessObjectBakePass(renderer);
             }
-
+            
             AssetDatabase.WriteImportSettingsIfDirty(fbxPath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
 
-        private void ProcessObjectBakePass(GameObject obj)
+        private void ProcessObjectBakePass(Renderer renderer)
         {
-            Renderer renderer = obj.GetComponent<Renderer>();
+            GameObject obj = renderer.gameObject;
 
             if (renderer)
             {
                 foreach (Material sharedMat in renderer.sharedMaterials)
                 {
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
-                    QuickJSON matJson = null;
-                    MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
-                    string jsonPath = obj.name + "/Materials/" + sourceName;
-                    if (jsonMeshData != null && jsonMeshData.PathExists(jsonPath))
-                        matJson = jsonMeshData.GetObjectAtPath(jsonPath);                    
-
-                    if (matJson != null)
+                    if (!processedBuildMaterials.Contains(sourceName))
                     {
-                        if (blenderProject)
-                            BakeBlenderTextures(sourceName, matJson);
+                        QuickJSON matJson = GetMatJson(obj, sourceName);
+                        MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
 
-                        if (characterInfo.BasicMaterials && Pipeline.isHDRP)
+                        if (matJson != null)
                         {
-                            if (materialType == MaterialType.Skin || materialType == MaterialType.Head)
-                            {
-                                BakeDefaultMap(sharedMat, sourceName, "_ThicknessMap", "TransMap",
-                                    matJson, "Custom Shader/Image/Transmission Map");
+                            if (blenderProject)
+                                BakeBlenderTextures(sourceName, matJson);
 
-                                BakeDefaultMap(sharedMat, sourceName, "_DetailMap", "MicroN",
-                                    matJson, "Custom Shader/Image/MicroNormal");
+                            if (materialType == MaterialType.SSS || characterInfo.BasicMaterials)
+                            {
+                                if (materialType == MaterialType.Skin || 
+                                    materialType == MaterialType.Head || 
+                                    materialType == MaterialType.SSS)
+                                {
+                                    BakeDefaultMap(sharedMat, sourceName, "_ThicknessMap", "TransMap",
+                                        matJson, "Custom Shader/Image/Transmission Map");
+
+                                    if (RP == RenderPipeline.HDRP) // only HDRP uses the packed detail map
+                                    {
+                                        BakeDefaultMap(sharedMat, sourceName, "_DetailMap", "MicroN",
+                                            matJson, "Custom Shader/Image/MicroNormal");
+                                    }
+                                }
                             }
                         }
                     }
@@ -523,33 +505,83 @@ namespace Reallusion.Import
             }
         }
 
+        private QuickJSON GetMatJson(GameObject obj, string sourceName)
+        {
+            QuickJSON matJson = null;
+            string objName = obj.name;
+            string jsonPath = "";
+            if (jsonMeshData != null)
+            {
+                jsonPath = objName + "/Materials/" + sourceName;
+                if (jsonMeshData.PathExists(jsonPath))
+                {
+                    matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                }
+                else
+                {
+                    // there is a bug where a space in name causes the name to be truncated on export from CC3/4
+                    if (objName.Contains(" "))
+                    {
+                        Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly.");
+                        string[] split = objName.Split(' ');
+                        objName = split[0];
+                        jsonPath = objName + "/Materials/" + sourceName;
+                        if (jsonMeshData.PathExists(jsonPath))
+                        {
+                            matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                        }
+                    }
+                }
+            }
+            if (matJson == null) Util.LogError("Unable to find json material data: " + jsonPath);
+
+            return matJson;
+        }
+
         private MaterialType GetMaterialType(GameObject obj, Material mat, string sourceName, QuickJSON matJson)
         {            
             if (matJson != null)
             {
                 bool hasOpacity = false;
-                if (matJson != null && matJson.PathExists("Textures/Opacity/Texture Path"))
+                if (sourceName.iContains("_Transparency_")) hasOpacity = true;
+                if (matJson != null)
                 {
-                    hasOpacity = true;
+                    string texturePath = matJson.GetStringValue("Textures/Opacity/Texture Path");
+                    if (!string.IsNullOrEmpty(texturePath)) hasOpacity = true;
                 }
 
-                if (sourceName.StartsWith("Std_Eye_L", System.StringComparison.InvariantCultureIgnoreCase) ||
-                    sourceName.StartsWith("Std_Eye_R", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Eye_L") ||
+                    sourceName.iStartsWith("Std_Eye_R"))
                 {
                     return MaterialType.Eye;
                 }
 
+                // actor build materials that are opaque, but detected as transparent.
+                if (characterInfo.Generation == BaseGeneration.ActorBuild)
+                {
+                    if (sourceName.iContains("_Cornea_L") ||
+                        sourceName.iContains("_Cornea_R") ||
+                        sourceName.iContains("_Upper_Teeth") ||
+                        sourceName.iContains("_Lower_Teeth") ||
+                        sourceName.iContains("_Tongue"))
+                    {
+                        return MaterialType.DefaultOpaque;
+                    }
+                }
+
                 if (hasOpacity)
                 {
-                    if (sourceName.StartsWith("Std_Eyelash", System.StringComparison.InvariantCultureIgnoreCase))
+                    if (sourceName.iStartsWith("Std_Eyelash"))
                         return MaterialType.Eyelash;
-                    if (sourceName.StartsWith("Ga_Eyelash", System.StringComparison.InvariantCultureIgnoreCase))
+                    if (sourceName.iStartsWith("Ga_Eyelash"))
                         return MaterialType.Eyelash;
-                    if (sourceName.ToLowerInvariant().Contains("_base_") || sourceName.ToLowerInvariant().Contains("scalp_"))
+                    if (sourceName.iContains("_base_") || sourceName.iContains("scalp_"))
                         return MaterialType.Scalp;
                 }
 
                 string customShader = matJson?.GetStringValue("Custom Shader/Shader Name");
+                string defaultType = matJson?.GetStringValue("Material Type");
+
                 switch (customShader)
                 {
                     case "RLEyeOcclusion": return MaterialType.EyeOcclusion;
@@ -560,48 +592,47 @@ namespace Reallusion.Import
                     case "RLTongue": return MaterialType.Tongue;
                     case "RLTeethGum": return MaterialType.Teeth;
                     case "RLEye": return MaterialType.Cornea;
+                    case "RLSSS": return MaterialType.SSS;
                     default:
-                        if (string.IsNullOrEmpty(matJson?.GetStringValue("Textures/Opacity/Texture Path")))
-                            return MaterialType.DefaultOpaque;
-                        else
-                            return MaterialType.DefaultAlpha;
+                        if (hasOpacity) return MaterialType.DefaultAlpha;
+                        else return MaterialType.DefaultOpaque;
                 }
             }
             else
             {
                 // if there is no JSON, try to determine the material types from the names.
 
-                if (sourceName.StartsWith("Std_Eye_L", System.StringComparison.InvariantCultureIgnoreCase) ||
-                    sourceName.StartsWith("Std_Eye_R", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Eye_L") ||
+                    sourceName.iStartsWith("Std_Eye_R"))
                     return MaterialType.Eye;
 
-                if (sourceName.StartsWith("Std_Cornea_L", System.StringComparison.InvariantCultureIgnoreCase) ||
-                    sourceName.StartsWith("Std_Cornea_R", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Cornea_L") ||
+                    sourceName.iStartsWith("Std_Cornea_R"))
                     return MaterialType.Cornea;
 
-                if (sourceName.StartsWith("Std_Eye_Occlusion_", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Eye_Occlusion_"))
                     return MaterialType.EyeOcclusion;
 
-                if (sourceName.StartsWith("Std_Tearline_", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Tearline_"))
                     return MaterialType.Tearline;
 
-                if (sourceName.StartsWith("Std_Upper_Teeth", System.StringComparison.InvariantCultureIgnoreCase) ||
-                    sourceName.StartsWith("Std_Lower_Teeth", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Upper_Teeth") ||
+                    sourceName.iStartsWith("Std_Lower_Teeth"))
                     return MaterialType.Teeth;
 
-                if (sourceName.StartsWith("Std_Tongue", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Tongue"))
                     return MaterialType.Tongue;
 
-                if (sourceName.StartsWith("Std_Skin_Head", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Skin_Head"))
                     return MaterialType.Head;
 
-                if (sourceName.StartsWith("Std_Skin_", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Skin_"))
                     return MaterialType.Skin;
 
-                if (sourceName.StartsWith("Std_Nails", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Nails"))
                     return MaterialType.Skin;
 
-                if (sourceName.StartsWith("Std_Eyelash", System.StringComparison.InvariantCultureIgnoreCase))
+                if (sourceName.iStartsWith("Std_Eyelash"))
                     return MaterialType.Eyelash;
 
                 // Detecting the hair is harder to do...
@@ -611,9 +642,9 @@ namespace Reallusion.Import
         }        
 
         private Material CreateRemapMaterial(MaterialType materialType, Material sharedMaterial, string sourceName)
-        {
+        {            
             // get the template material.
-            Material templateMaterial = Pipeline.GetTemplateMaterial(materialType, characterInfo.BuildQuality, characterInfo, USE_AMPLIFY_SHADER, characterInfo.FeatureUseTessellation);
+            Material templateMaterial = Pipeline.GetTemplateMaterial(sourceName, materialType, characterInfo.BuildQuality, characterInfo, USE_AMPLIFY_SHADER, characterInfo.FeatureUseTessellation);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -683,6 +714,11 @@ namespace Reallusion.Import
             if (shaderName.iContains(Pipeline.SHADER_DEFAULT))
             {
                 ConnectDefaultMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
+            }
+
+            else if (shaderName.iContains(Pipeline.SHADER_HQ_SSS))
+            {
+                ConnectSSSMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);
             }
 
             else if (shaderName.iContains(Pipeline.SHADER_DEFAULT_HAIR))
@@ -771,7 +807,7 @@ namespace Reallusion.Import
 
                 if (!diffuseAlpha)
                 {
-                    if (diffuse && opacity && diffuse != opacity)
+                    if ((diffuse || opacity) && diffuse != opacity)
                     {
                         Util.LogInfo("Baking DiffuseAlpha texture for " + sourceName);
                         folder = Util.GetAssetFolder(diffuse, opacity);
@@ -844,6 +880,26 @@ namespace Reallusion.Import
             MaterialType materialType, QuickJSON matJson)
         {
             string customShader = matJson?.GetStringValue("Custom Shader/Shader Name");
+            string jsonMaterialType = matJson?.GetStringValue("Material Type");
+
+            if (jsonMaterialType.iEquals("Tra"))
+            {
+                if (RP == RenderPipeline.HDRP)
+                {
+                    mat.SetFloatIf("_MaterialID", 4f);
+                    mat.EnableKeyword("_MATERIAL_FEATURE_SPECULAR_COLOR");
+                }
+                else if (RP == RenderPipeline.URP)
+                {
+                    mat.SetFloatIf("_WorkflowMode", 0f);
+                    mat.EnableKeyword("_SPECULAR_SETUP");
+                }
+                else
+                {
+                    Shader specShader = Shader.Find("Standard (Specular setup)");
+                    mat.shader = specShader;
+                }
+            }
 
             // these default materials should *not* attach any textures:
             if (customShader == "RLEyeTearline" || customShader == "RLEyeOcclusion") return;
@@ -859,12 +915,24 @@ namespace Reallusion.Import
                         FLAG_SRGB);
                 }
 
-                ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
-                    matJson, "Textures/HDRP");
+                ConnectTextureTo(sourceName, mat, "_SpecularColorMap", "Specular",
+                    matJson, "Textures/Specular");                
 
-                ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
+                ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
+                    matJson, "Textures/HDRP");                
+
+                if (ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
                     matJson, "Textures/Normal",
-                    FLAG_NORMAL);
+                    FLAG_NORMAL))
+                {
+                    mat.EnableKeyword("_NORMALMAP");
+                    mat.EnableKeyword("_NORMALMAP_TANGENT_SPACE");
+                }
+                else
+                {
+                    mat.DisableKeyword("_NORMALMAP");
+                    mat.DisableKeyword("_NORMALMAP_TANGENT_SPACE");
+                }                
 
                 ConnectTextureTo(sourceName, mat, "_EmissiveColorMap", "Glow",
                     matJson, "Textures/Glow");                
@@ -894,25 +962,56 @@ namespace Reallusion.Import
                     }
                 }
 
-                if (ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
-                    matJson, "Textures/MetallicAlpha"))
+                if (ConnectTextureTo(sourceName, mat, "_SpecGlossMap", "Specular",
+                    matJson, "Textures/Specular"))
                 {
-                    mat.SetFloatIf("_Metallic", 1f);                    
+                    mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                    mat.EnableKeyword("_SPECGLOSSMAP");
+                    
                 }
                 else
                 {
-                    mat.SetFloatIf("_Metallic", 0f);                    
+                    mat.DisableKeyword("_METALLICSPECGLOSSMAP");
+                    mat.DisableKeyword("_SPECGLOSSMAP");
                 }
 
-                ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
-                    matJson, "Textures/AO");
+                if (ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
+                    matJson, "Textures/MetallicAlpha"))
+                {
+                    mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                }
+                else
+                {
+                    mat.DisableKeyword("_METALLICSPECGLOSSMAP");
+                }
+                
+                if (ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
+                    matJson, "Textures/AO"))
+                {
+                    mat.EnableKeyword("_OCCLUSIONMAP");
+                }
+                else
+                {
+                    mat.DisableKeyword("_OCCLUSIONMAP");
+                }
 
-                ConnectTextureTo(sourceName, mat, "_BumpMap", "Normal",
+                if (ConnectTextureTo(sourceName, mat, "_BumpMap", "Normal",
                     matJson, "Textures/Normal",
-                    FLAG_NORMAL);
+                    FLAG_NORMAL))
+                {
+                    mat.EnableKeyword("_NORMALMAP");
+                }
+                else
+                {
+                    mat.DisableKeyword("_NORMALMAP");
+                }
 
-                ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
-                    matJson, "Textures/Glow");
+                if (ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
+                    matJson, "Textures/Glow"))
+                {
+                    mat.globalIlluminationFlags = mat.globalIlluminationFlags | MaterialGlobalIlluminationFlags.AnyEmissive;
+                    mat.EnableKeyword("_EMISSION");
+                }                
             }
 
             // reconstruct any missing packed texture maps from Blender source maps.
@@ -921,51 +1020,36 @@ namespace Reallusion.Import
             else if (RP == RenderPipeline.URP)
                 ConnectBlenderTextures(sourceName, mat, matJson, "_BaseMap", "", "_MetallicGlossMap");
             else
-                ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");            
-
-            // override smoothness for basic material skin
-            if (RP != RenderPipeline.HDRP && mat.GetTextureIf("_MetallicGlossMap"))
-            {
-                if (customShader == "RLHead" || customShader == "RLSkin")
-                {
-                    mat.SetFloatIf("_Smoothness", 0.7f);
-                    mat.SetFloatIf("_GlossMapScale", 0.7f);
-                }
-                else
-                {
-                    // eyelash and scalp should keep the template smoothness
-                    if (materialType != MaterialType.Scalp && materialType != MaterialType.Eyelash)
-                    {
-                        mat.SetFloatIf("_Smoothness", 0.897f);
-                        mat.SetFloatIf("_GlossMapScale", 0.897f);
-                    }
-                }
-            }
-
+                ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");
+            
             // All
             if (matJson != null)
-            {
-                // Roughness_Value from Blender pipeline (instead of baking a small value texture)
+            {                
                 if (matJson.PathExists("Roughness_Value"))
                 {
-                    if (RP == RenderPipeline.Builtin)
-                        mat.SetFloatIf("_Glossiness", 1f - matJson.GetFloatValue("Roughness_Value"));
-                    else
-                        mat.SetFloatIf("_Smoothness", 1f - matJson.GetFloatValue("Roughness_Value"));
-                    
+                    // Roughness_Value from Blender pipeline (instead of baking a small value texture)
+                    mat.SetFloatIf("_Smoothness", 1f - matJson.GetFloatValue("Roughness_Value"));                    
+                    mat.SetFloatIf("_GlossMapScale", 1f - matJson.GetFloatValue("Roughness_Value"));
                 }
-
-                // Metallic_Value from Blender pipeline (instead of baking a small value texture)
+                
                 if (matJson.PathExists("Metallic_Value"))
                 {
+                    // Metallic_Value from Blender pipeline (instead of baking a small value texture)
                     mat.SetFloatIf("_Metallic", matJson.GetFloatValue("Metallic_Value"));
                 }
 
+                // Diffuse tint
                 if (RP != RenderPipeline.Builtin)
                     mat.SetColorIf("_BaseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
                 else
                     mat.SetColorIf("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
 
+                if (RP == RenderPipeline.HDRP)
+                    mat.SetColorIf("_SpecularColor", 0.2f * Util.LinearTosRGB(matJson.GetColorValue("Specular Color")));
+                else
+                    mat.SetColorIf("_SpecColor", 0.2f * Util.LinearTosRGB(matJson.GetColorValue("Specular Color")));
+
+                // Emission
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
                 {
                     if (RP == RenderPipeline.HDRP)
@@ -974,6 +1058,7 @@ namespace Reallusion.Import
                         mat.SetColorIf("_EmissionColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 }
 
+                // Normal map strength
                 if (matJson.PathExists("Textures/Normal/Strength"))
                 {
                     if (RP == RenderPipeline.HDRP)
@@ -983,37 +1068,133 @@ namespace Reallusion.Import
                 }
             }
 
-            // connecting default HDRP materials:
-            if (RP == RenderPipeline.HDRP && !string.IsNullOrEmpty(customShader))
+            // Subsurface overrides
+            if (matJson != null && matJson.PathExists("Subsurface Scatter"))
             {
-                // for skin and head materials:
-                if (customShader == "RLHead" || customShader == "RLSkin")
-                {
-                    ConnectTextureTo(sourceName, mat, "_SubsurfaceMaskMap", "SSSMap",
-                        matJson, "Custom Shader/Image/SSS Map");
+                ConnectTextureTo(sourceName, mat, "_SubsurfaceMaskMap", "SSSMap",
+                    matJson, "Custom Shader/Image/SSS Map");
 
-                    // use the baked thickness and details maps...
+                float microNormalTiling = 20f;
+                float microNormalStrength = 0.5f;
+                Color sssFalloff = Color.white;
+                float subsurfaceScale = 0.85f;
+
+                if (matJson.PathExists("Subsurface Scatter/Falloff"))
+                    sssFalloff = matJson.GetColorValue("Subsurface Scatter/Falloff");
+
+                if (matJson.PathExists("Subsurface Scatter/Lerp"))
+                    subsurfaceScale = matJson.GetFloatValue("Subsurface Scatter/Lerp");
+
+                if (matJson.PathExists("Custom Shader/Variable/MicroNormal Tiling"))
+                    microNormalTiling = matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling");
+
+                if (matJson.PathExists("Custom Shader/Variable/MicroNormal Strength"))
+                    microNormalStrength = matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength");                
+
+                if (RP == RenderPipeline.HDRP)
+                {
+                    // HDRP uses the baked thickness and packed detail map                        
                     mat.SetTextureIf("_ThicknessMap", GetCachedBakedMap(sharedMat, "_ThicknessMap"));
                     mat.SetTextureIf("_DetailMap", GetCachedBakedMap(sharedMat, "_DetailMap"));
-
-                    float microNormalTiling = 20f;
-                    float microNormalStrength = 0.5f;
-                    if (matJson != null)
-                    {
-                        microNormalTiling = matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling");
-                        microNormalStrength = matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength");
-                    }
                     mat.SetTextureScaleIf("_DetailMap", new Vector2(microNormalTiling, microNormalTiling));
                     mat.SetFloatIf("_DetailNormalScale", microNormalStrength);
-                    mat.SetFloatIf("_Thickness", 0.4f);
-                    mat.SetRemapRange("_ThicknessRemap", 0.4f, 1f);
                 }
-            }            
+                else
+                {
+                    ConnectTextureTo(sourceName, mat, "_ThicknessMap", "TransMap",
+                        matJson, "Custom Shader/Image/Transmission Map");
+
+                    // 3D & URP use the micro normal mask and map directly
+                    ConnectTextureTo(sourceName, mat, "_DetailMask", "MicroNMask",
+                        matJson, "Custom Shader/Image/MicroNormalMask");
+
+                    ConnectTextureTo(sourceName, mat, "_DetailNormalMap", "MicroN",
+                        matJson, "Custom Shader/Image/MicroNormal", FLAG_NORMAL);
+
+                    mat.SetTextureScaleIf("_DetailNormalMap", new Vector2(microNormalTiling, microNormalTiling));
+                    mat.SetFloatIf("_DetailNormalMapScale", microNormalStrength);
+                    mat.SetColorIf("_SubsurfaceFalloff", sssFalloff);
+                }
+
+                if (sourceName.iContains("Ga_Skin_"))
+                {
+                    // game base skin has blank white transmission maps so needs to be turned down
+                    if (RP == RenderPipeline.HDRP)
+                    {
+                        mat.SetRemapRange("_ThicknessRemap", 0.4f, 1f);
+                    }
+                    else if (RP == RenderPipeline.URP)
+                    {
+                        // URP has particularly sensitive transmission
+                        mat.SetFloatIf("_Thickness", 0.04f);
+                        // and the differences in subsurface wrapping need to be accounted for
+                        mat.SetFloatIf("_SubsurfaceMask", subsurfaceScale * 0.4f);
+                    }
+                    else
+                    {
+                        mat.SetFloatIf("_Thickness", 0.4f);
+                        // the differences in subsurface wrapping need to be accounted for
+                        mat.SetFloatIf("_SubsurfaceMask", subsurfaceScale * 0.4f);
+                    }
+
+                }
+                else //if (customShader == "RLSSS")
+                {
+                    mat.SetRemapRange("_ThicknessRemap", 0.0f, 1f);
+                    mat.SetFloatIf("_Thickness", 1f);
+                    mat.SetFloatIf("_SubsurfaceMask", subsurfaceScale);
+                }
+            }
+
+            // Apply micro roughness & specular
+            if (matJson != null && matJson.PathExists("Custom Shader/Variable/Micro Roughness Scale"))
+            {
+                float microRoughnessMod = 0.0f;
+                float specular = 0.5f;
+                if (matJson.PathExists("Custom Shader/Variable/Micro Roughness Scale"))
+                    microRoughnessMod = matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale");
+                if (matJson.PathExists("Custom Shader/Variable/_Specular"))
+                    specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
+
+                if (RP == RenderPipeline.HDRP)
+                {
+                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_Smoothness", 0.5f));
+                    float smoothnessMin = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_SmoothnessRemapMin", 0f));
+                    float smoothnessMax = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_SmoothnessRemapMax", MAX_SMOOTHNESS));
+                    mat.SetMinMaxRange("_SmoothnessRemap", smoothnessMin - microRoughnessMod, smoothnessMax - microRoughnessMod);
+                    mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
+                }
+                else if (RP == RenderPipeline.URP)
+                {
+                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_Smoothness", 0.5f));
+                    mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
+                }
+                else
+                {
+                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_GlossMapScale", 0.5f));
+                    mat.SetFloatIf("_GlossMapScale", smoothness - microRoughnessMod);
+                }
+            }
+
+            if (jsonMaterialType.iEquals("Tra"))
+            {
+                mat.SetFloatIf("_Smoothness", 0.5f);
+                mat.SetFloatIf("_GlossMapScale", 0.5f);
+                mat.SetFloatIf("_Glossiness", 0.5f);
+                mat.SetMinMaxRange("_SmoothnessRemap", 0f, 0.5f);
+            }
+        }
+
+        private void ConnectSSSMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
+            MaterialType materialType, QuickJSON matJson)
+        {
+            // for now the SSS implementation is incomplete, treat as default material with extra steps
+            ConnectDefaultMaterial(obj, sourceName, sharedMat, mat, materialType, matJson);            
         }
 
         // HDRP only
-        private void ConnectDefaultHairMaterial(GameObject obj, string sourceName, Material sharedMat, 
-            Material mat, MaterialType materialType, QuickJSON matJson)
+        private void ConnectDefaultHairMaterial(GameObject obj, string sourceName, Material sharedMat,
+        Material mat, MaterialType materialType, QuickJSON matJson)
         {
             //bool isFacialHair = FacialProfileMapper.MeshHasFacialBlendShapes(obj) != FacialProfile.None;
 
@@ -1036,7 +1217,7 @@ namespace Reallusion.Import
             // reconstruct any missing packed texture maps from Blender source maps.
             if (RP == RenderPipeline.HDRP)
                 ConnectBlenderTextures(sourceName, mat, matJson, "_BaseColorMap", "_MaskMap", "");
-            
+
             if (matJson != null)
             {
                 float diffuseStrength = matJson.GetFloatValue("Custom Shader/Variable/Diffuse Strength");
@@ -1416,15 +1597,17 @@ namespace Reallusion.Import
                 }
 
                 mat.SetFloatIf("_IrisSmoothness", 0f); // 1f - matJson.GetFloatValue("Custom Shader/Variable/_Iris Roughness"));
-                mat.SetFloatIf("_IrisBrightness", 1.5f * matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));                                
+                mat.SetFloatIf("_IrisBrightness", 1.2f * matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));                                
                 mat.SetFloatIf("_IOR", matJson.GetFloatValue("Custom Shader/Variable/_IoR"));
                 float irisScale = matJson.GetFloatValue("Custom Shader/Variable/Iris UV Radius") / 0.16f;
                 mat.SetFloatIf("_IrisScale", irisScale);
                 mat.SetFloatIf("_IrisRadius", 0.15f * irisScale);                
-                mat.SetFloatIf("_LimbusWidth", matJson.GetFloatValue("Custom Shader/Variable/Limbus UV Width Color"));                
+                mat.SetFloatIf("_LimbusWidth", matJson.GetFloatValue("Custom Shader/Variable/Limbus UV Width Color"));
                 float limbusDarkScale = matJson.GetFloatValue("Custom Shader/Variable/Limbus Dark Scale");
-                float limbusDarkT = Mathf.InverseLerp(0f, 10f, limbusDarkScale);
-                mat.SetFloatIf("_LimbusDarkRadius", Mathf.Lerp(0.145f, 0.075f, limbusDarkT));
+                float ds = Mathf.Pow(0.01f, 0.2f) / limbusDarkScale;
+                float dm = Mathf.Pow(0.5f, 0.2f) / limbusDarkScale;
+                mat.SetFloatIf("_LimbusDarkRadius", ds);
+                mat.SetFloatIf("_LimbusDarkWidth", 2f * (dm - ds));
                 //mat.SetFloatIf("_LimbusDarkWidth", 0.035f);
                 float scleraBrightnessPower = 0.65f;
                 if (Pipeline.isHDRP) scleraBrightnessPower = 0.75f;
@@ -1462,9 +1645,15 @@ namespace Reallusion.Import
             ConnectTextureTo(sourceName, mat, "_AOMap", "ao",
                 matJson, "Textures/AO");
 
-            ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
+            if (!ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
                 matJson, "Textures/Normal",
-                FLAG_NORMAL);
+                FLAG_NORMAL))
+            {
+                if (RECONSTRUCT_FLOW_NORMALS)
+                {
+                    BakeHairFlowToNormalMap(mat, sourceName, matJson);
+                }
+            }    
 
             ConnectTextureTo(sourceName, mat, "_BlendMap", "blend_multiply",
                 matJson, "Textures/Blend");
@@ -1541,7 +1730,7 @@ namespace Reallusion.Import
                 float rimTransmission = matJson.GetFloatValue("Custom Shader/Variable/Transmission Strength");
                 float roughnessStrength = matJson.GetFloatValue("Custom Shader/Variable/Hair Roughness Map Strength");
                 float smoothnessStrength = 1f - Mathf.Pow(roughnessStrength, 1f);
-                float smoothnessMax = mat.GetFloatIf("_SmoothnessMax", 0.8f);
+                float smoothnessMax = mat.GetFloatIf("_SmoothnessMax", MAX_SMOOTHNESS);
 
                 if (RP == RenderPipeline.HDRP)
                 {
@@ -1608,12 +1797,7 @@ namespace Reallusion.Import
                 mat.SetVectorIf("_HighlightBDistribution", (1f / 255f) * matJson.GetVector3Value("Custom Shader/Variable/_2nd Dye Distribution from Grayscale"));
                 mat.SetFloatIf("_HighlightBOverlapEnd", matJson.GetFloatValue("Custom Shader/Variable/Mask 2nd Dye by RootMap"));
                 mat.SetFloatIf("_HighlightBOverlapInvert", matJson.GetFloatValue("Custom Shader/Variable/Invert 2nd Dye RootMap Mask"));                
-            }
-
-            if (mat.GetTexture("_NormalMap") == null)
-            {
-                BakeHairFlowToNormalMap(mat, sourceName, matJson);
-            }
+            }            
         }
 
         private void ConnectHQEyeOcclusionMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
@@ -1689,7 +1873,7 @@ namespace Reallusion.Import
                 mat.SetFloatIf("_DepthOffset", 0.005f * matJson.GetFloatValue("Custom Shader/Variable/Depth Offset"));                
                 mat.SetFloatIf("_InnerOffset", 0.005f * matJson.GetFloatValue("Custom Shader/Variable/Depth Offset"));
 
-                mat.SetFloatIf("_Smoothness", 0.88f - 0.88f * matJson.GetFloatValue("Custom Shader/Variable/Roughness"));
+                mat.SetFloatIf("_Smoothness", MAX_SMOOTHNESS - MAX_SMOOTHNESS * matJson.GetFloatValue("Custom Shader/Variable/Roughness"));
             }
 
             if (blenderProject)
@@ -1720,7 +1904,7 @@ namespace Reallusion.Import
             return null;
         }
 
-        private void PrepDefaultMap(string sourceName, string suffix, QuickJSON jsonData, string jsonPath)
+        private void PrepDefaultMap(string sourceName, string suffix, QuickJSON jsonData, string jsonPath, int flags = 0)
         {
             string jsonTexturePath = null;
             if (jsonData != null)
@@ -1731,7 +1915,7 @@ namespace Reallusion.Import
             Texture2D tex = GetTextureFrom(jsonTexturePath, sourceName, suffix, out string name, true);
             // make sure to set the correct import settings for 
             // these textures before using them for baking...                        
-            if (!DoneTexture(tex)) SetTextureImport(tex, name, FLAG_FOR_BAKE);
+            if (!DoneTexture(tex)) SetTextureImport(tex, name, FLAG_FOR_BAKE + flags);
         }
 
         private void BakeDefaultMap(Material sharedMat, string sourceName, string shaderRef, string suffix, QuickJSON jsonData, string jsonPath)
@@ -1951,12 +2135,17 @@ namespace Reallusion.Import
                     mat.SetTextureOffset(shaderRef, offset);
                     mat.SetTextureScale(shaderRef, tiling);
 
-                    Util.LogInfo("        Connected texture: " + tex.name);
+                    Util.LogInfo("        Connecting texture: " + tex.name);
 
                     if (!DoneTexture(tex)) SetTextureImport(tex, name, flags);
                 }
                 else
                 {
+                    if (!string.IsNullOrEmpty(jsonTexturePath))
+                    {
+                        Util.LogError("Unable to locate texture defined in Json: " + jsonTexturePath + "\nMaterial: " + materialName);
+                    }
+
                     mat.SetTexture(shaderRef, null);
                 }
             }

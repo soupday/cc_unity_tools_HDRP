@@ -6,7 +6,11 @@
         "GUID:df380645f10b7bc4b97d4f5eb6303d95",
         "GUID:78bd2ddd6e276394a9615c203e574844",
         "GUID:457756d89b35d2941b3e7b37b4ece6f1",
-        "GUID:3932ccc3044a255448b1c8bfffe8d0c1"
+        "GUID:3932ccc3044a255448b1c8bfffe8d0c1",
+		"GUID:8f7035be1433e7b42bb810f12982480e",
+        "GUID:f9dedde5eec30c2468e14d8a7b14626e",
+        "GUID:7e9d95a3be8cd654ba8a8d2bb2409223",
+        "GUID:22f31b74491fb45d5b598e0b935deb31"
     ],
     "includePlatforms": [
         "Editor"
@@ -49,6 +53,16 @@
             "name": "com.unity.render-pipelines.high-definition",
             "expression": "12.0.0",
             "define": "HDRP_12_0_0_OR_NEWER"
+        },
+		{
+            "name": "com.unity.demoteam.hair",
+            "expression": "0.9.0-exp.1",
+            "define": "HAS_PACKAGE_STRAND_HAIR"
+        },
+        {
+            "name": "com.unity.demoteam.digital-human",
+            "expression": "0.1.1-preview",
+            "define": "HAS_PACKAGE_DIGITAL_HUMAN"
         }
     ],
     "noEngineReferences": false
