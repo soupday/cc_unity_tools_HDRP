@@ -350,9 +350,6 @@ namespace Reallusion.Import
             return count;
         }
 
-
-
-
         private void CleanUp()
         {   
             // remove all the old lod object containers
