@@ -1001,28 +1001,43 @@ namespace Reallusion.Import
                     new GUIContent("Animation Player On", "Always show the animation player when opening the preview scene."));
             GUILayout.Space(ROW_SPACE);
 
-
             GUILayout.Space(10f);
-            GUILayout.Label("Physics Collider Shrink");
-            GUILayout.Space(ROW_SPACE);
-            GUILayout.BeginHorizontal();            
-            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = GUILayout.HorizontalSlider(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS, -2, 2f);
-            GUILayout.Label(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS.ToString(), GUILayout.Width(30f));
-            GUILayout.EndHorizontal();
-            GUILayout.Space(ROW_SPACE);
-
-            GUILayout.Space(10f);
-            GUILayout.Label("Physics Collider Detection Threshold");
+            GUILayout.BeginVertical(new GUIContent("", "Override mip-map bias for all textures setup for the characters."), labelStyle);
+            GUILayout.Label("Mip-map Bias");
             GUILayout.Space(ROW_SPACE);
             GUILayout.BeginHorizontal();
-            Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = GUILayout.HorizontalSlider(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD, 0f, 1f);
-            GUILayout.Label(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD.ToString(), GUILayout.Width(30f));
+            Importer.MIPMAP_BIAS = GUILayout.HorizontalSlider(Importer.MIPMAP_BIAS, -1f, 1f);
+            GUILayout.Label(Importer.MIPMAP_BIAS.ToString("0.00"),
+                            GUILayout.Width(40f));
             GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
             GUILayout.Space(ROW_SPACE);
+
             GUILayout.Space(10f);
+            GUILayout.BeginVertical(new GUIContent("", "When setting up the physics capsule and sphere colliders, shrink the radius by this amount. This can help resolve colliders pushing out cloth too much during simulation."), labelStyle);
+            GUILayout.Label("Physics Collider Shrink");
+            GUILayout.Space(ROW_SPACE);
+            GUILayout.BeginHorizontal();
+            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = GUILayout.HorizontalSlider(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS, -2, 2f);
+            GUILayout.Label(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS.ToString("0.00"), 
+                            GUILayout.Width(40f));
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUILayout.Space(ROW_SPACE);
 
+            GUILayout.Space(10f);
+            GUILayout.BeginVertical(new GUIContent("", "When assigning weight maps, the system analyses the weights of the mesh to determine which colliders affect the cloth simulation.Only cloth weights above this threshold will be considered for collider detection. Note: This is the default value supplied to the WeightMapper component, it can be further modified there."), labelStyle);
+            GUILayout.Label("Physics Collider Detection Threshold");
+            GUILayout.Space(ROW_SPACE);            
+            GUILayout.BeginHorizontal();
+            Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = GUILayout.HorizontalSlider(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD, 0f, 1f);
+            GUILayout.Label(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD.ToString("0.00"), 
+                            GUILayout.Width(40f));
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUILayout.Space(ROW_SPACE);
 
-
+            GUILayout.Space(10f);
             string label = "Log Everything";
             if (Util.LOG_LEVEL == 0) label = "Log Errors Only";
             if (Util.LOG_LEVEL == 1) label = "Log Warnings and Errors";
@@ -1036,6 +1051,19 @@ namespace Reallusion.Import
                 menu.AddItem(new GUIContent("Log Everything"), Util.LOG_LEVEL == 2, LogOptionSelected, 2);
                 menu.ShowAsContext();
             }
+            GUILayout.Space(ROW_SPACE);
+
+            GUILayout.Space(10f);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(new GUIContent("Reset Options", "Reset options to defaults."),
+                GUILayout.Height(BUTTON_HEIGHT), GUILayout.Width(160f)))
+            {
+                ResetOptions();
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
             GUILayout.Space(ROW_SPACE);
 
             GUILayout.EndVertical();
@@ -1317,6 +1345,18 @@ namespace Reallusion.Import
                     }
                 }
             }
+        }
+
+        public static void ResetOptions()
+        {
+            Importer.MIPMAP_BIAS = 0f;
+            Importer.RECONSTRUCT_FLOW_NORMALS = false;
+            Importer.REBAKE_BLENDER_UNITY_MAPS = false;
+            Importer.ANIMPLAYER_ON_BY_DEFAULT = false;
+            Importer.USE_AMPLIFY_SHADER = true;
+            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = 0.5f;
+            Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = 0.25f;
+            Util.LOG_LEVEL = 0;
         }
     }
 }

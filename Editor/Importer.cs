@@ -50,8 +50,7 @@ namespace Reallusion.Import
         public const string MATERIALS_FOLDER = "Materials";
         public const string PREFABS_FOLDER = "Prefabs";
         public const string BAKE_SUFFIX = "_Baked";
-
-        public const float MIPMAP_BIAS = 0f;
+        
         public const float MIPMAP_BIAS_HAIR_ID_MAP = -1f;
         public const float MIPMAP_ALPHA_CLIP_HAIR = 0.6f;
         public const float MIPMAP_ALPHA_CLIP_HAIR_BAKED = 0.8f;
@@ -66,6 +65,21 @@ namespace Reallusion.Import
         public const int FLAG_WRAP_CLAMP = 1024;
 
         public const float MAX_SMOOTHNESS = 0.897f;
+
+        public static float MIPMAP_BIAS
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Mipmap_Bias"))
+                    return EditorPrefs.GetFloat("RL_Importer_Mipmap_Bias");
+                return 0f;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Importer_Mipmap_Bias", value);
+            }
+        }
 
         public static bool USE_AMPLIFY_SHADER
         {

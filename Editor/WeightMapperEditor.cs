@@ -58,7 +58,7 @@ namespace Reallusion.Import
 
 			GUILayout.Space(10f);
 
-			EditorGUILayout.HelpBox("Recalculate all the cloth constraints from the weight maps and cloth settings. Can be done in play mode.", MessageType.Info, true);			
+			EditorGUILayout.HelpBox("Recalculate all the cloth constraints from the weight maps and cloth settings. Can be done in play mode.", MessageType.Info, true);	
 
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();

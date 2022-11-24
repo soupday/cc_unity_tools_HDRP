@@ -48,7 +48,9 @@ namespace Reallusion.Import
         {
             EditorApplication.playModeStateChanged += WindowManager.OnPlayModeStateChanged;
             EditorApplication.update += WindowManager.MonitorScene;
-            showPlayer = Importer.ANIMPLAYER_ON_BY_DEFAULT;
+
+            // Animation mode is a bit unpredictable, so leave it off by default for now
+            showPlayer = false; // Importer.ANIMPLAYER_ON_BY_DEFAULT;
             currentScene = EditorSceneManager.GetActiveScene();
 
             previewScene = PreviewScene.FetchPreviewScene(currentScene);
