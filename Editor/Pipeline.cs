@@ -687,73 +687,30 @@ namespace Reallusion.Import
             string customTemplateName;
             Material customTemplate = null;
             Material foundTemplate = null;
-            bool foundHDRPorURP12 = false;
-            
-            if (isHDRP12 || isURP12)
+            bool foundAmplify = false;
+            bool foundTessellation = false;            
+
+            if (useAmplify)
             {
-                customTemplateName = templateName + "12";
+                customTemplateName = templateName + "_Amplify";
                 foundTemplate = Util.FindMaterial(customTemplateName);
                 if (foundTemplate)
                 {
                     templateName = customTemplateName;
                     customTemplate = foundTemplate;
-                    foundHDRPorURP12 = true;
-                }
-            }
-
-            if (useAmplify)
-            {
-                // There are cases where there is an URP12_Amplify shader but no corresponding URP12 base shader
-                if (isURP12 && !foundHDRPorURP12)
-                {
-                    customTemplateName = templateName + "12_Amplify";
-                    foundTemplate = Util.FindMaterial(customTemplateName);
-                    if (foundTemplate)
-                    {
-                        templateName = customTemplateName;
-                        customTemplate = foundTemplate;
-                        foundHDRPorURP12 = true;
-                    }
-                }
-
-                if (!foundTemplate)
-                {
-                    customTemplateName = templateName + "_Amplify";
-                    foundTemplate = Util.FindMaterial(customTemplateName);
-                    if (foundTemplate)
-                    {
-                        templateName = customTemplateName;
-                        customTemplate = foundTemplate;
-                    }
+                    foundAmplify = true;
                 }
             }
 
             if (useTessellation)
-            {
-                foundTemplate = null;
-
-                // There are cases where there is an HDRP12_T shader but no corresponding HDRP12 base shader
-                if (isHDRP12 && !foundHDRPorURP12)
+            {                
+                customTemplateName = templateName + "_T";
+                foundTemplate = Util.FindMaterial(customTemplateName);
+                if (foundTemplate)
                 {
-                    customTemplateName = templateName + "12_T";
-                    foundTemplate = Util.FindMaterial(customTemplateName);
-                    if (foundTemplate)
-                    {
-                        templateName = customTemplateName;
-                        customTemplate = foundTemplate;
-                        foundHDRPorURP12 = true;
-                    }
-                }
-
-                if (!foundTemplate)
-                {
-                    customTemplateName = templateName + "_T";
-                    foundTemplate = Util.FindMaterial(customTemplateName);
-                    if (foundTemplate)
-                    {
-                        templateName = customTemplateName;
-                        customTemplate = foundTemplate;
-                    }
+                    templateName = customTemplateName;
+                    customTemplate = foundTemplate;
+                    foundTessellation = true;
                 }
             }
 

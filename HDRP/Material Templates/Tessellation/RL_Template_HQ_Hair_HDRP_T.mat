@@ -2,37 +2,25 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 8
+  serializedVersion: 6
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RL_Template_HQ_Hair_2nd_Pass_HDRP12_T
-  m_Shader: {fileID: -6465566751694194690, guid: 59adc6954f9abbf4b8c16a770e746925,
-    type: 3}
-  m_ValidKeywords:
-  - _ALPHATEST_ON
-  - _ALPHATOMASK_ON
-  - _DISABLE_SSR_TRANSPARENT
-  - _DOUBLESIDED_ON
-  - _ENABLE_FOG_ON_TRANSPARENT
-  - _SURFACE_TYPE_TRANSPARENT
-  - _TESSELLATION_PHONG
-  - _TRANSPARENT_WRITES_MOTION_VEC
-  m_InvalidKeywords:
-  - _ENUMCLIPQUALITY_ON_STANDARD
+  m_Name: RL_Template_HQ_Hair_HDRP_T
+  m_Shader: {fileID: -6465566751694194690, guid: c0256c0c7451fb149a1321b58446f275, type: 3}
+  m_ShaderKeywords: _ALPHATEST_ON _ALPHATOMASK_ON _DISABLE_SSR_TRANSPARENT _DOUBLESIDED_ON
+    _ENABLE_FOG_ON_TRANSPARENT _SURFACE_TYPE_TRANSPARENT _TRANSPARENT_WRITES_MOTION_VEC
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 3001
+  m_CustomRenderQueue: 3000
   stringTagMap:
     MotionVector: User
     RenderType: Transparent
   disabledShaderPasses:
   - RayTracingPrepass
   - MOTIONVECTORS
-  - TransparentDepthPrepass
-  - TransparentDepthPostpass
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -84,17 +72,15 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    m_Ints: []
     m_Floats:
     - BOOLEAN_ENABLECOLOR: 0
-    - BOOLEAN_SECONDPASS: 0
     - _AOOccludeAll: 0
     - _AOStrength: 1
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.01
+    - _AlphaClip: 0.05
     - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 10
-    - _AlphaPower: 1
+    - _AlphaPower: 0.7
     - _AlphaRemap: 1
     - _AlphaSrcBlend: 1
     - _AlphaToMask: 1
@@ -102,16 +88,17 @@ Material:
     - _BaseColorStrength: 1
     - _BlendMode: 0
     - _BlendStrength: 1
-    - _ConservativeDepthOffsetEnable: 0
     - _CullMode: 0
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
+    - _DepthPostpass: 0.15
+    - _DepthPrepass: 0.666
     - _DiffuseStrength: 1
     - _DoubleSidedEnable: 1
-    - _DoubleSidedGIMode: 0
     - _DoubleSidedNormalMode: 2
     - _DstBlend: 10
-    - _EnableBlendModePreserveSpecularLighting: 1
+    - _ENUMCLIPQUALITY_ON: 0
+    - _EnableBlendModePreserveSpecularLighting: 0
     - _EnableFogOnTransparent: 1
     - _EndColorStrength: 1
     - _FlowMapFlipGreen: 0
@@ -122,8 +109,9 @@ Material:
     - _HighlightBOverlapEnd: 1
     - _HighlightBOverlapInvert: 1
     - _HighlightBStrength: 0
+    - _HighlightBlend: 1
     - _InvertRootMap: 0
-    - _NormalStrength: 0.013
+    - _NormalStrength: 1
     - _OpaqueCullMode: 2
     - _ReceivesSSR: 1
     - _ReceivesSSRTransparent: 0
@@ -134,7 +122,7 @@ Material:
     - _SecondarySmoothness: 0.625
     - _SecondarySpecularMultiplier: 0.05
     - _SecondarySpecularShift: 0
-    - _ShadowClip: 0.5
+    - _ShadowClip: 0.35
     - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
     - _SmoothnessPower: 1
@@ -154,26 +142,19 @@ Material:
     - _StencilWriteMaskMV: 40
     - _SupportDecals: 1
     - _SurfaceType: 1
-    - _TessellationBackFaceCullEpsilon: -0.25
     - _TessellationFactor: 8
-    - _TessellationFactorMaxDistance: 50
-    - _TessellationFactorMinDistance: 20
-    - _TessellationFactorTriangleSize: 100
-    - _TessellationMaxDisplacement: 0.01
-    - _TessellationMode: 1
-    - _TessellationShapeFactor: 0.75
     - _TransparentBackfaceEnable: 1
     - _TransparentCullMode: 2
-    - _TransparentDepthPostpassEnable: 0
-    - _TransparentDepthPrepassEnable: 0
-    - _TransparentSortPriority: 1
+    - _TransparentDepthPostpassEnable: 1
+    - _TransparentDepthPrepassEnable: 1
+    - _TransparentSortPriority: 0
     - _TransparentWritingMotionVec: 1
     - _TransparentZWrite: 0
     - _UseShadowThreshold: 1
     - _VertexColorStrength: 0.5
-    - _ZTestDepthEqualForOpaque: 2
+    - _ZTestDepthEqualForOpaque: 4
     - _ZTestGBuffer: 3
-    - _ZTestTransparent: 2
+    - _ZTestTransparent: 4
     - _ZWrite: 0
     m_Colors:
     - _DiffuseColor: {r: 1, g: 1, b: 1, a: 0}
@@ -202,6 +183,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 12
-  hdPluginSubTargetMaterialVersions:
-    m_Keys: []
-    m_Values: 
