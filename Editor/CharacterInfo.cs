@@ -51,7 +51,8 @@ namespace Reallusion.Import
         public RigOverride UnknownRigType { get; set; }
         private bool bakeCustomShaders = true;
         private bool bakeSeparatePrefab = true;
-        private bool useTessellation = false;        
+        private bool useTessellation = false;
+        private GameObject prefabAsset;
 
         public ProcessingType BuildType { get { return logType; } set { logType = value; } }
         public MaterialQuality BuildQuality
@@ -184,7 +185,8 @@ namespace Reallusion.Import
         {
             get
             {
-                return Util.FindCharacterPrefabAsset(Fbx);
+                if (!prefabAsset) prefabAsset = Util.FindCharacterPrefabAsset(Fbx);
+                return prefabAsset;
             }
         }
 
@@ -291,6 +293,22 @@ namespace Reallusion.Import
 
                 return generation;
             } 
+        }
+
+        public bool HasColorEnabledHair()
+        {
+            Renderer[] renderers = PrefabAsset.GetComponentsInChildren<Renderer>();
+            foreach (Renderer r in renderers)
+            {
+                foreach (Material m in r.sharedMaterials)
+                {
+                    if (m.HasProperty("BOOLEAN_ENABLECOLOR"))
+                    {
+                        if (m.GetFloat("BOOLEAN_ENABLECOLOR") > 0f) return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public void CheckGeneration()
