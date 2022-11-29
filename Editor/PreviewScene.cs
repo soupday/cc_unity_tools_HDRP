@@ -97,7 +97,43 @@ namespace Reallusion.Import
 
                 active++;
                 if (active >= lightingContainers.Count) active = 0;
+
                 lightingContainers[active].SetActive(true);
+
+                EditorPrefs.SetString("RL_Lighting_Preset", lightingContainers[active].name);
+            }
+        }
+
+        public static void RestoreLighting()
+        {
+            if (EditorPrefs.HasKey("RL_Lighting_Preset"))
+            {
+                string presetName = EditorPrefs.GetString("RL_Lighting_Preset");
+
+                PreviewScene ps = WindowManager.GetPreviewScene();
+
+                List<GameObject> lightingContainers = new List<GameObject>();
+                Util.FindSceneObjects(ps.lighting, "LightingConfig", lightingContainers);
+
+                bool found = false;
+                for (int i = 0; i < lightingContainers.Count; i++)
+                {
+                    if (lightingContainers[i].name == presetName)
+                    {
+                        lightingContainers[i].SetActive(true);
+                        found = true;
+                    }
+                    else
+                    {
+                        lightingContainers[i].SetActive(false);
+                    }
+                }
+
+                if (!found)
+                {
+                    lightingContainers[0].SetActive(true);
+                    EditorPrefs.SetString("RL_Lighting_Preset", lightingContainers[0].name);
+                }
             }
         }
 
@@ -235,6 +271,8 @@ namespace Reallusion.Import
             ppv.isGlobal = true;
             ppv.profile = volume;
 #endif
+
+            RestoreLighting();
         }
     }
 }
