@@ -275,6 +275,7 @@ namespace Reallusion.Import
             string meshFolder = Path.Combine(folder, PRUNED_FOLDER_NAME);
 
             Mesh dstMesh = new Mesh();
+            dstMesh.indexFormat = srcMesh.indexFormat;            
             dstMesh.vertices = srcMesh.vertices;
             dstMesh.uv = srcMesh.uv;
             dstMesh.uv2 = srcMesh.uv2;
@@ -344,6 +345,7 @@ namespace Reallusion.Import
         public static Mesh CopyMesh(Mesh srcMesh)
         {
             Mesh dstMesh = new Mesh();
+            dstMesh.indexFormat = srcMesh.indexFormat;
             dstMesh.vertices = srcMesh.vertices;
             dstMesh.uv = srcMesh.uv;
             dstMesh.uv2 = srcMesh.uv2;
@@ -412,6 +414,7 @@ namespace Reallusion.Import
             }
                         
             Mesh dstMesh = new Mesh();
+            dstMesh.indexFormat = srcMesh.indexFormat;
             dstMesh.vertices = srcMesh.vertices;
             dstMesh.uv = srcMesh.uv;
             dstMesh.uv2 = srcMesh.uv2;
@@ -720,6 +723,7 @@ namespace Reallusion.Import
 
             // now create the extracted mesh
             Mesh newMesh = new Mesh();
+            newMesh.indexFormat = srcMesh.indexFormat;
             Vector3[] vertices = new Vector3[numNewVerts];
             Vector2[] uv = new Vector2[srcUv.Length > 0 ? numNewVerts : 0];
             Vector2[] uv2 = new Vector2[srcUv2.Length > 0 ? numNewVerts : 0];
@@ -884,6 +888,7 @@ namespace Reallusion.Import
 
             // now create the extracted mesh
             Mesh newMesh = new Mesh();
+            newMesh.indexFormat = srcMesh.indexFormat;
             Vector3[] vertices = new Vector3[numNewVerts];
             Vector2[] uv = new Vector2[srcUv.Length > 0 ? numNewVerts : 0];
             Vector2[] uv2 = new Vector2[srcUv2.Length > 0 ? numNewVerts : 0];

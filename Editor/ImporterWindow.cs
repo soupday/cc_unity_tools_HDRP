@@ -83,8 +83,7 @@ namespace Reallusion.Import
         private bool dragging = false;
         private bool repaintDelegated = false;
 
-        private Styles importerStyles;
-        private static Texture2D dragTex, contextTex, nonContextTex; 
+        private Styles importerStyles;        
         //GUIStyle dragBarStyle;
         //GUIStyle nameTextStyle;
         //GUIStyle fakeButton;
@@ -228,143 +227,21 @@ namespace Reallusion.Import
             iconBuildMaterials = Util.FindTexture(folders, "RLIcon_ActionBuildMaterials");
             Current = this;
 
-            //dragTex = TextureColor(Color.white * 0.098f);
-            //contextTex = TextureColor(new Color(0.259f, 0.345f, 0.259f));
-            //nonContextTex = TextureColor(Color.grey * 0.5f);
-
             RefreshCharacterList();
-            /*
-            logStyle = new GUIStyle();
-            logStyle.wordWrap = true;
-            logStyle.fontStyle = FontStyle.Italic;
-            logStyle.normal.textColor = Color.grey;
-
-            mainStyle = new GUIStyle();
-            mainStyle.wordWrap = false;
-            mainStyle.fontStyle = FontStyle.Normal;
-            mainStyle.normal.textColor = Color.white;
-
-            iconStyle = new GUIStyle();
-            iconStyle.wordWrap = false;
-            iconStyle.fontStyle = FontStyle.Normal;
-            iconStyle.normal.textColor = Color.white;
-            iconStyle.alignment = TextAnchor.MiddleCenter;
-
-            boldStyle = new GUIStyle();
-            boldStyle.alignment = TextAnchor.UpperLeft;
-            boldStyle.wordWrap = false;
-            boldStyle.fontStyle = FontStyle.Bold;
-            boldStyle.normal.textColor = Color.white;
-
-            labelStyle = new GUIStyle();
-            labelStyle.alignment = TextAnchor.UpperLeft;
-            labelStyle.wordWrap = false;
-            labelStyle.fontStyle = FontStyle.Normal;
-            labelStyle.normal.textColor = Color.white;
-
-            buttonStyle = new GUIStyle();
-            buttonStyle.wordWrap = false;
-            buttonStyle.fontStyle = FontStyle.Normal;
-            buttonStyle.normal.textColor = Color.white;
-            buttonStyle.alignment = TextAnchor.MiddleCenter;
             
-            dragBarStyle = new GUIStyle(GUI.skin.box);
-            dragBarStyle.normal.background = TextureColor(Color.white * 0.098f);
-            dragBarStyle.stretchHeight = true;
-            dragBarStyle.stretchWidth = true;
-
-            nameTextStyle = new GUIStyle(iconStyle);
-            nameTextStyle.alignment = TextAnchor.MiddleCenter;
-
-            fakeButton = new GUIStyle("Box");
-            fakeButton.normal.background = TextureColor(Color.grey * 0.5f);
-            fakeButton.padding = new RectOffset(1, 1, 1, 1);
-            fakeButton.stretchHeight = true;
-            fakeButton.stretchWidth = true;
-
-            fakeButtonContext = new GUIStyle(fakeButton);
-            fakeButtonContext.normal.background = TextureColor(new Color(0.259f, 0.345f, 0.259f));
-            */
             if (titleContent.text != windowTitle) titleContent.text = windowTitle;
-        }
+        }        
 
-        public class Styles
-        {            
-            public GUIStyle logStyle;
-            public GUIStyle mainStyle;
-            public GUIStyle buttonStyle;
-            public GUIStyle labelStyle;
-            public GUIStyle boldStyle;
-            public GUIStyle iconStyle;
-            public GUIStyle dragBarStyle;
-            public GUIStyle nameTextStyle;
-            public GUIStyle fakeButton;
-            public GUIStyle fakeButtonContext;
+        private void PreviewCharacter()
+        {
+            StoreBackScene();
 
-            public Styles()
-            {
-                logStyle = new GUIStyle();
-                logStyle.wordWrap = true;
-                logStyle.fontStyle = FontStyle.Italic;
-                logStyle.normal.textColor = Color.grey;
+            WindowManager.OpenPreviewScene(contextCharacter.Fbx);
 
-                mainStyle = new GUIStyle();
-                mainStyle.wordWrap = false;
-                mainStyle.fontStyle = FontStyle.Normal;
-                mainStyle.normal.textColor = Color.white;
+            if (WindowManager.showPlayer)
+                WindowManager.ShowAnimationPlayer();
 
-                iconStyle = new GUIStyle();
-                iconStyle.wordWrap = false;
-                iconStyle.fontStyle = FontStyle.Normal;
-                iconStyle.normal.textColor = Color.white;
-                iconStyle.alignment = TextAnchor.MiddleCenter;
-
-                boldStyle = new GUIStyle();
-                boldStyle.alignment = TextAnchor.UpperLeft;
-                boldStyle.wordWrap = false;
-                boldStyle.fontStyle = FontStyle.Bold;
-                boldStyle.normal.textColor = Color.white;
-
-                labelStyle = new GUIStyle();
-                labelStyle.alignment = TextAnchor.UpperLeft;
-                labelStyle.wordWrap = false;
-                labelStyle.fontStyle = FontStyle.Normal;
-                labelStyle.normal.textColor = Color.white;
-
-                buttonStyle = new GUIStyle();
-                buttonStyle.wordWrap = false;
-                buttonStyle.fontStyle = FontStyle.Normal;
-                buttonStyle.normal.textColor = Color.white;
-                buttonStyle.alignment = TextAnchor.MiddleCenter;
-
-                //color textures for the area styling
-                dragTex = TextureColor(Color.white * 0.098f);
-                contextTex = TextureColor(new Color(0.259f, 0.345f, 0.259f));
-                nonContextTex = TextureColor(Color.grey * 0.5f);
-
-                dragBarStyle = new GUIStyle(GUI.skin.box);
-                dragBarStyle.normal.background = dragTex;
-                dragBarStyle.stretchHeight = true;
-                dragBarStyle.stretchWidth = true;
-
-                nameTextStyle = new GUIStyle();
-                nameTextStyle.alignment = TextAnchor.MiddleLeft;
-                nameTextStyle.wordWrap = false;
-                nameTextStyle.fontStyle = FontStyle.Normal;
-                nameTextStyle.normal.textColor = Color.white;
-
-                fakeButton = new GUIStyle(GUI.skin.box);
-                fakeButton.normal.background = nonContextTex;
-                fakeButton.padding = new RectOffset(1, 1, 1, 1);
-                fakeButton.stretchHeight = true;
-                fakeButton.stretchWidth = true;
-
-                fakeButtonContext = new GUIStyle(GUI.skin.box);
-                fakeButtonContext.normal.background = contextTex;
-                fakeButtonContext.padding = new RectOffset(1, 1, 1, 1);
-                fakeButtonContext.stretchHeight = true;
-                fakeButtonContext.stretchWidth = true;
-            }
+            ResetAllSceneViewCamera();
         }
 
         private void RefreshCharacterList()
@@ -474,6 +351,7 @@ namespace Reallusion.Import
         private void OnGUI()
         {
             if (importerStyles == null) importerStyles = new Styles();
+
             RestoreData();
             RestoreSelection();
             
@@ -534,39 +412,32 @@ namespace Reallusion.Import
 
             // functions to run after the GUI has finished...             
             if (previewCharacterAfterGUI)
-            {                
-                StoreBackScene();
-
-                WindowManager.OpenPreviewScene(contextCharacter.Fbx);
-
-                if (WindowManager.showPlayer) 
-                    WindowManager.ShowAnimationPlayer();
-
-                ResetAllSceneViewCamera();
+            {
+                EditorApplication.delayCall += PreviewCharacter;
             }
             else if (refreshAfterGUI)
-            {                
-                RefreshCharacterList();
+            {
+                EditorApplication.delayCall += RefreshCharacterList;
             }
             else if (buildAfterGUI)
             {
-                BuildCharacter();
+                EditorApplication.delayCall += BuildCharacter;
             }
             else if (bakeAfterGUI)
             {
-                BakeCharacter();
+                EditorApplication.delayCall += BakeCharacter;
             }
             else if (bakeHairAfterGUI)
             {
-                BakeCharacterHair();
+                EditorApplication.delayCall += BakeCharacterHair;
             }
             else if (restoreHairAfterGUI)
             {
-                RestoreCharacterHair();
+                EditorApplication.delayCall += RestoreCharacterHair;
             }
             else if (physicsAfterGUI)
             {
-                RebuildCharacterPhysics();
+                EditorApplication.delayCall += RebuildCharacterPhysics;
             }
         }
 
@@ -1595,6 +1466,8 @@ namespace Reallusion.Import
         // detail view icon area layout
         private void OnGUIDetailIconArea(Rect iconBlock)
         {
+            importerStyles.FixMeh();
+
             GUILayout.Space(TOP_PADDING);
 
             float rowHeight = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
@@ -1619,24 +1492,12 @@ namespace Reallusion.Import
                     if (info.BuiltBasicMaterials) iconTexture = iconBasic;
                     else if (info.BuiltHQMaterials) iconTexture = iconHQ;
                 }
-
-                Color background = GUI.backgroundColor;
-                Color tint = background;
-                if (contextCharacter == info)
-                    tint = Color.green;
-
+                
                 float heightDelta = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
                 boxRect.y = idx * heightDelta;
 
                 GUILayout.BeginArea(boxRect);
-
-                // this is more robust than using styles from the importerStyles object
-                GUIStyle fakeButton = new GUIStyle("Box");
-                fakeButton.normal.background = TextureColor(contextCharacter == info ? new Color(0.259f, 0.345f, 0.259f) : Color.grey * 0.5f);
-                //fakeButton.padding = new RectOffset(1, 1, 1, 1);
-                fakeButton.stretchHeight = true;
-                fakeButton.stretchWidth = true;                
-                //GUILayout.BeginVertical(fakeButton);
+                                
                 GUILayout.BeginVertical(contextCharacter == info ? importerStyles.fakeButtonContext : importerStyles.fakeButton);
                 GUILayout.FlexibleSpace();
 
@@ -1674,8 +1535,7 @@ namespace Reallusion.Import
                     {
                         previewCharacterAfterGUI = true;
                     }
-                }
-                GUI.backgroundColor = background;
+                }                
             }
             GUI.EndScrollView();
         }
@@ -1771,10 +1631,111 @@ namespace Reallusion.Import
 
         public static Texture2D TextureColor(Color color)
         {
-            Texture2D texture = new Texture2D(1, 1);
-            texture.SetPixel(0, 0, color);
-            texture.Apply();
+            const int size = 32;
+            Texture2D texture = new Texture2D(size, size);
+            Color[] pixels = texture.GetPixels();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = color;
+            }
+            texture.SetPixels(pixels);
+            texture.Apply(true);
             return texture;
+        }
+
+
+
+        public class Styles
+        {
+            public GUIStyle logStyle;
+            public GUIStyle mainStyle;
+            public GUIStyle buttonStyle;
+            public GUIStyle labelStyle;
+            public GUIStyle boldStyle;
+            public GUIStyle iconStyle;
+            public GUIStyle dragBarStyle;
+            public GUIStyle nameTextStyle;
+            public GUIStyle fakeButton;
+            public GUIStyle fakeButtonContext;
+            public Texture2D dragTex, contextTex;
+
+            public Styles()
+            {
+                logStyle = new GUIStyle();
+                logStyle.wordWrap = true;
+                logStyle.fontStyle = FontStyle.Italic;
+                logStyle.normal.textColor = Color.grey;
+
+                mainStyle = new GUIStyle();
+                mainStyle.wordWrap = false;
+                mainStyle.fontStyle = FontStyle.Normal;
+                mainStyle.normal.textColor = Color.white;
+
+                iconStyle = new GUIStyle();
+                iconStyle.wordWrap = false;
+                iconStyle.fontStyle = FontStyle.Normal;
+                iconStyle.normal.textColor = Color.white;
+                iconStyle.alignment = TextAnchor.MiddleCenter;
+
+                boldStyle = new GUIStyle();
+                boldStyle.alignment = TextAnchor.UpperLeft;
+                boldStyle.wordWrap = false;
+                boldStyle.fontStyle = FontStyle.Bold;
+                boldStyle.normal.textColor = Color.white;
+
+                labelStyle = new GUIStyle();
+                labelStyle.alignment = TextAnchor.UpperLeft;
+                labelStyle.wordWrap = false;
+                labelStyle.fontStyle = FontStyle.Normal;
+                labelStyle.normal.textColor = Color.white;
+
+                buttonStyle = new GUIStyle();
+                buttonStyle.wordWrap = false;
+                buttonStyle.fontStyle = FontStyle.Normal;
+                buttonStyle.normal.textColor = Color.white;
+                buttonStyle.alignment = TextAnchor.MiddleCenter;
+
+                //color textures for the area styling
+                               
+
+                dragBarStyle = new GUIStyle();
+                dragBarStyle.normal.background = dragTex;
+                dragBarStyle.stretchHeight = true;
+                dragBarStyle.stretchWidth = true;
+
+                nameTextStyle = new GUIStyle();
+                nameTextStyle.alignment = TextAnchor.MiddleLeft;
+                nameTextStyle.wordWrap = false;
+                nameTextStyle.fontStyle = FontStyle.Normal;
+                nameTextStyle.normal.textColor = Color.white;
+
+                fakeButton = new GUIStyle();
+                //fakeButton.normal.background = nonContextTex;
+                fakeButton.padding = new RectOffset(1, 1, 1, 1);
+                fakeButton.stretchHeight = true;
+                fakeButton.stretchWidth = true;
+
+                fakeButtonContext = new GUIStyle();
+                fakeButtonContext.name = "fakeButtonContext";
+                fakeButtonContext.normal.background = contextTex;
+                fakeButtonContext.padding = new RectOffset(1, 1, 1, 1);
+                fakeButtonContext.stretchHeight = true;
+                fakeButtonContext.stretchWidth = true;
+            }
+
+            public void FixMeh()
+            {
+                if (!dragTex)
+                {                    
+                    dragTex = TextureColor(Color.white * 0.1f);
+                    dragBarStyle.normal.background = dragTex;                    
+                }
+                if (!contextTex)
+                {                    
+                    contextTex = TextureColor(new Color(0.259f, 0.345f, 0.259f));
+                    fakeButtonContext.normal.background = contextTex;
+                }
+            }
         }
     }
 }
