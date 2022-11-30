@@ -28,6 +28,7 @@ using Object = UnityEngine.Object;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
+using System.Runtime.Remoting.Messaging;
 
 namespace Reallusion.Import
 {
@@ -82,7 +83,14 @@ namespace Reallusion.Import
         private bool dragging = false;
         private bool repaintDelegated = false;
 
-        private GUIStyle logStyle, mainStyle, buttonStyle, labelStyle, boldStyle, iconStyle;
+        private Styles importerStyles;
+        private static Texture2D dragTex, contextTex, nonContextTex; 
+        //GUIStyle dragBarStyle;
+        //GUIStyle nameTextStyle;
+        //GUIStyle fakeButton;
+        //GUIStyle fakeButtonContext;
+
+        //private GUIStyle logStyle, mainStyle, buttonStyle, labelStyle, boldStyle, iconStyle;
         private Texture2D iconUnprocessed;
         private Texture2D iconBasic;
         private Texture2D iconHQ;
@@ -220,8 +228,12 @@ namespace Reallusion.Import
             iconBuildMaterials = Util.FindTexture(folders, "RLIcon_ActionBuildMaterials");
             Current = this;
 
-            RefreshCharacterList();
+            //dragTex = TextureColor(Color.white * 0.098f);
+            //contextTex = TextureColor(new Color(0.259f, 0.345f, 0.259f));
+            //nonContextTex = TextureColor(Color.grey * 0.5f);
 
+            RefreshCharacterList();
+            /*
             logStyle = new GUIStyle();
             logStyle.wordWrap = true;
             logStyle.fontStyle = FontStyle.Italic;
@@ -255,8 +267,104 @@ namespace Reallusion.Import
             buttonStyle.fontStyle = FontStyle.Normal;
             buttonStyle.normal.textColor = Color.white;
             buttonStyle.alignment = TextAnchor.MiddleCenter;
+            
+            dragBarStyle = new GUIStyle(GUI.skin.box);
+            dragBarStyle.normal.background = TextureColor(Color.white * 0.098f);
+            dragBarStyle.stretchHeight = true;
+            dragBarStyle.stretchWidth = true;
 
+            nameTextStyle = new GUIStyle(iconStyle);
+            nameTextStyle.alignment = TextAnchor.MiddleCenter;
+
+            fakeButton = new GUIStyle("Box");
+            fakeButton.normal.background = TextureColor(Color.grey * 0.5f);
+            fakeButton.padding = new RectOffset(1, 1, 1, 1);
+            fakeButton.stretchHeight = true;
+            fakeButton.stretchWidth = true;
+
+            fakeButtonContext = new GUIStyle(fakeButton);
+            fakeButtonContext.normal.background = TextureColor(new Color(0.259f, 0.345f, 0.259f));
+            */
             if (titleContent.text != windowTitle) titleContent.text = windowTitle;
+        }
+
+        public class Styles
+        {            
+            public GUIStyle logStyle;
+            public GUIStyle mainStyle;
+            public GUIStyle buttonStyle;
+            public GUIStyle labelStyle;
+            public GUIStyle boldStyle;
+            public GUIStyle iconStyle;
+            public GUIStyle dragBarStyle;
+            public GUIStyle nameTextStyle;
+            public GUIStyle fakeButton;
+            public GUIStyle fakeButtonContext;
+
+            public Styles()
+            {
+                logStyle = new GUIStyle();
+                logStyle.wordWrap = true;
+                logStyle.fontStyle = FontStyle.Italic;
+                logStyle.normal.textColor = Color.grey;
+
+                mainStyle = new GUIStyle();
+                mainStyle.wordWrap = false;
+                mainStyle.fontStyle = FontStyle.Normal;
+                mainStyle.normal.textColor = Color.white;
+
+                iconStyle = new GUIStyle();
+                iconStyle.wordWrap = false;
+                iconStyle.fontStyle = FontStyle.Normal;
+                iconStyle.normal.textColor = Color.white;
+                iconStyle.alignment = TextAnchor.MiddleCenter;
+
+                boldStyle = new GUIStyle();
+                boldStyle.alignment = TextAnchor.UpperLeft;
+                boldStyle.wordWrap = false;
+                boldStyle.fontStyle = FontStyle.Bold;
+                boldStyle.normal.textColor = Color.white;
+
+                labelStyle = new GUIStyle();
+                labelStyle.alignment = TextAnchor.UpperLeft;
+                labelStyle.wordWrap = false;
+                labelStyle.fontStyle = FontStyle.Normal;
+                labelStyle.normal.textColor = Color.white;
+
+                buttonStyle = new GUIStyle();
+                buttonStyle.wordWrap = false;
+                buttonStyle.fontStyle = FontStyle.Normal;
+                buttonStyle.normal.textColor = Color.white;
+                buttonStyle.alignment = TextAnchor.MiddleCenter;
+
+                //color textures for the area styling
+                dragTex = TextureColor(Color.white * 0.098f);
+                contextTex = TextureColor(new Color(0.259f, 0.345f, 0.259f));
+                nonContextTex = TextureColor(Color.grey * 0.5f);
+
+                dragBarStyle = new GUIStyle(GUI.skin.box);
+                dragBarStyle.normal.background = dragTex;
+                dragBarStyle.stretchHeight = true;
+                dragBarStyle.stretchWidth = true;
+
+                nameTextStyle = new GUIStyle();
+                nameTextStyle.alignment = TextAnchor.MiddleLeft;
+                nameTextStyle.wordWrap = false;
+                nameTextStyle.fontStyle = FontStyle.Normal;
+                nameTextStyle.normal.textColor = Color.white;
+
+                fakeButton = new GUIStyle(GUI.skin.box);
+                fakeButton.normal.background = nonContextTex;
+                fakeButton.padding = new RectOffset(1, 1, 1, 1);
+                fakeButton.stretchHeight = true;
+                fakeButton.stretchWidth = true;
+
+                fakeButtonContext = new GUIStyle(GUI.skin.box);
+                fakeButtonContext.normal.background = contextTex;
+                fakeButtonContext.padding = new RectOffset(1, 1, 1, 1);
+                fakeButtonContext.stretchHeight = true;
+                fakeButtonContext.stretchWidth = true;
+            }
         }
 
         private void RefreshCharacterList()
@@ -365,6 +473,7 @@ namespace Reallusion.Import
         
         private void OnGUI()
         {
+            if (importerStyles == null) importerStyles = new Styles();
             RestoreData();
             RestoreSelection();
             
@@ -423,10 +532,9 @@ namespace Reallusion.Import
             if (windowMode == ImporterWindowMode.Build)
                 OnGUITreeViewArea(treeviewBlock);
 
-            // functions to run after the GUI has finished...
-
+            // functions to run after the GUI has finished...             
             if (previewCharacterAfterGUI)
-            {
+            {                
                 StoreBackScene();
 
                 WindowManager.OpenPreviewScene(contextCharacter.Fbx);
@@ -434,10 +542,10 @@ namespace Reallusion.Import
                 if (WindowManager.showPlayer) 
                     WindowManager.ShowAnimationPlayer();
 
-                ResetAllSceneViewCamera();                
+                ResetAllSceneViewCamera();
             }
             else if (refreshAfterGUI)
-            {
+            {                
                 RefreshCharacterList();
             }
             else if (buildAfterGUI)
@@ -464,6 +572,7 @@ namespace Reallusion.Import
 
         bool doubleClick = false;
 
+        // original icon area layout for reference
         private void OnGUIIconArea(Rect iconBlock)
         {            
             GUILayout.BeginArea(iconBlock);
@@ -523,7 +632,7 @@ namespace Reallusion.Import
                     GUILayout.BeginHorizontal();                    
                     GUILayout.FlexibleSpace();
                     string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
-                    GUILayout.Box(name, iconStyle, GUILayout.Width(ICON_SIZE));
+                    GUILayout.Box(name, importerStyles.iconStyle, GUILayout.Width(ICON_SIZE));
                     GUILayout.FlexibleSpace();
                     GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
@@ -552,13 +661,13 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label(contextCharacter.name, boldStyle);
+            GUILayout.Label(contextCharacter.name, importerStyles.boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label(contextCharacter.folder, labelStyle);
+            GUILayout.Label(contextCharacter.folder, importerStyles.labelStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -567,13 +676,13 @@ namespace Reallusion.Import
             GUILayout.Label("(" + contextCharacter.Generation.ToString() + "/"
                                 + contextCharacter.FaceProfile.expressionProfile + "/"
                                 + contextCharacter.FaceProfile.visemeProfile
-                            + ")", boldStyle);
+                            + ")", importerStyles.boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label(importType, boldStyle);
+            GUILayout.Label(importType, importerStyles.boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -994,7 +1103,7 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();            
             GUILayout.FlexibleSpace();
-            GUILayout.Label("Settings", boldStyle);
+            GUILayout.Label("Settings", importerStyles.boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(TITLE_SPACE);
@@ -1030,7 +1139,7 @@ namespace Reallusion.Import
             GUILayout.Space(ROW_SPACE);
 
             GUILayout.Space(10f);
-            GUILayout.BeginVertical(new GUIContent("", "Override mip-map bias for all textures setup for the characters."), labelStyle);
+            GUILayout.BeginVertical(new GUIContent("", "Override mip-map bias for all textures setup for the characters."), importerStyles.labelStyle);
             GUILayout.Label("Mip-map Bias");
             GUILayout.Space(ROW_SPACE);
             GUILayout.BeginHorizontal();
@@ -1042,7 +1151,7 @@ namespace Reallusion.Import
             GUILayout.Space(ROW_SPACE);
 
             GUILayout.Space(10f);
-            GUILayout.BeginVertical(new GUIContent("", "When setting up the physics capsule and sphere colliders, shrink the radius by this amount. This can help resolve colliders pushing out cloth too much during simulation."), labelStyle);
+            GUILayout.BeginVertical(new GUIContent("", "When setting up the physics capsule and sphere colliders, shrink the radius by this amount. This can help resolve colliders pushing out cloth too much during simulation."), importerStyles.labelStyle);
             GUILayout.Label("Physics Collider Shrink");
             GUILayout.Space(ROW_SPACE);
             GUILayout.BeginHorizontal();
@@ -1054,7 +1163,7 @@ namespace Reallusion.Import
             GUILayout.Space(ROW_SPACE);
 
             GUILayout.Space(10f);
-            GUILayout.BeginVertical(new GUIContent("", "When assigning weight maps, the system analyses the weights of the mesh to determine which colliders affect the cloth simulation.Only cloth weights above this threshold will be considered for collider detection. Note: This is the default value supplied to the WeightMapper component, it can be further modified there."), labelStyle);
+            GUILayout.BeginVertical(new GUIContent("", "When assigning weight maps, the system analyses the weights of the mesh to determine which colliders affect the cloth simulation.Only cloth weights above this threshold will be considered for collider detection. Note: This is the default value supplied to the WeightMapper component, it can be further modified there."), importerStyles.labelStyle);
             GUILayout.Label("Physics Collider Detection Threshold");
             GUILayout.Space(ROW_SPACE);            
             GUILayout.BeginHorizontal();
@@ -1396,20 +1505,27 @@ namespace Reallusion.Import
             HandleMouseDrag(dragHandle);
 
             GUILayout.BeginArea(dragBar);
-            GUIStyle drag = new GUIStyle(GUI.skin.box);
-            drag.normal.background = TextureColor(Color.white * 0.098f);
-            drag.stretchHeight = true;
-            drag.stretchWidth = true;
-              
-            GUILayout.BeginVertical(drag);
-
+            GUILayout.BeginVertical(importerStyles.dragBarStyle);
             GUILayout.EndVertical();
             GUILayout.EndArea();
         }
 
         private void OnGUIFlexibleIconArea(Rect iconBlock)
+        {            
+            if (iconAreaWidth > ICON_WIDTH_DETAIL)
+            {
+                OnGUIDetailIconArea(iconBlock); // detail view icon area layout
+            }
+            else
+            {
+                OnGUILargeIconArea(iconBlock); // adapted original icon area layaout
+            }            
+        }
+
+        // adapted original icon area layaout
+        private void OnGUILargeIconArea(Rect iconBlock)
         {
-            //GUILayout.BeginArea(iconBlock);
+            GUILayout.BeginArea(iconBlock);
 
             Event e = Event.current;
             if (e.isMouse && e.type == EventType.MouseDown)
@@ -1418,20 +1534,14 @@ namespace Reallusion.Import
                 else doubleClick = false;
             }
 
-            Event mouseEvent = Event.current;
-            Vector2 mousePosition = mouseEvent.mousePosition;            
-            
-            GUILayout.Space(TOP_PADDING);
-            using (var iconScrollViewScope = new EditorGUILayout.ScrollViewScope(iconScrollView, GUILayout.Width(iconBlock.width - 4f), GUILayout.Height(iconBlock.height - 10f)))
+            using (var iconScrollViewScope = new EditorGUILayout.ScrollViewScope(iconScrollView, GUILayout.Width(iconBlock.width - 1f), GUILayout.Height(iconBlock.height - 10f)))
             {
                 iconScrollView = iconScrollViewScope.scrollPosition;
                 GUILayout.BeginVertical();
-                bool showDetail = iconAreaWidth > ICON_WIDTH_DETAIL;
-                Rect boxRect = new Rect(0f, 0f, iconAreaWidth - 4f, ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN);
 
                 for (int idx = 0; idx < validCharacters.Count; idx++)
                 {
-                    CharacterInfo info = validCharacters[idx];
+                    CharacterInfo info = validCharacters[idx];                    
                     Texture2D iconTexture = iconUnprocessed;
                     string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
                     if (info.bakeIsBaked)
@@ -1449,95 +1559,125 @@ namespace Reallusion.Import
                     Color tint = background;
                     if (contextCharacter == info)
                         tint = Color.green;
+                    GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
 
-                    if (!showDetail) GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
+                    GUILayout.BeginHorizontal();
+                    GUILayout.FlexibleSpace();
 
-                    if (showDetail)
+                    GUILayout.BeginVertical();
+                    if (GUILayout.Button(iconTexture,
+                        GUILayout.Width(ICON_SIZE),
+                        GUILayout.Height(ICON_SIZE)))
                     {
-                        float heightDelta = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
-                        boxRect.y = idx * heightDelta;                        
-
-                        GUILayout.BeginArea(boxRect);                        
-                        GUIStyle newButton = new GUIStyle("Box");
-                        newButton.normal.background = TextureColor(contextCharacter == info ? new Color(0.259f, 0.345f, 0.259f) : Color.grey * 0.5f);                        
-                        newButton.padding = new RectOffset(1, 1, 1, 1);                        
-                        newButton.stretchHeight = true;
-                        newButton.stretchWidth = true;
-                        GUILayout.BeginVertical(newButton);
-                        GUILayout.FlexibleSpace();
-
-                        GUILayout.BeginHorizontal(); // horizontal container for image and label
-
-                        GUILayout.BeginVertical(); // vertical container for image
-                        GUILayout.FlexibleSpace();
-
-                        GUILayout.Box(iconTexture, new GUIStyle(),
-                            GUILayout.Width(ICON_SIZE_SMALL),
-                            GUILayout.Height(ICON_SIZE_SMALL));
-                        GUILayout.FlexibleSpace();
-                        GUILayout.EndVertical(); // vertical container for image
-
-                        GUILayout.BeginVertical(); // vertical container for label
-                        GUILayout.FlexibleSpace();
-                        GUIStyle nameStyle = new GUIStyle(iconStyle);
-                        nameStyle.alignment = TextAnchor.MiddleCenter;
-                        GUILayout.Label(name, nameStyle);
-                        GUILayout.FlexibleSpace();
-                        GUILayout.EndVertical(); // vertical container for label
-
-                        GUILayout.FlexibleSpace(); // fill horizontal for overall left-justify
-
-                        GUILayout.EndHorizontal(); // horizontal container for image and label
-
-                        GUILayout.FlexibleSpace();
-                        GUILayout.EndVertical(); //(newButton)
-
-                        GUILayout.EndArea();
-
-                        if (HandleListClick(boxRect))
+                        SetContextCharacter(info.guid);
+                        if (doubleClick)
                         {
-                            RepaintOnUpdate();
-                            SetContextCharacter(info.guid);
-                            if (newDoubleClick)
-                            {
-                                previewCharacterAfterGUI = true;
-                            }
+                            previewCharacterAfterGUI = true;
                         }
-                        GUI.backgroundColor = background;
                     }
-                    else
-                    {
-                        //original layout
-                        GUILayout.BeginHorizontal();
-                        GUILayout.FlexibleSpace();
 
-                        GUILayout.BeginVertical();
-                        if (GUILayout.Button(iconTexture,
-                            GUILayout.Width(ICON_SIZE),
-                            GUILayout.Height(ICON_SIZE)))
-                        {
-                            SetContextCharacter(info.guid);
-                            if (doubleClick)
-                            {
-                                previewCharacterAfterGUI = true;
-                            }
-                        }
+                    GUI.backgroundColor = background;
 
-                        GUI.backgroundColor = background;
+                    GUILayout.FlexibleSpace();
 
-                        GUILayout.FlexibleSpace();
+                    GUILayout.Box(name, importerStyles.iconStyle, GUILayout.Width(ICON_SIZE));
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndVertical();
 
-                        GUILayout.Box(name, iconStyle, GUILayout.Width(ICON_SIZE));
-                        GUILayout.FlexibleSpace();
-                        GUILayout.EndVertical();
-
-                        GUILayout.FlexibleSpace();
-                        GUILayout.EndHorizontal();
-                    }
-                } // for
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndHorizontal();
+                }
                 GUILayout.EndVertical();
             }
-            //GUILayout.EndArea();
+            GUILayout.EndArea();
+        }
+
+        // detail view icon area layout
+        private void OnGUIDetailIconArea(Rect iconBlock)
+        {
+            GUILayout.Space(TOP_PADDING);
+
+            float rowHeight = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
+
+            Rect boxRect = new Rect(0f, 0f, iconAreaWidth - 4f, rowHeight);
+            Rect posRect = new Rect(iconBlock);
+            Rect viewRect = new Rect(0f, 0f, iconAreaWidth - 14f, rowHeight * validCharacters.Count);
+
+            iconScrollView = GUI.BeginScrollView(posRect, iconScrollView, viewRect, false, false);
+            for (int idx = 0; idx < validCharacters.Count; idx++)
+            {
+                CharacterInfo info = validCharacters[idx];
+                Texture2D iconTexture = iconUnprocessed;
+                string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
+                if (info.bakeIsBaked)
+                {
+                    if (info.BuiltBasicMaterials) iconTexture = iconMixed;
+                    else if (info.BuiltHQMaterials) iconTexture = iconBaked;
+                }
+                else
+                {
+                    if (info.BuiltBasicMaterials) iconTexture = iconBasic;
+                    else if (info.BuiltHQMaterials) iconTexture = iconHQ;
+                }
+
+                Color background = GUI.backgroundColor;
+                Color tint = background;
+                if (contextCharacter == info)
+                    tint = Color.green;
+
+                float heightDelta = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
+                boxRect.y = idx * heightDelta;
+
+                GUILayout.BeginArea(boxRect);
+
+                // this is more robust than using styles from the importerStyles object
+                GUIStyle fakeButton = new GUIStyle("Box");
+                fakeButton.normal.background = TextureColor(contextCharacter == info ? new Color(0.259f, 0.345f, 0.259f) : Color.grey * 0.5f);
+                //fakeButton.padding = new RectOffset(1, 1, 1, 1);
+                fakeButton.stretchHeight = true;
+                fakeButton.stretchWidth = true;                
+                //GUILayout.BeginVertical(fakeButton);
+                GUILayout.BeginVertical(contextCharacter == info ? importerStyles.fakeButtonContext : importerStyles.fakeButton);
+                GUILayout.FlexibleSpace();
+
+                GUILayout.BeginHorizontal(); // horizontal container for image and label
+
+                GUILayout.BeginVertical(); // vertical container for image
+                GUILayout.FlexibleSpace();
+
+                GUILayout.Box(iconTexture, new GUIStyle(),
+                    GUILayout.Width(ICON_SIZE_SMALL),
+                    GUILayout.Height(ICON_SIZE_SMALL));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical(); // vertical container for image
+
+                GUILayout.BeginVertical(); // vertical container for label
+                GUILayout.FlexibleSpace();                
+                GUILayout.Label(name, importerStyles.nameTextStyle);
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical(); // vertical container for label
+
+                GUILayout.FlexibleSpace(); // fill horizontal for overall left-justify
+
+                GUILayout.EndHorizontal(); // horizontal container for image and label
+
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical(); //(fakeButton)
+
+                GUILayout.EndArea();
+
+                if (HandleListClick(boxRect))
+                {
+                    RepaintOnUpdate();
+                    SetContextCharacter(info.guid);
+                    if (fakeButtonDoubleClick)
+                    {
+                        previewCharacterAfterGUI = true;
+                    }
+                }
+                GUI.backgroundColor = background;
+            }
+            GUI.EndScrollView();
         }
 
         private void HandleMouseDrag(Rect container)
@@ -1591,7 +1731,7 @@ namespace Reallusion.Import
             }
         }
 
-        private bool newDoubleClick = false;
+        private bool fakeButtonDoubleClick = false;
 
         private bool HandleListClick(Rect container)
         {            
@@ -1602,10 +1742,10 @@ namespace Reallusion.Import
                 {
                     if (mouseEvent.clickCount == 2)
                     {
-                        newDoubleClick = true;
+                        fakeButtonDoubleClick = true;
                     }
                     else
-                        newDoubleClick = false;
+                        fakeButtonDoubleClick = false;
                     return true;
                 }                
             }
@@ -1629,7 +1769,7 @@ namespace Reallusion.Import
             repaintDelegated = false;
         }
 
-        public Texture2D TextureColor(Color color)
+        public static Texture2D TextureColor(Color color)
         {
             Texture2D texture = new Texture2D(1, 1);
             texture.SetPixel(0, 0, color);
