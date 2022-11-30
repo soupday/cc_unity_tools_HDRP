@@ -64,7 +64,7 @@ namespace Reallusion.Import
         const float INFO_HEIGHT = 80f;
         const float OPTION_HEIGHT = 170f;
         const float ACTION_HEIGHT = 76f;
-        //const float ICON_WIDTH = 100f; // re-purposed below for draggable width icon area
+        const float ICON_WIDTH = 100f; // re-purposed below for draggable width icon area
         const float ACTION_WIDTH = ACTION_BUTTON_SIZE + 12f;
         const float TITLE_SPACE = 12f;
         const float ROW_SPACE = 4f;
@@ -72,13 +72,13 @@ namespace Reallusion.Import
         // additions for draggable width icon area
         const float DRAG_BAR_WIDTH = 2f;
         const float DRAG_HANDLE_PADDING = 8f;
-        private float ICON_WIDTH = 100f; 
+        private float iconAreaWidth = ICON_WIDTH; 
         const float ICON_WIDTH_MIN = 100f;
         const float ICON_WIDTH_DETAIL = 150f;
-        const float ICON_SIZE_SMALL = 32f;
+        const float ICON_SIZE_SMALL = 25f;
         const float ICON_DETAIL_MARGIN = 2f;
         private float CURRENT_INFO_WIDTH = 0f;
-        const float INFO_WIDTH_MIN = 150f;
+        const float INFO_WIDTH_MIN = 0f;
         private bool dragging = false;
         private bool repaintDelegated = false;
 
@@ -109,6 +109,8 @@ namespace Reallusion.Import
         private Texture2D iconLighting;
         private Texture2D iconCamera;
         private Texture2D iconBuildMaterials;
+
+        private Rect currentOver;
 
         // SerializeField is used to ensure the view state is written to the window 
         // layout file. This means that the state survives restarting Unity as long as the window
@@ -365,7 +367,7 @@ namespace Reallusion.Import
         {
             RestoreData();
             RestoreSelection();
-
+            
             if (validCharacters == null || validCharacters.Count == 0)
             {
                 GUILayout.Label("No CC/iClone Characters detected!");
@@ -380,18 +382,18 @@ namespace Reallusion.Import
             if (contextCharacter.Generation == BaseGeneration.Unknown) optionHeight += 14f;
             optionHeight += 14f;
 
-            Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_WIDTH, innerHeight);
+            Rect iconBlock = new Rect(0f, TOP_PADDING, iconAreaWidth, innerHeight);
 
             // additions for draggable width icon area
             Rect dragBar = new Rect(iconBlock.xMax, TOP_PADDING, DRAG_BAR_WIDTH, innerHeight);
 
-            Rect infoBlock = new Rect(dragBar.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, INFO_HEIGHT);
+            Rect infoBlock = new Rect(dragBar.xMax, TOP_PADDING, width - iconAreaWidth - ACTION_WIDTH, INFO_HEIGHT);
             CURRENT_INFO_WIDTH = infoBlock.width;
             
             Rect optionBlock = new Rect(dragBar.xMax, infoBlock.yMax, infoBlock.width, optionHeight);
             Rect actionBlock = new Rect(dragBar.xMax + infoBlock.width, TOP_PADDING, ACTION_WIDTH, innerHeight);            
             Rect treeviewBlock = new Rect(dragBar.xMax, optionBlock.yMax, infoBlock.width, height - optionBlock.yMax);
-            Rect settingsBlock = new Rect(dragBar.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, innerHeight);
+            Rect settingsBlock = new Rect(dragBar.xMax, TOP_PADDING, width - iconAreaWidth - ACTION_WIDTH, innerHeight);
 
             previewCharacterAfterGUI = false;
             refreshAfterGUI = false;
@@ -1415,13 +1417,17 @@ namespace Reallusion.Import
                 if (e.clickCount == 2) doubleClick = true;
                 else doubleClick = false;
             }
+
+            Event mouseEvent = Event.current;
+            Vector2 mousePosition = mouseEvent.mousePosition;            
+            
             GUILayout.Space(TOP_PADDING);
             using (var iconScrollViewScope = new EditorGUILayout.ScrollViewScope(iconScrollView, GUILayout.Width(iconBlock.width - 4f), GUILayout.Height(iconBlock.height - 10f)))
             {
                 iconScrollView = iconScrollViewScope.scrollPosition;
                 GUILayout.BeginVertical();
-                bool showDetail = ICON_WIDTH > ICON_WIDTH_DETAIL;
-                Rect boxRect = new Rect(0f, 0f, ICON_WIDTH - 4f, ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN);
+                bool showDetail = iconAreaWidth > ICON_WIDTH_DETAIL;
+                Rect boxRect = new Rect(0f, 0f, iconAreaWidth - 4f, ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN);
 
                 for (int idx = 0; idx < validCharacters.Count; idx++)
                 {
@@ -1443,108 +1449,61 @@ namespace Reallusion.Import
                     Color tint = background;
                     if (contextCharacter == info)
                         tint = Color.green;
-                    GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
+
+                    if (!showDetail) GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
 
                     if (showDetail)
                     {
-                        bool test = true;
-                        if (test)
+                        float heightDelta = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
+                        boxRect.y = idx * heightDelta;                        
+
+                        GUILayout.BeginArea(boxRect);                        
+                        GUIStyle newButton = new GUIStyle("Box");
+                        newButton.normal.background = TextureColor(contextCharacter == info ? new Color(0.259f, 0.345f, 0.259f) : Color.grey * 0.5f);                        
+                        newButton.padding = new RectOffset(1, 1, 1, 1);                        
+                        newButton.stretchHeight = true;
+                        newButton.stretchWidth = true;
+                        GUILayout.BeginVertical(newButton);
+                        GUILayout.FlexibleSpace();
+
+                        GUILayout.BeginHorizontal(); // horizontal container for image and label
+
+                        GUILayout.BeginVertical(); // vertical container for image
+                        GUILayout.FlexibleSpace();
+
+                        GUILayout.Box(iconTexture, new GUIStyle(),
+                            GUILayout.Width(ICON_SIZE_SMALL),
+                            GUILayout.Height(ICON_SIZE_SMALL));
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndVertical(); // vertical container for image
+
+                        GUILayout.BeginVertical(); // vertical container for label
+                        GUILayout.FlexibleSpace();
+                        GUIStyle nameStyle = new GUIStyle(iconStyle);
+                        nameStyle.alignment = TextAnchor.MiddleCenter;
+                        GUILayout.Label(name, nameStyle);
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndVertical(); // vertical container for label
+
+                        GUILayout.FlexibleSpace(); // fill horizontal for overall left-justify
+
+                        GUILayout.EndHorizontal(); // horizontal container for image and label
+
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndVertical(); //(newButton)
+
+                        GUILayout.EndArea();
+
+                        if (HandleListClick(boxRect))
                         {
-                            float heightDelta = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
-                            boxRect.y = idx * heightDelta;
-
-                            GUILayout.BeginArea(boxRect);
-                            //GUI.backgroundColor = background;
-                            GUIStyle newButton = new GUIStyle(GUI.skin.box);
-                            newButton.normal.background = TextureColor(Color.grey * 0.5f);
-                            newButton.hover.background = TextureColor(Color.cyan * 0.5f);
-                            newButton.padding = new RectOffset(1, 1, 1, 1);
-                            newButton.stretchHeight = true;
-                            newButton.stretchWidth = true;
-                            GUILayout.BeginVertical(newButton);
-                            GUILayout.FlexibleSpace();
-
-                            GUILayout.BeginHorizontal(); // horizontal container for image and label
-
-                            GUILayout.BeginVertical(); // vertical container for image
-                            GUILayout.FlexibleSpace();
-
-                            GUILayout.Box(iconTexture, new GUIStyle(),
-                                GUILayout.Width(ICON_SIZE_SMALL),
-                                GUILayout.Height(ICON_SIZE_SMALL));
-                            GUILayout.FlexibleSpace();
-                            GUILayout.EndVertical(); // vertical container for image
-
-                            GUILayout.BeginVertical(); // vertical container for label
-                            GUILayout.FlexibleSpace();
-                            GUIStyle nameStyle = new GUIStyle(iconStyle);
-                            nameStyle.alignment = TextAnchor.MiddleCenter;
-                            GUILayout.Label(name, nameStyle);
-                            GUILayout.FlexibleSpace();
-                            GUILayout.EndVertical(); // vertical container for label
-
-                            GUILayout.FlexibleSpace(); // fill horizontal for overall left-justify
-
-                            GUILayout.EndHorizontal(); // horizontal container for image and label
-
-                            GUILayout.FlexibleSpace();
-                            GUILayout.EndVertical(); //(newButton)
-
-                            GUILayout.EndArea();
-
-                            if (HandleListClick(boxRect))
+                            RepaintOnUpdate();
+                            SetContextCharacter(info.guid);
+                            if (newDoubleClick)
                             {
-                                SetContextCharacter(info.guid);
-                                if (newDoubleClick)
-                                {
-                                    previewCharacterAfterGUI = true;
-                                    
-                                }
+                                previewCharacterAfterGUI = true;
                             }
-                            GUI.backgroundColor = background;
-
-                            
                         }
-
-                        if (!test)
-                        {
-                            //detail layout
-                            GUILayout.BeginHorizontal();
-
-                            // button content 
-                            GUILayout.BeginVertical();
-                            //GUILayout.FlexibleSpace();
-
-                            if (GUILayout.Button(iconTexture,
-                                GUILayout.Width(ICON_SIZE_SMALL),
-                                GUILayout.Height(ICON_SIZE_SMALL)))
-                            {
-                                SetContextCharacter(info.guid);
-                                if (doubleClick)
-                                {
-                                    previewCharacterAfterGUI = true;
-                                }
-                            }
-
-                            GUI.backgroundColor = background;
-
-                            //GUILayout.FlexibleSpace();
-                            GUILayout.EndVertical();
-
-                            // name content
-                            GUILayout.BeginVertical();
-                            GUILayout.Space(10f);
-                            GUIStyle nameStyle = new GUIStyle(iconStyle);
-                            nameStyle.alignment = TextAnchor.MiddleCenter;
-                            GUILayout.Label(name, nameStyle);
-
-                            //GUILayout.FlexibleSpace();
-                            GUILayout.EndVertical();
-
-
-                            GUILayout.FlexibleSpace();
-                            GUILayout.EndHorizontal();
-                        }
+                        GUI.backgroundColor = background;
                     }
                     else
                     {
@@ -1560,7 +1519,7 @@ namespace Reallusion.Import
                             SetContextCharacter(info.guid);
                             if (doubleClick)
                             {
-                                previewCharacterAfterGUI = true;                                
+                                previewCharacterAfterGUI = true;
                             }
                         }
 
@@ -1575,7 +1534,7 @@ namespace Reallusion.Import
                         GUILayout.FlexibleSpace();
                         GUILayout.EndHorizontal();
                     }
-                }
+                } // for
                 GUILayout.EndVertical();
             }
             //GUILayout.EndArea();
@@ -1587,30 +1546,48 @@ namespace Reallusion.Import
             if (container.Contains(mouseEvent.mousePosition) || dragging)
             {
                 if (mouseEvent.type == EventType.MouseDrag)
-                {
-                    if (!repaintDelegated)
-                    {
-                        EditorApplication.update -= RepaintOnUpdate;
-                        EditorApplication.update += RepaintOnUpdate;
-                        repaintDelegated = true;
-                    }
-
+                {                    
                     dragging = true;
-                    ICON_WIDTH += mouseEvent.delta.x;
-                    if (ICON_WIDTH < ICON_WIDTH_MIN)
-                        ICON_WIDTH = ICON_WIDTH_MIN;
+                    iconAreaWidth += mouseEvent.delta.x;
+                    if (iconAreaWidth < ICON_WIDTH_MIN)
+                        iconAreaWidth = ICON_WIDTH_MIN;
 
                     //float INFO_WIDTH_CALC = position.width - WINDOW_MARGIN - ICON_WIDTH - ACTION_WIDTH;
                     if (CURRENT_INFO_WIDTH < INFO_WIDTH_MIN)
-                        ICON_WIDTH = position.width - WINDOW_MARGIN - ACTION_WIDTH - INFO_WIDTH_MIN;
+                        iconAreaWidth = position.width - WINDOW_MARGIN - ACTION_WIDTH - INFO_WIDTH_MIN;
+
+                    RepaintOnUpdate();
                 }
 
                 if (mouseEvent.type == EventType.MouseUp)
-                {
+                {                    
                     dragging = false;
-                    EditorApplication.update -= RepaintOnUpdate;
-                    repaintDelegated = false;
+
+                    RepaintOnUpdate();
                 }
+            }
+        }
+
+        private void HandleMouseOver(Rect container)
+        {            
+            Event mouseEvent = Event.current;
+            if (container.Contains(mouseEvent.mousePosition))
+            {                
+                if (currentOver != container)
+                {
+                    currentOver = container;
+                    RepaintOnUpdate();
+                }
+            }            
+        }
+
+        private void HandleMouseOut()
+        {
+            Event mouseEvent = Event.current;
+            if (currentOver != default && !currentOver.Contains(mouseEvent.mousePosition))
+            {
+                currentOver = default;
+                RepaintOnUpdate();
             }
         }
 
@@ -1634,10 +1611,22 @@ namespace Reallusion.Import
             }
             return false;
         }
-        
+
         void RepaintOnUpdate()
         {
-            this.Repaint();
+            if (!repaintDelegated)
+            {
+                repaintDelegated = true;
+                EditorApplication.update -= RepaintOnceOnUpdate;
+                EditorApplication.update += RepaintOnceOnUpdate;
+            }
+        }
+        
+        void RepaintOnceOnUpdate()
+        {
+            Repaint();
+            EditorApplication.update -= RepaintOnceOnUpdate;
+            repaintDelegated = false;
         }
 
         public Texture2D TextureColor(Color color)
