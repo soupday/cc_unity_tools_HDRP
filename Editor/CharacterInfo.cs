@@ -297,14 +297,17 @@ namespace Reallusion.Import
 
         public bool HasColorEnabledHair()
         {
-            Renderer[] renderers = PrefabAsset.GetComponentsInChildren<Renderer>();
-            foreach (Renderer r in renderers)
+            if (PrefabAsset)
             {
-                foreach (Material m in r.sharedMaterials)
+                Renderer[] renderers = PrefabAsset.GetComponentsInChildren<Renderer>();
+                foreach (Renderer r in renderers)
                 {
-                    if (m.HasProperty("BOOLEAN_ENABLECOLOR"))
+                    foreach (Material m in r.sharedMaterials)
                     {
-                        if (m.GetFloat("BOOLEAN_ENABLECOLOR") > 0f) return true;
+                        if (m.HasProperty("BOOLEAN_ENABLECOLOR"))
+                        {
+                            if (m.GetFloat("BOOLEAN_ENABLECOLOR") > 0f) return true;
+                        }
                     }
                 }
             }

@@ -77,21 +77,20 @@ namespace Reallusion.Import
             return WindowManager.IsPreviewScene && AnimPlayerGUI.IsPlayerShown();
         }
 
-        [MenuItem("Assets/Reallusion/Import Character", priority = 2000)]
+        /*
+        [MenuItem("Assets/Reallusion/Import Character (Single Character Mode)", priority = 2000)]
         public static void InitAssetCC3ImportGUI()
         {
             ImporterWindow.Init(ImporterWindow.Mode.single, Selection.activeObject);
         }
          
-        [MenuItem("Assets/Reallusion/Import Character", true)]
+        [MenuItem("Assets/Reallusion/Import Character (Single Character Mode)", true)]
         public static bool ValidateInitAssetCC3ImportGUI()
         {
             if (Util.IsCC3Character(Selection.activeObject)) return true;
             return false;
-        }
+        }*/
         
-
-
         // Scene Tools
         //
 

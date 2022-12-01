@@ -375,7 +375,7 @@ namespace Reallusion.Import
                         QuickJSON matJson = GetMatJson(obj, sourceName);
 
                         // determine the material type, this dictates the shader and template material.
-                        MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
+                        MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
 
                         Util.LogInfo("    Material name: " + sourceName + ", type:" + materialType.ToString());
 
@@ -897,7 +897,9 @@ namespace Reallusion.Import
                 else
                 {
                     Shader specShader = Shader.Find("Standard (Specular setup)");
+                    int renderQueue = mat.renderQueue;
                     mat.shader = specShader;
+                    mat.renderQueue = renderQueue;                    
                 }
             }
 
@@ -1178,10 +1180,17 @@ namespace Reallusion.Import
 
             if (jsonMaterialType.iEquals("Tra"))
             {
-                mat.SetFloatIf("_Smoothness", 0.5f);
-                mat.SetFloatIf("_GlossMapScale", 0.5f);
-                mat.SetFloatIf("_Glossiness", 0.5f);
-                mat.SetMinMaxRange("_SmoothnessRemap", 0f, 0.5f);
+                float glossiness = 0.5f;
+                float specular = 1f;
+                Color specularColor = Color.white;
+                if (matJson != null && matJson.PathExists("Glossiness")) glossiness = matJson.GetFloatValue("Glossiness");
+                if (matJson != null && matJson.PathExists("Specular")) specular = matJson.GetFloatValue("Specular");
+                if (matJson != null && matJson.PathExists("Specular Color")) specularColor = Util.LinearTosRGB(matJson.GetColorValue("Specular Color"));
+                glossiness = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, glossiness);
+                mat.SetFloatIf("_Smoothness", glossiness);
+                mat.SetFloatIf("_GlossMapScale", glossiness);                
+                mat.SetFloatIf("_Glossiness", glossiness);
+                mat.SetMinMaxRange("_SmoothnessRemap", 0f, glossiness);
             }
         }
 

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Object = UnityEngine.Object;
+using System.Linq;
 
 namespace Reallusion.Import
 {
@@ -64,6 +65,11 @@ namespace Reallusion.Import
         public static bool IsCC3Character(string guid)
         {
             string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            return IsCC3CharacterAtPath(assetPath);
+        }
+
+        public static bool IsCC3CharacterAtPath(string assetPath)
+        {            
             if (assetPath.iEndsWith(".fbx"))
             {
                 string assetFolder = Path.GetDirectoryName(assetPath);
@@ -87,7 +93,7 @@ namespace Reallusion.Import
             }
 
             return false;
-        }        
+        }
 
         public static Color LinearTosRGBOld(Color c)
         {
@@ -188,20 +194,31 @@ namespace Reallusion.Import
             return "";
         }
 
+        public struct CharacterSort
+        {
+            public string guid;
+            public string name;
+        }
+
         public static List<string> GetValidCharacterGUIDS()
         {
-            string[] guids = AssetDatabase.FindAssets("t:Model", new string[] { "Assets" });
-            List<string> results = new List<string>();
+            string[] guids = AssetDatabase.FindAssets("t:Model", new string[] { "Assets" });            
+            List<CharacterSort> results = new List<CharacterSort>();
 
             foreach (string g in guids)
             {
-                if (IsCC3Character(g))
+                string assetPath = AssetDatabase.GUIDToAssetPath(g);
+                if (IsCC3CharacterAtPath(assetPath))
                 {
-                    results.Add(g);
+                    string name = Path.GetFileNameWithoutExtension(assetPath);
+                    results.Add(new CharacterSort() { guid = g, name = name });
                 }
             }
+            
+            List<string> sortedGuids = new List<string>(results.Count);
+            foreach (CharacterSort cs in results.OrderBy(o => o.name)) sortedGuids.Add(cs.guid);
 
-            return results;
+            return sortedGuids;
         }
 
         public static void ImportPaths(List<string> paths)
