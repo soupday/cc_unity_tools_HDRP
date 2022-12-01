@@ -1181,7 +1181,12 @@ namespace Reallusion.Import
             if (jsonMaterialType.iEquals("Tra"))
             {
                 float glossiness = 0.5f;
+                float specular = 1f;
+                Color specularColor = Color.white;
                 if (matJson != null && matJson.PathExists("Glossiness")) glossiness = matJson.GetFloatValue("Glossiness");
+                if (matJson != null && matJson.PathExists("Specular")) specular = matJson.GetFloatValue("Specular");
+                if (matJson != null && matJson.PathExists("Specular Color")) specularColor = Util.LinearTosRGB(matJson.GetColorValue("Specular Color"));
+                glossiness = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, glossiness);
                 mat.SetFloatIf("_Smoothness", glossiness);
                 mat.SetFloatIf("_GlossMapScale", glossiness);                
                 mat.SetFloatIf("_Glossiness", glossiness);

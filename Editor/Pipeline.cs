@@ -719,5 +719,12 @@ namespace Reallusion.Import
 
             return false;
         }
+
+        public static void DisableRayTracing(SkinnedMeshRenderer smr)
+        {
+#if HDRP_10_5_0_OR_NEWER
+            smr.rayTracingMode = UnityEngine.Experimental.Rendering.RayTracingMode.Off;
+#endif
+        }
     }
 }

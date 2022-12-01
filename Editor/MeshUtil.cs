@@ -1083,6 +1083,7 @@ namespace Reallusion.Import
             {
                 bool hasHairMaterial = false;
                 bool isFacialObject = FacialProfileMapper.MeshHasFacialBlendShapes(r.gameObject);
+                bool hasScalpMaterial = false;
                 int subMeshCount = 0;
                 int hairMeshCount = 0;
                 foreach (Material m in r.sharedMaterials)
@@ -1092,6 +1093,12 @@ namespace Reallusion.Import
                     {
                         hasHairMaterial = true;
                         hairMeshCount++;
+                    }
+                    else if (m.name.iContains("scalp_") ||
+                             m.name.iContains("_base_") ||
+                             m.name.iContains("_transparency"))
+                    {
+                        hasScalpMaterial = true;
                     }
                 }
 
@@ -1241,23 +1248,13 @@ namespace Reallusion.Import
                             oldSmr.sharedMaterials = sharedMaterials;
                         }
 
-                        /*
-                         * Unknown which versions to target for this...
                         // if the hair mesh has a scalp or base then what remains should be the scalp/base
-                        // in HDRP ray tracing this should be set to not ray trace shadows.
-                        if (hairMeshCount > subMeshCount)
+                        // in HDRP ray tracing this should be set to not ray trace.
+                        // but only if there is only the scalp material left:
+                        if (hasScalpMaterial && oldSmr.sharedMaterials.Length == 1)
                         {
-                            foreach (Material m in oldSmr.sharedMaterials)
-                            {
-                                if (m.name.iContains("scalp_") || 
-                                    m.name.iContains("_base_") || 
-                                    m.name.iContains("_transparency"))
-                                {
-                                    oldSmr.rayTracingMode = UnityEngine.Experimental.Rendering.RayTracingMode.Off;
-                                }
-                            }
-                        }
-                        */
+                            Pipeline.DisableRayTracing(oldSmr);
+                        }                        
 
                         processCount++;
                     }
