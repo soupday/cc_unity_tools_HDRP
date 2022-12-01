@@ -72,8 +72,7 @@ namespace Reallusion.Import
 
         // additions for draggable width icon area
         const float DRAG_BAR_WIDTH = 2f;
-        const float DRAG_HANDLE_PADDING = 8f;
-        private float iconAreaWidth = ICON_WIDTH; 
+        const float DRAG_HANDLE_PADDING = 8f;        
         const float ICON_WIDTH_MIN = 100f;
         const float ICON_WIDTH_DETAIL = 140f;
         const float ICON_SIZE_SMALL = 25f;
@@ -115,9 +114,7 @@ namespace Reallusion.Import
         private Texture2D iconSettingsOn;
         private Texture2D iconLighting;
         private Texture2D iconCamera;
-        private Texture2D iconBuildMaterials;
-
-        private Rect currentOver;
+        private Texture2D iconBuildMaterials;        
 
         // SerializeField is used to ensure the view state is written to the window 
         // layout file. This means that the state survives restarting Unity as long as the window
@@ -125,7 +122,22 @@ namespace Reallusion.Import
         [SerializeField] TreeViewState treeViewState;
 
         //The TreeView is not serializable, so it should be reconstructed from the tree data.
-        CharacterTreeView characterTreeView;        
+        CharacterTreeView characterTreeView;
+
+        public static float ICON_AREA_WIDTH
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_IconAreaWidth"))
+                    return EditorPrefs.GetFloat("RL_Importer_IconAreaWidth");
+                return ICON_WIDTH;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Importer_IconAreaWidth", value);
+            }
+        }
 
         public static void StoreBackScene()
         {
@@ -357,7 +369,15 @@ namespace Reallusion.Import
             
             if (validCharacters == null || validCharacters.Count == 0)
             {
+                GUILayout.BeginVertical();
+                GUILayout.FlexibleSpace();
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
                 GUILayout.Label("No CC/iClone Characters detected!");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical();                
                 return;
             }            
 
@@ -369,18 +389,18 @@ namespace Reallusion.Import
             if (contextCharacter.Generation == BaseGeneration.Unknown) optionHeight += 14f;
             optionHeight += 14f;
 
-            Rect iconBlock = new Rect(0f, TOP_PADDING, iconAreaWidth, innerHeight);
+            Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_AREA_WIDTH, innerHeight);
 
             // additions for draggable width icon area
             Rect dragBar = new Rect(iconBlock.xMax, TOP_PADDING, DRAG_BAR_WIDTH, innerHeight);
 
-            Rect infoBlock = new Rect(dragBar.xMax, TOP_PADDING, width - iconAreaWidth - ACTION_WIDTH, INFO_HEIGHT);
+            Rect infoBlock = new Rect(dragBar.xMax, TOP_PADDING, width - ICON_AREA_WIDTH - ACTION_WIDTH, INFO_HEIGHT);
             CURRENT_INFO_WIDTH = infoBlock.width;
             
             Rect optionBlock = new Rect(dragBar.xMax, infoBlock.yMax, infoBlock.width, optionHeight);
             Rect actionBlock = new Rect(dragBar.xMax + infoBlock.width, TOP_PADDING, ACTION_WIDTH, innerHeight);            
             Rect treeviewBlock = new Rect(dragBar.xMax, optionBlock.yMax, infoBlock.width, height - optionBlock.yMax);
-            Rect settingsBlock = new Rect(dragBar.xMax, TOP_PADDING, width - iconAreaWidth - ACTION_WIDTH, innerHeight);
+            Rect settingsBlock = new Rect(dragBar.xMax, TOP_PADDING, width - ICON_AREA_WIDTH - ACTION_WIDTH, innerHeight);
 
             previewCharacterAfterGUI = false;
             refreshAfterGUI = false;
@@ -442,77 +462,7 @@ namespace Reallusion.Import
         }
 
         bool doubleClick = false;
-
-        // original icon area layout for reference
-        private void OnGUIIconArea(Rect iconBlock)
-        {            
-            GUILayout.BeginArea(iconBlock);
-
-            Event e = Event.current;
-            if (e.isMouse && e.type == EventType.MouseDown)
-            {
-                if (e.clickCount == 2) doubleClick = true;
-                else doubleClick = false;
-            }
-
-            using (var iconScrollViewScope = new EditorGUILayout.ScrollViewScope(iconScrollView, GUILayout.Width(iconBlock.width - 10f), GUILayout.Height(iconBlock.height - 10f)))
-            {
-                iconScrollView = iconScrollViewScope.scrollPosition;
-                GUILayout.BeginVertical();
-
-                for (int idx = 0; idx < validCharacters.Count; idx++)
-                {
-                    CharacterInfo info = validCharacters[idx];
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Space(7f);
-                    Texture2D iconTexture = iconUnprocessed;
-
-                    if (info.bakeIsBaked)
-                    {
-                        if (info.BuiltBasicMaterials) iconTexture = iconMixed;
-                        else if (info.BuiltHQMaterials) iconTexture = iconBaked;
-                    }
-                    else
-                    {
-                        if (info.BuiltBasicMaterials) iconTexture = iconBasic;
-                        else if (info.BuiltHQMaterials) iconTexture = iconHQ;
-                    }
-
-                    Color background = GUI.backgroundColor;
-                    Color tint = background;
-                    if (contextCharacter == info) 
-                        tint = Color.green;
-                    GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
-
-                    if (GUILayout.Button(iconTexture,                        
-                        GUILayout.Width(ICON_SIZE),
-                        GUILayout.Height(ICON_SIZE))) 
-                    {                        
-                        SetContextCharacter(info.guid);
-                        if (doubleClick)
-                        {
-                            previewCharacterAfterGUI = true;
-                        }
-                    }
-
-                    GUI.backgroundColor = background;
-                    
-                    GUILayout.FlexibleSpace();                    
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();                    
-                    GUILayout.FlexibleSpace();
-                    string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
-                    GUILayout.Box(name, importerStyles.iconStyle, GUILayout.Width(ICON_SIZE));
-                    GUILayout.FlexibleSpace();
-                    GUILayout.FlexibleSpace();
-                    GUILayout.EndHorizontal();
-                }
-                GUILayout.EndVertical();
-            }
-            GUILayout.EndArea();            
-        }
-        
+                
         private void OnGUIInfoArea(Rect infoBlock)
         {            
             string importType = "Unprocessed";
@@ -1365,6 +1315,7 @@ namespace Reallusion.Import
             Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = 0.5f;
             Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = 0.25f;
             Util.LOG_LEVEL = 0;
+            ICON_AREA_WIDTH = ICON_WIDTH;
         }
 
         // additions for draggable width icon area
@@ -1383,7 +1334,7 @@ namespace Reallusion.Import
 
         private void OnGUIFlexibleIconArea(Rect iconBlock)
         {            
-            if (iconAreaWidth > ICON_WIDTH_DETAIL)
+            if (ICON_AREA_WIDTH > ICON_WIDTH_DETAIL)
             {
                 OnGUIDetailIconArea(iconBlock); // detail view icon area layout
             }
@@ -1472,9 +1423,9 @@ namespace Reallusion.Import
 
             float rowHeight = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
 
-            Rect boxRect = new Rect(0f, 0f, iconAreaWidth - 4f, rowHeight);
+            Rect boxRect = new Rect(0f, 0f, ICON_AREA_WIDTH - 4f, rowHeight);
             Rect posRect = new Rect(iconBlock);
-            Rect viewRect = new Rect(0f, 0f, iconAreaWidth - 14f, rowHeight * validCharacters.Count);
+            Rect viewRect = new Rect(0f, 0f, ICON_AREA_WIDTH - 14f, rowHeight * validCharacters.Count);
 
             iconScrollView = GUI.BeginScrollView(posRect, iconScrollView, viewRect, false, false);
             for (int idx = 0; idx < validCharacters.Count; idx++)
@@ -1548,13 +1499,13 @@ namespace Reallusion.Import
                 if (mouseEvent.type == EventType.MouseDrag)
                 {                    
                     dragging = true;
-                    iconAreaWidth += mouseEvent.delta.x;
-                    if (iconAreaWidth < ICON_WIDTH_MIN)
-                        iconAreaWidth = ICON_WIDTH_MIN;
+                    ICON_AREA_WIDTH += mouseEvent.delta.x;
+                    if (ICON_AREA_WIDTH < ICON_WIDTH_MIN)
+                        ICON_AREA_WIDTH = ICON_WIDTH_MIN;
 
                     //float INFO_WIDTH_CALC = position.width - WINDOW_MARGIN - ICON_WIDTH - ACTION_WIDTH;
                     if (CURRENT_INFO_WIDTH < INFO_WIDTH_MIN)
-                        iconAreaWidth = position.width - WINDOW_MARGIN - ACTION_WIDTH - INFO_WIDTH_MIN;
+                        ICON_AREA_WIDTH = position.width - WINDOW_MARGIN - ACTION_WIDTH - INFO_WIDTH_MIN;
 
                     RepaintOnUpdate();
                 }
@@ -1566,30 +1517,7 @@ namespace Reallusion.Import
                     RepaintOnUpdate();
                 }
             }
-        }
-
-        private void HandleMouseOver(Rect container)
-        {            
-            Event mouseEvent = Event.current;
-            if (container.Contains(mouseEvent.mousePosition))
-            {                
-                if (currentOver != container)
-                {
-                    currentOver = container;
-                    RepaintOnUpdate();
-                }
-            }            
-        }
-
-        private void HandleMouseOut()
-        {
-            Event mouseEvent = Event.current;
-            if (currentOver != default && !currentOver.Contains(mouseEvent.mousePosition))
-            {
-                currentOver = default;
-                RepaintOnUpdate();
-            }
-        }
+        }        
 
         private bool fakeButtonDoubleClick = false;
 

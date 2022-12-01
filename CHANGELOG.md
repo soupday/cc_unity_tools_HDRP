@@ -1,6 +1,14 @@
 Changelog
 =========
 
+### v 1.4.1
+- Traditional material glossiness fix.
+- High poly (sub-division) hair mesh extraction fix.
+- SSS Diffusion profile added.
+- Remembers last used lighting preset on character preview change.
+- Character icon list side bar can be dragged into a more compact list view.
+    - Character list sorted alphabetically.
+
 ### v 1.4.0
 - Import & Setup
     - ActorBuild detection separated from ActorCore (ActorBuild can have more advanced materials)
