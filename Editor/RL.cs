@@ -737,5 +737,48 @@ namespace Reallusion.Import
 
             return false;
         }
+
+        public static Material GetActorBuildSingleMaterial(GameObject fbx)
+        {
+            if (fbx)
+            {
+                bool singleMaterial = true;
+                Material actorBuildMaterial = null;
+                Transform[] transforms = fbx.GetComponentsInChildren<Transform>();
+                foreach (Transform t in transforms)
+                {
+                    switch (t.name)
+                    {
+                        // for a single material actorbuild these should all have the same material
+                        case "CC_Game_Body":
+                        case "CC_Game_Tongue":
+                        case "CC_Base_Eye":
+                        case "CC_Base_Teeth":
+                        case "CC_Base_Tongue":
+                        case "CC_Base_Body":
+                            Renderer r = t.gameObject.GetComponent<Renderer>();
+                            if (r)
+                            {
+                                if (r.sharedMaterials.Length == 1)
+                                {
+                                    if (actorBuildMaterial && actorBuildMaterial != r.sharedMaterials[0])
+                                        singleMaterial = false;
+
+                                    actorBuildMaterial = r.sharedMaterials[0];
+                                }
+                                else
+                                {
+                                    singleMaterial = false;
+                                }
+                            }
+                            break;
+                    }
+                }
+
+                if (singleMaterial) return actorBuildMaterial;
+            }
+
+            return null;
+        }
     }
 }

@@ -65,6 +65,8 @@ namespace Reallusion.Import
         public const int FLAG_WRAP_CLAMP = 1024;
 
         public const float MAX_SMOOTHNESS = 0.897f;
+        public const float SPECULAR_SCALE = 0.5f;
+        public const float TRA_SPECULAR_SCALE = 0.2f;
 
         public static float MIPMAP_BIAS
         {
@@ -1067,12 +1069,7 @@ namespace Reallusion.Import
                 if (RP != RenderPipeline.Builtin)
                     mat.SetColorIf("_BaseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
                 else
-                    mat.SetColorIf("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
-
-                if (RP == RenderPipeline.HDRP)
-                    mat.SetColorIf("_SpecularColor", 0.2f * Util.LinearTosRGB(matJson.GetColorValue("Specular Color")));
-                else
-                    mat.SetColorIf("_SpecColor", 0.2f * Util.LinearTosRGB(matJson.GetColorValue("Specular Color")));
+                    mat.SetColorIf("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));                
 
                 // Emission
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
@@ -1171,49 +1168,78 @@ namespace Reallusion.Import
                 }
             }
 
-            // Apply micro roughness & specular
-            if (matJson != null && matJson.PathExists("Custom Shader/Variable/Micro Roughness Scale"))
+            // Smoothness/Glossiness and Specular
+            if (matJson != null)
             {
-                float microRoughnessMod = 0.0f;
-                float specular = 0.5f;
                 if (matJson.PathExists("Custom Shader/Variable/Micro Roughness Scale"))
-                    microRoughnessMod = matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale");
-                if (matJson.PathExists("Custom Shader/Variable/_Specular"))
-                    specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
+                {
+                    Color specularColor = Color.white * SPECULAR_SCALE;
+                    float microRoughnessMod = 0.0f;
+                    float specular = 0.5f;
 
-                if (RP == RenderPipeline.HDRP)
-                {
-                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_Smoothness", 0.5f));
-                    float smoothnessMin = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_SmoothnessRemapMin", 0f));
-                    float smoothnessMax = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_SmoothnessRemapMax", MAX_SMOOTHNESS));
-                    mat.SetMinMaxRange("_SmoothnessRemap", smoothnessMin - microRoughnessMod, smoothnessMax - microRoughnessMod);
-                    mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
+                    if (matJson.PathExists("Custom Shader/Variable/Micro Roughness Scale"))
+                        microRoughnessMod = matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale");
+                    if (matJson.PathExists("Custom Shader/Variable/_Specular"))
+                        specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");
+                    if (matJson != null && matJson.PathExists("Specular Color"))
+                        specularColor = SPECULAR_SCALE * Util.LinearTosRGB(matJson.GetColorValue("Specular Color"));
+
+                    if (RP == RenderPipeline.HDRP)
+                    {
+                        float smoothness = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, mat.GetFloatIf("_Smoothness", 0.5f));
+                        float smoothnessMin = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, mat.GetFloatIf("_SmoothnessRemapMin", 0f));
+                        float smoothnessMax = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, mat.GetFloatIf("_SmoothnessRemapMax", MAX_SMOOTHNESS));
+                        mat.SetMinMaxRange("_SmoothnessRemap", smoothnessMin - microRoughnessMod, smoothnessMax - microRoughnessMod);
+                        mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
+                    }
+                    else if (RP == RenderPipeline.URP)
+                    {
+                        float smoothness = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, mat.GetFloatIf("_Smoothness", 0.5f));
+                        mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
+                    }
+                    else
+                    {
+                        float smoothness = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, mat.GetFloatIf("_GlossMapScale", 0.5f));
+                        mat.SetFloatIf("_GlossMapScale", smoothness - microRoughnessMod);
+                    }
                 }
-                else if (RP == RenderPipeline.URP)
+                else if (jsonMaterialType.iEquals("Tra"))
                 {
-                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_Smoothness", 0.5f));
-                    mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
+                    float glossiness = 0.5f;
+                    float specular = 1f;
+                    Color specularColor = Color.white * TRA_SPECULAR_SCALE;
+
+                    if (matJson.PathExists("Glossiness"))
+                        glossiness = matJson.GetFloatValue("Glossiness");
+                    if (matJson.PathExists("Specular"))
+                        specular = matJson.GetFloatValue("Specular");
+                    if (matJson.PathExists("Specular Color"))
+                        specularColor = TRA_SPECULAR_SCALE * Util.LinearTosRGB(matJson.GetColorValue("Specular Color"));
+
+                    glossiness = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, glossiness);
+                    mat.SetFloatIf("_Smoothness", glossiness);
+                    mat.SetFloatIf("_GlossMapScale", glossiness);
+                    mat.SetFloatIf("_Glossiness", glossiness);
+                    mat.SetMinMaxRange("_SmoothnessRemap", 0f, glossiness);
+
+                    if (RP == RenderPipeline.HDRP)
+                        mat.SetColorIf("_SpecularColor", specularColor);
+                    else
+                        mat.SetColorIf("_SpecColor", specularColor);
                 }
                 else
                 {
-                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_GlossMapScale", 0.5f));
-                    mat.SetFloatIf("_GlossMapScale", smoothness - microRoughnessMod);
-                }
-            }
+                    Color specularColor = Color.white * SPECULAR_SCALE;
 
-            if (jsonMaterialType.iEquals("Tra"))
-            {
-                float glossiness = 0.5f;
-                float specular = 1f;
-                Color specularColor = Color.white;
-                if (matJson != null && matJson.PathExists("Glossiness")) glossiness = matJson.GetFloatValue("Glossiness");
-                if (matJson != null && matJson.PathExists("Specular")) specular = matJson.GetFloatValue("Specular");
-                if (matJson != null && matJson.PathExists("Specular Color")) specularColor = Util.LinearTosRGB(matJson.GetColorValue("Specular Color"));
-                glossiness = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, glossiness);
-                mat.SetFloatIf("_Smoothness", glossiness);
-                mat.SetFloatIf("_GlossMapScale", glossiness);                
-                mat.SetFloatIf("_Glossiness", glossiness);
-                mat.SetMinMaxRange("_SmoothnessRemap", 0f, glossiness);
+                    if (matJson.PathExists("Specular Color")) 
+                        specularColor = SPECULAR_SCALE * Util.LinearTosRGB(matJson.GetColorValue("Specular Color"));
+                    
+                    float specSmoothness = Util.CombineSpecularToSmoothness(specularColor.grayscale, MAX_SMOOTHNESS);
+                    mat.SetMinMaxRange("_SmoothnessRemap", 0f, specSmoothness);
+                    mat.SetFloatIf("_Smoothness", specSmoothness);                
+                    mat.SetFloatIf("_Smoothness", specSmoothness);                
+                    mat.SetFloatIf("_GlossMapScale", specSmoothness);                    
+                }
             }
         }
 

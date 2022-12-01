@@ -559,6 +559,13 @@ namespace Reallusion.Import
             if (info.Generation == BaseGeneration.ActorCore)
                 return MATERIAL_DEFAULT_SINGLE_MATERIAL;            
 
+            if (info.Generation == BaseGeneration.ActorBuild)
+            {
+                Material singleMaterial = RL.GetActorBuildSingleMaterial(info.Fbx);
+                if (singleMaterial && singleMaterial.name == sourceName)
+                    return MATERIAL_DEFAULT_SINGLE_MATERIAL;
+            }
+
             if (quality == MaterialQuality.High) // option overrides for high quality materials
             {
                 if (info.RefractiveEyes)
