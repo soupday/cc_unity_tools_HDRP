@@ -375,7 +375,7 @@ namespace Reallusion.Import
                         QuickJSON matJson = GetMatJson(obj, sourceName);
 
                         // determine the material type, this dictates the shader and template material.
-                        MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
+                        MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
 
                         Util.LogInfo("    Material name: " + sourceName + ", type:" + materialType.ToString());
 

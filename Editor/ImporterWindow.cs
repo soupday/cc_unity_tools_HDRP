@@ -1449,10 +1449,10 @@ namespace Reallusion.Import
 
                     GUI.backgroundColor = background;
 
-                    GUILayout.FlexibleSpace();
+                    GUILayout.Space(2f);
 
                     GUILayout.Box(name, importerStyles.iconStyle, GUILayout.Width(ICON_SIZE));
-                    GUILayout.FlexibleSpace();
+                    GUILayout.Space(2f);
                     GUILayout.EndVertical();
 
                     GUILayout.FlexibleSpace();
