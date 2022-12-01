@@ -559,6 +559,13 @@ namespace Reallusion.Import
             if (info.Generation == BaseGeneration.ActorCore)
                 return MATERIAL_DEFAULT_SINGLE_MATERIAL;            
 
+            if (info.Generation == BaseGeneration.ActorBuild)
+            {
+                Material singleMaterial = RL.GetActorBuildSingleMaterial(info.Fbx);
+                if (singleMaterial && singleMaterial.name == sourceName)
+                    return MATERIAL_DEFAULT_SINGLE_MATERIAL;
+            }
+
             if (quality == MaterialQuality.High) // option overrides for high quality materials
             {
                 if (info.RefractiveEyes)
@@ -723,7 +730,10 @@ namespace Reallusion.Import
         public static void DisableRayTracing(SkinnedMeshRenderer smr)
         {
 #if HDRP_10_5_0_OR_NEWER
-            smr.rayTracingMode = UnityEngine.Experimental.Rendering.RayTracingMode.Off;
+            if (SystemInfo.supportsRayTracing)
+            {
+                smr.rayTracingMode = UnityEngine.Experimental.Rendering.RayTracingMode.Off;
+            }
 #endif
         }
     }

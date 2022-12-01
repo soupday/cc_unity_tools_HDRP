@@ -25,10 +25,6 @@ using System;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using Object = UnityEngine.Object;
-using UnityEditor.Experimental.GraphView;
-using UnityEngine.EventSystems;
-using UnityEngine.UIElements;
-using System.Runtime.Remoting.Messaging;
 
 namespace Reallusion.Import
 {
@@ -72,7 +68,7 @@ namespace Reallusion.Import
 
         // additions for draggable width icon area
         const float DRAG_BAR_WIDTH = 2f;
-        const float DRAG_HANDLE_PADDING = 8f;        
+        const float DRAG_HANDLE_PADDING = 4f;        
         const float ICON_WIDTH_MIN = 100f;
         const float ICON_WIDTH_DETAIL = 140f;
         const float ICON_SIZE_SMALL = 25f;
@@ -186,7 +182,7 @@ namespace Reallusion.Import
         {                        
             Type hwt = Type.GetType("UnityEditor.SceneHierarchyWindow, UnityEditor.dll");
             ImporterWindow window = GetWindow<ImporterWindow>(windowTitle, hwt);
-            window.minSize = new Vector2(300f, 500f);            
+            window.minSize = new Vector2(300f, 500f);
             Current = window;
 
             ClearAllData();
@@ -1322,7 +1318,8 @@ namespace Reallusion.Import
 
         private void OnGUIDragBarArea(Rect dragBar)
         {
-            Rect dragHandle = new Rect(dragBar.x - DRAG_HANDLE_PADDING, dragBar.y, 2 * DRAG_HANDLE_PADDING, dragBar.height);
+            //Rect dragHandle = new Rect(dragBar.x - DRAG_HANDLE_PADDING, dragBar.y, 2 * DRAG_HANDLE_PADDING, dragBar.height);
+            Rect dragHandle = new Rect(dragBar.x, dragBar.y, DRAG_BAR_WIDTH + DRAG_HANDLE_PADDING, dragBar.height);
             EditorGUIUtility.AddCursorRect(dragHandle, MouseCursor.ResizeHorizontal);
             HandleMouseDrag(dragHandle);
 
