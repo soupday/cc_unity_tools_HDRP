@@ -375,9 +375,11 @@ namespace Reallusion.Import
                         QuickJSON matJson = GetMatJson(obj, sourceName);
 
                         // determine the material type, this dictates the shader and template material.
-                        MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
+                        MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
 
                         Util.LogInfo("    Material name: " + sourceName + ", type:" + materialType.ToString());
+
+                        FixRayTracing(obj, sharedMat, materialType);
 
                         // re-use or create the material.
                         Material mat = CreateRemapMaterial(materialType, sharedMat, sourceName);
@@ -705,6 +707,27 @@ namespace Reallusion.Import
 
             return remapMaterial;
         }        
+
+        private void FixRayTracing(GameObject obj, Material mat, MaterialType materialType)
+        {
+            SkinnedMeshRenderer smr = obj.GetComponent<SkinnedMeshRenderer>();
+
+            if (smr)
+            {
+                if (materialType == MaterialType.EyeOcclusion ||
+                    materialType == MaterialType.Tearline)
+                {
+                    Pipeline.DisableRayTracing(smr);
+                }
+                else if (materialType == MaterialType.Scalp)
+                {
+                    if (smr.sharedMaterials.Length == 1)
+                    {
+                        Pipeline.DisableRayTracing(smr);
+                    }
+                }
+            }
+        }
 
         private void ProcessTextures(GameObject obj, string sourceName, Material sharedMat, Material mat, 
             MaterialType materialType, QuickJSON matJson)
@@ -1872,6 +1895,8 @@ namespace Reallusion.Import
                                 obj.transform.localScale.y +
                                 obj.transform.localScale.z) / 3.0f;            
             mat.SetFloatIf("_ExpandScale", 1.0f / modelScale);
+
+
         }
 
         private void ConnectHQTearlineMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
