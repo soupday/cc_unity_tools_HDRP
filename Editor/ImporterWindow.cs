@@ -75,7 +75,7 @@ namespace Reallusion.Import
         const float DRAG_HANDLE_PADDING = 8f;
         private float iconAreaWidth = ICON_WIDTH; 
         const float ICON_WIDTH_MIN = 100f;
-        const float ICON_WIDTH_DETAIL = 150f;
+        const float ICON_WIDTH_DETAIL = 140f;
         const float ICON_SIZE_SMALL = 25f;
         const float ICON_DETAIL_MARGIN = 2f;
         private float CURRENT_INFO_WIDTH = 0f;
