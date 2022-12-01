@@ -897,7 +897,9 @@ namespace Reallusion.Import
                 else
                 {
                     Shader specShader = Shader.Find("Standard (Specular setup)");
+                    int renderQueue = mat.renderQueue;
                     mat.shader = specShader;
+                    mat.renderQueue = renderQueue;                    
                 }
             }
 

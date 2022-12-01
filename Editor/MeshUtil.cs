@@ -1084,11 +1084,15 @@ namespace Reallusion.Import
                 bool hasHairMaterial = false;
                 bool isFacialObject = FacialProfileMapper.MeshHasFacialBlendShapes(r.gameObject);
                 int subMeshCount = 0;
+                int hairMeshCount = 0;
                 foreach (Material m in r.sharedMaterials)
                 {
                     subMeshCount++;
                     if (m.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
+                    {
                         hasHairMaterial = true;
+                        hairMeshCount++;
+                    }
                 }
 
                 if (hasHairMaterial)
@@ -1134,7 +1138,7 @@ namespace Reallusion.Import
 
                             // extract mesh into two new meshes, the old mesh without the extracted submesh
                             // and just the extracted submesh
-                            Mesh newMesh = ExtractSubMesh(oldMesh, index);                            
+                            Mesh newMesh = ExtractSubMesh(oldMesh, index);
                             // Save the mesh asset.
                             Util.EnsureAssetsFolderExists(meshFolder);
                             string meshPath = Path.Combine(meshFolder, oldObj.name + "_ExtractedHairMesh" + index.ToString() + ".mesh");
@@ -1236,6 +1240,24 @@ namespace Reallusion.Import
                                     sharedMaterials[i++] = oldSmr.sharedMaterials[j];
                             oldSmr.sharedMaterials = sharedMaterials;
                         }
+
+                        /*
+                         * Unknown which versions to target for this...
+                        // if the hair mesh has a scalp or base then what remains should be the scalp/base
+                        // in HDRP ray tracing this should be set to not ray trace shadows.
+                        if (hairMeshCount > subMeshCount)
+                        {
+                            foreach (Material m in oldSmr.sharedMaterials)
+                            {
+                                if (m.name.iContains("scalp_") || 
+                                    m.name.iContains("_base_") || 
+                                    m.name.iContains("_transparency"))
+                                {
+                                    oldSmr.rayTracingMode = UnityEngine.Experimental.Rendering.RayTracingMode.Off;
+                                }
+                            }
+                        }
+                        */
 
                         processCount++;
                     }
