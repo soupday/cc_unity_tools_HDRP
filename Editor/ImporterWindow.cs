@@ -718,9 +718,9 @@ namespace Reallusion.Import
                     restoreHairAfterGUI = true;
                 }
             }
-            else if (!contextCharacter.BuiltBasicMaterials && contextCharacter.HasColorEnabledHair())
+            else //if (!contextCharacter.BuiltBasicMaterials && contextCharacter.HasColorEnabledHair())
             {
-                //if (contextCharacter.BuiltBasicMaterials || !contextCharacter.HasColorEnabledHair()) GUI.enabled = false;
+                if (contextCharacter.BuiltBasicMaterials || !contextCharacter.HasColorEnabledHair()) GUI.enabled = false;
 
                 if (GUILayout.Button(new GUIContent(iconActionBakeHair, "Bake hair materials, to preview the baked results of the 'Enable Color' in the hair materials."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
