@@ -67,7 +67,7 @@ namespace Reallusion.Import
             else
             {
                 if (fbx)
-                {
+                {                    
                     Transform[] children = fbx.transform.GetComponentsInChildren<Transform>(true);
                     foreach (Transform child in children)
                     {
@@ -80,7 +80,11 @@ namespace Reallusion.Import
                         if (objectName.iContains("RL_BoneRoot"))
                         {
                             if (child.Find("CC_Base_Hip"))
-                                return BaseGeneration.G3;
+                            {
+                                Material acMat = GetActorCoreSingleMaterial(fbx);
+                                if (acMat) return BaseGeneration.ActorCore;
+                                else return BaseGeneration.G3;
+                            }
                         }
                     }
 
@@ -736,6 +740,38 @@ namespace Reallusion.Import
             }
 
             return false;
+        }
+
+        public static Material GetActorCoreSingleMaterial(GameObject fbx)
+        {
+            if (fbx)
+            {                
+                Material actorCoreMaterial = null;
+                Transform[] transforms = fbx.GetComponentsInChildren<Transform>();
+                foreach (Transform t in transforms)
+                {
+                    Renderer r = t.gameObject.GetComponent<Renderer>();
+                    if (r)
+                    {
+                        if (r.sharedMaterials.Length == 1)
+                        {
+                            if (actorCoreMaterial && actorCoreMaterial != r.sharedMaterials[0])
+                                return null;
+
+                            actorCoreMaterial = r.sharedMaterials[0];
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+
+                }
+
+                return actorCoreMaterial;
+            }
+
+            return null;
         }
 
         public static Material GetActorBuildSingleMaterial(GameObject fbx)
