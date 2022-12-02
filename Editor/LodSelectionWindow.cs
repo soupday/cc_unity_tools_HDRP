@@ -74,9 +74,9 @@ namespace Reallusion.Import
                 window.BuildModelPrefabDict(path);
             else
                 window.BuildModelPrefabDict(Selection.objects);
-                        
+
             window.minSize = new Vector2(boxW * 3f + 8f, boxH * 2f + 24f);
-            window.Show();
+            window.Show();            
 
             return window;
         }
@@ -198,6 +198,19 @@ namespace Reallusion.Import
                 //Debug.Log(model.Value);
             }
 
+            if (modelList.Count == 0)
+            {
+                GUILayout.BeginVertical();
+                GUILayout.FlexibleSpace();
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("No character prefabs detected in folder or selection.");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical();
+            }
+
             GUI.EndScrollView();
 
             return;            
@@ -271,7 +284,7 @@ namespace Reallusion.Import
                 AssetToModelList(bakedPathSuffix, path, guid, assetName, ref largest);
             }
 
-            nameField.SetValueWithoutNotify(nameHint + "_LODGroup");
+            nameField.SetValueWithoutNotify(nameHint + "_LOD");
 
             SortAndAutoSelect();
         }

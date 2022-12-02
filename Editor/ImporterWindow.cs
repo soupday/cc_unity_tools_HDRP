@@ -61,12 +61,30 @@ namespace Reallusion.Import
         const float INFO_HEIGHT = 80f;
         const float OPTION_HEIGHT = 170f;
         const float ACTION_HEIGHT = 76f;
-        const float ICON_WIDTH = 100f;
+        const float ICON_WIDTH = 100f; // re-purposed below for draggable width icon area
         const float ACTION_WIDTH = ACTION_BUTTON_SIZE + 12f;
         const float TITLE_SPACE = 12f;
         const float ROW_SPACE = 4f;
 
-        private GUIStyle logStyle, mainStyle, buttonStyle, labelStyle, boldStyle, iconStyle;
+        // additions for draggable width icon area
+        const float DRAG_BAR_WIDTH = 2f;
+        const float DRAG_HANDLE_PADDING = 4f;        
+        const float ICON_WIDTH_MIN = 100f;
+        const float ICON_WIDTH_DETAIL = 140f;
+        const float ICON_SIZE_SMALL = 25f;
+        const float ICON_DETAIL_MARGIN = 2f;
+        private float CURRENT_INFO_WIDTH = 0f;
+        const float INFO_WIDTH_MIN = 0f;
+        private bool dragging = false;
+        private bool repaintDelegated = false;
+
+        private Styles importerStyles;        
+        //GUIStyle dragBarStyle;
+        //GUIStyle nameTextStyle;
+        //GUIStyle fakeButton;
+        //GUIStyle fakeButtonContext;
+
+        //private GUIStyle logStyle, mainStyle, buttonStyle, labelStyle, boldStyle, iconStyle;
         private Texture2D iconUnprocessed;
         private Texture2D iconBasic;
         private Texture2D iconHQ;
@@ -92,7 +110,7 @@ namespace Reallusion.Import
         private Texture2D iconSettingsOn;
         private Texture2D iconLighting;
         private Texture2D iconCamera;
-        private Texture2D iconBuildMaterials;
+        private Texture2D iconBuildMaterials;        
 
         // SerializeField is used to ensure the view state is written to the window 
         // layout file. This means that the state survives restarting Unity as long as the window
@@ -100,7 +118,37 @@ namespace Reallusion.Import
         [SerializeField] TreeViewState treeViewState;
 
         //The TreeView is not serializable, so it should be reconstructed from the tree data.
-        CharacterTreeView characterTreeView;        
+        CharacterTreeView characterTreeView;
+
+        public static float ICON_AREA_WIDTH
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_IconAreaWidth"))
+                    return EditorPrefs.GetFloat("RL_Importer_IconAreaWidth");
+                return ICON_WIDTH;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Importer_IconAreaWidth", value);
+            }
+        }
+
+        public static bool SELECT_LINKED
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_SelectLinked"))
+                    return EditorPrefs.GetBool("RL_Importer_SelectLinked");
+                return true;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_SelectLinked", value);
+            }
+        }
 
         public static void StoreBackScene()
         {
@@ -203,42 +251,20 @@ namespace Reallusion.Import
             Current = this;
 
             RefreshCharacterList();
-
-            logStyle = new GUIStyle();
-            logStyle.wordWrap = true;
-            logStyle.fontStyle = FontStyle.Italic;
-            logStyle.normal.textColor = Color.grey;
-
-            mainStyle = new GUIStyle();
-            mainStyle.wordWrap = false;
-            mainStyle.fontStyle = FontStyle.Normal;
-            mainStyle.normal.textColor = Color.white;
-
-            iconStyle = new GUIStyle();
-            iconStyle.wordWrap = false;
-            iconStyle.fontStyle = FontStyle.Normal;
-            iconStyle.normal.textColor = Color.white;
-            iconStyle.alignment = TextAnchor.MiddleCenter;
-
-            boldStyle = new GUIStyle();
-            boldStyle.alignment = TextAnchor.UpperLeft;
-            boldStyle.wordWrap = false;
-            boldStyle.fontStyle = FontStyle.Bold;
-            boldStyle.normal.textColor = Color.white;
-
-            labelStyle = new GUIStyle();
-            labelStyle.alignment = TextAnchor.UpperLeft;
-            labelStyle.wordWrap = false;
-            labelStyle.fontStyle = FontStyle.Normal;
-            labelStyle.normal.textColor = Color.white;
-
-            buttonStyle = new GUIStyle();
-            buttonStyle.wordWrap = false;
-            buttonStyle.fontStyle = FontStyle.Normal;
-            buttonStyle.normal.textColor = Color.white;
-            buttonStyle.alignment = TextAnchor.MiddleCenter;
-
+            
             if (titleContent.text != windowTitle) titleContent.text = windowTitle;
+        }        
+
+        private void PreviewCharacter()
+        {
+            StoreBackScene();
+
+            WindowManager.OpenPreviewScene(contextCharacter.Fbx);
+
+            if (WindowManager.showPlayer)
+                WindowManager.ShowAnimationPlayer();
+
+            ResetAllSceneViewCamera();
         }
 
         private void RefreshCharacterList()
@@ -347,12 +373,22 @@ namespace Reallusion.Import
         
         private void OnGUI()
         {
+            if (importerStyles == null) importerStyles = new Styles();
+
             RestoreData();
             RestoreSelection();
-
+            
             if (validCharacters == null || validCharacters.Count == 0)
             {
+                GUILayout.BeginVertical();
+                GUILayout.FlexibleSpace();
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
                 GUILayout.Label("No CC/iClone Characters detected!");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical();                
                 return;
             }            
 
@@ -364,12 +400,18 @@ namespace Reallusion.Import
             if (contextCharacter.Generation == BaseGeneration.Unknown) optionHeight += 14f;
             optionHeight += 14f;
 
-            Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_WIDTH, innerHeight);
-            Rect infoBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, INFO_HEIGHT);
-            Rect optionBlock = new Rect(iconBlock.xMax, infoBlock.yMax, infoBlock.width, optionHeight);
-            Rect actionBlock = new Rect(iconBlock.xMax + infoBlock.width, TOP_PADDING, ACTION_WIDTH, innerHeight);            
-            Rect treeviewBlock = new Rect(iconBlock.xMax, optionBlock.yMax, infoBlock.width, height - optionBlock.yMax);
-            Rect settingsBlock = new Rect(iconBlock.xMax, TOP_PADDING, width - ICON_WIDTH - ACTION_WIDTH, innerHeight);
+            Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_AREA_WIDTH, innerHeight);
+
+            // additions for draggable width icon area
+            Rect dragBar = new Rect(iconBlock.xMax, TOP_PADDING, DRAG_BAR_WIDTH, innerHeight);
+
+            Rect infoBlock = new Rect(dragBar.xMax, TOP_PADDING, width - ICON_AREA_WIDTH - ACTION_WIDTH, INFO_HEIGHT);
+            CURRENT_INFO_WIDTH = infoBlock.width;
+            
+            Rect optionBlock = new Rect(dragBar.xMax, infoBlock.yMax, infoBlock.width, optionHeight);
+            Rect actionBlock = new Rect(dragBar.xMax + infoBlock.width, TOP_PADDING, ACTION_WIDTH, innerHeight);            
+            Rect treeviewBlock = new Rect(dragBar.xMax, optionBlock.yMax, infoBlock.width, height - optionBlock.yMax);
+            Rect settingsBlock = new Rect(dragBar.xMax, TOP_PADDING, width - ICON_AREA_WIDTH - ACTION_WIDTH, innerHeight);
 
             previewCharacterAfterGUI = false;
             refreshAfterGUI = false;
@@ -381,7 +423,9 @@ namespace Reallusion.Import
 
             CheckDragAndDrop();
 
-            OnGUIIconArea(iconBlock);            
+            //OnGUIIconArea(iconBlock);
+            OnGUIFlexibleIconArea(iconBlock);
+            OnGUIDragBarArea(dragBar);
 
             if (windowMode == ImporterWindowMode.Build)
                 OnGUIInfoArea(infoBlock);
@@ -397,116 +441,39 @@ namespace Reallusion.Import
             if (windowMode == ImporterWindowMode.Build)
                 OnGUITreeViewArea(treeviewBlock);
 
-            // functions to run after the GUI has finished...
-
+            // functions to run after the GUI has finished...             
             if (previewCharacterAfterGUI)
             {
-                StoreBackScene();
-
-                WindowManager.OpenPreviewScene(contextCharacter.Fbx);
-
-                if (WindowManager.showPlayer) 
-                    WindowManager.ShowAnimationPlayer();
-
-                ResetAllSceneViewCamera();                
+                EditorApplication.delayCall += PreviewCharacter;
             }
             else if (refreshAfterGUI)
             {
-                RefreshCharacterList();
+                EditorApplication.delayCall += RefreshCharacterList;
             }
             else if (buildAfterGUI)
             {
-                BuildCharacter();
+                EditorApplication.delayCall += BuildCharacter;
             }
             else if (bakeAfterGUI)
             {
-                BakeCharacter();
+                EditorApplication.delayCall += BakeCharacter;
             }
             else if (bakeHairAfterGUI)
             {
-                BakeCharacterHair();
+                EditorApplication.delayCall += BakeCharacterHair;
             }
             else if (restoreHairAfterGUI)
             {
-                RestoreCharacterHair();
+                EditorApplication.delayCall += RestoreCharacterHair;
             }
             else if (physicsAfterGUI)
             {
-                RebuildCharacterPhysics();
+                EditorApplication.delayCall += RebuildCharacterPhysics;
             }
         }
 
         bool doubleClick = false;
-
-        private void OnGUIIconArea(Rect iconBlock)
-        {            
-            GUILayout.BeginArea(iconBlock);
-
-            Event e = Event.current;
-            if (e.isMouse && e.type == EventType.MouseDown)
-            {
-                if (e.clickCount == 2) doubleClick = true;
-                else doubleClick = false;
-            }
-
-            using (var iconScrollViewScope = new EditorGUILayout.ScrollViewScope(iconScrollView, GUILayout.Width(iconBlock.width - 10f), GUILayout.Height(iconBlock.height - 10f)))
-            {
-                iconScrollView = iconScrollViewScope.scrollPosition;
-                GUILayout.BeginVertical();
-
-                for (int idx = 0; idx < validCharacters.Count; idx++)
-                {
-                    CharacterInfo info = validCharacters[idx];
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Space(7f);
-                    Texture2D iconTexture = iconUnprocessed;
-
-                    if (info.bakeIsBaked)
-                    {
-                        if (info.BuiltBasicMaterials) iconTexture = iconMixed;
-                        else if (info.BuiltHQMaterials) iconTexture = iconBaked;
-                    }
-                    else
-                    {
-                        if (info.BuiltBasicMaterials) iconTexture = iconBasic;
-                        else if (info.BuiltHQMaterials) iconTexture = iconHQ;
-                    }
-
-                    Color background = GUI.backgroundColor;
-                    Color tint = background;
-                    if (contextCharacter == info) 
-                        tint = Color.green;
-                    GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
-
-                    if (GUILayout.Button(iconTexture,                        
-                        GUILayout.Width(ICON_SIZE),
-                        GUILayout.Height(ICON_SIZE))) 
-                    {                        
-                        SetContextCharacter(info.guid);
-                        if (doubleClick)
-                        {
-                            previewCharacterAfterGUI = true;
-                        }
-                    }
-
-                    GUI.backgroundColor = background;
-                    
-                    GUILayout.FlexibleSpace();                    
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();                    
-                    GUILayout.FlexibleSpace();
-                    string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
-                    GUILayout.Box(name, iconStyle, GUILayout.Width(ICON_SIZE));
-                    GUILayout.FlexibleSpace();
-                    GUILayout.FlexibleSpace();
-                    GUILayout.EndHorizontal();
-                }
-                GUILayout.EndVertical();
-            }
-            GUILayout.EndArea();            
-        }
-        
+                
         private void OnGUIInfoArea(Rect infoBlock)
         {            
             string importType = "Unprocessed";
@@ -526,13 +493,13 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label(contextCharacter.name, boldStyle);
+            GUILayout.Label(contextCharacter.name, importerStyles.boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label(contextCharacter.folder, labelStyle);
+            GUILayout.Label(contextCharacter.folder, importerStyles.labelStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -541,13 +508,13 @@ namespace Reallusion.Import
             GUILayout.Label("(" + contextCharacter.Generation.ToString() + "/"
                                 + contextCharacter.FaceProfile.expressionProfile + "/"
                                 + contextCharacter.FaceProfile.visemeProfile
-                            + ")", boldStyle);
+                            + ")", importerStyles.boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label(importType, boldStyle);
+            GUILayout.Label(importType, importerStyles.boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -753,18 +720,20 @@ namespace Reallusion.Import
 
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
-            if (contextCharacter.BuiltBasicMaterials) GUI.enabled = false;
+            
             if (contextCharacter.tempHairBake)
             {
-                if (GUILayout.Button(new GUIContent(iconActionBakeHairOn, "Restore Hair materials."),
+                if (GUILayout.Button(new GUIContent(iconActionBakeHairOn, "Restore original hair diffuse textures."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
                     restoreHairAfterGUI = true;
                 }
             }
-            else
+            else //if (!contextCharacter.BuiltBasicMaterials && contextCharacter.HasColorEnabledHair())
             {
-                if (GUILayout.Button(new GUIContent(iconActionBakeHair, "Bake hair materials."),
+                if (contextCharacter.BuiltBasicMaterials || !contextCharacter.HasColorEnabledHair()) GUI.enabled = false;
+
+                if (GUILayout.Button(new GUIContent(iconActionBakeHair, "Bake hair diffuse textures, to preview the baked results of the 'Enable Color' in the hair materials."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
                     bakeHairAfterGUI = true;
@@ -945,7 +914,8 @@ namespace Reallusion.Import
             GUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
-            characterTreeView.selectLinked = GUILayout.Toggle(characterTreeView.selectLinked, "Select Linked");
+            SELECT_LINKED = GUILayout.Toggle(SELECT_LINKED, "Select Linked");
+            characterTreeView.selectLinked = SELECT_LINKED;
             GUILayout.FlexibleSpace();
 
             GUILayout.EndHorizontal();
@@ -966,7 +936,7 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();            
             GUILayout.FlexibleSpace();
-            GUILayout.Label("Settings", boldStyle);
+            GUILayout.Label("Settings", importerStyles.boldStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(TITLE_SPACE);
@@ -1002,7 +972,7 @@ namespace Reallusion.Import
             GUILayout.Space(ROW_SPACE);
 
             GUILayout.Space(10f);
-            GUILayout.BeginVertical(new GUIContent("", "Override mip-map bias for all textures setup for the characters."), labelStyle);
+            GUILayout.BeginVertical(new GUIContent("", "Override mip-map bias for all textures setup for the characters."), importerStyles.labelStyle);
             GUILayout.Label("Mip-map Bias");
             GUILayout.Space(ROW_SPACE);
             GUILayout.BeginHorizontal();
@@ -1014,7 +984,7 @@ namespace Reallusion.Import
             GUILayout.Space(ROW_SPACE);
 
             GUILayout.Space(10f);
-            GUILayout.BeginVertical(new GUIContent("", "When setting up the physics capsule and sphere colliders, shrink the radius by this amount. This can help resolve colliders pushing out cloth too much during simulation."), labelStyle);
+            GUILayout.BeginVertical(new GUIContent("", "When setting up the physics capsule and sphere colliders, shrink the radius by this amount. This can help resolve colliders pushing out cloth too much during simulation."), importerStyles.labelStyle);
             GUILayout.Label("Physics Collider Shrink");
             GUILayout.Space(ROW_SPACE);
             GUILayout.BeginHorizontal();
@@ -1026,7 +996,7 @@ namespace Reallusion.Import
             GUILayout.Space(ROW_SPACE);
 
             GUILayout.Space(10f);
-            GUILayout.BeginVertical(new GUIContent("", "When assigning weight maps, the system analyses the weights of the mesh to determine which colliders affect the cloth simulation.Only cloth weights above this threshold will be considered for collider detection. Note: This is the default value supplied to the WeightMapper component, it can be further modified there."), labelStyle);
+            GUILayout.BeginVertical(new GUIContent("", "When assigning weight maps, the system analyses the weights of the mesh to determine which colliders affect the cloth simulation.Only cloth weights above this threshold will be considered for collider detection. Note: This is the default value supplied to the WeightMapper component, it can be further modified there."), importerStyles.labelStyle);
             GUILayout.Label("Physics Collider Detection Threshold");
             GUILayout.Space(ROW_SPACE);            
             GUILayout.BeginHorizontal();
@@ -1256,8 +1226,8 @@ namespace Reallusion.Import
 
                 WindowManager.HideAnimationPlayer(true);
 
-                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
-                GameObject bakedAsset = baker.BakeHQHair();
+                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter, "Hair");
+                baker.BakeHQHairDiffuse();
 
                 contextCharacter.tempHairBake = true;
                 contextCharacter.Write();
@@ -1272,7 +1242,7 @@ namespace Reallusion.Import
 
                 WindowManager.HideAnimationPlayer(true);
 
-                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
+                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter, "Hair");
                 GameObject bakedAsset = baker.RestoreHQHair();
 
                 contextCharacter.tempHairBake = false;
@@ -1357,6 +1327,356 @@ namespace Reallusion.Import
             Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = 0.5f;
             Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = 0.25f;
             Util.LOG_LEVEL = 0;
+            ICON_AREA_WIDTH = ICON_WIDTH;
+        }
+
+        // additions for draggable width icon area
+
+        private void OnGUIDragBarArea(Rect dragBar)
+        {
+            //Rect dragHandle = new Rect(dragBar.x - DRAG_HANDLE_PADDING, dragBar.y, 2 * DRAG_HANDLE_PADDING, dragBar.height);
+            Rect dragHandle = new Rect(dragBar.x, dragBar.y, DRAG_BAR_WIDTH + DRAG_HANDLE_PADDING, dragBar.height);
+            EditorGUIUtility.AddCursorRect(dragHandle, MouseCursor.ResizeHorizontal);
+            HandleMouseDrag(dragHandle);
+
+            GUILayout.BeginArea(dragBar);
+            GUILayout.BeginVertical(importerStyles.dragBarStyle);
+            GUILayout.EndVertical();
+            GUILayout.EndArea();
+        }
+
+        private void OnGUIFlexibleIconArea(Rect iconBlock)
+        {            
+            if (ICON_AREA_WIDTH > ICON_WIDTH_DETAIL)
+            {
+                OnGUIDetailIconArea(iconBlock); // detail view icon area layout
+            }
+            else
+            {
+                OnGUILargeIconArea(iconBlock); // adapted original icon area layaout
+            }            
+        }
+
+        // adapted original icon area layaout
+        private void OnGUILargeIconArea(Rect iconBlock)
+        {
+            GUILayout.BeginArea(iconBlock);
+
+            Event e = Event.current;
+            if (e.isMouse && e.type == EventType.MouseDown)
+            {
+                if (e.clickCount == 2) doubleClick = true;
+                else doubleClick = false;
+            }
+
+            using (var iconScrollViewScope = new EditorGUILayout.ScrollViewScope(iconScrollView, GUILayout.Width(iconBlock.width - 1f), GUILayout.Height(iconBlock.height - 10f)))
+            {
+                iconScrollView = iconScrollViewScope.scrollPosition;
+                GUILayout.BeginVertical();
+
+                for (int idx = 0; idx < validCharacters.Count; idx++)
+                {
+                    CharacterInfo info = validCharacters[idx];                    
+                    Texture2D iconTexture = iconUnprocessed;
+                    string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
+                    if (info.bakeIsBaked)
+                    {
+                        if (info.BuiltBasicMaterials) iconTexture = iconMixed;
+                        else if (info.BuiltHQMaterials) iconTexture = iconBaked;
+                    }
+                    else
+                    {
+                        if (info.BuiltBasicMaterials) iconTexture = iconBasic;
+                        else if (info.BuiltHQMaterials) iconTexture = iconHQ;
+                    }
+
+                    Color background = GUI.backgroundColor;
+                    Color tint = background;
+                    if (contextCharacter == info)
+                        tint = Color.green;
+                    GUI.backgroundColor = Color.Lerp(background, tint, 0.25f);
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.FlexibleSpace();
+
+                    GUILayout.BeginVertical();
+                    if (GUILayout.Button(iconTexture,
+                        GUILayout.Width(ICON_SIZE),
+                        GUILayout.Height(ICON_SIZE)))
+                    {
+                        SetContextCharacter(info.guid);
+                        if (doubleClick)
+                        {
+                            previewCharacterAfterGUI = true;
+                        }
+                    }
+
+                    GUI.backgroundColor = background;
+
+                    GUILayout.Space(2f);
+
+                    GUILayout.Box(name, importerStyles.iconStyle, GUILayout.Width(ICON_SIZE));
+                    GUILayout.Space(2f);
+                    GUILayout.EndVertical();
+
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndArea();
+        }
+
+        // detail view icon area layout
+        private void OnGUIDetailIconArea(Rect iconBlock)
+        {
+            importerStyles.FixMeh();
+
+            GUILayout.Space(TOP_PADDING);
+
+            float rowHeight = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
+
+            Rect boxRect = new Rect(0f, 0f, ICON_AREA_WIDTH - 4f, rowHeight);
+            Rect posRect = new Rect(iconBlock);
+            Rect viewRect = new Rect(0f, 0f, ICON_AREA_WIDTH - 14f, rowHeight * validCharacters.Count);
+
+            iconScrollView = GUI.BeginScrollView(posRect, iconScrollView, viewRect, false, false);
+            for (int idx = 0; idx < validCharacters.Count; idx++)
+            {
+                CharacterInfo info = validCharacters[idx];
+                Texture2D iconTexture = iconUnprocessed;
+                string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
+                if (info.bakeIsBaked)
+                {
+                    if (info.BuiltBasicMaterials) iconTexture = iconMixed;
+                    else if (info.BuiltHQMaterials) iconTexture = iconBaked;
+                }
+                else
+                {
+                    if (info.BuiltBasicMaterials) iconTexture = iconBasic;
+                    else if (info.BuiltHQMaterials) iconTexture = iconHQ;
+                }
+                
+                float heightDelta = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;
+                boxRect.y = idx * heightDelta;
+
+                GUILayout.BeginArea(boxRect);
+                                
+                GUILayout.BeginVertical(contextCharacter == info ? importerStyles.fakeButtonContext : importerStyles.fakeButton);
+                GUILayout.FlexibleSpace();
+
+                GUILayout.BeginHorizontal(); // horizontal container for image and label
+
+                GUILayout.BeginVertical(); // vertical container for image
+                GUILayout.FlexibleSpace();
+
+                GUILayout.Box(iconTexture, new GUIStyle(),
+                    GUILayout.Width(ICON_SIZE_SMALL),
+                    GUILayout.Height(ICON_SIZE_SMALL));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical(); // vertical container for image
+
+                GUILayout.BeginVertical(); // vertical container for label
+                GUILayout.FlexibleSpace();                
+                GUILayout.Label(name, importerStyles.nameTextStyle);
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical(); // vertical container for label
+
+                GUILayout.FlexibleSpace(); // fill horizontal for overall left-justify
+
+                GUILayout.EndHorizontal(); // horizontal container for image and label
+
+                GUILayout.FlexibleSpace();
+                GUILayout.EndVertical(); //(fakeButton)
+
+                GUILayout.EndArea();
+
+                if (HandleListClick(boxRect))
+                {
+                    RepaintOnUpdate();
+                    SetContextCharacter(info.guid);
+                    if (fakeButtonDoubleClick)
+                    {
+                        previewCharacterAfterGUI = true;
+                    }
+                }                
+            }
+            GUI.EndScrollView();
+        }
+
+        private void HandleMouseDrag(Rect container)
+        {
+            Event mouseEvent = Event.current;
+            if (container.Contains(mouseEvent.mousePosition) || dragging)
+            {
+                if (mouseEvent.type == EventType.MouseDrag)
+                {                    
+                    dragging = true;
+                    ICON_AREA_WIDTH += mouseEvent.delta.x;
+                    if (ICON_AREA_WIDTH < ICON_WIDTH_MIN)
+                        ICON_AREA_WIDTH = ICON_WIDTH_MIN;
+
+                    //float INFO_WIDTH_CALC = position.width - WINDOW_MARGIN - ICON_WIDTH - ACTION_WIDTH;
+                    if (CURRENT_INFO_WIDTH < INFO_WIDTH_MIN)
+                        ICON_AREA_WIDTH = position.width - WINDOW_MARGIN - ACTION_WIDTH - INFO_WIDTH_MIN;
+
+                    RepaintOnUpdate();
+                }
+
+                if (mouseEvent.type == EventType.MouseUp)
+                {                    
+                    dragging = false;
+
+                    RepaintOnUpdate();
+                }
+            }
+        }        
+
+        private bool fakeButtonDoubleClick = false;
+
+        private bool HandleListClick(Rect container)
+        {            
+            Event mouseEvent = Event.current;
+            if (container.Contains(mouseEvent.mousePosition))
+            {
+                if (mouseEvent.type == EventType.MouseDown)
+                {
+                    if (mouseEvent.clickCount == 2)
+                    {
+                        fakeButtonDoubleClick = true;
+                    }
+                    else
+                        fakeButtonDoubleClick = false;
+                    return true;
+                }                
+            }
+            return false;
+        }
+
+        void RepaintOnUpdate()
+        {
+            if (!repaintDelegated)
+            {
+                repaintDelegated = true;
+                EditorApplication.update -= RepaintOnceOnUpdate;
+                EditorApplication.update += RepaintOnceOnUpdate;
+            }
+        }
+        
+        void RepaintOnceOnUpdate()
+        {
+            Repaint();
+            EditorApplication.update -= RepaintOnceOnUpdate;
+            repaintDelegated = false;
+        }
+
+        public static Texture2D TextureColor(Color color)
+        {
+            const int size = 32;
+            Texture2D texture = new Texture2D(size, size);
+            Color[] pixels = texture.GetPixels();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = color;
+            }
+            texture.SetPixels(pixels);
+            texture.Apply(true);
+            return texture;
+        }
+
+
+
+        public class Styles
+        {
+            public GUIStyle logStyle;
+            public GUIStyle mainStyle;
+            public GUIStyle buttonStyle;
+            public GUIStyle labelStyle;
+            public GUIStyle boldStyle;
+            public GUIStyle iconStyle;
+            public GUIStyle dragBarStyle;
+            public GUIStyle nameTextStyle;
+            public GUIStyle fakeButton;
+            public GUIStyle fakeButtonContext;
+            public Texture2D dragTex, contextTex;
+
+            public Styles()
+            {
+                logStyle = new GUIStyle();
+                logStyle.wordWrap = true;
+                logStyle.fontStyle = FontStyle.Italic;
+                logStyle.normal.textColor = Color.grey;
+
+                mainStyle = new GUIStyle();
+                mainStyle.wordWrap = false;
+                mainStyle.fontStyle = FontStyle.Normal;
+                mainStyle.normal.textColor = Color.white;
+
+                iconStyle = new GUIStyle();
+                iconStyle.wordWrap = false;
+                iconStyle.fontStyle = FontStyle.Normal;
+                iconStyle.normal.textColor = Color.white;
+                iconStyle.alignment = TextAnchor.MiddleCenter;
+
+                boldStyle = new GUIStyle();
+                boldStyle.alignment = TextAnchor.UpperLeft;
+                boldStyle.wordWrap = false;
+                boldStyle.fontStyle = FontStyle.Bold;
+                boldStyle.normal.textColor = Color.white;
+
+                labelStyle = new GUIStyle();
+                labelStyle.alignment = TextAnchor.UpperLeft;
+                labelStyle.wordWrap = false;
+                labelStyle.fontStyle = FontStyle.Normal;
+                labelStyle.normal.textColor = Color.white;
+
+                buttonStyle = new GUIStyle();
+                buttonStyle.wordWrap = false;
+                buttonStyle.fontStyle = FontStyle.Normal;
+                buttonStyle.normal.textColor = Color.white;
+                buttonStyle.alignment = TextAnchor.MiddleCenter;
+
+                //color textures for the area styling
+                               
+
+                dragBarStyle = new GUIStyle();
+                dragBarStyle.normal.background = dragTex;
+                dragBarStyle.stretchHeight = true;
+                dragBarStyle.stretchWidth = true;
+
+                nameTextStyle = new GUIStyle();
+                nameTextStyle.alignment = TextAnchor.MiddleLeft;
+                nameTextStyle.wordWrap = false;
+                nameTextStyle.fontStyle = FontStyle.Normal;
+                nameTextStyle.normal.textColor = Color.white;
+
+                fakeButton = new GUIStyle();
+                //fakeButton.normal.background = nonContextTex;
+                fakeButton.padding = new RectOffset(1, 1, 1, 1);
+                fakeButton.stretchHeight = true;
+                fakeButton.stretchWidth = true;
+
+                fakeButtonContext = new GUIStyle();
+                fakeButtonContext.name = "fakeButtonContext";
+                fakeButtonContext.normal.background = contextTex;
+                fakeButtonContext.padding = new RectOffset(1, 1, 1, 1);
+                fakeButtonContext.stretchHeight = true;
+                fakeButtonContext.stretchWidth = true;
+            }
+
+            public void FixMeh()
+            {
+                if (!dragTex)
+                {                    
+                    dragTex = TextureColor(Color.white * 0.1f);
+                    dragBarStyle.normal.background = dragTex;                    
+                }
+                if (!contextTex)
+                {                    
+                    contextTex = TextureColor(new Color(0.259f, 0.345f, 0.259f));
+                    fakeButtonContext.normal.background = contextTex;
+                }
+            }
         }
     }
 }

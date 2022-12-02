@@ -40,7 +40,7 @@ namespace Reallusion.Import
 
     public static class Pipeline
     {
-        public const string VERSION = "1.4.0";
+        public const string VERSION = "1.4.1";
 
 #if HDRP_10_5_0_OR_NEWER
         // version
@@ -494,49 +494,40 @@ namespace Reallusion.Import
 
             SerializedProperty item;
             int index;
+            bool modified = false;
+            string[] profiles = new string[] { "RL_Skin_Profile", "RL_Teeth_Profile", "RL_Eye_Profile", "RL_SSS_Profile" };            
 
-            Object skinProfileAsset = Util.FindAsset("RL_Skin_Profile");
-            Object teethProfileAsset = Util.FindAsset("RL_Teeth_Profile");
-            Object eyeProfileAsset = Util.FindAsset("RL_Eye_Profile");
-
-            if (!skinProfileAsset || !teethProfileAsset || !eyeProfileAsset) return;
-
-            bool addSkinProfile = true;
-            bool addTeethProfile = true;
-            bool addEyeProfile = true;
-            foreach (SerializedProperty p in list)
+            foreach (string profile in profiles)
             {
-                if (p.objectReferenceValue == skinProfileAsset) addSkinProfile = false;
-                if (p.objectReferenceValue == teethProfileAsset) addTeethProfile = false;
-                if (p.objectReferenceValue == eyeProfileAsset) addEyeProfile = false;
+                Object asset = Util.FindAsset(profile);
+                if (asset)
+                {
+                    bool add = true;
+
+                    foreach (SerializedProperty p in list)
+                    {
+                        if (p.objectReferenceValue == asset) add = false;
+                    }
+
+                    if (add)
+                    {
+                        index = list.arraySize;
+                        if (index < 15)
+                        {
+                            list.InsertArrayElementAtIndex(index);
+                            item = list.GetArrayElementAtIndex(index);
+                            item.objectReferenceValue = asset;
+                            modified = true;
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Maximum number of diffusion profiles reached! Unable to add profile: " + profile);
+                        }
+                    }
+                }
             }
 
-            if (addSkinProfile)
-            {
-                index = list.arraySize;
-                list.InsertArrayElementAtIndex(index);
-                item = list.GetArrayElementAtIndex(index);
-                item.objectReferenceValue = skinProfileAsset;
-            }
-
-            if (addTeethProfile)
-            {
-                index = list.arraySize;
-                list.InsertArrayElementAtIndex(index);
-                item = list.GetArrayElementAtIndex(index);
-                item.objectReferenceValue = teethProfileAsset;
-            }
-
-            if (addEyeProfile)
-            {
-                index = list.arraySize;
-                list.InsertArrayElementAtIndex(index);
-                item = list.GetArrayElementAtIndex(index);
-                item.objectReferenceValue = eyeProfileAsset;
-            }
-
-            if (addSkinProfile || addTeethProfile || addEyeProfile)
-                hdrp.ApplyModifiedProperties();
+            if (modified) hdrp.ApplyModifiedProperties();
 #endif
         }
 
@@ -567,6 +558,13 @@ namespace Reallusion.Import
         {            
             if (info.Generation == BaseGeneration.ActorCore)
                 return MATERIAL_DEFAULT_SINGLE_MATERIAL;            
+
+            if (info.Generation == BaseGeneration.ActorBuild)
+            {
+                Material singleMaterial = RL.GetActorBuildSingleMaterial(info.Fbx);
+                if (singleMaterial && singleMaterial.name == sourceName)
+                    return MATERIAL_DEFAULT_SINGLE_MATERIAL;
+            }
 
             if (quality == MaterialQuality.High) // option overrides for high quality materials
             {
@@ -727,6 +725,16 @@ namespace Reallusion.Import
                     return true;            
 
             return false;
+        }
+
+        public static void DisableRayTracing(SkinnedMeshRenderer smr)
+        {
+#if HDRP_10_5_0_OR_NEWER
+            if (SystemInfo.supportsRayTracing)
+            {
+                smr.rayTracingMode = UnityEngine.Experimental.Rendering.RayTracingMode.Off;
+            }
+#endif
         }
     }
 }

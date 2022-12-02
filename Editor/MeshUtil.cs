@@ -275,6 +275,7 @@ namespace Reallusion.Import
             string meshFolder = Path.Combine(folder, PRUNED_FOLDER_NAME);
 
             Mesh dstMesh = new Mesh();
+            dstMesh.indexFormat = srcMesh.indexFormat;            
             dstMesh.vertices = srcMesh.vertices;
             dstMesh.uv = srcMesh.uv;
             dstMesh.uv2 = srcMesh.uv2;
@@ -344,6 +345,7 @@ namespace Reallusion.Import
         public static Mesh CopyMesh(Mesh srcMesh)
         {
             Mesh dstMesh = new Mesh();
+            dstMesh.indexFormat = srcMesh.indexFormat;
             dstMesh.vertices = srcMesh.vertices;
             dstMesh.uv = srcMesh.uv;
             dstMesh.uv2 = srcMesh.uv2;
@@ -412,6 +414,7 @@ namespace Reallusion.Import
             }
                         
             Mesh dstMesh = new Mesh();
+            dstMesh.indexFormat = srcMesh.indexFormat;
             dstMesh.vertices = srcMesh.vertices;
             dstMesh.uv = srcMesh.uv;
             dstMesh.uv2 = srcMesh.uv2;
@@ -720,6 +723,7 @@ namespace Reallusion.Import
 
             // now create the extracted mesh
             Mesh newMesh = new Mesh();
+            newMesh.indexFormat = srcMesh.indexFormat;
             Vector3[] vertices = new Vector3[numNewVerts];
             Vector2[] uv = new Vector2[srcUv.Length > 0 ? numNewVerts : 0];
             Vector2[] uv2 = new Vector2[srcUv2.Length > 0 ? numNewVerts : 0];
@@ -884,6 +888,7 @@ namespace Reallusion.Import
 
             // now create the extracted mesh
             Mesh newMesh = new Mesh();
+            newMesh.indexFormat = srcMesh.indexFormat;
             Vector3[] vertices = new Vector3[numNewVerts];
             Vector2[] uv = new Vector2[srcUv.Length > 0 ? numNewVerts : 0];
             Vector2[] uv2 = new Vector2[srcUv2.Length > 0 ? numNewVerts : 0];
@@ -1078,12 +1083,23 @@ namespace Reallusion.Import
             {
                 bool hasHairMaterial = false;
                 bool isFacialObject = FacialProfileMapper.MeshHasFacialBlendShapes(r.gameObject);
+                bool hasScalpMaterial = false;
                 int subMeshCount = 0;
+                int hairMeshCount = 0;
                 foreach (Material m in r.sharedMaterials)
                 {
                     subMeshCount++;
                     if (m.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
+                    {
                         hasHairMaterial = true;
+                        hairMeshCount++;
+                    }
+                    else if (m.name.iContains("scalp_") ||
+                             m.name.iContains("_base_") ||
+                             m.name.iContains("_transparency"))
+                    {
+                        hasScalpMaterial = true;
+                    }
                 }
 
                 if (hasHairMaterial)
@@ -1129,7 +1145,7 @@ namespace Reallusion.Import
 
                             // extract mesh into two new meshes, the old mesh without the extracted submesh
                             // and just the extracted submesh
-                            Mesh newMesh = ExtractSubMesh(oldMesh, index);                            
+                            Mesh newMesh = ExtractSubMesh(oldMesh, index);
                             // Save the mesh asset.
                             Util.EnsureAssetsFolderExists(meshFolder);
                             string meshPath = Path.Combine(meshFolder, oldObj.name + "_ExtractedHairMesh" + index.ToString() + ".mesh");
@@ -1231,6 +1247,14 @@ namespace Reallusion.Import
                                     sharedMaterials[i++] = oldSmr.sharedMaterials[j];
                             oldSmr.sharedMaterials = sharedMaterials;
                         }
+
+                        // if the hair mesh has a scalp or base then what remains should be the scalp/base
+                        // in HDRP ray tracing this should be set to not ray trace.
+                        // but only if there is only the scalp material left:
+                        if (hasScalpMaterial && oldSmr.sharedMaterials.Length == 1)
+                        {
+                            Pipeline.DisableRayTracing(oldSmr);
+                        }                        
 
                         processCount++;
                     }

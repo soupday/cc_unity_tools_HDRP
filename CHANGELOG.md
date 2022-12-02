@@ -1,6 +1,19 @@
 Changelog
 =========
 
+### v 1.4.1
+- Traditional material glossiness fix.
+- High poly (sub-division) hair mesh extraction fix.
+- SSS Diffusion profile added.
+- Remembers last used lighting preset on character preview change.
+- Character icon list side bar can be dragged into a more compact list view.
+    - Character list sorted alphabetically.
+- When HDRP Ray tracing is enabled:
+    - The material build function will turn off ray tracing on the Scalp (when separeated), Eye Occlusion and Tearline meshes as it causes darkening artifacts on the underlying skin and eye surfaces.
+    - (Typically the scalp is only separated from the hair materials when two-pass hair is enabled)
+- Bake Hair function now only bakes the result of the 'Enable Color' properties into the diffuse maps of the hair materials. Press again to revert to original diffuse maps.
+- Improved ActorCore and ActorBuild single material detection.
+
 ### v 1.4.0
 - Import & Setup
     - ActorBuild detection separated from ActorCore (ActorBuild can have more advanced materials)

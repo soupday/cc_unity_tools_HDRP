@@ -46,6 +46,7 @@
 #pragma kernel RLCorneaThickness
 #pragma kernel RLCorneaSubsurfaceMask
 #pragma kernel RLHairColoredDiffuse
+#pragma kernel RLHairColoredDiffuseOnly
 #pragma kernel RLHairDiffuse
 #pragma kernel RLHairMask
 #pragma kernel RLHairMetallicGloss
@@ -1335,6 +1336,29 @@ void RLHairColoredDiffuse(uint3 id : SV_DispatchThreadID)
     color = lerp(color, color * depthBlend, colorBlendStrength);
     color = lerp(color, color * ao, aoOccludeAll);
     
+    color = LinearTosRGB(color);
+    color.a = alpha;
+
+    Result[id.xy] = color;
+}
+
+[numthreads(1, 1, 1)]
+void RLHairColoredDiffuseOnly(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float4 diffuse = SAMPLE(Diffuse, uv);
+    float4 rootMap = SAMPLE(Root, uv);
+    float4 idMap = SAMPLE(ID, uv);       
+
+    float alpha = diffuse.a;
+
+    float4 color = RootEndBlend(diffuse, rootMap.g);
+    color = HighlightBlend(color, idMap.g, rootMap.g, highlightAColor, highlightADistribution,
+        highlightAStrength, highlightAOverlapEnd, highlightAOverlapInvert);
+    color = HighlightBlend(color, idMap.g, rootMap.g, highlightBColor, highlightBDistribution,
+        highlightBStrength, highlightBOverlapEnd, highlightBOverlapInvert);    
+
     color = LinearTosRGB(color);
     color.a = alpha;
 

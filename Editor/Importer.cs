@@ -26,8 +26,7 @@ namespace Reallusion.Import
     public class Importer
     {
         private readonly GameObject fbx;
-        private readonly QuickJSON jsonData;
-        private readonly QuickJSON jsonMeshData;
+        private readonly QuickJSON jsonData;        
         private readonly QuickJSON jsonPhysicsData;
         private readonly string fbxPath;
         private readonly string fbxFolder;
@@ -64,7 +63,8 @@ namespace Reallusion.Import
         public const int FLAG_HAIR_ID = 64;
         public const int FLAG_WRAP_CLAMP = 1024;
 
-        public const float MAX_SMOOTHNESS = 0.897f;
+        public const float MAX_SMOOTHNESS = 0.897f;        
+        public const float TRA_SPECULAR_SCALE = 0.2f;
 
         public static float MIPMAP_BIAS
         {
@@ -171,15 +171,9 @@ namespace Reallusion.Import
             Util.LogInfo("Using material folder: " + materialsFolder);
 
             // fetch the character json export data.            
-            jsonData = info.JsonData;
-            string jsonPath = characterName + "/Object/" + characterName + "/Meshes";
-            jsonMeshData = null;
-            if (jsonData.PathExists(jsonPath))
-                jsonMeshData = jsonData.GetObjectAtPath(jsonPath);
-            else
-                Util.LogError("Unable to find Json mesh data: " + jsonPath);
-
-            jsonPath = characterName + "/Object/" + characterName + "/Physics";
+            jsonData = info.JsonData;            
+            if (info.MeshJsonData == null) Util.LogError("Unable to find Json mesh data!");
+            
             jsonPhysicsData = info.PhysicsJsonData;
             if (jsonPhysicsData == null)
                 Util.LogWarn("Unable to find Json physics data!");
@@ -372,12 +366,14 @@ namespace Reallusion.Import
                     {
                         // fetch the json parent for this material.
                         // the json data for the material contains custom shader names, parameters and texture paths.
-                        QuickJSON matJson = GetMatJson(obj, sourceName);
+                        QuickJSON matJson = characterInfo.GetMatJson(obj, sourceName);
 
                         // determine the material type, this dictates the shader and template material.
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
 
                         Util.LogInfo("    Material name: " + sourceName + ", type:" + materialType.ToString());
+
+                        FixRayTracing(obj, sharedMat, materialType);
 
                         // re-use or create the material.
                         Material mat = CreateRemapMaterial(materialType, sharedMat, sourceName);
@@ -423,7 +419,7 @@ namespace Reallusion.Import
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
                     if (!processedBuildMaterials.Contains(sourceName))
                     {
-                        QuickJSON matJson = GetMatJson(obj, sourceName);
+                        QuickJSON matJson = characterInfo.GetMatJson(obj, sourceName);
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
 
                         if (matJson != null)
@@ -475,7 +471,7 @@ namespace Reallusion.Import
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
                     if (!processedBuildMaterials.Contains(sourceName))
                     {
-                        QuickJSON matJson = GetMatJson(obj, sourceName);
+                        QuickJSON matJson = characterInfo.GetMatJson(obj, sourceName);
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
 
                         if (matJson != null)
@@ -503,40 +499,7 @@ namespace Reallusion.Import
                     }
                 }
             }
-        }
-
-        private QuickJSON GetMatJson(GameObject obj, string sourceName)
-        {
-            QuickJSON matJson = null;
-            string objName = obj.name;
-            string jsonPath = "";
-            if (jsonMeshData != null)
-            {
-                jsonPath = objName + "/Materials/" + sourceName;
-                if (jsonMeshData.PathExists(jsonPath))
-                {
-                    matJson = jsonMeshData.GetObjectAtPath(jsonPath);
-                }
-                else
-                {
-                    // there is a bug where a space in name causes the name to be truncated on export from CC3/4
-                    if (objName.Contains(" "))
-                    {
-                        Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly.");
-                        string[] split = objName.Split(' ');
-                        objName = split[0];
-                        jsonPath = objName + "/Materials/" + sourceName;
-                        if (jsonMeshData.PathExists(jsonPath))
-                        {
-                            matJson = jsonMeshData.GetObjectAtPath(jsonPath);
-                        }
-                    }
-                }
-            }
-            if (matJson == null) Util.LogError("Unable to find json material data: " + jsonPath);
-
-            return matJson;
-        }
+        }        
 
         private MaterialType GetMaterialType(GameObject obj, Material mat, string sourceName, QuickJSON matJson)
         {            
@@ -705,6 +668,27 @@ namespace Reallusion.Import
 
             return remapMaterial;
         }        
+
+        private void FixRayTracing(GameObject obj, Material mat, MaterialType materialType)
+        {
+            SkinnedMeshRenderer smr = obj.GetComponent<SkinnedMeshRenderer>();
+
+            if (smr)
+            {
+                if (materialType == MaterialType.EyeOcclusion ||
+                    materialType == MaterialType.Tearline)
+                {
+                    Pipeline.DisableRayTracing(smr);
+                }
+                else if (materialType == MaterialType.Scalp)
+                {
+                    if (smr.sharedMaterials.Length == 1)
+                    {
+                        Pipeline.DisableRayTracing(smr);
+                    }
+                }
+            }
+        }
 
         private void ProcessTextures(GameObject obj, string sourceName, Material sharedMat, Material mat, 
             MaterialType materialType, QuickJSON matJson)
@@ -897,7 +881,9 @@ namespace Reallusion.Import
                 else
                 {
                     Shader specShader = Shader.Find("Standard (Specular setup)");
+                    int renderQueue = mat.renderQueue;
                     mat.shader = specShader;
+                    mat.renderQueue = renderQueue;                    
                 }
             }
 
@@ -1042,12 +1028,7 @@ namespace Reallusion.Import
                 if (RP != RenderPipeline.Builtin)
                     mat.SetColorIf("_BaseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
                 else
-                    mat.SetColorIf("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
-
-                if (RP == RenderPipeline.HDRP)
-                    mat.SetColorIf("_SpecularColor", 0.2f * Util.LinearTosRGB(matJson.GetColorValue("Specular Color")));
-                else
-                    mat.SetColorIf("_SpecColor", 0.2f * Util.LinearTosRGB(matJson.GetColorValue("Specular Color")));
+                    mat.SetColorIf("_Color", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));                
 
                 // Emission
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
@@ -1146,42 +1127,62 @@ namespace Reallusion.Import
                 }
             }
 
-            // Apply micro roughness & specular
-            if (matJson != null && matJson.PathExists("Custom Shader/Variable/Micro Roughness Scale"))
+            // Smoothness/Glossiness and Specular
+            if (matJson != null)
             {
-                float microRoughnessMod = 0.0f;
-                float specular = 0.5f;
                 if (matJson.PathExists("Custom Shader/Variable/Micro Roughness Scale"))
-                    microRoughnessMod = matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale");
-                if (matJson.PathExists("Custom Shader/Variable/_Specular"))
-                    specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
+                {                    
+                    float microRoughnessMod = 0.0f;
+                    float specular = 0.5f;
 
-                if (RP == RenderPipeline.HDRP)
-                {
-                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_Smoothness", 0.5f));
-                    float smoothnessMin = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_SmoothnessRemapMin", 0f));
-                    float smoothnessMax = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_SmoothnessRemapMax", MAX_SMOOTHNESS));
-                    mat.SetMinMaxRange("_SmoothnessRemap", smoothnessMin - microRoughnessMod, smoothnessMax - microRoughnessMod);
-                    mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
-                }
-                else if (RP == RenderPipeline.URP)
-                {
-                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_Smoothness", 0.5f));
-                    mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
-                }
-                else
-                {
-                    float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_GlossMapScale", 0.5f));
-                    mat.SetFloatIf("_GlossMapScale", smoothness - microRoughnessMod);
-                }
-            }
+                    if (matJson.PathExists("Custom Shader/Variable/Micro Roughness Scale"))
+                        microRoughnessMod = matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale");
+                    if (matJson.PathExists("Custom Shader/Variable/_Specular"))
+                        specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                    
 
-            if (jsonMaterialType.iEquals("Tra"))
-            {
-                mat.SetFloatIf("_Smoothness", 0.5f);
-                mat.SetFloatIf("_GlossMapScale", 0.5f);
-                mat.SetFloatIf("_Glossiness", 0.5f);
-                mat.SetMinMaxRange("_SmoothnessRemap", 0f, 0.5f);
+                    if (RP == RenderPipeline.HDRP)
+                    {
+                        float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_Smoothness", 0.5f));
+                        float smoothnessMin = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_SmoothnessRemapMin", 0f));
+                        float smoothnessMax = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_SmoothnessRemapMax", MAX_SMOOTHNESS));
+                        mat.SetMinMaxRange("_SmoothnessRemap", smoothnessMin - microRoughnessMod, smoothnessMax - microRoughnessMod);
+                        mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
+                    }
+                    else if (RP == RenderPipeline.URP)
+                    {
+                        float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_Smoothness", 0.5f));
+                        mat.SetFloatIf("_Smoothness", smoothness - microRoughnessMod);
+                    }
+                    else
+                    {
+                        float smoothness = Util.CombineSpecularToSmoothness(specular, mat.GetFloatIf("_GlossMapScale", 0.5f));
+                        mat.SetFloatIf("_GlossMapScale", smoothness - microRoughnessMod);
+                    }
+                }
+                else if (jsonMaterialType.iEquals("Tra"))
+                {
+                    float glossiness = 0.5f;
+                    float specular = 1f;
+                    Color specularColor = Color.white * TRA_SPECULAR_SCALE;
+
+                    if (matJson.PathExists("Glossiness"))
+                        glossiness = matJson.GetFloatValue("Glossiness");
+                    if (matJson.PathExists("Specular"))
+                        specular = matJson.GetFloatValue("Specular");
+                    if (matJson.PathExists("Specular Color"))
+                        specularColor = TRA_SPECULAR_SCALE * Util.LinearTosRGB(matJson.GetColorValue("Specular Color"));
+
+                    glossiness = Util.CombineSpecularToSmoothness(specularColor.grayscale * specular, glossiness);
+                    mat.SetFloatIf("_Smoothness", glossiness);
+                    mat.SetFloatIf("_GlossMapScale", glossiness);
+                    mat.SetFloatIf("_Glossiness", glossiness);
+                    mat.SetMinMaxRange("_SmoothnessRemap", 0f, glossiness);
+
+                    if (RP == RenderPipeline.HDRP)
+                        mat.SetColorIf("_SpecularColor", specularColor);
+                    else
+                        mat.SetColorIf("_SpecColor", specularColor);
+                }                
             }
         }
 
@@ -1863,6 +1864,8 @@ namespace Reallusion.Import
                                 obj.transform.localScale.y +
                                 obj.transform.localScale.z) / 3.0f;            
             mat.SetFloatIf("_ExpandScale", 1.0f / modelScale);
+
+
         }
 
         private void ConnectHQTearlineMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
