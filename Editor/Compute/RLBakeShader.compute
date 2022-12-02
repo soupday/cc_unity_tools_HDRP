@@ -1351,15 +1351,13 @@ void RLHairColoredDiffuseOnly(uint3 id : SV_DispatchThreadID)
     float4 rootMap = SAMPLE(Root, uv);
     float4 idMap = SAMPLE(ID, uv);       
 
-    float alpha = pow(saturate((diffuse.a / alphaRemap)), alphaPower);
+    float alpha = diffuse.a;
 
     float4 color = RootEndBlend(diffuse, rootMap.g);
     color = HighlightBlend(color, idMap.g, rootMap.g, highlightAColor, highlightADistribution,
         highlightAStrength, highlightAOverlapEnd, highlightAOverlapInvert);
     color = HighlightBlend(color, idMap.g, rootMap.g, highlightBColor, highlightBDistribution,
-        highlightBStrength, highlightBOverlapEnd, highlightBOverlapInvert);
-
-    color = color * diffuseStrength;    
+        highlightBStrength, highlightBOverlapEnd, highlightBOverlapInvert);    
 
     color = LinearTosRGB(color);
     color.a = alpha;
