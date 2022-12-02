@@ -80,7 +80,7 @@ namespace Reallusion.Import
             guidRemaps.Add(new GUIDRemap(from, to));
         }
 
-        public Object GetGUIDRemap(Object to)
+        public Object GetGUIDRemapFrom(Object to)
         {
             string guidTo = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(to));
 
@@ -89,6 +89,23 @@ namespace Reallusion.Import
                 if (gr.to == guidTo)
                 {
                     string path = AssetDatabase.GUIDToAssetPath(gr.from);
+                    if (!string.IsNullOrEmpty(path)) return AssetDatabase.LoadAssetAtPath<Object>(path);
+                    else return null;
+                }
+            }
+
+            return null;
+        }
+
+        public Object GetGUIDRemapTo(Object from)
+        {
+            string guidFrom = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(from));
+
+            foreach (GUIDRemap gr in guidRemaps)
+            {
+                if (gr.from == guidFrom)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(gr.to);
                     if (!string.IsNullOrEmpty(path)) return AssetDatabase.LoadAssetAtPath<Object>(path);
                     else return null;
                 }

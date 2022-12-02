@@ -436,6 +436,18 @@ namespace Reallusion.Import
 
                                 if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
                                 {
+                                    // replace the diffuse map on the source material (non multi-pass version)
+                                    Material sourceMat = GetSourceHairMaterial(sharedMat);
+                                    if (sourceMat)
+                                    {
+                                        // set baked diffuse map
+                                        sourceMat.SetTextureIf("_DiffuseMap", bakedMap);
+                                        // turn off enable color
+                                        sourceMat.SetFloatIf("BOOLEAN_ENABLECOLOR", 0f);
+                                        sourceMat.DisableKeyword("BOOLEAN_ENABLECOLOR_ON");
+                                        Pipeline.ResetMaterial(sourceMat);
+                                    }
+
                                     // Get the 2nd pass shared material
                                     foreach (Material secondPassMat in renderer.sharedMaterials)
                                     {
@@ -454,6 +466,27 @@ namespace Reallusion.Import
                         }
                     }
                 }
+            }
+        }
+
+        private Material GetSourceHairMaterial(Material mat)
+        {
+            string materialName = mat.name;
+            string[] folders = new string[] { sourceMaterialsFolder };
+
+            if (materialName.iContains("_1st_Pass"))
+            {
+                materialName = materialName.Substring(0, materialName.IndexOf("_1st_Pass"));
+                return Util.FindMaterial(materialName, folders);
+            }
+            else if (materialName.iContains("_2nd_Pass"))
+            {
+                materialName = materialName.Substring(0, materialName.IndexOf("_2nd_Pass"));
+                return Util.FindMaterial(materialName, folders);
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -483,26 +516,38 @@ namespace Reallusion.Import
                             if (sourceName.iEndsWith("_2nd_Pass")) continue;
 
                             Texture2D bakedMap = (Texture2D)sharedMat.GetTextureIf("_DiffuseMap");
-                            Texture2D sourceMap = (Texture2D)characterInfo.GetGUIDRemap(bakedMap);
+                            Texture2D sourceMap = (Texture2D)characterInfo.GetGUIDRemapFrom(bakedMap);
                             if (sourceMap)
                             {
-                                // set source diffuse map
+                                // restore source diffuse map
                                 sharedMat.SetTextureIf("_DiffuseMap", sourceMap);
                                 // turn on enable color
                                 sharedMat.SetFloatIf("BOOLEAN_ENABLECOLOR", 1f);
                                 sharedMat.EnableKeyword("BOOLEAN_ENABLECOLOR_ON");
                                 Pipeline.ResetMaterial(sharedMat);
-                                // remove the texture switch
+                                // remove the texture switch info
                                 characterInfo.RemoveGUIDRemap(sourceMap, bakedMap);                                
 
                                 if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
                                 {
+                                    // restore the diffuse map on the source material (non multi-pass version)
+                                    Material sourceMat = GetSourceHairMaterial(sharedMat);
+                                    if (sourceMat)
+                                    {
+                                        // set source diffuse map
+                                        sourceMat.SetTextureIf("_DiffuseMap", sourceMap);
+                                        // turn on enable color
+                                        sourceMat.SetFloatIf("BOOLEAN_ENABLECOLOR", 1f);
+                                        sourceMat.EnableKeyword("BOOLEAN_ENABLECOLOR_ON");
+                                        Pipeline.ResetMaterial(sourceMat);
+                                    }
+
                                     // Get the 2nd pass shared material
                                     foreach (Material secondPassMat in renderer.sharedMaterials)
                                     {
                                         if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
                                         {
-                                            // set source diffuse map
+                                            // restore source diffuse map
                                             secondPassMat.SetTextureIf("_DiffuseMap", sourceMap);
                                             // turn on enable color
                                             secondPassMat.SetFloatIf("BOOLEAN_ENABLECOLOR", 1f);
