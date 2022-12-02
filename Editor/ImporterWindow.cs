@@ -723,7 +723,7 @@ namespace Reallusion.Import
             
             if (contextCharacter.tempHairBake)
             {
-                if (GUILayout.Button(new GUIContent(iconActionBakeHairOn, "Restore original hair materials."),
+                if (GUILayout.Button(new GUIContent(iconActionBakeHairOn, "Restore original hair diffuse textures."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
                     restoreHairAfterGUI = true;
@@ -733,7 +733,7 @@ namespace Reallusion.Import
             {
                 if (contextCharacter.BuiltBasicMaterials || !contextCharacter.HasColorEnabledHair()) GUI.enabled = false;
 
-                if (GUILayout.Button(new GUIContent(iconActionBakeHair, "Bake hair materials, to preview the baked results of the 'Enable Color' in the hair materials."),
+                if (GUILayout.Button(new GUIContent(iconActionBakeHair, "Bake hair diffuse textures, to preview the baked results of the 'Enable Color' in the hair materials."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
                     bakeHairAfterGUI = true;
