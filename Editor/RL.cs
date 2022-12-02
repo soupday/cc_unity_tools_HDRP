@@ -532,24 +532,15 @@ namespace Reallusion.Import
         }
 
         public static GameObject CreatePrefabFromFbx(CharacterInfo info, GameObject fbx, out GameObject sceneInstance)
-        {
-            bool noMotion = !info.name.iContains("_Motion");
-            sceneInstance = null;
-
-            if (noMotion)
+        {            
+            if (info.path.iContains("_lod") && CountLODs(fbx) > 1)
             {
-                // Set the Prefab
-                if (info.path.iContains("_lod") && CountLODs(fbx) > 1)
-                {                    
-                    return CreateOneLODPrefabFromModel(info, fbx, "", out sceneInstance);
-                }
-                else
-                {                    
-                    return CreatePrefabFromModel(info, fbx, out sceneInstance);
-                }
+                return CreateOneLODPrefabFromModel(info, fbx, "", out sceneInstance);
             }
-
-            return null;
+            else
+            {
+                return CreatePrefabFromModel(info, fbx, out sceneInstance);
+            }
         }
 
         /// <summary>
