@@ -26,8 +26,7 @@ namespace Reallusion.Import
     public class Importer
     {
         private readonly GameObject fbx;
-        private readonly QuickJSON jsonData;
-        private readonly QuickJSON jsonMeshData;
+        private readonly QuickJSON jsonData;        
         private readonly QuickJSON jsonPhysicsData;
         private readonly string fbxPath;
         private readonly string fbxFolder;
@@ -173,15 +172,9 @@ namespace Reallusion.Import
             Util.LogInfo("Using material folder: " + materialsFolder);
 
             // fetch the character json export data.            
-            jsonData = info.JsonData;
-            string jsonPath = characterName + "/Object/" + characterName + "/Meshes";
-            jsonMeshData = null;
-            if (jsonData.PathExists(jsonPath))
-                jsonMeshData = jsonData.GetObjectAtPath(jsonPath);
-            else
-                Util.LogError("Unable to find Json mesh data: " + jsonPath);
-
-            jsonPath = characterName + "/Object/" + characterName + "/Physics";
+            jsonData = info.JsonData;            
+            if (info.MeshJsonData == null) Util.LogError("Unable to find Json mesh data!");
+            
             jsonPhysicsData = info.PhysicsJsonData;
             if (jsonPhysicsData == null)
                 Util.LogWarn("Unable to find Json physics data!");
@@ -374,7 +367,7 @@ namespace Reallusion.Import
                     {
                         // fetch the json parent for this material.
                         // the json data for the material contains custom shader names, parameters and texture paths.
-                        QuickJSON matJson = GetMatJson(obj, sourceName);
+                        QuickJSON matJson = characterInfo.GetMatJson(obj, sourceName);
 
                         // determine the material type, this dictates the shader and template material.
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
@@ -427,7 +420,7 @@ namespace Reallusion.Import
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
                     if (!processedBuildMaterials.Contains(sourceName))
                     {
-                        QuickJSON matJson = GetMatJson(obj, sourceName);
+                        QuickJSON matJson = characterInfo.GetMatJson(obj, sourceName);
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
 
                         if (matJson != null)
@@ -479,7 +472,7 @@ namespace Reallusion.Import
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
                     if (!processedBuildMaterials.Contains(sourceName))
                     {
-                        QuickJSON matJson = GetMatJson(obj, sourceName);
+                        QuickJSON matJson = characterInfo.GetMatJson(obj, sourceName);
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
 
                         if (matJson != null)
@@ -507,40 +500,7 @@ namespace Reallusion.Import
                     }
                 }
             }
-        }
-
-        private QuickJSON GetMatJson(GameObject obj, string sourceName)
-        {
-            QuickJSON matJson = null;
-            string objName = obj.name;
-            string jsonPath = "";
-            if (jsonMeshData != null)
-            {
-                jsonPath = objName + "/Materials/" + sourceName;
-                if (jsonMeshData.PathExists(jsonPath))
-                {
-                    matJson = jsonMeshData.GetObjectAtPath(jsonPath);
-                }
-                else
-                {
-                    // there is a bug where a space in name causes the name to be truncated on export from CC3/4
-                    if (objName.Contains(" "))
-                    {
-                        Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly.");
-                        string[] split = objName.Split(' ');
-                        objName = split[0];
-                        jsonPath = objName + "/Materials/" + sourceName;
-                        if (jsonMeshData.PathExists(jsonPath))
-                        {
-                            matJson = jsonMeshData.GetObjectAtPath(jsonPath);
-                        }
-                    }
-                }
-            }
-            if (matJson == null) Util.LogError("Unable to find json material data: " + jsonPath);
-
-            return matJson;
-        }
+        }        
 
         private MaterialType GetMaterialType(GameObject obj, Material mat, string sourceName, QuickJSON matJson)
         {            

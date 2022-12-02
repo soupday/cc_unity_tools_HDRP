@@ -62,7 +62,7 @@ namespace Reallusion.Import
         private bool PARALLAX_EYES => characterInfo.ParallaxEyes;
         private bool BASIC_EYES => characterInfo.BasicEyes;
 
-        public ComputeBake(UnityEngine.Object character, CharacterInfo info)
+        public ComputeBake(UnityEngine.Object character, CharacterInfo info, string textureFolderOverride = null)
         {
             fbx = (GameObject)character;
             fbxPath = AssetDatabase.GetAssetPath(fbx);
@@ -72,7 +72,8 @@ namespace Reallusion.Import
             fbxFolder = Path.GetDirectoryName(fbxPath);
             bakeFolder = Util.CreateFolder(fbxFolder, BAKE_FOLDER);
             characterFolder = Util.CreateFolder(bakeFolder, characterName);
-            texturesFolder = Util.CreateFolder(characterFolder, TEXTURES_FOLDER);
+            texturesFolder = Util.CreateFolder(characterFolder,
+                string.IsNullOrEmpty(textureFolderOverride) ? TEXTURES_FOLDER : textureFolderOverride);
             materialsFolder = Util.CreateFolder(characterFolder, MATERIALS_FOLDER);
             string parentSourceMaterialsFolder = Util.CreateFolder(fbxFolder, MATERIALS_FOLDER);
             sourceMaterialsFolder = Util.CreateFolder(parentSourceMaterialsFolder, characterName);            
@@ -286,18 +287,17 @@ namespace Reallusion.Import
             return null;
         }
 
-        public GameObject BakeHQHair()
+        public GameObject BakeHQHairDiffuse()
         {
             if (Util.IsCC3Character(fbx) && prefab)
             {
-                if (!CopyToClone(true)) return null;
+                if (!CopyToClone()) return null;
 
-                BakeMaterials(true);
+                BakeHairDiffuseTextures();
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
 
-                PrefabUtility.ApplyPrefabInstance(clone, InteractionMode.UserAction);
                 GameObject.DestroyImmediate(clone);
 
                 return prefab;
@@ -310,12 +310,13 @@ namespace Reallusion.Import
         {
             if (Util.IsCC3Character(fbx) && prefab)
             {
-                if (!CopyToClone(true)) return null;                
+                if (!CopyToClone()) return null;
+
+                RestoreHairDiffuseTextures();
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-
-                PrefabUtility.ApplyPrefabInstance(clone, InteractionMode.UserAction);
+                
                 GameObject.DestroyImmediate(clone);
 
                 return prefab;
@@ -324,7 +325,7 @@ namespace Reallusion.Import
             return null;
         }
 
-        public void BakeMaterials(bool hairOnly = false)
+        public void BakeMaterials()
         {
             Renderer[] renderers = clone.GetComponentsInChildren<Renderer>();
             List<Material> processed = new List<Material>(renderers.Length);
@@ -346,48 +347,171 @@ namespace Reallusion.Import
                         Material firstPass = null;
                         Material secondPass = null;
 
-                        if (!hairOnly)
-                        {
-                            if (shaderName.iContains(Pipeline.SHADER_HQ_SKIN))
-                                bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
+                        if (shaderName.iContains(Pipeline.SHADER_HQ_SKIN))
+                            bakedMaterial = BakeSkinMaterial(sharedMat, sourceName);
 
-                            else if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH))
-                                bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_TEETH))
+                            bakedMaterial = BakeTeethMaterial(sharedMat, sourceName);
 
-                            else if (shaderName.iContains(Pipeline.SHADER_HQ_TONGUE))
-                                bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_TONGUE))
+                            bakedMaterial = BakeTongueMaterial(sharedMat, sourceName);
 
-                            else if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA) ||
-                                 shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
-                                 shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE) ||
-                                 shaderName.iContains(Pipeline.SHADER_HQ_EYE_REFRACTIVE))
-                                bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_CORNEA) ||
+                             shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_PARALLAX) ||
+                             shaderName.iContains(Pipeline.SHADER_HQ_CORNEA_REFRACTIVE) ||
+                             shaderName.iContains(Pipeline.SHADER_HQ_EYE_REFRACTIVE))
+                            bakedMaterial = BakeEyeMaterial(sharedMat, sourceName);
 
-                            else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION))
-                                bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);
-                        }
+                        else if (shaderName.iContains(Pipeline.SHADER_HQ_EYE_OCCLUSION))
+                            bakedMaterial = BakeEyeOcclusionMaterial(sharedMat, sourceName);
 
                         if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR) ||
                             shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS) ||
                             shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
-
-                            bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);                        
-
-                        if (firstPass && secondPass)
                         {
-                            ReplaceMaterial(sharedMat, firstPass);
-                            // Get the 2nd pass shared material
-                            foreach (Material secondPassMat in renderer.sharedMaterials)
+                            if (sourceName.iEndsWith("_2nd_Pass")) continue;
+
+                            bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);
+
+                            if (firstPass && secondPass)
                             {
-                                if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
+                                ReplaceMaterial(sharedMat, firstPass);
+                                // Get the 2nd pass shared material
+                                foreach (Material secondPassMat in renderer.sharedMaterials)
                                 {
-                                    ReplaceMaterial(secondPassMat, secondPass);
+                                    if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
+                                    {
+                                        ReplaceMaterial(secondPassMat, secondPass);
+                                    }
+                                }
+                            }
+                            else if (bakedMaterial)
+                            {
+                                ReplaceMaterial(sharedMat, bakedMaterial);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void BakeHairDiffuseTextures()
+        {
+            Renderer[] renderers = clone.GetComponentsInChildren<Renderer>();
+            List<Material> processed = new List<Material>(renderers.Length);
+
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer)
+                {
+                    foreach (Material sharedMat in renderer.sharedMaterials)
+                    {
+                        // don't process duplicates...
+                        if (processed.Contains(sharedMat)) continue;
+                        processed.Add(sharedMat);
+
+                        // in case any of the materials have been renamed after a previous import, get the source name.
+                        string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
+                        string shaderName = Util.GetShaderName(sharedMat);
+
+                        if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR) ||
+                            shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS) ||
+                            shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
+                        {
+                            if (sourceName.iEndsWith("_2nd_Pass")) continue;
+
+                            if (sharedMat.GetFloatIf("BOOLEAN_ENABLECOLOR") > 0f)
+                            {
+                                Texture2D sourceMap = (Texture2D)sharedMat.GetTextureIf("_DiffuseMap");
+                                // bake diffuse map
+                                BakeHairDiffuseOnly(sharedMat, sourceName, out Texture2D bakedMap);
+                                // set baked diffuse map
+                                sharedMat.SetTextureIf("_DiffuseMap", bakedMap);
+                                // turn off enable color
+                                sharedMat.SetFloatIf("BOOLEAN_ENABLECOLOR", 0f);
+                                sharedMat.DisableKeyword("BOOLEAN_ENABLECOLOR_ON");
+                                Pipeline.ResetMaterial(sharedMat);
+                                // add the texture switch to the character info
+                                characterInfo.AddGUIDRemap(sourceMap, bakedMap);                                
+
+                                if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
+                                {
+                                    // Get the 2nd pass shared material
+                                    foreach (Material secondPassMat in renderer.sharedMaterials)
+                                    {
+                                        if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
+                                        {
+                                            // set baked diffuse map
+                                            secondPassMat.SetTextureIf("_DiffuseMap", bakedMap);
+                                            // turn off enable color
+                                            secondPassMat.SetFloatIf("BOOLEAN_ENABLECOLOR", 0f);
+                                            secondPassMat.DisableKeyword("BOOLEAN_ENABLECOLOR_ON");
+                                            Pipeline.ResetMaterial(secondPassMat);
+                                        }
+                                    }
                                 }
                             }
                         }
-                        else if (bakedMaterial)
+                    }
+                }
+            }
+        }
+
+        public void RestoreHairDiffuseTextures()
+        {
+            Renderer[] renderers = clone.GetComponentsInChildren<Renderer>();
+            List<Material> processed = new List<Material>(renderers.Length);
+
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer)
+                {
+                    foreach (Material sharedMat in renderer.sharedMaterials)
+                    {
+                        // don't process duplicates...
+                        if (processed.Contains(sharedMat)) continue;
+                        processed.Add(sharedMat);
+
+                        // in case any of the materials have been renamed after a previous import, get the source name.
+                        string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
+                        string shaderName = Util.GetShaderName(sharedMat);                        
+
+                        if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR) ||
+                            shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS) ||
+                            shaderName.iContains(Pipeline.SHADER_HQ_HAIR_COVERAGE))
                         {
-                            ReplaceMaterial(sharedMat, bakedMaterial);
+                            if (sourceName.iEndsWith("_2nd_Pass")) continue;
+
+                            Texture2D bakedMap = (Texture2D)sharedMat.GetTextureIf("_DiffuseMap");
+                            Texture2D sourceMap = (Texture2D)characterInfo.GetGUIDRemap(bakedMap);
+                            if (sourceMap)
+                            {
+                                // set source diffuse map
+                                sharedMat.SetTextureIf("_DiffuseMap", sourceMap);
+                                // turn on enable color
+                                sharedMat.SetFloatIf("BOOLEAN_ENABLECOLOR", 1f);
+                                sharedMat.EnableKeyword("BOOLEAN_ENABLECOLOR_ON");
+                                Pipeline.ResetMaterial(sharedMat);
+                                // remove the texture switch
+                                characterInfo.RemoveGUIDRemap(sourceMap, bakedMap);                                
+
+                                if (shaderName.iContains(Pipeline.SHADER_HQ_HAIR_1ST_PASS))
+                                {
+                                    // Get the 2nd pass shared material
+                                    foreach (Material secondPassMat in renderer.sharedMaterials)
+                                    {
+                                        if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
+                                        {
+                                            // set source diffuse map
+                                            secondPassMat.SetTextureIf("_DiffuseMap", sourceMap);
+                                            // turn on enable color
+                                            secondPassMat.SetFloatIf("BOOLEAN_ENABLECOLOR", 1f);
+                                            secondPassMat.EnableKeyword("BOOLEAN_ENABLECOLOR_ON");
+                                            Pipeline.ResetMaterial(secondPassMat);
+                                        }
+                                    }
+                                }                                
+                            }                            
                         }
                     }
                 }
@@ -412,26 +536,13 @@ namespace Reallusion.Import
             }
         }
 
-        public bool CopyToClone(bool hairOnly = false)
+        public bool CopyToClone()
         {
-            if (!hairOnly)
-            {
-                // don't link the prefab as a variant to the original prefabs as updating the original causes the variants to be reset.
-                if (prefab)
-                    clone = GameObject.Instantiate<GameObject>(prefab);                
-                else
-                    clone = GameObject.Instantiate<GameObject>(fbx);
-            }
+            // don't link the prefab as a variant to the original prefabs as updating the original causes the variants to be reset.
+            if (prefab)
+                clone = GameObject.Instantiate<GameObject>(prefab);                
             else
-            {
-                if (prefab)
-                    clone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-                else
-                    clone = null;                
-            }
-
-            // put any HQ materials back if replaced by baked materials...
-            if (clone) RestoreHQMaterials(clone);
+                clone = GameObject.Instantiate<GameObject>(fbx);
 
             return clone != null;
         }
@@ -1493,6 +1604,51 @@ namespace Reallusion.Import
                     SetBasic(result);
                     return result;
                 }
+            }
+        }
+
+        private void BakeHairDiffuseOnly(Material mat, string sourceName, out Texture2D bakedBaseMap)
+        {
+            Texture2D diffuse = GetMaterialTexture(mat, "_DiffuseMap");
+            Texture2D id = GetMaterialTexture(mat, "_IDMap");
+            Texture2D root = GetMaterialTexture(mat, "_RootMap");                        
+            float diffuseStrength = mat.GetFloatIf("_DiffuseStrength");
+            float baseColorStrength = mat.GetFloatIf("_BaseColorStrength");                        
+            float globalStrength = mat.GetFloatIf("_GlobalStrength");
+            float rootColorStrength = mat.GetFloatIf("_RootColorStrength");
+            float endColorStrength = mat.GetFloatIf("_EndColorStrength");
+            float invertRootMap = mat.GetFloatIf("_InvertRootMap");
+            float highlightBlend = mat.GetFloatIf("_HighlightBlend", 1.0f);
+            float highlightAStrength = mat.GetFloatIf("_HighlightAStrength");
+            float highlightAOverlapEnd = mat.GetFloatIf("_HighlightAOverlapEnd");
+            float highlightAOverlapInvert = mat.GetFloatIf("_HighlightAOverlapInvert");
+            float highlightBStrength = mat.GetFloatIf("_HighlightBStrength");
+            float highlightBOverlapEnd = mat.GetFloatIf("_HighlightBOverlapEnd");
+            float highlightBOverlapInvert = mat.GetFloatIf("_HighlightBOverlapInvert");
+            Vector4 highlightADistribution = mat.GetVectorIf("_HighlightADistribution");
+            Vector4 highlightBDistribution = mat.GetVectorIf("_HighlightBDistribution");            
+            Color rootColor = mat.GetColorIf("_RootColor", Color.black);
+            Color endColor = mat.GetColorIf("_EndColor", Color.white);
+            Color highlightAColor = mat.GetColorIf("_HighlightAColor", Color.white);
+            Color highlightBColor = mat.GetColorIf("_HighlightBColor", Color.white);            
+            bool enableColor = mat.GetFloatIf("BOOLEAN_ENABLECOLOR") > 0f;
+
+            if (enableColor)
+            {
+                bakedBaseMap = BakeHairDiffuseMap(diffuse, null, id, root, null,
+                    1f, 1f, 1f, 1f, 0f,
+                    rootColor, rootColorStrength, endColor, endColorStrength, globalStrength,
+                    invertRootMap, baseColorStrength, highlightBlend,
+                    highlightAColor, highlightADistribution, highlightAOverlapEnd,
+                    highlightAOverlapInvert, highlightAStrength,
+                    highlightBColor, highlightBDistribution, highlightBOverlapEnd,
+                    highlightBOverlapInvert, highlightBStrength,
+                    0f, Color.white, 0f,
+                    sourceName + "_BaseMap", "RLHairColoredDiffuseOnly");
+            }
+            else
+            {
+                bakedBaseMap = diffuse;
             }
         }
 
@@ -2623,7 +2779,7 @@ namespace Reallusion.Import
                         Color highlightBColor, Vector4 highlightBDistribution, float highlightBOverlapEnd, 
                         float highlightBOverlapInvert, float highlightBStrength,
                         float blendStrength, Color vertexBaseColor, float vertexColorStrength,
-                        string name)
+                        string name, string kernelName = "RLHairColoredDiffuse")
         {
             Vector2Int maxSize = GetMaxSize(diffuse, id);
             ComputeBakeTexture bakeTarget =
@@ -2641,7 +2797,7 @@ namespace Reallusion.Import
                 root = CheckMask(root);
                 mask = CheckMask(mask);
 
-                int kernel = bakeShader.FindKernel("RLHairColoredDiffuse");
+                int kernel = bakeShader.FindKernel(kernelName);
                 bakeTarget.Create(bakeShader, kernel);
                 bakeShader.SetTexture(kernel, "Diffuse", diffuse);
                 bakeShader.SetTexture(kernel, "ColorBlend", blend);
@@ -2684,7 +2840,7 @@ namespace Reallusion.Import
         private Texture2D BakeHairDiffuseMap(Texture2D diffuse, Texture2D blend, Texture2D mask,
                         float diffuseStrength, float alphaPower, float alphaRemap, float aoStrength, float aoOccludeAll,
                         float blendStrength, Color vertexBaseColor, float vertexColorStrength,
-                        string name)
+                        string name, string kernelName = "RLHairDiffuse")
         {
             Vector2Int maxSize = GetMaxSize(diffuse);
             ComputeBakeTexture bakeTarget =
@@ -2700,7 +2856,7 @@ namespace Reallusion.Import
                 blend = CheckMask(blend);
                 mask = CheckMask(mask);
 
-                int kernel = bakeShader.FindKernel("RLHairDiffuse");
+                int kernel = bakeShader.FindKernel(kernelName);
                 bakeTarget.Create(bakeShader, kernel);
                 bakeShader.SetTexture(kernel, "Diffuse", diffuse);
                 bakeShader.SetTexture(kernel, "ColorBlend", blend);

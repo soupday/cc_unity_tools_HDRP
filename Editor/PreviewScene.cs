@@ -267,7 +267,7 @@ namespace Reallusion.Import
             ppl.volumeTrigger = camera.transform;
             LayerMask everything = ~0;
             ppl.volumeLayer = everything;
-            ppl.antialiasingMode = PostProcessLayer.Antialiasing.SubpixelMorphologicalAntialiasing;
+            ppl.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;
             ppv.isGlobal = true;
             ppv.profile = volume;
 #endif
