@@ -135,6 +135,21 @@ namespace Reallusion.Import
             }
         }
 
+        public static bool SELECT_LINKED
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_SelectLinked"))
+                    return EditorPrefs.GetBool("RL_Importer_SelectLinked");
+                return true;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_SelectLinked", value);
+            }
+        }
+
         public static void StoreBackScene()
         {
             Scene currentScene = SceneManager.GetActiveScene();
@@ -899,7 +914,8 @@ namespace Reallusion.Import
             GUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
-            characterTreeView.selectLinked = GUILayout.Toggle(characterTreeView.selectLinked, "Select Linked");
+            SELECT_LINKED = GUILayout.Toggle(SELECT_LINKED, "Select Linked");
+            characterTreeView.selectLinked = SELECT_LINKED;
             GUILayout.FlexibleSpace();
 
             GUILayout.EndHorizontal();
@@ -1210,8 +1226,8 @@ namespace Reallusion.Import
 
                 WindowManager.HideAnimationPlayer(true);
 
-                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
-                GameObject bakedAsset = baker.BakeHQHair();
+                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter, "Hair");
+                baker.BakeHQHairDiffuse();
 
                 contextCharacter.tempHairBake = true;
                 contextCharacter.Write();
@@ -1226,7 +1242,7 @@ namespace Reallusion.Import
 
                 WindowManager.HideAnimationPlayer(true);
 
-                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter);
+                ComputeBake baker = new ComputeBake(contextCharacter.Fbx, contextCharacter, "Hair");
                 GameObject bakedAsset = baker.RestoreHQHair();
 
                 contextCharacter.tempHairBake = false;

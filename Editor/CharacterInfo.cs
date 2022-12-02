@@ -19,6 +19,7 @@
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Reallusion.Import
 {
@@ -53,6 +54,86 @@ namespace Reallusion.Import
         private bool bakeSeparatePrefab = true;
         private bool useTessellation = false;
         private GameObject prefabAsset;
+
+        public struct GUIDRemap
+        {
+            public string from;
+            public string to;
+
+            public GUIDRemap(string from, string to)
+            {
+                this.from = from;
+                this.to = to;
+            }
+
+            public GUIDRemap(Object from, Object to)
+            {
+                this.from = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(from));
+                this.to = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(to));
+            }
+        }
+
+        private List<GUIDRemap> guidRemaps;
+
+        public void AddGUIDRemap(Object from, Object to)
+        {
+            guidRemaps.Add(new GUIDRemap(from, to));
+        }
+
+        public Object GetGUIDRemapFrom(Object to)
+        {
+            string guidTo = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(to));
+
+            foreach (GUIDRemap gr in guidRemaps)
+            {
+                if (gr.to == guidTo)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(gr.from);
+                    if (!string.IsNullOrEmpty(path)) return AssetDatabase.LoadAssetAtPath<Object>(path);
+                    else return null;
+                }
+            }
+
+            return null;
+        }
+
+        public Object GetGUIDRemapTo(Object from)
+        {
+            string guidFrom = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(from));
+
+            foreach (GUIDRemap gr in guidRemaps)
+            {
+                if (gr.from == guidFrom)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(gr.to);
+                    if (!string.IsNullOrEmpty(path)) return AssetDatabase.LoadAssetAtPath<Object>(path);
+                    else return null;
+                }
+            }
+
+            return null;
+        }
+
+        public void RemoveGUIDRemap(Object from, Object to)
+        {
+            string guidTo = "";
+            string guidFrom = "";
+            if (to) guidTo = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(to));
+            if (from) guidFrom = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(from));
+            for (int i = 0; i < guidRemaps.Count; i++)
+            {
+                GUIDRemap gr = guidRemaps[i];
+                if (gr.from == guidFrom || gr.to == guidTo)
+                {
+                    guidRemaps.RemoveAt(i--);
+                }
+            }
+        }
+
+        public void CleanGUIDRemaps()
+        {
+            RemoveGUIDRemap(null, null);
+        }
 
         public ProcessingType BuildType { get { return logType; } set { logType = value; } }
         public MaterialQuality BuildQuality
@@ -138,6 +219,7 @@ namespace Reallusion.Import
             infoFilepath = Path.Combine(folder, name + "_ImportInfo.txt");
             jsonFilepath = Path.Combine(folder, name + ".json");
             if (path.iContains("_lod")) isLOD = true;
+            guidRemaps = new List<GUIDRemap>();
 
             if (File.Exists(infoFilepath))            
                 Read();
@@ -148,6 +230,7 @@ namespace Reallusion.Import
         public void ApplySettings()
         {            
             FixCharSettings();
+            CleanGUIDRemaps();
 
             builtLogType = logType;
             builtQualEyes = qualEyes;
@@ -251,6 +334,51 @@ namespace Reallusion.Import
                     return JsonData.GetObjectAtPath(jsonPath);
                 return null;
             }
+        }
+
+        public QuickJSON MeshJsonData
+        {
+            get
+            {
+                string jsonPath = name + "/Object/" + name + "/Meshes";
+                if (JsonData.PathExists(jsonPath))
+                    return JsonData.GetObjectAtPath(jsonPath);
+                return null;
+            }
+        }
+
+        public QuickJSON GetMatJson(GameObject obj, string sourceName)
+        {
+            QuickJSON jsonMeshData = MeshJsonData;
+            QuickJSON matJson = null;
+            string objName = obj.name;
+            string jsonPath = "";
+            if (jsonMeshData != null)
+            {
+                jsonPath = objName + "/Materials/" + sourceName;
+                if (jsonMeshData.PathExists(jsonPath))
+                {
+                    matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                }
+                else
+                {
+                    // there is a bug where a space in name causes the name to be truncated on export from CC3/4
+                    if (objName.Contains(" "))
+                    {
+                        Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly.");
+                        string[] split = objName.Split(' ');
+                        objName = split[0];
+                        jsonPath = objName + "/Materials/" + sourceName;
+                        if (jsonMeshData.PathExists(jsonPath))
+                        {
+                            matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                        }
+                    }
+                }
+            }
+            if (matJson == null) Util.LogError("Unable to find json material data: " + jsonPath);
+
+            return matJson;
         }
 
         public QuickJSON PhysicsJsonData
@@ -366,9 +494,10 @@ namespace Reallusion.Import
         public void Read()
         {
             TextAsset infoAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(infoFilepath);
-
+            guidRemaps.Clear();
             string[] lineEndings = new string[] { "\r\n", "\r", "\n" };
             char[] propertySplit = new char[] { '=' };
+            char[] guidSplit = new char[] { '|' };
             string[] lines = infoAsset.text.Split(lineEndings, System.StringSplitOptions.None);
             string property = "";
             string value = "";
@@ -433,6 +562,13 @@ namespace Reallusion.Import
                     case "rigOverride":
                         UnknownRigType = (RigOverride)System.Enum.Parse(typeof(RigOverride), value);
                         break;
+                    case "GUIDRemap":
+                        string[] guids = value.Split(guidSplit, System.StringSplitOptions.None);
+                        if (guids.Length == 2)
+                        {
+                            guidRemaps.Add(new GUIDRemap(guids[0], guids[1]));
+                        }
+                        break;
                 }
             }
             ApplySettings();
@@ -455,6 +591,10 @@ namespace Reallusion.Import
             writer.WriteLine("animationSetup=" + (animationSetup ? "true" : "false"));
             writer.WriteLine("animationRetargeted=" + animationRetargeted.ToString());
             writer.WriteLine("rigOverride=" + UnknownRigType.ToString());
+            foreach (GUIDRemap gr in guidRemaps)
+            {
+                writer.WriteLine("GUIDRemap=" + gr.from + "|" + gr.to);
+            }
             writer.Close();
             AssetDatabase.ImportAsset(infoFilepath);            
         }
