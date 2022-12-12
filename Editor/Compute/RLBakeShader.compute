@@ -1448,7 +1448,7 @@ float EyeOcclusionGradient(float2 uv)
     float alpha2 = saturate(smoothstep(eoTop2Min, eoTop2Max, y) * eoOcclusionStrength2);
     float edge2 = ((1.0 - eoTearDuctPosition) * eoTearDuctWidth) + eoTearDuctPosition;
     float tearDuctMask = (1.0 - smoothstep(eoTearDuctPosition, edge2, x));
-    return pow(max(alpha1, alpha2) * tearDuctMask, eoOcclusionPower);    
+    return pow(saturate(max(alpha1, alpha2) * tearDuctMask), eoOcclusionPower);
 }
 
 [numthreads(1, 1, 1)]
@@ -1458,8 +1458,8 @@ void RLEyeOcclusionDiffuse(uint3 id : SV_DispatchThreadID)
 
     float4 alpha = EyeOcclusionGradient(uv);
     //float4 color = sRGBToLinearApprox(eoEyeOcclusionColor);
-    float4 color = eoEyeOcclusionColor * alpha;
-    color.a = alpha;
+    // premultiply
+    float4 color = eoEyeOcclusionColor * alpha;    
 
     Result[id.xy] = color;
 }

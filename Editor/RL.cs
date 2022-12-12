@@ -118,34 +118,41 @@ namespace Reallusion.Import
         }
 
         public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, string characterName, BaseGeneration generation, CharacterInfo.RigOverride rigOverride, QuickJSON jsonData)
-        {
-            importer.importNormals = ModelImporterNormals.Calculate;
-            //importer.importNormals = ModelImporterNormals.Import;
-            importer.importTangents = ModelImporterTangents.CalculateMikk;
+        {            
+            // import normals to avoid mesh smoothing issues
+            importer.importNormals = ModelImporterNormals.Import;            
             importer.importBlendShapes = true;
+            // importing blend shape normals gives disasterously bad results, they need to be recalculated,
+            // ideally using the legacy blend shape normals option, but this has not been exposed to scripts so...
             importer.importBlendShapeNormals = ModelImporterNormals.Calculate;
+            // when recalculating blend shape normals, recalculate using only area weights,
+            // this produces the best results on CC3/4 body meshes
+            importer.normalCalculationMode = ModelImporterNormalCalculationMode.AreaWeighted;            
+            // prefer smoothing groups (though usually there aren't any)
+            importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.PreferSmoothingGroups;
+            // default angle of 60 degrees
+            importer.normalSmoothingAngle = 60f;
+            importer.importTangents = ModelImporterTangents.CalculateMikk;
             importer.generateAnimations = ModelImporterGenerateAnimations.GenerateAnimations;
             importer.animationType = ModelImporterAnimationType.Human;
-            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-            importer.autoGenerateAvatarMappingIfUnspecified = true;
+            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;            
 
+            importer.autoGenerateAvatarMappingIfUnspecified = true;
+            
             if (generation == BaseGeneration.Unknown)
             {
-                if (!characterName.Contains("_Motion"))
+                switch (rigOverride)
                 {
-                    switch (rigOverride)
-                    {
-                        case CharacterInfo.RigOverride.None:
-                            importer.animationType = ModelImporterAnimationType.None;
-                            break;                        
-                        case CharacterInfo.RigOverride.Humanoid:
-                            importer.animationType = ModelImporterAnimationType.Human;
-                            break;
-                        case CharacterInfo.RigOverride.Generic:
-                        default:
-                            importer.animationType = ModelImporterAnimationType.Generic;
-                            break;
-                    }                    
+                    case CharacterInfo.RigOverride.None:
+                        importer.animationType = ModelImporterAnimationType.None;
+                        break;
+                    case CharacterInfo.RigOverride.Humanoid:
+                        importer.animationType = ModelImporterAnimationType.Human;
+                        break;
+                    case CharacterInfo.RigOverride.Generic:
+                    default:
+                        importer.animationType = ModelImporterAnimationType.Generic;
+                        break;
                 }
                 return;
             }
@@ -370,9 +377,9 @@ namespace Reallusion.Import
             human.armStretch = 0.05f;
             human.legStretch = 0.05f;
             human.feetSpacing = 0.0f;
-            human.hasTranslationDoF = false;
+            human.hasTranslationDoF = true;            
 
-            if (jsonData != null || !characterName.iContains("_Motion"))
+            if (jsonData != null)
             {
                 Transform[] transforms = fbx.GetComponentsInChildren<Transform>();
                 SkeletonBone[] bones = new SkeletonBone[transforms.Length];
@@ -383,7 +390,7 @@ namespace Reallusion.Import
                     bones[i].rotation = transforms[i].localRotation;
                     bones[i].scale = transforms[i].localScale;
                 }
-                human.skeleton = bones;                
+                human.skeleton = bones;
             }
 
             importer.humanDescription = human;

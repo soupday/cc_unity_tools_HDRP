@@ -54,9 +54,9 @@ namespace Reallusion.Import
             [HideInInspector]
             public float selfMargin;
             [Space(8)]
-            [Range(1f, 500f)]
+            [Range(1f, 5000f)]
             public float solverFrequency;
-            [Range(1f, 50f)]
+            [Range(1f, 500f)]
             public float stiffnessFrequency;
             [Space(8)]
             [Range(0f, 1f)]            
@@ -103,6 +103,7 @@ namespace Reallusion.Import
         public bool updateColliders = true;
         public bool optimizeColliders = true;
         public bool includeAllLimbColliders = false;
+        public bool updateConstraints = true;
 
         [HideInInspector]
         public string characterGUID;
@@ -122,8 +123,8 @@ namespace Reallusion.Import
 
             // add cloth component
             Cloth cloth = clothTarget.GetComponent<Cloth>();
-            if (!cloth) cloth = clothTarget.AddComponent<Cloth>();            
-
+            if (!cloth) cloth = clothTarget.AddComponent<Cloth>();
+            
             // generate a mapping dictionary of cloth vertices to mesh vertices
             Dictionary<long, int> uniqueVertices = new Dictionary<long, int>();
             int count = 0;
@@ -134,15 +135,7 @@ namespace Reallusion.Import
                 {
                     uniqueVertices.Add(SpatialHash(meshVertices[k]), count++);
                 }
-            }
-
-            // reset coefficients
-            ClothSkinningCoefficient[] coefficients = new ClothSkinningCoefficient[cloth.coefficients.Length];
-            Array.Copy(cloth.coefficients, coefficients, coefficients.Length);
-            for (int i = 0; i < cloth.coefficients.Length; i++)
-            {
-                coefficients[i].maxDistance = 0;
-            }
+            }                         
 
             // fetch UV's
             List<Vector2> uvs = new List<Vector2>();
@@ -155,7 +148,16 @@ namespace Reallusion.Import
             List<Collider> detectedColliders = new List<Collider>(colliders.Count);
             ColliderManager colliderManager = gameObject.GetComponentInParent<ColliderManager>();                        
             if (colliderManager) colliders.AddRange(colliderManager.colliders);
-            else colliders.AddRange(gameObject.transform.parent.GetComponentsInChildren<Collider>());            
+            else colliders.AddRange(gameObject.transform.parent.GetComponentsInChildren<Collider>());
+                        
+            ClothSkinningCoefficient[] coefficients = new ClothSkinningCoefficient[cloth.coefficients.Length];
+            Array.Copy(cloth.coefficients, coefficients, coefficients.Length);
+
+            // reset coefficients
+            for (int i = 0; i < cloth.coefficients.Length; i++)
+            {
+                coefficients[i].maxDistance = 0;
+            }
 
             // apply weight maps to cloth coefficients and cloth settings
             for (int i = 0; i < mesh.subMeshCount; i++)//
@@ -181,7 +183,7 @@ namespace Reallusion.Import
                         cloth.friction = data.friction;
                         cloth.damping = Mathf.Pow(data.damping, 0.333f);
                         cloth.selfCollisionDistance = data.selfMargin * modelScale;
-                        cloth.selfCollisionStiffness = 1f;
+                        cloth.selfCollisionStiffness = 1f;                        
 
                         bool doColliders = updateColliders && data.softRigidCollision;
 
@@ -277,10 +279,13 @@ namespace Reallusion.Import
                         }
                     }
                 }
-            }            
+            }
 
             // set coefficients
-            cloth.coefficients = coefficients;
+            if (updateConstraints)
+            {                
+                cloth.coefficients = coefficients;
+            }
 
             // set colliders
             if (updateColliders)

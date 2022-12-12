@@ -372,25 +372,26 @@ namespace Reallusion.Import
                             if (sourceName.iEndsWith("_2nd_Pass")) continue;
 
                             bakedMaterial = BakeHairMaterial(sharedMat, sourceName, out firstPass, out secondPass);
+                        }
 
-                            if (firstPass && secondPass)
+                        if (firstPass && secondPass)
+                        {
+                            ReplaceMaterial(sharedMat, firstPass);
+                            // Get the 2nd pass shared material
+                            foreach (Material secondPassMat in renderer.sharedMaterials)
                             {
-                                ReplaceMaterial(sharedMat, firstPass);
-                                // Get the 2nd pass shared material
-                                foreach (Material secondPassMat in renderer.sharedMaterials)
+                                if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
                                 {
-                                    if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
-                                    {
-                                        ReplaceMaterial(secondPassMat, secondPass);
-                                    }
+                                    ReplaceMaterial(secondPassMat, secondPass);
                                 }
                             }
-                            else if (bakedMaterial)
-                            {
-                                ReplaceMaterial(sharedMat, bakedMaterial);
-                            }
+                        }
+                        else if (bakedMaterial)
+                        {
+                            ReplaceMaterial(sharedMat, bakedMaterial);
                         }
                     }
+
                 }
             }
         }
