@@ -62,7 +62,7 @@ Material:
     - _AlphaSrcBlend: 1
     - _AlphaToMask: 0
     - _AlphaToMaskInspectorValue: 0
-    - _BlendMode: 0
+    - _BlendMode: 4
     - _CullMode: 2
     - _CullModeForward: 2
     - _DepthOffsetEnable: 0
@@ -75,6 +75,7 @@ Material:
     - _ExpandLower: 0
     - _ExpandOut: 0.0001
     - _ExpandOuter: 0
+    - _ExpandScale: 1
     - _ExpandUpper: 0
     - _OpaqueCullMode: 2
     - _RayTracing: 0

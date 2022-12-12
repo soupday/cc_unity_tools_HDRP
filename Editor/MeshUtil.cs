@@ -41,9 +41,9 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Reverse Triangle Order", true)]
-        private static bool ValudidateDoReverse()
+        private static bool ValidateDoReverse()
         {
-            return Selection.gameObjects.Length > 0;
+            return Util.IsSavedPrefabInSelection();
         }
 
         [MenuItem("Reallusion/Mesh Tools/Prune Blend Shapes", priority = 101)]
@@ -57,9 +57,9 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Prune Blend Shapes", true)]
-        private static bool ValudidateDoPrune()
+        private static bool ValidateDoPrune()
         {
-            return Selection.gameObjects.Length > 0;
+            return Util.IsSavedPrefabInSelection();
         }
 
         [MenuItem("Reallusion/Mesh Tools/Auto Smooth Mesh", priority = 102)]
@@ -83,9 +83,9 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Auto Smooth Mesh", true)]
-        private static bool ValudidateDoAutoSmoothMesh()
+        private static bool ValidateDoAutoSmoothMesh()
         {
-            return Selection.gameObjects.Length > 0;
+            return Util.IsSavedPrefabInSelection();
         }
 
         [MenuItem("Reallusion/Mesh Tools/Open or Close Character Mouth", priority = 201)]
@@ -95,7 +95,7 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Open or Close Character Mouth", true)]
-        private static bool ValudidateDoOpenCloseMouth()
+        private static bool ValidateDoOpenCloseMouth()
         {
             return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
@@ -107,7 +107,7 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Open or Close Character Eyes", true)]
-        private static bool ValudidateDoOpenCloseEyes()
+        private static bool ValidateDoOpenCloseEyes()
         {
             return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
@@ -119,7 +119,7 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Left", true)]
-        private static bool ValudidateDoLookLeft()
+        private static bool ValidateDoLookLeft()
         {            
             return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
@@ -131,7 +131,7 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Right", true)]
-        private static bool ValudidateDoLookRight()
+        private static bool ValidateDoLookRight()
         {
             return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
@@ -143,7 +143,7 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Up", true)]
-        private static bool ValudidateDoLookUp()
+        private static bool ValidateDoLookUp()
         {
             return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
@@ -155,7 +155,7 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Down", true)]
-        private static bool ValudidateDoLookDown()
+        private static bool ValidateDoLookDown()
         {
             return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
         }
@@ -167,9 +167,41 @@ namespace Reallusion.Import
         }
 
         [MenuItem("Reallusion/Mesh Tools/Eye/Look Forward", true)]
-        private static bool ValudidateDoLookForward()
+        private static bool ValidateDoLookForward()
         {
             return WindowManager.IsPreviewScene && WindowManager.GetPreviewScene().GetPreviewCharacter() != null;
+        }
+
+        public static bool GetSourcePrefab(Object obj, string folderName, 
+            out string characterName, out string meshFolder, out Object prefabObject)
+        {
+            characterName = "";
+            meshFolder = "";
+            prefabObject = null;
+
+            if (!obj) return false;
+
+            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(obj);
+
+            if (!fbxAsset)
+            {
+                Debug.LogWarning("Object: " + obj.name + " is not part of an imported CC3/4 character!");
+                return false;
+            }
+
+            prefabObject = PrefabUtility.GetCorrespondingObjectFromSource(obj);
+            if (!prefabObject || !AssetDatabase.GetAssetPath(prefabObject).iEndsWith(".prefab"))
+            {
+                Debug.LogWarning("Object: " + obj.name + " is not part of prefab asset!");
+                return false;
+            }            
+
+            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
+            characterName = Path.GetFileNameWithoutExtension(fbxPath);
+            string fbxFolder = Path.GetDirectoryName(fbxPath);
+            meshFolder = Path.Combine(fbxFolder, folderName, characterName);
+
+            return true;
         }
 
         public static Mesh GetMeshFrom(Object obj)
@@ -251,92 +283,86 @@ namespace Reallusion.Import
 
         public static void PruneBlendShapes(Object obj)
         {
-            if (!obj) return;
-
-            GameObject sceneRoot = Util.GetScenePrefabInstanceRoot(obj);
-            GameObject asset = PrefabUtility.GetCorrespondingObjectFromSource(sceneRoot);
-            Object srcObj = PrefabUtility.GetCorrespondingObjectFromSource(obj);
-            Mesh srcMesh = GetMeshFrom(srcObj);
-            string path = AssetDatabase.GetAssetPath(asset);
-
-            if (string.IsNullOrEmpty(path))
+            if (GetSourcePrefab(obj, PRUNED_FOLDER_NAME, out string characterName, out string meshFolder, out Object srcObj))
             {
-                Util.LogWarn("Object: " + obj.name + " has no source Prefab Asset.");
-                path = Path.Combine("Assets", "dummy.prefab");
-            }
+                //GameObject sceneRoot = Util.GetScenePrefabInstanceRoot(obj);
+                //GameObject asset = PrefabUtility.GetCorrespondingObjectFromSource(sceneRoot);
+                //Object srcObj = PrefabUtility.GetCorrespondingObjectFromSource(obj);                
+                //string path = AssetDatabase.GetAssetPath(asset);
 
-            if (!srcMesh)
-            {
-                Util.LogError("No mesh found in selected object.");
-                return;
-            }
+                Mesh srcMesh = GetMeshFrom(srcObj);
 
-            string folder = Path.GetDirectoryName(path);
-            string meshFolder = Path.Combine(folder, PRUNED_FOLDER_NAME);
-
-            Mesh dstMesh = new Mesh();
-            dstMesh.indexFormat = srcMesh.indexFormat;            
-            dstMesh.vertices = srcMesh.vertices;
-            dstMesh.uv = srcMesh.uv;
-            dstMesh.uv2 = srcMesh.uv2;
-            dstMesh.normals = srcMesh.normals;
-            dstMesh.colors = srcMesh.colors;
-            dstMesh.boneWeights = srcMesh.boneWeights;
-            dstMesh.bindposes = srcMesh.bindposes;
-            dstMesh.bounds = srcMesh.bounds;
-            dstMesh.tangents = srcMesh.tangents;
-            dstMesh.triangles = srcMesh.triangles;
-            dstMesh.subMeshCount = srcMesh.subMeshCount;
-
-            for (int s = 0; s < srcMesh.subMeshCount; s++)
-            {
-                SubMeshDescriptor submesh = srcMesh.GetSubMesh(s);
-                dstMesh.SetSubMesh(s, submesh);
-            }
-
-            // copy any blendshapes across
-            if (srcMesh.blendShapeCount > 0)
-            {
-                Vector3[] deltaVerts = new Vector3[srcMesh.vertexCount];
-                Vector3[] deltaNormals = new Vector3[srcMesh.vertexCount];
-                Vector3[] deltaTangents = new Vector3[srcMesh.vertexCount];
-
-                for (int i = 0; i < srcMesh.blendShapeCount; i++)
+                if (!srcMesh)
                 {
-                    string name = srcMesh.GetBlendShapeName(i);
+                    Util.LogError("No mesh found in selected object.");
+                    return;
+                }
+                
+                Mesh dstMesh = new Mesh();
+                dstMesh.indexFormat = srcMesh.indexFormat;
+                dstMesh.vertices = srcMesh.vertices;
+                dstMesh.uv = srcMesh.uv;
+                dstMesh.uv2 = srcMesh.uv2;
+                dstMesh.normals = srcMesh.normals;
+                dstMesh.colors = srcMesh.colors;
+                dstMesh.boneWeights = srcMesh.boneWeights;
+                dstMesh.bindposes = srcMesh.bindposes;
+                dstMesh.bounds = srcMesh.bounds;
+                dstMesh.tangents = srcMesh.tangents;
+                dstMesh.triangles = srcMesh.triangles;
+                dstMesh.subMeshCount = srcMesh.subMeshCount;
 
-                    int frameCount = srcMesh.GetBlendShapeFrameCount(i);
-                    for (int f = 0; f < frameCount; f++)
+                for (int s = 0; s < srcMesh.subMeshCount; s++)
+                {
+                    SubMeshDescriptor submesh = srcMesh.GetSubMesh(s);
+                    dstMesh.SetSubMesh(s, submesh);
+                }
+
+                // copy any blendshapes across
+                if (srcMesh.blendShapeCount > 0)
+                {
+                    Vector3[] deltaVerts = new Vector3[srcMesh.vertexCount];
+                    Vector3[] deltaNormals = new Vector3[srcMesh.vertexCount];
+                    Vector3[] deltaTangents = new Vector3[srcMesh.vertexCount];
+
+                    for (int i = 0; i < srcMesh.blendShapeCount; i++)
                     {
-                        float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
-                        srcMesh.GetBlendShapeFrameVertices(i, f, deltaVerts, deltaNormals, deltaTangents);
+                        string name = srcMesh.GetBlendShapeName(i);
 
-                        Vector3 deltaSum = Vector3.zero;
-                        for (int d = 0; d < srcMesh.vertexCount; d++) deltaSum += deltaVerts[d];
-                        //Debug.Log(name + ": deltaSum = " + deltaSum.ToString());
-                        
-                        if (deltaSum.magnitude > 0.1f)
-                            dstMesh.AddBlendShapeFrame(name, frameWeight, deltaVerts, deltaNormals, deltaTangents);
+                        int frameCount = srcMesh.GetBlendShapeFrameCount(i);
+                        for (int f = 0; f < frameCount; f++)
+                        {
+                            float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
+                            srcMesh.GetBlendShapeFrameVertices(i, f, deltaVerts, deltaNormals, deltaTangents);
+
+                            Vector3 deltaSum = Vector3.zero;
+                            for (int d = 0; d < srcMesh.vertexCount; d++) deltaSum += deltaVerts[d];
+                            //Debug.Log(name + ": deltaSum = " + deltaSum.ToString());
+
+                            if (deltaSum.magnitude > 0.1f)
+                                dstMesh.AddBlendShapeFrame(name, frameWeight, deltaVerts, deltaNormals, deltaTangents);
+                        }
                     }
                 }
-            }
 
-            // Save the mesh asset.
-            if (!AssetDatabase.IsValidFolder(meshFolder))
-                AssetDatabase.CreateFolder(folder, PRUNED_FOLDER_NAME);
-            string meshPath = Path.Combine(meshFolder, srcObj.name + ".mesh");
-            AssetDatabase.CreateAsset(dstMesh, meshPath);
-
-            if (obj.GetType() == typeof(GameObject))
-            {
-                GameObject go = (GameObject)obj;
-                if (go)
+                // Save the mesh asset.
+                if (Util.EnsureAssetsFolderExists(meshFolder))
                 {
-                    Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+                    string meshPath = Path.Combine(meshFolder, srcObj.name + ".mesh");
+                    AssetDatabase.CreateAsset(dstMesh, meshPath);
 
-                    if (!ReplaceMesh(obj, createdMesh))
+                    if (obj.GetType() == typeof(GameObject))
                     {
-                        Util.LogError("Unable to set mesh in selected object!");
+                        GameObject go = (GameObject)obj;
+                        if (go)
+                        {
+                            Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+
+                            if (!ReplaceMesh(obj, createdMesh))
+                            {
+                                Util.LogError("Unable to set mesh in selected object!");
+                            }
+                        }
                     }
                 }
             }
@@ -389,108 +415,95 @@ namespace Reallusion.Import
 
         public static void ReverseTriangleOrder(Object obj)
         {
-            if (!obj) return;
-            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(obj);
-            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
-            string characterName = Path.GetFileNameWithoutExtension(fbxPath);
-            string fbxFolder = Path.GetDirectoryName(fbxPath);
-            string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, characterName);
-            // fetch the mesh from the prefab
-            Object srcObj = PrefabUtility.GetCorrespondingObjectFromSource(obj);
-            Mesh srcMesh = GetMeshFrom(srcObj);
-
-            if (!srcMesh) return;
-
-            if (string.IsNullOrEmpty(fbxPath))
+            if (GetSourcePrefab(obj, MESH_FOLDER_NAME, out string characterName, out string meshFolder, out Object srcObj))
             {
-                Util.LogWarn("Object: " + obj.name + " has no source Prefab Asset.");
-                fbxPath = Path.Combine("Assets", "dummy.prefab");
-            }
+                Mesh srcMesh = GetMeshFrom(srcObj);
 
-            if (!srcMesh)
-            {
-                Util.LogError("No mesh found in selected object.");
-                return;
-            }
-                        
-            Mesh dstMesh = new Mesh();
-            dstMesh.indexFormat = srcMesh.indexFormat;
-            dstMesh.vertices = srcMesh.vertices;
-            dstMesh.uv = srcMesh.uv;
-            dstMesh.uv2 = srcMesh.uv2;
-            dstMesh.normals = srcMesh.normals;
-            dstMesh.colors = srcMesh.colors;
-            dstMesh.boneWeights = srcMesh.boneWeights;
-            dstMesh.bindposes = srcMesh.bindposes;
-            dstMesh.bounds = srcMesh.bounds;
-            dstMesh.tangents = srcMesh.tangents;            
-
-            int[] reversed = new int[srcMesh.triangles.Length];
-            int[] forward = srcMesh.triangles;
-
-            // first pass: reverse the triangle order for each submesh
-            for (int s = 0; s < srcMesh.subMeshCount; s++)
-            {
-                SubMeshDescriptor submesh = srcMesh.GetSubMesh(s);
-                int start = submesh.indexStart;
-                int end = start + submesh.indexCount;
-                int j = end - 3;                
-                for (int i = start; i < end; i += 3)
+                if (!srcMesh)
                 {
-                    reversed[j] = forward[i];
-                    reversed[j + 1] = forward[i + 1];
-                    reversed[j + 2] = forward[i + 2];
-                    j -= 3;
+                    Util.LogError("No mesh found in selected object.");
+                    return;
                 }
-            }
 
-            dstMesh.triangles = reversed;
-            dstMesh.subMeshCount = srcMesh.subMeshCount;
+                Mesh dstMesh = new Mesh();
+                dstMesh.indexFormat = srcMesh.indexFormat;
+                dstMesh.vertices = srcMesh.vertices;
+                dstMesh.uv = srcMesh.uv;
+                dstMesh.uv2 = srcMesh.uv2;
+                dstMesh.normals = srcMesh.normals;
+                dstMesh.colors = srcMesh.colors;
+                dstMesh.boneWeights = srcMesh.boneWeights;
+                dstMesh.bindposes = srcMesh.bindposes;
+                dstMesh.bounds = srcMesh.bounds;
+                dstMesh.tangents = srcMesh.tangents;
 
-            // second pass: copy sub-mesh data (vertex and triangle data must be present for this)
-            for (int s = 0; s < srcMesh.subMeshCount; s++)
-            {
-                SubMeshDescriptor submesh = srcMesh.GetSubMesh(s);
-                dstMesh.SetSubMesh(s, submesh);
-            }
+                int[] reversed = new int[srcMesh.triangles.Length];
+                int[] forward = srcMesh.triangles;
 
-            // copy any blendshapes across
-            if (srcMesh.blendShapeCount > 0)
-            {
-                Vector3[] bufVerts = new Vector3[srcMesh.vertexCount];
-                Vector3[] bufNormals = new Vector3[srcMesh.vertexCount];
-                Vector3[] bufTangents = new Vector3[srcMesh.vertexCount];
-
-                for (int i = 0; i < srcMesh.blendShapeCount; i++)
+                // first pass: reverse the triangle order for each submesh
+                for (int s = 0; s < srcMesh.subMeshCount; s++)
                 {
-                    string name = srcMesh.GetBlendShapeName(i);
-
-                    int frameCount = srcMesh.GetBlendShapeFrameCount(i);
-                    for (int f = 0; f < frameCount; f++)
+                    SubMeshDescriptor submesh = srcMesh.GetSubMesh(s);
+                    int start = submesh.indexStart;
+                    int end = start + submesh.indexCount;
+                    int j = end - 3;
+                    for (int i = start; i < end; i += 3)
                     {
-                        float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
-                        srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
-                        dstMesh.AddBlendShapeFrame(name, frameWeight, bufVerts, bufNormals, bufTangents);                        
+                        reversed[j] = forward[i];
+                        reversed[j + 1] = forward[i + 1];
+                        reversed[j + 2] = forward[i + 2];
+                        j -= 3;
                     }
                 }
-            }
-            
-            // Save the mesh asset.
-            if (Util.EnsureAssetsFolderExists(meshFolder))
-            {
-                string meshPath = Path.Combine(meshFolder, srcObj.name + "_Inverted.mesh");
-                AssetDatabase.CreateAsset(dstMesh, meshPath);
 
-                if (obj.GetType() == typeof(GameObject))
+                dstMesh.triangles = reversed;
+                dstMesh.subMeshCount = srcMesh.subMeshCount;
+
+                // second pass: copy sub-mesh data (vertex and triangle data must be present for this)
+                for (int s = 0; s < srcMesh.subMeshCount; s++)
                 {
-                    GameObject go = (GameObject)obj;
-                    if (go)
-                    {
-                        Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+                    SubMeshDescriptor submesh = srcMesh.GetSubMesh(s);
+                    dstMesh.SetSubMesh(s, submesh);
+                }
 
-                        if (!ReplaceMesh(obj, createdMesh))
+                // copy any blendshapes across
+                if (srcMesh.blendShapeCount > 0)
+                {
+                    Vector3[] bufVerts = new Vector3[srcMesh.vertexCount];
+                    Vector3[] bufNormals = new Vector3[srcMesh.vertexCount];
+                    Vector3[] bufTangents = new Vector3[srcMesh.vertexCount];
+
+                    for (int i = 0; i < srcMesh.blendShapeCount; i++)
+                    {
+                        string name = srcMesh.GetBlendShapeName(i);
+
+                        int frameCount = srcMesh.GetBlendShapeFrameCount(i);
+                        for (int f = 0; f < frameCount; f++)
                         {
-                            Util.LogError("Unable to set mesh in selected object!");
+                            float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
+                            srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
+                            dstMesh.AddBlendShapeFrame(name, frameWeight, bufVerts, bufNormals, bufTangents);
+                        }
+                    }
+                }
+
+                // Save the mesh asset.
+                if (Util.EnsureAssetsFolderExists(meshFolder))
+                {
+                    string meshPath = Path.Combine(meshFolder, srcObj.name + "_Inverted.mesh");
+                    AssetDatabase.CreateAsset(dstMesh, meshPath);
+
+                    if (obj.GetType() == typeof(GameObject))
+                    {
+                        GameObject go = (GameObject)obj;
+                        if (go)
+                        {
+                            Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+
+                            if (!ReplaceMesh(obj, createdMesh))
+                            {
+                                Util.LogError("Unable to set mesh in selected object!");
+                            }
                         }
                     }
                 }
@@ -1442,47 +1455,42 @@ namespace Reallusion.Import
 
         public static void AutoSmoothMesh(Object obj)
         {
-            if (!obj) return;            
-            GameObject fbxAsset = Util.FindRootPrefabAssetFromSceneObject(obj);
-            string fbxPath = AssetDatabase.GetAssetPath(fbxAsset);
-            string characterName = Path.GetFileNameWithoutExtension(fbxPath);
-            string fbxFolder = Path.GetDirectoryName(fbxPath);
-            string meshFolder = Path.Combine(fbxFolder, MESH_FOLDER_NAME, characterName);            
-            Object srcObj = PrefabUtility.GetCorrespondingObjectFromSource(obj);
-
-            if (srcObj)
+            if (GetSourcePrefab(obj, MESH_FOLDER_NAME, out string characterName, out string meshFolder, out Object srcObj))
             {
                 Mesh srcMesh = GetMeshFrom(srcObj);
 
-                if (srcMesh)
+                if (!srcMesh)
                 {
-                    if (srcMesh.name.iEndsWith("_Smoothed"))
+                    Util.LogError("No mesh found in selected object.");
+                    return;
+                }
+
+                if (srcMesh.name.iEndsWith("_Smoothed"))
+                {
+                    Util.LogWarn("Mesh is already smoothed!");
+                    return;
+                }
+
+                Mesh dstMesh = CopyMesh(srcMesh);
+                SmoothNormals2(dstMesh, 120f);
+
+                // Save the mesh asset.
+                if (Util.EnsureAssetsFolderExists(meshFolder))
+                {
+                    string meshPath = Path.Combine(meshFolder, srcObj.name + "_Smoothed.mesh");
+                    AssetDatabase.CreateAsset(dstMesh, meshPath);
+
+                    if (obj.GetType() == typeof(GameObject))
                     {
-                        Util.LogWarn("Mesh is already smoothed!");
-                        return;
-                    }
-
-                    Mesh dstMesh = CopyMesh(srcMesh);
-                    SmoothNormals2(dstMesh, 120f);
-
-                    // Save the mesh asset.
-                    if (Util.EnsureAssetsFolderExists(meshFolder))
-                    {
-                        string meshPath = Path.Combine(meshFolder, srcObj.name + "_Smoothed.mesh");
-                        AssetDatabase.CreateAsset(dstMesh, meshPath);
-
-                        if (obj.GetType() == typeof(GameObject))
+                        GameObject go = (GameObject)obj;
+                        if (go)
                         {
-                            GameObject go = (GameObject)obj;
-                            if (go)
-                            {
-                                Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+                            Mesh createdMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
 
-                                if (ReplaceMesh(obj, createdMesh))
-                                    Util.LogAlways("Auto Smooth Mesh Complete!");
-                                else
-                                    Util.LogError("Unable to set mesh in selected object!");                                
-                            }
+                            if (ReplaceMesh(obj, createdMesh))
+                                Util.LogAlways("Auto Smooth Mesh Complete!");
+                            else
+                                Util.LogError("Unable to set mesh in selected object!");
                         }
                     }
                 }
