@@ -142,7 +142,7 @@ namespace Reallusion.Import
         {
             CharacterInfo ci = ImporterWindow.Current.Character;
             ComputeBake baker = new ComputeBake(ci.Fbx, ci);
-            Texture2D gradient = baker.BakeGradientMap("Assets\\Test", "Gradient");
+            Texture2D gradient = baker.BakeGradientMap("Assets" + Path.DirectorySeparatorChar + "Test", "Gradient");
         }
         */
     }

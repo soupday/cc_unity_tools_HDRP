@@ -93,7 +93,35 @@ namespace Reallusion.Import
             }
 
             return false;
+        }        
+
+        public static bool IsSavedPrefabInSelection()
+        {
+            if (Selection.gameObjects.Length > 1)
+            {
+                foreach (GameObject sel in Selection.gameObjects)
+                {
+                    GameObject instanceRoot = GetScenePrefabInstanceRoot(sel);
+                    GameObject prefabSource = PrefabUtility.GetCorrespondingObjectFromSource(instanceRoot);
+                    if (prefabSource)
+                    {
+                        if (AssetDatabase.GetAssetPath(prefabSource).iEndsWith(".prefab")) return true;
+                    }
+                }
+            }
+            else if (Selection.gameObjects.Length == 1)
+            {
+                GameObject instanceRoot = GetScenePrefabInstanceRoot(Selection.gameObjects[0]);
+                GameObject prefabSource = PrefabUtility.GetCorrespondingObjectFromSource(instanceRoot);                
+                if (prefabSource)
+                {
+                    if (AssetDatabase.GetAssetPath(prefabSource).iEndsWith(".prefab")) return true;
+                }                
+            }
+
+            return false;
         }
+
 
         public static Color LinearTosRGBOld(Color c)
         {
@@ -271,8 +299,28 @@ namespace Reallusion.Import
             fullPath = Path.GetFullPath(fullPath);
             string basePath = Path.GetFullPath(Path.GetDirectoryName(Application.dataPath));
 
-            string[] fullSplit = fullPath.Split('\\');
-            string[] baseSplit = basePath.Split('\\');
+            string[] fullSplit;
+            string[] baseSplit;
+
+            // check OS and split the path accordingly
+            // There is also Path.DirectorySeparatorChar
+            // But this will remind me to treat the absolute path roots differently (If I ever need to)
+            if (Application.platform == RuntimePlatform.WindowsEditor)
+            {
+                fullSplit = fullPath.Split('\\');
+                baseSplit = basePath.Split('\\');
+            }
+            else if (Application.platform == RuntimePlatform.OSXEditor || 
+                     Application.platform == RuntimePlatform.LinuxEditor)
+            {
+                fullSplit = fullPath.Split('/');
+                baseSplit = basePath.Split('/');
+            }
+            else
+            {
+                Debug.LogError("Unsupported Platform: " + Application.platform);
+                return fullPath;
+            }
 
             int sharedRootIndex = -1;
 
@@ -290,7 +338,7 @@ namespace Reallusion.Import
 
             for (int i = sharedRootIndex + 1; i < fullSplit.Length - 1; i++)
             {
-                relativePath += fullSplit[i] + "\\";
+                relativePath += fullSplit[i] + Path.DirectorySeparatorChar;
             }
             relativePath += fullSplit[fullSplit.Length - 1];
 
@@ -525,12 +573,15 @@ namespace Reallusion.Import
 
         public static string CombineJsonTexPath(string fbxPath, string jsonTexPath)
         {
-            // remove any ./ prefix from the json path
-            if (jsonTexPath.iStartsWith("./"))
-                jsonTexPath = jsonTexPath.Substring(2);
-            // convert slashes to backslashes
-            jsonTexPath = jsonTexPath.Replace("/", "\\");
-            return Path.Combine(fbxPath, jsonTexPath);            
+            // remove any ./ .\ prefix from the start of the json texture path
+            if (jsonTexPath.iStartsWith("./") || jsonTexPath.iStartsWith(".\\"))
+                jsonTexPath = jsonTexPath.Substring(2);            
+
+            // convert slashes/backslashes to OS dependant separator
+            if (Path.DirectorySeparatorChar != '\\') jsonTexPath = jsonTexPath.Replace('\\', Path.DirectorySeparatorChar);
+            if (Path.DirectorySeparatorChar != '/') jsonTexPath = jsonTexPath.Replace('/', Path.DirectorySeparatorChar);
+
+            return Path.Combine(fbxPath, jsonTexPath);
         }
 
         public static GameObject FindPreviewScenePrefab()

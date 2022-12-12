@@ -1,6 +1,13 @@
 Changelog
 =========
 
+### v 1.4.2
+- OSX and Linux file path support.
+- Tweaked character model importer settings for better normal import and blend shape normal generation. Should reduce mesh smoothing issues.
+- Disabled Menu Mesh Tools when not working on a generated prefab. (The tools cannot operate directly on an FBX)
+- Fixed Bake not replacing materials with baked versions.
+- Eye Occlusion shaders factor in Occlusion Color alpha value.
+
 ### v 1.4.1
 - Traditional material glossiness fix.
 - High poly (sub-division) hair mesh extraction fix.

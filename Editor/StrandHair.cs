@@ -113,7 +113,7 @@ namespace Reallusion.Import
 
                 if (doneSomething)
                 {
-                    //prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, "Assets\\test.prefab");
+                    //prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, "Assets" + Path.DirectorySeparatorChar + "test.prefab");
                     //PrefabUtility.ApplyPrefabInstance(prefabInstance, InteractionMode.UserAction);
                     //PrefabUtility.SavePrefabAsset(prefabAsset);
                     WindowManager.onTimer += SavePrefabDelayed;
