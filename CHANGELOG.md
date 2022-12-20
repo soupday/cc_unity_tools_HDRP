@@ -1,6 +1,12 @@
 Changelog
 =========
 
+### v 1.4.3
+- Tries to untangle instalod duplication suffixes on accessories.
+    - inc. Script error fix that was blocking build materials when instalod meshes were not found in Json data.
+- Cast shadows removed from Tearline, Eye occlusion and scalp meshes.
+- Stand alone shader packages for the various pipelines included in /Packages/ folder.
+
 ### v 1.4.2
 - OSX and Linux file path support.
 - Tweaked character model importer settings for better normal import and blend shape normal generation. Should reduce mesh smoothing issues.

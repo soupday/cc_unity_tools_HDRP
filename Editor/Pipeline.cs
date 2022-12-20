@@ -21,6 +21,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Diagnostics;
 using UnityEngine.Rendering;
+using System.IO;
 #if HDRP_10_5_0_OR_NEWER
 using UnityEngine.Rendering.HighDefinition;
 using UnityEditor.Rendering.HighDefinition;
@@ -34,13 +35,13 @@ namespace Reallusion.Import
     {
         None, Skin, Head, Eye, Cornea, EyeOcclusion, Tearline, Hair, Scalp,
         Eyelash, Teeth, Tongue, DefaultOpaque, DefaultAlpha, SSS
-    }
+    }    
 
     public enum MaterialQuality { None, Default, High, Baked }
 
     public static class Pipeline
     {
-        public const string VERSION = "1.4.2";
+        public const string VERSION = "1.4.3";
 
 #if HDRP_10_5_0_OR_NEWER
         // version
