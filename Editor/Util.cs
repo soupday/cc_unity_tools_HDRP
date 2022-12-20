@@ -588,13 +588,13 @@ namespace Reallusion.Import
         {
             string[] texGuids;
 
-            texGuids = AssetDatabase.FindAssets("t:prefab PreviewScenePrefab");
+            texGuids = AssetDatabase.FindAssets("t:prefab RL_PreviewScenePrefab");
 
             foreach (string guid in texGuids)
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 string name = Path.GetFileNameWithoutExtension(assetPath);
-                if (name.Equals("PreviewScenePrefab", System.StringComparison.InvariantCultureIgnoreCase))
+                if (name.Equals("RL_PreviewScenePrefab", System.StringComparison.InvariantCultureIgnoreCase))
                 {
                     return AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
                 }
@@ -613,7 +613,15 @@ namespace Reallusion.Import
                 if (pair.Value == sharedMaterial) return pair.Key.name;
             }
 
-            return sharedMaterial.name;
+            string sourceName = sharedMaterial.name;
+
+            if (sourceName.iContains("_1st_Pass"))
+                sourceName = sourceName.Substring(0, sourceName.IndexOf("_1st_Pass", System.StringComparison.InvariantCultureIgnoreCase));
+
+            if (sourceName.iContains("_2nd_Pass"))
+                sourceName = sourceName.Substring(0, sourceName.IndexOf("_2nd_Pass", System.StringComparison.InvariantCultureIgnoreCase));
+
+            return sourceName;
         }
 
         // example functions

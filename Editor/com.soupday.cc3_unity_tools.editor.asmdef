@@ -1,16 +1,22 @@
 {
     "name": "soupday.cc3_unity_tools.editor",
     "rootNamespace": "Reallusion.Import",
-    "references": [
+    "references": [        
         "GUID:3eae0364be2026648bf74846acb8a731",
         "GUID:df380645f10b7bc4b97d4f5eb6303d95",
         "GUID:78bd2ddd6e276394a9615c203e574844",
         "GUID:457756d89b35d2941b3e7b37b4ece6f1",
-        "GUID:3932ccc3044a255448b1c8bfffe8d0c1",
-		"GUID:8f7035be1433e7b42bb810f12982480e",
+        "GUID:8f7035be1433e7b42bb810f12982480e",
         "GUID:f9dedde5eec30c2468e14d8a7b14626e",
         "GUID:7e9d95a3be8cd654ba8a8d2bb2409223",
-        "GUID:22f31b74491fb45d5b598e0b935deb31"
+        "GUID:22f31b74491fb45d5b598e0b935deb31",
+        "GUID:c579267770062bf448e75eb160330b7f",
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
+        "GUID:5a630cec8ed146c44818bd9e43016622",
+        "GUID:a35efad8797223d499f8c68b1f545dbc",
+        "GUID:d60799ab2a985554ea1a39cd38695018",
+        "GUID:f68ff95cd5433b640840728c8ffe0f9d",
+        "GUID:3932ccc3044a255448b1c8bfffe8d0c1"
     ],
     "includePlatforms": [
         "Editor"
@@ -25,9 +31,9 @@
     "defineConstraints": [],
     "versionDefines": [
         {
-            "name": "com.unity.render-pipelines.high-definition",
-            "expression": "12.0.0",
-            "define": "HDRP_12_0_0_OR_NEWER"
+            "name": "com.unity.postprocessing",
+            "expression": "3.1.1",
+            "define": "UNITY_POST_PROCESSING_3_1_1"
         },
         {
             "name": "Unity",
@@ -38,6 +44,16 @@
             "name": "com.unity.formats.alembic",
             "expression": "1.0.7",
             "define": "UNITY_ALEMBIC_1_0_7"
+        },
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "10.5.0",
+            "define": "URP_10_5_0_OR_NEWER"
+        },
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "12.0.0",
+            "define": "URP_12_0_0_OR_NEWER"
         },
         {
             "name": "com.unity.render-pipelines.high-definition",
@@ -54,7 +70,7 @@
             "expression": "12.0.0",
             "define": "HDRP_12_0_0_OR_NEWER"
         },
-		{
+        {
             "name": "com.unity.demoteam.hair",
             "expression": "0.9.0-exp.1",
             "define": "HAS_PACKAGE_STRAND_HAIR"

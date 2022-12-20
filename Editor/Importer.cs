@@ -261,7 +261,7 @@ namespace Reallusion.Import
             ProcessObjectTreeBakePass(fbx);
 
             // create / apply materials and shaders with supplied or baked texures.            
-            ProcessObjectTreeBuildPass(fbx);
+            ProcessObjectTreeBuildPass(fbx);            
 
             characterInfo.tempHairBake = false;
 
@@ -290,8 +290,8 @@ namespace Reallusion.Import
             AssetDatabase.Refresh();
 
             // create prefab.
-            GameObject prefabAsset = RL.CreatePrefabFromFbx(characterInfo, fbx, out GameObject prefabInstance);
-            
+            GameObject prefabAsset = RL.CreatePrefabFromFbx(characterInfo, fbx, out GameObject prefabInstance);            
+
             // setup 2 pass hair in the prefab.
             if (characterInfo.DualMaterialHair)
             {
@@ -312,6 +312,9 @@ namespace Reallusion.Import
             {
                 MeshUtil.FixSkinnedMeshBounds(prefabInstance);
             }
+
+            // apply post setup to prefab instance
+            ProcessObjectTreePostPass(prefabInstance);
 
             // save final prefab instance and remove from scene
             RL.SaveAndRemovePrefabInstance(prefabAsset, prefabInstance);
@@ -372,8 +375,6 @@ namespace Reallusion.Import
                         MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);
 
                         Util.LogInfo("    Material name: " + sourceName + ", type:" + materialType.ToString());
-
-                        FixRayTracing(obj, sharedMat, materialType);
 
                         // re-use or create the material.
                         Material mat = CreateRemapMaterial(materialType, sharedMat, sourceName);
@@ -499,7 +500,43 @@ namespace Reallusion.Import
                     }
                 }
             }
-        }        
+        }
+
+        void ProcessObjectTreePostPass(GameObject obj)
+        {
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+
+            foreach (Renderer renderer in renderers)
+            {
+                ProcessObjectPostPass(renderer);
+            }
+        }
+
+        private void ProcessObjectPostPass(Renderer renderer)
+        {
+            GameObject obj = renderer.gameObject;
+
+            if (renderer)
+            {
+                Util.LogInfo("Post Processing sub-object: " + obj.name);
+
+                foreach (Material sharedMat in renderer.sharedMaterials)
+                {
+                    // in case any of the materials have been renamed after a previous import, get the source name.
+                    string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
+
+                    // fetch the json parent for this material.
+                    // the json data for the material contains custom shader names, parameters and texture paths.
+                    QuickJSON matJson = characterInfo.GetMatJson(obj, sourceName);
+
+                    // determine the material type, this dictates the shader and template material.
+                    MaterialType materialType = GetMaterialType(obj, sharedMat, sourceName, matJson);                        
+
+                    // Fix ray tracing and shadow casting
+                    FixRayTracing(obj, sharedMat, materialType);
+                }
+            }
+        }
 
         private MaterialType GetMaterialType(GameObject obj, Material mat, string sourceName, QuickJSON matJson)
         {            
@@ -679,12 +716,14 @@ namespace Reallusion.Import
                     materialType == MaterialType.Tearline)
                 {
                     Pipeline.DisableRayTracing(smr);
+                    smr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
                 else if (materialType == MaterialType.Scalp)
                 {
                     if (smr.sharedMaterials.Length == 1)
                     {
                         Pipeline.DisableRayTracing(smr);
+                        smr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     }
                 }
             }
@@ -866,7 +905,7 @@ namespace Reallusion.Import
             string customShader = matJson?.GetStringValue("Custom Shader/Shader Name");
             string jsonMaterialType = matJson?.GetStringValue("Material Type");
 
-            if (jsonMaterialType.iEquals("Tra"))
+            if (jsonMaterialType == "Tra")
             {
                 if (RP == RenderPipeline.HDRP)
                 {
@@ -1159,7 +1198,7 @@ namespace Reallusion.Import
                         mat.SetFloatIf("_GlossMapScale", smoothness - microRoughnessMod);
                     }
                 }
-                else if (jsonMaterialType.iEquals("Tra"))
+                else if (jsonMaterialType == "Tra")
                 {
                     float glossiness = 0.5f;
                     float specular = 1f;

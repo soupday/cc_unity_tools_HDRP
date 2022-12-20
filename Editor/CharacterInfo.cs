@@ -356,25 +356,52 @@ namespace Reallusion.Import
             if (jsonMeshData != null)
             {
                 jsonPath = objName + "/Materials/" + sourceName;
-                if (jsonMeshData.PathExists(jsonPath))
+                matJson = jsonMeshData.GetObjectAtPath(jsonPath);                
+                                
+                if (matJson == null)
                 {
-                    matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                    if (objName.iContains("_Extracted"))
+                    {
+                        objName = objName.Substring(0, objName.IndexOf("_Extracted", System.StringComparison.InvariantCultureIgnoreCase));
+
+                        jsonPath = objName + "/Materials/" + sourceName;
+                        matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                    }
                 }
-                else
+
+                if (matJson == null)
                 {
                     // there is a bug where a space in name causes the name to be truncated on export from CC3/4
                     if (objName.Contains(" "))
                     {
-                        Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly.");
-                        string[] split = objName.Split(' ');
-                        objName = split[0];
-                        jsonPath = objName + "/Materials/" + sourceName;
+                        Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly...");
+                        string[] split = objName.Split(' ');                        
+                        jsonPath = split[0] + "/Materials/" + sourceName;
+                        if (jsonMeshData.PathExists(jsonPath))
+                        {
+                            matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                        }
+                    }
+                }                
+                    
+                if (matJson == null)
+                {          
+                    // instalod will generate unique suffixes _0/_1/_2 on character objects where object names and container
+                    // transforms have the same name, try to untangle the object name by speculatively removing this suffix.
+                    // (seems to happen mostly on accessories)
+                    if (objName[objName.Length - 2] == '_' && char.IsDigit(objName[objName.Length - 1]))
+                    {
+                        Util.LogWarn("Object name " + objName + " may by suffixed by InstaLod exporter. Attempting to untangle...");
+
+                        string specName = objName.Substring(0, objName.Length - 2);
+                        jsonPath = specName + "/Materials/" + sourceName;
                         if (jsonMeshData.PathExists(jsonPath))
                         {
                             matJson = jsonMeshData.GetObjectAtPath(jsonPath);
                         }
                     }
                 }
+                
             }
             if (matJson == null) Util.LogError("Unable to find json material data: " + jsonPath);
 

@@ -1130,20 +1130,23 @@ namespace Reallusion.Import
 
                         if (oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {
+                            float alphaClipValue = 0.666f;
+                            if (Pipeline.is3D) alphaClipValue = 0.55f;
+
                             // set alpha clip and remap to values that work better 
                             // with the two material system.
                             if (isFacialObject)
-                            {
-                                oldMat.SetFloatIf("_AlphaClip", 0.666f);
-                                oldMat.SetFloatIf("_AlphaClip2", 0.666f);
+                            {                                                                
+                                oldMat.SetFloatIf("_AlphaClip", alphaClipValue);
+                                oldMat.SetFloatIf("_AlphaClip2", alphaClipValue);
                                 oldMat.SetFloatIf("_AlphaPower", 1.5f);
                                 oldMat.SetFloatIf("_ShadowClip", 0.5f);
                                 oldMat.SetFloatIf("_AlphaRemap", 1.0f);
                             }
                             else
                             {
-                                oldMat.SetFloatIf("_AlphaClip", 0.666f);
-                                oldMat.SetFloatIf("_AlphaClip2", 0.666f);
+                                oldMat.SetFloatIf("_AlphaClip", alphaClipValue);
+                                oldMat.SetFloatIf("_AlphaClip2", alphaClipValue);
                                 oldMat.SetFloatIf("_AlphaPower", 0.7f);
                                 oldMat.SetFloatIf("_ShadowClip", 0.5f);
                                 oldMat.SetFloatIf("_AlphaRemap", 1.0f);
