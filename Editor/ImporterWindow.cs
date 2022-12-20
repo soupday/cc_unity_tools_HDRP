@@ -1662,13 +1662,15 @@ namespace Reallusion.Import
                 fakeButtonContext.padding = new RectOffset(1, 1, 1, 1);
                 fakeButtonContext.stretchHeight = true;
                 fakeButtonContext.stretchWidth = true;
+
+                FixMeh();
             }
 
             public void FixMeh()
             {
                 if (!dragTex)
                 {                    
-                    dragTex = TextureColor(Color.white * 0.1f);
+                    dragTex = TextureColor(new Color(0f,0f,0f,0.25f));
                     dragBarStyle.normal.background = dragTex;                    
                 }
                 if (!contextTex)
