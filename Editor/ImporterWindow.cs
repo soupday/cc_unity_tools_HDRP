@@ -65,6 +65,7 @@ namespace Reallusion.Import
         const float ACTION_WIDTH = ACTION_BUTTON_SIZE + 12f;
         const float TITLE_SPACE = 12f;
         const float ROW_SPACE = 4f;
+        const float MIN_SETTING_WIDTH = ACTION_WIDTH;
 
         // additions for draggable width icon area
         const float DRAG_BAR_WIDTH = 2f;
@@ -123,7 +124,7 @@ namespace Reallusion.Import
         public static float ICON_AREA_WIDTH
         {
             get
-            {
+            {                
                 if (EditorPrefs.HasKey("RL_Importer_IconAreaWidth"))
                     return EditorPrefs.GetFloat("RL_Importer_IconAreaWidth");
                 return ICON_WIDTH;
@@ -197,7 +198,7 @@ namespace Reallusion.Import
         {                        
             Type hwt = Type.GetType("UnityEditor.SceneHierarchyWindow, UnityEditor.dll");
             ImporterWindow window = GetWindow<ImporterWindow>(windowTitle, hwt);
-            window.minSize = new Vector2(300f, 500f);
+            window.minSize = new Vector2(ACTION_WIDTH + ICON_WIDTH + MIN_SETTING_WIDTH + WINDOW_MARGIN, 500f);
             Current = window;
 
             ClearAllData();
@@ -399,6 +400,13 @@ namespace Reallusion.Import
             //if (Pipeline.isHDRP12) optionHeight += 14f;
             if (contextCharacter.Generation == BaseGeneration.Unknown) optionHeight += 14f;
             optionHeight += 14f;
+            
+            if (width - ICON_AREA_WIDTH - ACTION_WIDTH < MIN_SETTING_WIDTH)
+            {
+                ICON_AREA_WIDTH = Mathf.Max(ICON_WIDTH, width - ACTION_WIDTH - MIN_SETTING_WIDTH);
+            }            
+
+            if (ICON_AREA_WIDTH > width - 51f) ICON_AREA_WIDTH = Mathf.Max(ICON_WIDTH, width - 51f);
 
             Rect iconBlock = new Rect(0f, TOP_PADDING, ICON_AREA_WIDTH, innerHeight);
 
@@ -758,7 +766,7 @@ namespace Reallusion.Import
 
             GUILayout.Space(ACTION_BUTTON_SPACE);
             
-            if (GUILayout.Button(new GUIContent(iconActionPhysics, "Enables cloth physics and rebuilds the character physics."),
+            if (GUILayout.Button(new GUIContent(iconActionPhysics, "Rebuilds the character physics."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 physicsAfterGUI = true;
@@ -997,7 +1005,7 @@ namespace Reallusion.Import
 
             GUILayout.Space(10f);
             GUILayout.BeginVertical(new GUIContent("", "When assigning weight maps, the system analyses the weights of the mesh to determine which colliders affect the cloth simulation.Only cloth weights above this threshold will be considered for collider detection. Note: This is the default value supplied to the WeightMapper component, it can be further modified there."), importerStyles.labelStyle);
-            GUILayout.Label("Physics Collider Detection Threshold");
+            GUILayout.Label("Collider Detection Threshold");
             GUILayout.Space(ROW_SPACE);            
             GUILayout.BeginHorizontal();
             Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = GUILayout.HorizontalSlider(Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD, 0f, 1f);

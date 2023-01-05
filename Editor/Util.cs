@@ -1048,7 +1048,7 @@ namespace Reallusion.Import
                 FindSceneObjects(root.GetChild(i), search, found);
             }
         }
-
+        
         public static Transform FindChildRecursive(Transform root, string search)
         {
             if (root.name.iEquals(search)) return root;
@@ -1060,7 +1060,7 @@ namespace Reallusion.Import
             }
 
             return null;
-        }
+        }        
 
         public static bool AssetPathIsEmpty(string assetPath)
         {

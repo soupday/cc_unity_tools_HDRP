@@ -306,46 +306,70 @@ half LinearTosRGB(half lin)
 
 float4 LinearTosRGB(float4 In)
 {
+#ifdef UNITY_COLORSPACE_GAMMA    
+    return In; 
+#else
     float3 sRGBLo = In.xyz * 12.92;
     float3 sRGBHi = (pow(max(abs(In.xyz), 1.192092896e-07), float3(1.0 / 2.4, 1.0 / 2.4, 1.0 / 2.4)) * 1.055) - 0.055;
     float3 sRGB = float3(In.xyz <= 0.0031308) ? sRGBLo : sRGBHi;
     return float4(sRGB, In.a);
+#endif
 }
 
 float LinearTosRGB(float In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     float sRGBLo = In * 12.92;
     float sRGBHi = (pow(max(abs(In), 1.192092896e-07), 1.0 / 2.4) * 1.055) - 0.055;
     return In <= 0.0031308 ? sRGBLo : sRGBHi;
+#endif
 }
 
 float4 sRGBToLinear(float4 In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     float3 linRGBLo = In.rgb / 12.92;;
     float3 linRGBHi = pow(max(abs((In.rgb + 0.055) / 1.055), 1.192092896e-07), float3(2.4, 2.4, 2.4));
     float3 lin = float3(In.rgb <= 0.04045) ? linRGBLo : linRGBHi;
     return float4(lin, In.a);
+#endif
 }
 
 half4 LinearTosRGBApprox(half4 In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     half3 linRGB = max(In.rgb, half3(0.h, 0.h, 0.h));
     linRGB = max(1.055h * pow(linRGB, 0.416666667h) - 0.055h, 0.h);
     return float4(linRGB, In.a);
+#endif
 }
 
 half4 sRGBToLinearApprox(half4 In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     half3 sRGB = In.rgb;
     sRGB = sRGB * (sRGB * (sRGB * 0.305306011h + 0.682171111h) + 0.012522878h);
     return float4(sRGB, In.a);
+#endif
 }
 
 float sRGBToLinear(float In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     float linearRGBLo = In / 12.92;
     float linearRGBHi = pow(max(abs((In + 0.055) / 1.055), 1.192092896e-07), 2.4);
     return In <= 0.04045 ? linearRGBLo : linearRGBHi;
+#endif
 }
 
 float2 GetUV(int2 xy)
