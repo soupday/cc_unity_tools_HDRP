@@ -183,7 +183,7 @@ namespace Reallusion.Import
 
         // bones that can have DynamicBone spring bone colliders
         private List<string> springColliderBones = new List<string> { 
-            "CC_Base_Head", "CC_Base_Spine01", "CC_Base_NeckTwist01" 
+            "CC_Base_Head", "CC_Base_Spine01", "CC_Base_NeckTwist01", "CC_Base_R_Upperarm", "CC_Base_R_Upperarm",
         };
 
         private GameObject prefabAsset;        
@@ -546,29 +546,38 @@ namespace Reallusion.Import
                 return;
             }
 
-            GameObject headBone = MeshUtil.FindCharacterBone(prefabInstance, "CC_Base_Head", "Head");
+            GameObject hairRig = MeshUtil.FindCharacterBone(prefabInstance, "RL_Hair_Rig_Head");
+            GameObject beardRig = MeshUtil.FindCharacterBone(prefabInstance, "RL_Hair_Rig_Jaw");
             List<Transform> hairRoots = new List<Transform>();
 
-            if (headBone)
+            if (hairRig)
             {
-                for (int i = 0; i < headBone.transform.childCount; i++)
+                for (int i = 0; i < hairRig.transform.childCount; i++)
                 {
-                    Transform childBone = headBone.transform.GetChild(i);
+                    Transform childBone = hairRig.transform.GetChild(i);
+                    hairRoots.Add(childBone);
+                }
+            }
 
-                    if (childBone.name.iStartsWith("RL_Hair") || childBone.name.iContains("Hair"))
-                    {
-                        hairRoots.Add(childBone);
-                    }
+            if (beardRig)
+            {
+                for (int i = 0; i < beardRig.transform.childCount; i++)
+                {
+                    Transform childBone = beardRig.transform.GetChild(i);
+                    hairRoots.Add(childBone);
                 }
             }
 
             if (hairRoots.Count > 0)
             {
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Roots", hairRoots);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Damping", 0.12f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Elasticity", 0.04f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Stiffness", 0.04f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Damping", 0.1f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Elasticity", 0.05f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Stiffness", 0.05f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Radius", 0.02f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_EndLength", 0f);
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Gravity", new Vector3(0f, -0.0098f, 0f));
+                
             }
 
             Type dynamicBoneColliderType = GetTypeInAssemblies("DynamicBoneColliderBase");

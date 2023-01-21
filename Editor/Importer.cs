@@ -536,6 +536,14 @@ namespace Reallusion.Import
 
                     // Fix ray tracing and shadow casting
                     FixRayTracing(obj, sharedMat, materialType);
+
+                    if (materialType == MaterialType.Head && characterInfo.FeatureUseWrinkleMaps)
+                    {
+                        if (renderer.GetType() == typeof(SkinnedMeshRenderer))
+                        {                            
+                            AddWrinkleManager(obj, (SkinnedMeshRenderer)renderer, sharedMat);
+                        }
+                    }
                 }
             }
         }
@@ -646,7 +654,8 @@ namespace Reallusion.Import
         private Material CreateRemapMaterial(MaterialType materialType, Material sharedMaterial, string sourceName)
         {            
             // get the template material.
-            Material templateMaterial = Pipeline.GetTemplateMaterial(sourceName, materialType, characterInfo.BuildQuality, characterInfo, USE_AMPLIFY_SHADER, characterInfo.FeatureUseTessellation);
+            Material templateMaterial = Pipeline.GetTemplateMaterial(sourceName, materialType, characterInfo.BuildQuality, 
+                characterInfo, USE_AMPLIFY_SHADER, characterInfo.FeatureUseTessellation, characterInfo.FeatureUseWrinkleMaps);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -1326,6 +1335,44 @@ namespace Reallusion.Import
                 ConnectTextureTo(sourceName, mat, "_NormalBlendMap", "NBMap",
                     matJson, "Custom Shader/Image/NormalMap Blend",
                     FLAG_NORMAL);
+                 
+                if (characterInfo.FeatureUseWrinkleMaps && matJson.PathExists("Wrinkle"))
+                {
+                    ConnectTextureTo(sourceName, mat, "_WrinkleDiffuseBlend1", "Wrinkle_Diffuse1",
+                        matJson, "Wrinkle/Textures/Diffuse_1",
+                        FLAG_SRGB);
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleDiffuseBlend2", "Wrinkle_Diffuse2",
+                        matJson, "Wrinkle/Textures/Diffuse_2",
+                        FLAG_SRGB);
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleDiffuseBlend3", "Wrinkle_Diffuse3",
+                        matJson, "Wrinkle/Textures/Diffuse_3",
+                        FLAG_SRGB);
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleNormalBlend1", "Wrinkle_Normal1",
+                        matJson, "Wrinkle/Textures/Normal_1",
+                        FLAG_NORMAL);
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleNormalBlend2", "Wrinkle_Normal2",
+                        matJson, "Wrinkle/Textures/Normal_2",
+                        FLAG_NORMAL);
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleNormalBlend3", "Wrinkle_Normal3",
+                        matJson, "Wrinkle/Textures/Normal_3",
+                        FLAG_NORMAL);
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleRoughnessBlend1", "Wrinkle_Roughness1",
+                        matJson, "Wrinkle/Textures/Roughness_1");
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleRoughnessBlend2", "Wrinkle_Roughness2",
+                        matJson, "Wrinkle/Textures/Roughness_2");
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleRoughnessBlend3", "Wrinkle_Roughness3",
+                        matJson, "Wrinkle/Textures/Roughness_3");
+
+                    ApplyWrinkleMasks(mat);                    
+                }
 
                 mat.EnableKeyword("BOOLEAN_IS_HEAD_ON");
             }
@@ -2147,6 +2194,56 @@ namespace Reallusion.Import
                 return false;
             }            
             return true;
+        }
+
+        private void AddWrinkleManager(GameObject obj, SkinnedMeshRenderer smr, Material mat)
+        {
+            WrinkleManager wm = obj.AddComponent<WrinkleManager>();
+            wm.headMaterial = mat;
+            wm.skinnedMeshRenderer = smr;
+        }
+
+        private void CopyWrinkleMasks(string folder)
+        {
+            string[] packageFolders = new string[] { "Packages" };
+            string[] characterFolders = new string[] { folder };
+
+            string[] maskNames = new string[] { "RL_Wrinkle_Set 1-1", "RL_Wrinkle_Set 1-2", "RL_Wrinkle_Set 2", "RL_Wrinkle_Set 3" };
+
+            List<Texture2D> maskTextures = new List<Texture2D>();
+
+            foreach (string maskName in maskNames)
+            {
+                Texture2D tex = Util.FindTexture(characterFolders, maskName);
+                if (!tex)
+                {
+                    tex = Util.FindTexture(packageFolders, maskName);
+                    if (tex)
+                    {
+                        // TODO
+                    }
+                }
+            }
+        }
+
+
+        private void ApplyWrinkleMasks(Material mat)
+        {
+            string[] folders = new string[] { "Packages", fbmFolder, texFolder };
+
+            string[] maskNames = new string[] { "RL_Wrinkle_Set 1-1", "RL_Wrinkle_Set 1-2", "RL_Wrinkle_Set 2", "RL_Wrinkle_Set 3" };
+            string[] refNames = new string[] { "_WrinkleMaskSet11", "_WrinkleMaskSet12", "_WrinkleMaskSet2", "_WrinkleMaskSet3" };
+            
+            for (int i = 0; i < maskNames.Length; i++)
+            {
+                string maskName = maskNames[i];
+                string refName = refNames[i];
+                Texture2D tex = Util.FindTexture(folders, maskName);
+                if (tex)
+                {
+                    mat.SetTextureIf(refName, tex);
+                }
+            }            
         }
 
         private bool ConnectTextureTo(string materialName, Material mat, string shaderRef, string suffix, 

@@ -100,6 +100,8 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_HAIR_1ST_PASS = "RL_Template_HQ_Hair_1st_Pass_HDRP";
         public const string MATERIAL_HQ_HAIR_2ND_PASS = "RL_Template_HQ_Hair_2nd_Pass_HDRP";
         public const string MATERIAL_HQ_HAIR_COVERAGE = "RL_Template_HQ_Hair_HDRP";
+        // wrinkle map
+        public const string MATERIAL_HQ_HEAD_WRINKLE = "RL_Template_HQ_HeadWrinkle_HDRP";
 
         // Default Materials
         //
@@ -674,18 +676,25 @@ namespace Reallusion.Import
             return templateName;
         }        
 
-        public static Material GetTemplateMaterial(string sourceName, MaterialType materialType, MaterialQuality quality, CharacterInfo info, bool useAmplify = false, bool useTessellation = false)
+        public static Material GetTemplateMaterial(string sourceName, MaterialType materialType, MaterialQuality quality, 
+            CharacterInfo info, bool useAmplify = false, bool useTessellation = false, bool useWrinkleMaps = false)
         {
             string templateName = GetTemplateMaterialName(sourceName, materialType, quality, info);
 
-            return GetCustomTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation);
+            return GetCustomTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation, useWrinkleMaps);
         }
 
-        public static Material GetCustomTemplateMaterial(string sourceName, string templateName, MaterialQuality quality, bool useAmplify, bool useTessellation)
+        public static Material GetCustomTemplateMaterial(string sourceName, string templateName, MaterialQuality quality, 
+            bool useAmplify, bool useTessellation, bool useWrinkleMaps)
         {
             string customTemplateName;
             Material customTemplate = null;
             Material foundTemplate = null;
+
+            if (useWrinkleMaps && templateName == MATERIAL_HQ_HEAD)
+            {
+                templateName = MATERIAL_HQ_HEAD_WRINKLE;
+            }
             
             if (useAmplify)
             {

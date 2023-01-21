@@ -54,6 +54,8 @@
 #pragma kernel RLEyeOcclusionDiffuse
 #pragma kernel RLFlowToNormal
 
+#pragma kernel RLChannelPackLinear
+
 // Defines
 //
 #define SAMPLE(tex,coord) tex.SampleLevel (sampler##tex,coord, 0)
@@ -188,6 +190,10 @@ float eoOcclusionStrength, eoTop2Min, eoTop2Max, eoOcclusionStrength2;
 float eoTearDuctPosition, eoTearDuctWidth, eoOcclusionPower;
 float4 eoEyeOcclusionColor;    
 
+TEX2D(RedChannel);
+TEX2D(GreenChannel);
+TEX2D(BlueChannel);
+TEX2D(AlphaChannel);
 
 // Node functions
 //
@@ -382,6 +388,28 @@ float2 GetUV(int2 xy)
 float invLerp(float a, float b, float v) 
 {
     return (v - a) / (b - a);
+}
+
+
+
+
+
+
+
+
+[numthreads(1, 1, 1)]
+void RLChannelPackLinear(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float redChannel = SAMPLE(RedChannel, uv).g;
+    float greenChannel = SAMPLE(GreenChannel, uv).g;
+    float blueChannel = SAMPLE(BlueChannel, uv).g;
+    float alphaChannel = SAMPLE(AlphaChannel, uv).g;    
+
+    float4 packed = float4(redChannel, greenChannel, blueChannel, alphaChannel);
+
+    Result[id.xy] = packed;
 }
 
 [numthreads(1, 1, 1)]

@@ -18,6 +18,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using System.IO;
 
 namespace Reallusion.Import
 {
@@ -145,5 +146,49 @@ namespace Reallusion.Import
             Texture2D gradient = baker.BakeGradientMap("Assets" + Path.DirectorySeparatorChar + "Test", "Gradient");
         }
         */
+
+        [MenuItem("Reallusion/Test/Channel Pack", priority = 220)]
+        public static void DoTest()
+        {
+            CharacterInfo ci = ImporterWindow.Current.Character;
+            ComputeBake baker = new ComputeBake(ci.Fbx, ci);
+            string[] folders = new string[] { "Assets", "Packages" };
+
+            Texture2D redChannel = Util.FindTexture(folders, "Set 1-1_Eye_Squint");
+            Texture2D greenChannel = Util.FindTexture(folders, "Set 1-1_Brow_Raise_Inner");
+            Texture2D blueChannel = Util.FindTexture(folders, "Set 1-1_Mouth_Pucker_Lower");
+            Texture2D alphaChannel = Util.FindTexture(folders, "Set 1-1_Chin_Up");
+
+            Texture2D pack = baker.BakeChannelPackLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannel, greenChannel, blueChannel, alphaChannel,
+                "ChannelPack1");
+
+            redChannel = Util.FindTexture(folders, "Set 1-2_Jaw_Open");
+            greenChannel = Util.FindTexture(folders, "Set 1-2_Eye_Blink");
+            blueChannel = Util.FindTexture(folders, "Set 1-1_Brow_Raise_Outer");
+            alphaChannel = Util.FindTexture(folders, "Set 1-1_Mouth_Pucker_Upper");
+
+            pack = baker.BakeChannelPackLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannel, greenChannel, blueChannel, alphaChannel,
+                "ChannelPack2");
+
+            redChannel = Util.FindTexture(folders, "Set 2_Neck_Stretch");
+            greenChannel = Util.FindTexture(folders, "Set 2_Brow_Drop");
+            blueChannel = Util.FindTexture(folders, "Set 2_Nose_Sneer");
+            alphaChannel = Util.FindTexture(folders, "Set 2_Mouth_Stretch");
+
+            pack = baker.BakeChannelPackLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannel, greenChannel, blueChannel, alphaChannel,
+                "ChannelPack3");
+
+            redChannel = Util.FindTexture(folders, "Set 3_Mouth_Smile");
+            greenChannel = Util.FindTexture(folders, "Set 3_Brow_Compress");
+            blueChannel = Util.FindTexture(folders, "Set 3_Cheek_Raise");            
+            alphaChannel = Util.FindTexture(folders, "Set 2_Nose_Crease");
+
+            pack = baker.BakeChannelPackLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannel, greenChannel, blueChannel, alphaChannel,
+                "ChannelPack4");
+        }
     }
 }

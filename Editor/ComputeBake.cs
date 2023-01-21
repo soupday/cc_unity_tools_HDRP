@@ -1437,6 +1437,7 @@ namespace Reallusion.Import
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
             bool useTessellation = characterInfo.BuiltFeatureTessellation;
+            bool useWrinkleMaps = characterInfo.BuiltFeatureWrinkleMaps;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -1567,14 +1568,14 @@ namespace Reallusion.Import
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
                         Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS, 
-                            MaterialQuality.Baked, useAmplify, useTessellation));
+                            MaterialQuality.Baked, useAmplify, useTessellation, useWrinkleMaps));
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName.Replace("_1st_Pass", "_2nd_Pass"),
                         Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS, 
-                            MaterialQuality.Baked, useAmplify, useTessellation));
+                            MaterialQuality.Baked, useAmplify, useTessellation, useWrinkleMaps));
 
                     // multi material pass hair is custom baked shader only:
                     SetCustom(firstPass);
@@ -1591,7 +1592,7 @@ namespace Reallusion.Import
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
                         Pipeline.GetTemplateMaterial(sourceName, MaterialType.Hair,
-                                    MaterialQuality.Baked, characterInfo, useAmplify, useTessellation));
+                                    MaterialQuality.Baked, characterInfo, useAmplify, useTessellation, useWrinkleMaps));
 
                     SetCustom(result);
                     return result;
@@ -1623,13 +1624,13 @@ namespace Reallusion.Import
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName,
-                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation));                    
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_1ST_PASS, MaterialQuality.Baked, useAmplify, useTessellation, useWrinkleMaps));                    
 
                     secondPass = CreateBakedMaterial(bakedBaseMap, bakedMaskMap, bakedMetallicGlossMap, bakedAOMap, bakedNormalMap,
                         null, null, null, null, emissionMap,
                         normalStrength, 1f, 1f, emissiveColor,
                         sourceName.Replace("_1st_Pass", "_2nd_Pass"),
-                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify, useTessellation));
+                        Pipeline.GetCustomTemplateMaterial(sourceName, Pipeline.MATERIAL_BAKED_HAIR_2ND_PASS, MaterialQuality.Baked, useAmplify, useTessellation, useWrinkleMaps));
 
                     SetBasic(firstPass);
                     alphaClip = 0.01f;
@@ -1762,6 +1763,35 @@ namespace Reallusion.Import
         }
 
         //
+
+        public Texture2D BakeChannelPackLinear(string folder,
+            Texture2D redChannel, Texture2D greenChannel, Texture2D blueChannel, Texture2D alphaChannel,            
+            string name)
+        {
+            Vector2Int maxSize = GetMaxSize(redChannel, greenChannel, blueChannel, alphaChannel);
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(maxSize, folder, name, Importer.FLAG_ALPHA_DATA);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                redChannel = CheckBlank(redChannel);
+                greenChannel = CheckBlank(greenChannel);
+                blueChannel = CheckBlank(blueChannel);
+                alphaChannel = CheckBlank(alphaChannel);
+
+                int kernel = bakeShader.FindKernel("RLChannelPackLinear");
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.SetTexture(kernel, "RedChannel", redChannel);
+                bakeShader.SetTexture(kernel, "GreenChannel", greenChannel);
+                bakeShader.SetTexture(kernel, "BlueChannel", blueChannel);
+                bakeShader.SetTexture(kernel, "AlphaChannel", alphaChannel);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
 
         public Texture2D BakeGradientMap(string folder, string name)
         {
