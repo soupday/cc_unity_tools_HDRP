@@ -33,10 +33,11 @@ namespace Reallusion.Import
         public SkinnedMeshRenderer skinnedMeshRenderer;
         public Material headMaterial;
         public bool initialized = false;
+        [Range(0f, 2f)]
         public float blendScale = 1f;
-
+        [Range(0.5f, 2f)]
+        public float blendPower = 0.75f;
         public Vector4[] valueSets = new Vector4[8];
-        public Vector4[] boolSets = new Vector4[8];
 
         public List<WrinkleMappings> mappings = new List<WrinkleMappings>()
         {   
@@ -163,8 +164,10 @@ namespace Reallusion.Import
                 {
                     for (int i = 0; i < 8; i++)
                     {
-                        boolSets[i] = Vector4.zero;
-                        valueSets[i] = Vector4.Lerp(valueSets[i], Vector4.zero, 8f * Time.deltaTime);
+                        if (valueSets[i].sqrMagnitude > 0.0001f)
+                            valueSets[i] = Vector4.Lerp(valueSets[i], Vector4.zero, 8f * Time.deltaTime);
+                        else 
+                            valueSets[i] = Vector4.zero;
                     }
 
                     foreach (WrinkleMappings wm in mappings)
@@ -172,47 +175,61 @@ namespace Reallusion.Import
                         if (wm.blendShapeIndex >= 0)
                         {
                             float weight = skinnedMeshRenderer.GetBlendShapeWeight(wm.blendShapeIndex) / 100f;
-                            weight = Mathf.Max(0f, Mathf.Min(1f, weight * blendScale));
+                            weight = Mathf.Pow(
+                                Mathf.Max(0f, Mathf.Min(1f, weight * blendScale)), blendPower
+                            );
 
                             int il = ((int)wm.set) - 1;
                             int ir = il + 4;
 
                             if (wm.side == MaskSide.left || wm.side == MaskSide.center)
-                            {
-                                /*
-                                if (boolSets[il][wm.setIndex] > 0f)
-                                {
-                                    if (weight > valueSets[il][wm.setIndex])
-                                        valueSets[il][wm.setIndex] = weight;
-                                }
-                                else
-                                {
-                                    valueSets[il][wm.setIndex] = weight;
-                                    boolSets[il][wm.setIndex] = 1f;
-                                }
-                                */
+                            {                                
                                 if (weight > valueSets[il][wm.setIndex])
                                     valueSets[il][wm.setIndex] = weight;
                             }
 
                             if (wm.side == MaskSide.right || wm.side == MaskSide.center)
                             {
-                                /*
-                                if (boolSets[ir][wm.setIndex] > 0f)
-                                {
-                                    if (weight > valueSets[ir][wm.setIndex])
-                                        valueSets[ir][wm.setIndex] = weight;
-                                }
-                                else
-                                {
-                                    valueSets[ir][wm.setIndex] = weight;
-                                    boolSets[ir][wm.setIndex] = 1f;
-                                }
-                                */
                                 if (weight > valueSets[ir][wm.setIndex])
                                     valueSets[ir][wm.setIndex] = weight;
                             }                            
                         }
+                    }
+
+                    // post calculation normalization
+                    // to avoid competing wrinkle maps from overriding each other,
+                    // any competing wrinkle maps whose sum exceeds 1.0, will be normalized 
+                    // to total 1.0, to allow them to blend.
+                    float a, b, c, d, sum, scale;
+
+                    // Brow Raise Inner & Outer L
+                    a = valueSets[0][1];
+                    b = valueSets[1][2];
+                    c = Mathf.Max(a, b);
+                    // Brow Drop
+                    d = valueSets[2][1];
+                    sum = c + d;
+                    if (sum > 1.0f)
+                    {
+                        scale = 1.0f / sum;
+                        valueSets[0][1] *= scale;
+                        valueSets[1][2] *= scale;
+                        valueSets[2][1] *= scale;
+                    }
+
+                    // Brow Raise Inner & Outer R
+                    a = valueSets[4][1];
+                    b = valueSets[5][2];
+                    c = Mathf.Max(a, b);
+                    // Brow Drop
+                    d = valueSets[6][1];
+                    sum = c + d;
+                    if (sum > 1.0f)
+                    {
+                        scale = 1.0f / sum;
+                        valueSets[0][1] *= scale;
+                        valueSets[1][2] *= scale;
+                        valueSets[2][1] *= scale;
                     }
 
                     headMaterial.SetVector("_WrinkleValueSet11L", valueSets[0]);

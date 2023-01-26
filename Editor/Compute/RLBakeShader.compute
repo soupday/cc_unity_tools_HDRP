@@ -14,6 +14,7 @@
 #pragma kernel RLHeadDiffuse
 #pragma kernel RLHeadMask
 #pragma kernel RLSkinMask
+#pragma kernel RLHeadWrinkleSmoothnessPack
 #pragma kernel RLHeadMetallicGloss
 #pragma kernel RLSkinMetallicGloss
 #pragma kernel RLHeadAO
@@ -94,6 +95,10 @@ TEX2D(Roughness);
 TEX2D(Alpha);
 TEX2D(MicroNormalMask);
 TEX2D(SmoothnessLUT);
+
+TEX2D(Roughness1);
+TEX2D(Roughness2);
+TEX2D(Roughness3);
 
 TEX2D(CavityAO);
 float smoothnessMin, smoothnessMax, smoothnessPower;
@@ -535,7 +540,7 @@ void RLDetail(uint3 id : SV_DispatchThreadID)
 
     float4 packed;
     packed.xz = 0.5;
-    packed.wy = UPACK(microNormal.xy);
+    packed.wy = UPACK(microNormal.xy); 
 
     Result[id.xy] = packed;
 }
@@ -716,6 +721,30 @@ void RLHeadMask(uint3 id : SV_DispatchThreadID)
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, ao, detailMask, smoothness);
+
+    Result[id.xy] = packed;
+}
+
+[numthreads(1, 1, 1)]
+void RLHeadWrinkleSmoothnessPack(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+    
+    float smoothness1 = saturate(1.0 - SAMPLE(Roughness1, uv).g);
+    float smoothness2 = saturate(1.0 - SAMPLE(Roughness2, uv).g);
+    float smoothness3 = saturate(1.0 - SAMPLE(Roughness3, uv).g);
+    float smoothnessMod = HeadSmoothnessMod(uv);    
+    
+    smoothness1 = lerp(smoothnessMin, smoothnessMax, pow(smoothness1, smoothnessPower));
+    smoothness1 = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness1);
+
+    smoothness2 = lerp(smoothnessMin, smoothnessMax, pow(smoothness2, smoothnessPower));
+    smoothness2 = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness2);
+
+    smoothness3 = lerp(smoothnessMin, smoothnessMax, pow(smoothness3, smoothnessPower));
+    smoothness3 = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness3);
+    
+    float4 packed = float4(smoothness1, smoothness2, smoothness3, 1.0);
 
     Result[id.xy] = packed;
 }

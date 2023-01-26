@@ -153,6 +153,8 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_HDRP";
         // for gamebase single material or actor core...
         public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_HDRP";
+        // wrinkle map
+        public const string MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM = "RL_Template_Baked_HeadWrinkleCustom_HDRP";
 #elif URP_10_5_0_OR_NEWER
         // version
         public const string FULL_VERSION = "URP " + VERSION;
@@ -472,6 +474,31 @@ namespace Reallusion.Import
 
         public static void ResetMaterial(Material mat)
         {
+            string[] propertyPaths = new string[] { "m_SavedProperties.m_TexEnvs", 
+                                                    "m_SavedProperties.m_Floats", 
+                                                    "m_SavedProperties.m_Colors" };
+
+            SerializedObject so = new SerializedObject(mat);
+
+            foreach (string path in propertyPaths)
+            {
+                var properties = so.FindProperty(path);
+
+                if (properties != null && properties.isArray)
+                {
+                    for (int j = properties.arraySize - 1; j >= 0; j--)
+                    {
+                        string propName = properties.GetArrayElementAtIndex(j).displayName;
+                        if (!mat.HasProperty(propName))
+                        {
+                            properties.DeleteArrayElementAtIndex(j);
+                            so.ApplyModifiedProperties();
+                        }
+                    }
+                }
+            }
+
+
 #if HDRP_10_5_0_OR_NEWER
             HDShaderUtils.ResetMaterialKeywords(mat);
 #endif
@@ -592,6 +619,12 @@ namespace Reallusion.Import
                     if (materialType == MaterialType.Hair)
                         return MATERIAL_HQ_HAIR_COVERAGE;
                 }
+
+                if (info.FeatureUseWrinkleMaps)
+                {
+                    if (materialType == MaterialType.Head)
+                        return MATERIAL_HQ_HEAD_WRINKLE;
+                }
             }
             else if (quality == MaterialQuality.Baked) // option overrides for baked materials
             {
@@ -625,6 +658,13 @@ namespace Reallusion.Import
                                        
                     if (materialType == MaterialType.EyeOcclusion)
                         return MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM;
+
+
+                    if (info.BuiltFeatureWrinkleMaps)
+                    {
+                        if (materialType == MaterialType.Head)                        
+                            return MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM;
+                    }
                 }                
             }
 
@@ -681,21 +721,16 @@ namespace Reallusion.Import
         {
             string templateName = GetTemplateMaterialName(sourceName, materialType, quality, info);
 
-            return GetCustomTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation, useWrinkleMaps);
+            return GetUpgradedTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation, useWrinkleMaps);
         }
 
-        public static Material GetCustomTemplateMaterial(string sourceName, string templateName, MaterialQuality quality, 
+        public static Material GetUpgradedTemplateMaterial(string sourceName, string templateName, MaterialQuality quality, 
             bool useAmplify, bool useTessellation, bool useWrinkleMaps)
         {
             string customTemplateName;
             Material customTemplate = null;
             Material foundTemplate = null;
 
-            if (useWrinkleMaps && templateName == MATERIAL_HQ_HEAD)
-            {
-                templateName = MATERIAL_HQ_HEAD_WRINKLE;
-            }
-            
             if (useAmplify)
             {
                 customTemplateName = templateName + "_Amplify";

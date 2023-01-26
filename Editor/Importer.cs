@@ -261,7 +261,7 @@ namespace Reallusion.Import
             ProcessObjectTreeBakePass(fbx);
 
             // create / apply materials and shaders with supplied or baked texures.            
-            ProcessObjectTreeBuildPass(fbx);            
+            ProcessObjectTreeBuildPass(fbx);
 
             characterInfo.tempHairBake = false;
 
@@ -1829,7 +1829,7 @@ namespace Reallusion.Import
                     SetFloatPowerRange(mat, "_SecondarySpecularMultiplier", specMapStrength * specStrength2, 0.0125f, 0.125f, specularPowerMod);
                     // set by template
                     //mat.SetFloatIf("_SecondarySmoothness", 0.5f);
-                    mat.SetFloatIf("_RimTransmissionIntensity", 2f * rimTransmission);
+                    mat.SetFloatIf("_RimTransmissionIntensity", 0.31f * Mathf.Pow(rimTransmission, 0.25f));
                     mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                         matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
                     mat.SetFloatIf("_SpecularShiftMin", 
