@@ -39,6 +39,8 @@ namespace Reallusion.Import
         public float blendCurve = 1f;
         [Range(0.1f, 20f)]
         public float blendFalloff = 8f;
+        [Range(1f, 120f)]
+        public float updateFrequency = 30f;
         public Vector4[] valueSets = new Vector4[8];
 
         public List<WrinkleMappings> mappings = new List<WrinkleMappings>()
@@ -56,9 +58,14 @@ namespace Reallusion.Import
             // mouth_pucker_lower
             new WrinkleMappings("Mouth_Pucker_Down_L", MaskSet.set11, MaskSide.left, 2),
             new WrinkleMappings("Mouth_Pucker_Down_R", MaskSet.set11, MaskSide.right, 2),
+                // mouth_pucker_lower
+                new WrinkleMappings("Mouth_L", MaskSet.set11, MaskSide.left, 2),
+                new WrinkleMappings("Mouth_R", MaskSet.set11, MaskSide.right, 2),
 
             // chin_up
             new WrinkleMappings("Mouth_Shrug_Lower", MaskSet.set11, MaskSide.center, 3),            
+                // chin_up
+                new WrinkleMappings("Mouth_Up", MaskSet.set11, MaskSide.center, 3),            
 
             // MASK 1-2 (Set 1, Mask 2)   
             
@@ -76,6 +83,9 @@ namespace Reallusion.Import
             // mouth_pucker_upper
             new WrinkleMappings("Mouth_Pucker_Up_L", MaskSet.set12, MaskSide.left, 3),
             new WrinkleMappings("Mouth_Pucker_Up_R", MaskSet.set12, MaskSide.right, 3),            
+                // mouth_pucker_upper
+                new WrinkleMappings("Mouth_L", MaskSet.set12, MaskSide.left, 3),
+                new WrinkleMappings("Mouth_R", MaskSet.set12, MaskSide.right, 3),  
 
             // MASK 2 (Set 2, Mask 1)            
 
@@ -100,6 +110,9 @@ namespace Reallusion.Import
             // mouth_stretch
             new WrinkleMappings("Mouth_Stretch_L", MaskSet.set2, MaskSide.left, 3),
             new WrinkleMappings("Mouth_Stretch_R", MaskSet.set2, MaskSide.right, 3),
+                // mouth_stretch
+                new WrinkleMappings("Mouth_Frown_L", MaskSet.set2, MaskSide.left, 3),
+                new WrinkleMappings("Mouth_Frown_R", MaskSet.set2, MaskSide.right, 3),
                      
             // MASK 3 (Set 3, Mask 1)    
 
@@ -117,6 +130,9 @@ namespace Reallusion.Import
             // cheek_raise
             new WrinkleMappings("Cheek_Raise_L", MaskSet.set3, MaskSide.left, 2),
             new WrinkleMappings("Cheek_Raise_R", MaskSet.set3, MaskSide.right, 2),
+                // cheek_raise
+                new WrinkleMappings("Mouth_L", MaskSet.set3, MaskSide.left, 2),
+                new WrinkleMappings("Mouth_R", MaskSet.set3, MaskSide.right, 2),
 
             // nose_crease
             new WrinkleMappings("Nose_Crease_L", MaskSet.set3, MaskSide.left, 3),
@@ -124,6 +140,9 @@ namespace Reallusion.Import
                 // nose_crease
                 new WrinkleMappings("Mouth_Up_Upper_L", MaskSet.set3, MaskSide.left, 3),
                 new WrinkleMappings("Mouth_Up_Upper_R", MaskSet.set3, MaskSide.right, 3),                        
+                // nose_crease
+                new WrinkleMappings("Mouth_L", MaskSet.set3, MaskSide.left, 3),
+                new WrinkleMappings("Mouth_R", MaskSet.set3, MaskSide.right, 3),
         };
 
         private void UpdateBlendShapeIndices()
@@ -160,6 +179,8 @@ namespace Reallusion.Import
         {
             if (!initialized) UpdateBlendShapeIndices();
 
+            float delay = 1f / updateFrequency;            
+
             if (initialized && headMaterial && skinnedMeshRenderer)
             {
                 if (updateTimer <= 0f)
@@ -167,7 +188,7 @@ namespace Reallusion.Import
                     for (int i = 0; i < 8; i++)
                     {
                         if (valueSets[i].sqrMagnitude > 0.0001f)
-                            valueSets[i] = Vector4.Lerp(valueSets[i], Vector4.zero, blendFalloff * Time.deltaTime);
+                            valueSets[i] = Vector4.Lerp(valueSets[i], Vector4.zero, blendFalloff * delay);
                         else 
                             valueSets[i] = Vector4.zero;
                     }
@@ -196,45 +217,7 @@ namespace Reallusion.Import
                                     valueSets[ir][wm.setIndex] = weight;
                             }                            
                         }
-                    }
-
-                    /*
-                    // post calculation normalization
-                    // to avoid competing wrinkle maps from overriding each other,
-                    // any competing wrinkle maps whose sum exceeds 1.0, will be normalized 
-                    // to total 1.0, to allow them to blend.
-                    float a, b, c, d, sum, scale;
-
-                    // Brow Raise Inner & Outer L
-                    a = valueSets[0][1];
-                    b = valueSets[1][2];
-                    c = Mathf.Max(a, b);
-                    // Brow Drop
-                    d = valueSets[2][1];
-                    sum = c + 2f * d;
-                    if (sum > 1.0f)
-                    {
-                        scale = 1.0f / sum;
-                        valueSets[0][1] *= scale;
-                        valueSets[1][2] *= scale;
-                        valueSets[2][1] *= scale;
-                    }
-
-                    // Brow Raise Inner & Outer R
-                    a = valueSets[4][1];
-                    b = valueSets[5][2];
-                    c = Mathf.Max(a, b);
-                    // Brow Drop
-                    d = valueSets[6][1];
-                    sum = c + d;
-                    if (sum > 1.0f)
-                    {
-                        scale = 1.0f / sum;
-                        valueSets[0][1] *= scale;
-                        valueSets[1][2] *= scale;
-                        valueSets[2][1] *= scale;
-                    }
-                    */
+                    }                    
 
                     headMaterial.SetVector("_WrinkleValueSet11L", valueSets[0]);
                     headMaterial.SetVector("_WrinkleValueSet12L", valueSets[1]);
@@ -244,6 +227,8 @@ namespace Reallusion.Import
                     headMaterial.SetVector("_WrinkleValueSet12R", valueSets[5]);
                     headMaterial.SetVector("_WrinkleValueSet2R", valueSets[6]);
                     headMaterial.SetVector("_WrinkleValueSet3R", valueSets[7]);
+
+                    updateTimer = delay;
                 }
                 else
                 {
