@@ -28,7 +28,7 @@ namespace Reallusion.Import
         public enum ProcessingType { None, Basic, HighQuality }
         public enum EyeQuality { None, Basic, Parallax, Refractive }
         public enum HairQuality { None, Default, TwoPass, Coverage }
-        public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4 } //, SpringBones = 8 }
+        public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4, SpringBoneHair = 8, WrinkleMaps = 16 }
 
         public enum RigOverride { None = 0, Generic, Humanoid }
 
@@ -153,6 +153,8 @@ namespace Reallusion.Import
         }
 
         public ShaderFeatureFlags ShaderFlags { get; set; } = ShaderFeatureFlags.NoFeatures;
+
+        public bool FeatureUseWrinkleMaps => (ShaderFlags & ShaderFeatureFlags.WrinkleMaps) > 0;
         public bool FeatureUseTessellation => (ShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool FeatureUseClothPhysics => (ShaderFlags & ShaderFeatureFlags.ClothPhysics) > 0;
         public bool FeatureUseHairPhysics => (ShaderFlags & ShaderFeatureFlags.HairPhysics) > 0;
@@ -179,6 +181,7 @@ namespace Reallusion.Import
         private bool builtTessellation = false;
 
         public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoFeatures;
+        public bool BuiltFeatureWrinkleMaps => (BuiltShaderFlags & ShaderFeatureFlags.WrinkleMaps) > 0;
         public bool BuiltFeatureTessellation => (BuiltShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool BuiltBasicMaterials => builtLogType == ProcessingType.Basic;
         public bool BuiltHQMaterials => builtLogType == ProcessingType.HighQuality;

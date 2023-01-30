@@ -14,6 +14,7 @@
 #pragma kernel RLHeadDiffuse
 #pragma kernel RLHeadMask
 #pragma kernel RLSkinMask
+#pragma kernel RLHeadWrinkleSmoothnessPack
 #pragma kernel RLHeadMetallicGloss
 #pragma kernel RLSkinMetallicGloss
 #pragma kernel RLHeadAO
@@ -54,6 +55,8 @@
 #pragma kernel RLEyeOcclusionDiffuse
 #pragma kernel RLFlowToNormal
 
+#pragma kernel RLChannelPackLinear
+
 // Defines
 //
 #define SAMPLE(tex,coord) tex.SampleLevel (sampler##tex,coord, 0)
@@ -92,6 +95,10 @@ TEX2D(Roughness);
 TEX2D(Alpha);
 TEX2D(MicroNormalMask);
 TEX2D(SmoothnessLUT);
+
+TEX2D(Roughness1);
+TEX2D(Roughness2);
+TEX2D(Roughness3);
 
 TEX2D(CavityAO);
 float smoothnessMin, smoothnessMax, smoothnessPower;
@@ -188,6 +195,10 @@ float eoOcclusionStrength, eoTop2Min, eoTop2Max, eoOcclusionStrength2;
 float eoTearDuctPosition, eoTearDuctWidth, eoOcclusionPower;
 float4 eoEyeOcclusionColor;    
 
+TEX2D(RedChannel);
+TEX2D(GreenChannel);
+TEX2D(BlueChannel);
+TEX2D(AlphaChannel);
 
 // Node functions
 //
@@ -306,46 +317,70 @@ half LinearTosRGB(half lin)
 
 float4 LinearTosRGB(float4 In)
 {
+#ifdef UNITY_COLORSPACE_GAMMA    
+    return In; 
+#else
     float3 sRGBLo = In.xyz * 12.92;
     float3 sRGBHi = (pow(max(abs(In.xyz), 1.192092896e-07), float3(1.0 / 2.4, 1.0 / 2.4, 1.0 / 2.4)) * 1.055) - 0.055;
     float3 sRGB = float3(In.xyz <= 0.0031308) ? sRGBLo : sRGBHi;
     return float4(sRGB, In.a);
+#endif
 }
 
 float LinearTosRGB(float In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     float sRGBLo = In * 12.92;
     float sRGBHi = (pow(max(abs(In), 1.192092896e-07), 1.0 / 2.4) * 1.055) - 0.055;
     return In <= 0.0031308 ? sRGBLo : sRGBHi;
+#endif
 }
 
 float4 sRGBToLinear(float4 In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     float3 linRGBLo = In.rgb / 12.92;;
     float3 linRGBHi = pow(max(abs((In.rgb + 0.055) / 1.055), 1.192092896e-07), float3(2.4, 2.4, 2.4));
     float3 lin = float3(In.rgb <= 0.04045) ? linRGBLo : linRGBHi;
     return float4(lin, In.a);
+#endif
 }
 
 half4 LinearTosRGBApprox(half4 In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     half3 linRGB = max(In.rgb, half3(0.h, 0.h, 0.h));
     linRGB = max(1.055h * pow(linRGB, 0.416666667h) - 0.055h, 0.h);
     return float4(linRGB, In.a);
+#endif
 }
 
 half4 sRGBToLinearApprox(half4 In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     half3 sRGB = In.rgb;
     sRGB = sRGB * (sRGB * (sRGB * 0.305306011h + 0.682171111h) + 0.012522878h);
     return float4(sRGB, In.a);
+#endif
 }
 
 float sRGBToLinear(float In)
 {
+#if UNITY_COLORSPACE_GAMMA
+    return In;
+#else
     float linearRGBLo = In / 12.92;
     float linearRGBHi = pow(max(abs((In + 0.055) / 1.055), 1.192092896e-07), 2.4);
     return In <= 0.04045 ? linearRGBLo : linearRGBHi;
+#endif
 }
 
 float2 GetUV(int2 xy)
@@ -358,6 +393,28 @@ float2 GetUV(int2 xy)
 float invLerp(float a, float b, float v) 
 {
     return (v - a) / (b - a);
+}
+
+
+
+
+
+
+
+
+[numthreads(1, 1, 1)]
+void RLChannelPackLinear(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float redChannel = SAMPLE(RedChannel, uv).g;
+    float greenChannel = SAMPLE(GreenChannel, uv).g;
+    float blueChannel = SAMPLE(BlueChannel, uv).g;
+    float alphaChannel = SAMPLE(AlphaChannel, uv).g;    
+
+    float4 packed = float4(redChannel, greenChannel, blueChannel, alphaChannel);
+
+    Result[id.xy] = packed;
 }
 
 [numthreads(1, 1, 1)]
@@ -483,7 +540,7 @@ void RLDetail(uint3 id : SV_DispatchThreadID)
 
     float4 packed;
     packed.xz = 0.5;
-    packed.wy = UPACK(microNormal.xy);
+    packed.wy = UPACK(microNormal.xy); 
 
     Result[id.xy] = packed;
 }
@@ -664,6 +721,30 @@ void RLHeadMask(uint3 id : SV_DispatchThreadID)
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, ao, detailMask, smoothness);
+
+    Result[id.xy] = packed;
+}
+
+[numthreads(1, 1, 1)]
+void RLHeadWrinkleSmoothnessPack(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+    
+    float smoothness1 = saturate(1.0 - SAMPLE(Roughness1, uv).g);
+    float smoothness2 = saturate(1.0 - SAMPLE(Roughness2, uv).g);
+    float smoothness3 = saturate(1.0 - SAMPLE(Roughness3, uv).g);
+    float smoothnessMod = HeadSmoothnessMod(uv);    
+    
+    smoothness1 = lerp(smoothnessMin, smoothnessMax, pow(smoothness1, smoothnessPower));
+    smoothness1 = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness1);
+
+    smoothness2 = lerp(smoothnessMin, smoothnessMax, pow(smoothness2, smoothnessPower));
+    smoothness2 = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness2);
+
+    smoothness3 = lerp(smoothnessMin, smoothnessMax, pow(smoothness3, smoothnessPower));
+    smoothness3 = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness3);
+    
+    float4 packed = float4(smoothness1, smoothness2, smoothness3, 1.0);
 
     Result[id.xy] = packed;
 }
