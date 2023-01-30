@@ -36,7 +36,9 @@ namespace Reallusion.Import
         [Range(0f, 2f)]
         public float blendScale = 1f;
         [Range(0.5f, 2f)]
-        public float blendPower = 0.75f;
+        public float blendCurve = 1f;
+        [Range(0.1f, 20f)]
+        public float blendFalloff = 8f;
         public Vector4[] valueSets = new Vector4[8];
 
         public List<WrinkleMappings> mappings = new List<WrinkleMappings>()
@@ -165,7 +167,7 @@ namespace Reallusion.Import
                     for (int i = 0; i < 8; i++)
                     {
                         if (valueSets[i].sqrMagnitude > 0.0001f)
-                            valueSets[i] = Vector4.Lerp(valueSets[i], Vector4.zero, 8f * Time.deltaTime);
+                            valueSets[i] = Vector4.Lerp(valueSets[i], Vector4.zero, blendFalloff * Time.deltaTime);
                         else 
                             valueSets[i] = Vector4.zero;
                     }
@@ -176,7 +178,7 @@ namespace Reallusion.Import
                         {
                             float weight = skinnedMeshRenderer.GetBlendShapeWeight(wm.blendShapeIndex) / 100f;
                             weight = Mathf.Pow(
-                                Mathf.Max(0f, Mathf.Min(1f, weight * blendScale)), blendPower
+                                Mathf.Max(0f, Mathf.Min(1f, weight * blendScale)), blendCurve
                             );
 
                             int il = ((int)wm.set) - 1;
@@ -196,6 +198,7 @@ namespace Reallusion.Import
                         }
                     }
 
+                    /*
                     // post calculation normalization
                     // to avoid competing wrinkle maps from overriding each other,
                     // any competing wrinkle maps whose sum exceeds 1.0, will be normalized 
@@ -208,7 +211,7 @@ namespace Reallusion.Import
                     c = Mathf.Max(a, b);
                     // Brow Drop
                     d = valueSets[2][1];
-                    sum = c + d;
+                    sum = c + 2f * d;
                     if (sum > 1.0f)
                     {
                         scale = 1.0f / sum;
@@ -231,6 +234,7 @@ namespace Reallusion.Import
                         valueSets[1][2] *= scale;
                         valueSets[2][1] *= scale;
                     }
+                    */
 
                     headMaterial.SetVector("_WrinkleValueSet11L", valueSets[0]);
                     headMaterial.SetVector("_WrinkleValueSet12L", valueSets[1]);

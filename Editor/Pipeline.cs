@@ -119,6 +119,8 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_HDRP";
+        // for gamebase single material or actor core...
+        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_HDRP";
 
         // Baked Materials
         // Note: Non custom materials must bake to HDRP default shaders
@@ -150,9 +152,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HAIR_1ST_PASS = "RL_Template_Baked_Hair_1st_Pass_HDRP";
         public const string MATERIAL_BAKED_HAIR_2ND_PASS = "RL_Template_Baked_Hair_2nd_Pass_HDRP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS = "RL_Template_Baked_HairCustom_1st_Pass_HDRP";
-        public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_HDRP";
-        // for gamebase single material or actor core...
-        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_HDRP";
+        public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_HDRP";        
         // wrinkle map
         public const string MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM = "RL_Template_Baked_HeadWrinkleCustom_HDRP";
 #elif URP_10_5_0_OR_NEWER
@@ -212,6 +212,8 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_HAIR_1ST_PASS = "RL_Template_HQ_Hair_1st_Pass_URP";
         public const string MATERIAL_HQ_HAIR_2ND_PASS = "RL_Template_HQ_Hair_2nd_Pass_URP";
         public const string MATERIAL_HQ_HAIR_COVERAGE = "RL_Template_HQ_Hair_Coverage_URP";
+        // wrinkle map
+        public const string MATERIAL_HQ_HEAD_WRINKLE = "RL_Template_HQ_HeadWrinkle_URP";
 
         // Default Materials
         //
@@ -229,6 +231,8 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_URP";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_URP";
+        // for gamebase single material or actor core...
+        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_URP";
 
         // Baked Materials
         // Note: Non custom materials must bake to HDRP default shaders
@@ -261,8 +265,8 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HAIR_2ND_PASS = "RL_Template_Baked_Hair_2nd_Pass_URP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS = "RL_Template_Baked_HairCustom_1st_Pass_URP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_URP";
-        // for gamebase single material or actor core...
-        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_URP";
+        // wrinkle map
+        public const string MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM = "RL_Template_Baked_HeadWrinkleCustom_URP";
 #else
         // version
         public const string FULL_VERSION = "3D " + VERSION;
@@ -320,6 +324,8 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_HAIR_1ST_PASS = "RL_Template_HQ_Hair_1st_Pass_3D";
         public const string MATERIAL_HQ_HAIR_2ND_PASS = "RL_Template_HQ_Hair_2nd_Pass_3D";
         public const string MATERIAL_HQ_HAIR_COVERAGE = "RL_Template_HQ_Hair_Coverage_3D";
+        // wrinkle map
+        public const string MATERIAL_HQ_HEAD_WRINKLE = "RL_Template_HQ_HeadWrinkle_3D";
 
         // Default Materials
         //
@@ -337,7 +343,9 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_3D";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_3D";
-
+        // for gamebase single material or actor core...
+        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_3D";
+        
         // Baked Materials
         // Note: Non custom materials must bake to HDRP default shaders
         //       Only "Custom" materials have custom shaders, or have special settings like refraction.
@@ -369,8 +377,8 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HAIR_2ND_PASS = "RL_Template_Baked_Hair_2nd_Pass_3D";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS = "RL_Template_Baked_HairCustom_1st_Pass_3D";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_3D";
-        // for gamebase single material or actor core...
-        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_3D";
+        // wrinkle map
+        public const string MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM = "RL_Template_Baked_HeadWrinkleCustom_3D";       
 #endif
 
         private static Dictionary<MaterialType, string> DICT_SHADERS = new Dictionary<MaterialType, string>

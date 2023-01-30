@@ -446,34 +446,41 @@ namespace Reallusion.Import
             {
                 colliderManager.characterGUID = characterGUID;
                 colliderManager.AddColliders(listColliders);
-            }            
+            }
+
+            Type dynamicBoneColliderType = GetTypeInAssemblies("DynamicBoneCollider");
 
             if (addHairSpringBones)
             {
-                Type dynamicBoneColliderType = GetTypeInAssemblies("DynamicBoneCollider");
-
-                foreach (CollisionShapeData collider in boneColliders)
+                if (dynamicBoneColliderType == null)
                 {
-                    if (collider.colliderType == ColliderType.Capsule && springColliderBones.Contains(collider.boneName))
+                    Debug.LogWarning("Warning: DynamicBone not found in project assembly.");
+                }
+                else
+                {
+                    foreach (CollisionShapeData collider in boneColliders)
                     {
-                        string colliderName = collider.boneName + "_" + collider.name;
-                        Transform bone = FindBone(collider.boneName);
-                        Collider existingCollider = FindColliderObj(colliderName, bone);                        
-
-                        if (existingCollider && existingCollider.GetType() == typeof(CapsuleCollider))
+                        if (collider.colliderType == ColliderType.Capsule && springColliderBones.Contains(collider.boneName))
                         {
-                            CapsuleCollider cc = (CapsuleCollider)existingCollider;
+                            string colliderName = collider.boneName + "_" + collider.name;
+                            Transform bone = FindBone(collider.boneName);
+                            Collider existingCollider = FindColliderObj(colliderName, bone);
 
-                            var dynamicBoneColliderComponent = existingCollider.gameObject.GetComponent(dynamicBoneColliderType);
-                            if (dynamicBoneColliderComponent == null)
+                            if (existingCollider && existingCollider.GetType() == typeof(CapsuleCollider))
                             {
-                                dynamicBoneColliderComponent = existingCollider.gameObject.AddComponent(dynamicBoneColliderType);
-                            }
+                                CapsuleCollider cc = (CapsuleCollider)existingCollider;
 
-                            SetTypeField(dynamicBoneColliderType, dynamicBoneColliderComponent, "m_Height", cc.height);
-                            SetTypeField(dynamicBoneColliderType, dynamicBoneColliderComponent, "m_Radius", cc.radius);
-                            SetTypeField(dynamicBoneColliderType, dynamicBoneColliderComponent, "m_Center", cc.center);
-                            SetTypeField(dynamicBoneColliderType, dynamicBoneColliderComponent, "m_Direction", cc.direction);
+                                var dynamicBoneColliderComponent = existingCollider.gameObject.GetComponent(dynamicBoneColliderType);
+                                if (dynamicBoneColliderComponent == null)
+                                {
+                                    dynamicBoneColliderComponent = existingCollider.gameObject.AddComponent(dynamicBoneColliderType);
+                                }
+
+                                SetTypeField(dynamicBoneColliderType, dynamicBoneColliderComponent, "m_Height", cc.height);
+                                SetTypeField(dynamicBoneColliderType, dynamicBoneColliderComponent, "m_Radius", cc.radius);
+                                SetTypeField(dynamicBoneColliderType, dynamicBoneColliderComponent, "m_Center", cc.center);
+                                SetTypeField(dynamicBoneColliderType, dynamicBoneColliderComponent, "m_Direction", cc.direction);
+                            }
                         }
                     }
                 }
@@ -530,7 +537,7 @@ namespace Reallusion.Import
 
             if (dynamicBoneType == null)
             {
-                Debug.LogWarning("DynamicBone is not found in project assembly.");
+                Debug.LogWarning("Warning: DynamicBone not found in project assembly.");
                 return;
             }
 

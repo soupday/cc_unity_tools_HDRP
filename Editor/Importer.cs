@@ -998,49 +998,17 @@ namespace Reallusion.Import
                     }
                 }
 
-                if (ConnectTextureTo(sourceName, mat, "_SpecGlossMap", "Specular",
-                    matJson, "Textures/Specular"))
-                {
-                    mat.EnableKeyword("_METALLICSPECGLOSSMAP");
-                    mat.EnableKeyword("_SPECGLOSSMAP");
-                    
-                }
-                else
-                {
-                    mat.DisableKeyword("_METALLICSPECGLOSSMAP");
-                    mat.DisableKeyword("_SPECGLOSSMAP");
-                }
+                ConnectTextureTo(sourceName, mat, "_SpecGlossMap", "Specular",
+                        matJson, "Textures/Specular");
 
-                if (ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
-                    matJson, "Textures/MetallicAlpha"))
-                {
-                    mat.EnableKeyword("_METALLICSPECGLOSSMAP");
-                }
-                else
-                {
-                    mat.DisableKeyword("_METALLICSPECGLOSSMAP");
-                }
-                
-                if (ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
-                    matJson, "Textures/AO"))
-                {
-                    mat.EnableKeyword("_OCCLUSIONMAP");
-                }
-                else
-                {
-                    mat.DisableKeyword("_OCCLUSIONMAP");
-                }
+                ConnectTextureTo(sourceName, mat, "_MetallicGlossMap", "MetallicAlpha",
+                        matJson, "Textures/MetallicAlpha");
 
-                if (ConnectTextureTo(sourceName, mat, "_BumpMap", "Normal",
-                    matJson, "Textures/Normal",
-                    FLAG_NORMAL))
-                {
-                    mat.EnableKeyword("_NORMALMAP");
-                }
-                else
-                {
-                    mat.DisableKeyword("_NORMALMAP");
-                }
+                ConnectTextureTo(sourceName, mat, "_OcclusionMap", "ao",
+                    matJson, "Textures/AO");
+
+                ConnectTextureTo(sourceName, mat, "_BumpMap", "Normal",
+                    matJson, "Textures/Normal", FLAG_NORMAL);                
 
                 if (ConnectTextureTo(sourceName, mat, "_EmissionMap", "Glow",
                     matJson, "Textures/Glow"))
@@ -1057,6 +1025,14 @@ namespace Reallusion.Import
                 ConnectBlenderTextures(sourceName, mat, matJson, "_BaseMap", "", "_MetallicGlossMap");
             else
                 ConnectBlenderTextures(sourceName, mat, matJson, "_MainTex", "", "_MetallicGlossMap");
+
+            if (!Pipeline.isHDRP)
+            {
+                KeywordsOnTexture(mat, "_SpecGlossMap", "_METALLICSPECGLOSSMAP", "_SPECGLOSSMAP");
+                KeywordsOnTexture(mat, "_MetallicGlossMap", "_METALLICSPECGLOSSMAP");
+                KeywordsOnTexture(mat, "_OcclusionMap", "_OCCLUSIONMAP");
+                KeywordsOnTexture(mat, "_BumpMap", "_NORMALMAP");
+            }
             
             // All
             if (matJson != null)
@@ -1143,6 +1119,7 @@ namespace Reallusion.Import
                         matJson, "Custom Shader/Image/MicroNormal", FLAG_NORMAL);
 
                     mat.SetTextureScaleIf("_DetailNormalMap", new Vector2(microNormalTiling, microNormalTiling));
+                    mat.SetTextureScaleIf("_DetailAlbedoMap", new Vector2(microNormalTiling, microNormalTiling));
                     mat.SetFloatIf("_DetailNormalMapScale", microNormalStrength);
                     mat.SetColorIf("_SubsurfaceFalloff", sssFalloff);
                 }
@@ -2309,6 +2286,36 @@ namespace Reallusion.Import
             tex = GetTextureFrom(jsonTexturePath, materialName, suffix, out string name, search);
 
             return tex;
+        }
+
+        private bool HasTextureIf(Material mat, string shaderRef)
+        {
+            if (mat.HasProperty(shaderRef))
+            {
+                return mat.GetTexture(shaderRef) != null;
+            }
+            return false;
+        }
+
+        private void KeywordsOnTexture(Material mat, string shaderRef, params string[] keywords)
+        {
+            if (mat.HasProperty(shaderRef))
+            {
+                if (mat.GetTexture(shaderRef) != null)
+                {
+                    foreach (string keyword in keywords)
+                    {
+                        mat.EnableKeyword(keyword);                        
+                    }
+                }
+                else
+                {
+                    foreach (string keyword in keywords)
+                    {
+                        mat.DisableKeyword(keyword);
+                    }
+                }
+            }            
         }
 
         private T ValueByPipeline<T>(T hdrp, T urp, T builtin)
