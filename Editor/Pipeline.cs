@@ -34,7 +34,7 @@ namespace Reallusion.Import
     public enum MaterialType
     {
         None, Skin, Head, Eye, Cornea, EyeOcclusion, Tearline, Hair, Scalp,
-        Eyelash, Teeth, Tongue, DefaultOpaque, DefaultAlpha, SSS
+        Eyelash, Teeth, Tongue, DefaultOpaque, DefaultAlpha, BlendAlpha, SSS
     }    
 
     public enum MaterialQuality { None, Default, High, Baked }
@@ -63,6 +63,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_TEETH = "RL_TeethShader_HDRP";
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_HDRP";
         public const string SHADER_HQ_ALPHACLIP = "HDRP/Lit";
+        public const string SHADER_HQ_ALPHABLEND = "HDRP/Lit";
         public const string SHADER_HQ_OPAQUE = "HDRP/Lit";
         public const string SHADER_HQ_SSS = "HDRP/Lit";
         // eye types
@@ -89,6 +90,7 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_HDRP";
         public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_HDRP";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
+        public const string MATERIAL_HQ_ALPHABLEND = "RL_Template_Default_AlphaBlend_HDRP";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_HQ_SSS = "RL_Template_Default_SSS_HDRP";
         // variants
@@ -117,6 +119,7 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_TEETH = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_TONGUE = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
+        public const string MATERIAL_DEFAULT_ALPHABLEND = "RL_Template_Default_AlphaBlend_HDRP";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_HDRP";
         // for gamebase single material or actor core...
@@ -138,6 +141,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_TEETH = "RL_Template_Baked_Skin_HDRP";
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_HDRP";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
+        public const string MATERIAL_BAKED_ALPHABLEND = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
         public const string MATERIAL_BAKED_SSS = "";
         // variants (that differ from the defaults above)
@@ -175,6 +179,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_TEETH = "RL_TeethShader_URP";
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_URP";
         public const string SHADER_HQ_ALPHACLIP = "Universal Render Pipeline/Lit";
+        public const string SHADER_HQ_ALPHABLEND = "Universal Render Pipeline/Lit";
         public const string SHADER_HQ_OPAQUE = "Universal Render Pipeline/Lit";
         public const string SHADER_HQ_SSS = "LitSSS";
         // eye types
@@ -201,6 +206,7 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_URP";
         public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_URP";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_URP";
+        public const string MATERIAL_HQ_ALPHABLEND = "RL_Template_Default_AlphaBlend_URP";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_HQ_SSS = "RL_Template_Default_SSS_URP";
         // variants
@@ -229,6 +235,7 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_TEETH = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_DEFAULT_TONGUE = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_URP";
+        public const string MATERIAL_DEFAULT_ALPHABLEND = "RL_Template_Default_AlphaBlend_URP";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_URP";
         // for gamebase single material or actor core...
@@ -250,6 +257,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_TEETH = "RL_Template_Baked_Skin_URP";
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_URP";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
+        public const string MATERIAL_BAKED_ALPHABLEND = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
         public const string MATERIAL_BAKED_SSS = "RL_Template_Baked_SSS_URP";
         // variants (that differ from the defaults above)
@@ -282,12 +290,13 @@ namespace Reallusion.Import
         public const string SHADER_HQ_EYE_OCCLUSION = "RL_EyeOcclusionShader_3D";
         public const string SHADER_HQ_TEARLINE = "RL_TearlineShader_3D";
         public const string SHADER_HQ_HAIR = "RL_HairShader_Clipped_3D";
-        public const string SHADER_HQ_SCALPBASE = "Universal Render Pipeline/Lit";
-        public const string SHADER_HQ_EYELASH = "Universal Render Pipeline/Lit";
+        public const string SHADER_HQ_SCALPBASE = "Standard";
+        public const string SHADER_HQ_EYELASH = "Standard";
         public const string SHADER_HQ_TEETH = "RL_TeethShader_3D";
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_3D";
-        public const string SHADER_HQ_ALPHACLIP = "Universal Render Pipeline/Lit";
-        public const string SHADER_HQ_OPAQUE = "Universal Render Pipeline/Lit";
+        public const string SHADER_HQ_ALPHACLIP = "Standard";
+        public const string SHADER_HQ_ALPHABLEND = "Standard";
+        public const string SHADER_HQ_OPAQUE = "Standard";
         public const string SHADER_HQ_SSS = "LitSSS";
         // eye types
         public const string SHADER_HQ_CORNEA_PARALLAX = "RL_CorneaShaderParallax_3D";
@@ -313,6 +322,7 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_3D";
         public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_3D";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_3D";
+        public const string MATERIAL_HQ_ALPHABLEND = "RL_Template_Default_AlphaBlend_3D";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_HQ_SSS = "RL_Template_Default_SSS_3D";
         // variants
@@ -341,6 +351,7 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_TEETH = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_DEFAULT_TONGUE = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_3D";
+        public const string MATERIAL_DEFAULT_ALPHABLEND = "RL_Template_Default_AlphaBlend_3D";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_3D";
         // for gamebase single material or actor core...
@@ -362,6 +373,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_TEETH = "RL_Template_Baked_Skin_3D";
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_3D";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
+        public const string MATERIAL_BAKED_ALPHABLEND = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
         public const string MATERIAL_BAKED_SSS = "";
         // variants (that differ from the defaults above)
@@ -395,6 +407,7 @@ namespace Reallusion.Import
             { MaterialType.Teeth, SHADER_HQ_TEETH },
             { MaterialType.Tongue, SHADER_HQ_TONGUE },
             { MaterialType.DefaultAlpha, SHADER_HQ_ALPHACLIP },
+            { MaterialType.BlendAlpha, SHADER_HQ_ALPHABLEND },
             { MaterialType.DefaultOpaque, SHADER_HQ_OPAQUE },
             { MaterialType.SSS, SHADER_HQ_SSS },
         };
@@ -413,6 +426,7 @@ namespace Reallusion.Import
             { MaterialType.Teeth, MATERIAL_DEFAULT_TEETH },
             { MaterialType.Tongue, MATERIAL_DEFAULT_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_DEFAULT_ALPHACLIP },
+            { MaterialType.BlendAlpha, MATERIAL_DEFAULT_ALPHABLEND },
             { MaterialType.DefaultOpaque, MATERIAL_DEFAULT_OPAQUE },
             { MaterialType.SSS, MATERIAL_DEFAULT_SSS },
         };
@@ -431,6 +445,7 @@ namespace Reallusion.Import
             { MaterialType.Teeth, MATERIAL_HQ_TEETH },
             { MaterialType.Tongue, MATERIAL_HQ_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_HQ_ALPHACLIP },
+            { MaterialType.BlendAlpha, MATERIAL_HQ_ALPHABLEND },
             { MaterialType.DefaultOpaque, MATERIAL_HQ_OPAQUE },
             { MaterialType.SSS, MATERIAL_HQ_SSS },
         };
@@ -449,6 +464,7 @@ namespace Reallusion.Import
             { MaterialType.Teeth, MATERIAL_BAKED_TEETH },
             { MaterialType.Tongue, MATERIAL_BAKED_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_BAKED_ALPHACLIP },
+            { MaterialType.BlendAlpha, MATERIAL_BAKED_ALPHABLEND },
             { MaterialType.DefaultOpaque, MATERIAL_BAKED_OPAQUE },
             { MaterialType.SSS, MATERIAL_BAKED_SSS },
         };
@@ -677,7 +693,8 @@ namespace Reallusion.Import
             }
 
             // override game base SSS skin with default skin for correct diffusion profile
-            if (materialType == MaterialType.SSS && sourceName.iContains("Ga_Skin_"))
+            if ((materialType == MaterialType.SSS && sourceName.iContains("Ga_Skin_")) ||
+                sourceName.iContains("Ga_Skin_"))
             {
                 return MATERIAL_DEFAULT_SKIN;
             }
