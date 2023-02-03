@@ -183,7 +183,7 @@ namespace Reallusion.Import
                 Util.LogInfo("JSON version: " + jsonVersion);
 
             generation = info.Generation;
-            blenderProject = jsonData.GetBoolValue(characterName + "/Blender_Project");
+            blenderProject = info.IsBlenderProject;
 
             // initialise the import path cache.        
             // this is used to re-import everything in one batch after it has all been setup.
@@ -268,7 +268,7 @@ namespace Reallusion.Import
             Util.LogInfo("Writing changes to asset database.");
 
             // set humanoid animation type
-            RL.HumanoidImportSettings(fbx, importer, characterName, generation, characterInfo.UnknownRigType, jsonData);
+            RL.HumanoidImportSettings(fbx, importer, characterInfo);
             if (blenderProject)
             {
                 importer.importCameras = false;
