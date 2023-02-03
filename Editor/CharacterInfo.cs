@@ -197,6 +197,10 @@ namespace Reallusion.Import
         public MaterialQuality BuiltQuality => BuiltHQMaterials ? MaterialQuality.High : MaterialQuality.Default;
         public bool Unprocessed => builtLogType == ProcessingType.None;
 
+        public string CharacterName => name;
+
+        public bool IsBlenderProject { get { return JsonData.GetBoolValue(CharacterName + "/Blender_Project"); } }
+
         private BaseGeneration generation = BaseGeneration.None;
         private GameObject fbx;
         private QuickJSON jsonData;
