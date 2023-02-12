@@ -854,10 +854,11 @@ namespace Reallusion.Import
             if (IS_HDRP) subsurfaceFalloff = Color.white;
 
             // Wrinkle Maps
-            Texture2D maskSet11 = GetMaterialTexture(mat, "_WrinkleMaskSet11");
-            Texture2D maskSet12 = GetMaterialTexture(mat, "_WrinkleMaskSet12");
+            Texture2D maskSet1A = GetMaterialTexture(mat, "_WrinkleMaskSet1A");
+            Texture2D maskSet1B = GetMaterialTexture(mat, "_WrinkleMaskSet1B");
             Texture2D maskSet2 = GetMaterialTexture(mat, "_WrinkleMaskSet2");
             Texture2D maskSet3 = GetMaterialTexture(mat, "_WrinkleMaskSet3");
+            Texture2D maskSet123 = GetMaterialTexture(mat, "_WrinkleMaskSet123");
             Texture2D diffuse1 = GetMaterialTexture(mat, "_WrinkleDiffuseBlend1");
             Texture2D diffuse2 = GetMaterialTexture(mat, "_WrinkleDiffuseBlend2");
             Texture2D diffuse3 = GetMaterialTexture(mat, "_WrinkleDiffuseBlend3");
@@ -1067,10 +1068,11 @@ namespace Reallusion.Import
             
             if (useWrinkleMaps)
             {
-                result.SetTextureIf("_WrinkleMaskSet11", maskSet11);
-                result.SetTextureIf("_WrinkleMaskSet12", maskSet12);
+                result.SetTextureIf("_WrinkleMaskSet1A", maskSet1A);
+                result.SetTextureIf("_WrinkleMaskSet1B", maskSet1B);
                 result.SetTextureIf("_WrinkleMaskSet2", maskSet2);
                 result.SetTextureIf("_WrinkleMaskSet3", maskSet3);
+                result.SetTextureIf("_WrinkleMaskSet123", maskSet123);
 
                 result.SetTextureIf("_WrinkleDiffuseBlend1", bakedBaseMap1);
                 result.SetTextureIf("_WrinkleDiffuseBlend2", bakedBaseMap2);
@@ -1890,6 +1892,54 @@ namespace Reallusion.Import
                 bakeShader.SetTexture(kernel, "GreenChannel", greenChannel);
                 bakeShader.SetTexture(kernel, "BlueChannel", blueChannel);
                 bakeShader.SetTexture(kernel, "AlphaChannel", alphaChannel);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
+
+        public Texture2D BakeChannelPackSymmetryLinear(string folder,
+            Texture2D redChannelL, Texture2D greenChannelL, Texture2D blueChannelL, Texture2D alphaChannelL,
+            Texture2D redChannelR, Texture2D greenChannelR, Texture2D blueChannelR, Texture2D alphaChannelR,
+            Vector4 redMaskL, Vector4 greenMaskL, Vector4 blueMaskL, Vector4 alphaMaskL,
+            Vector4 redMaskR, Vector4 greenMaskR, Vector4 blueMaskR, Vector4 alphaMaskR,
+            int size, string name)
+        {
+            Vector2Int maxSize = new Vector2Int(size, size);
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(maxSize, folder, name, Importer.FLAG_ALPHA_DATA);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                redChannelL = CheckBlank(redChannelL);
+                greenChannelL = CheckBlank(greenChannelL);
+                blueChannelL = CheckBlank(blueChannelL);
+                alphaChannelL = CheckBlank(alphaChannelL);
+                redChannelR = CheckBlank(redChannelR);
+                greenChannelR = CheckBlank(greenChannelR);
+                blueChannelR = CheckBlank(blueChannelR);
+                alphaChannelR = CheckBlank(alphaChannelR);
+
+                int kernel = bakeShader.FindKernel("RLChannelPackSymmetryLinear");
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.SetTexture(kernel, "RedChannelL", redChannelL);
+                bakeShader.SetTexture(kernel, "GreenChannelL", greenChannelL);
+                bakeShader.SetTexture(kernel, "BlueChannelL", blueChannelL);
+                bakeShader.SetTexture(kernel, "AlphaChannelL", alphaChannelL);
+                bakeShader.SetTexture(kernel, "RedChannelR", redChannelR);
+                bakeShader.SetTexture(kernel, "GreenChannelR", greenChannelR);
+                bakeShader.SetTexture(kernel, "BlueChannelR", blueChannelR);
+                bakeShader.SetTexture(kernel, "AlphaChannelR", alphaChannelR);
+                bakeShader.SetVector("redMaskL", redMaskL);
+                bakeShader.SetVector("greenMaskL", greenMaskL);
+                bakeShader.SetVector("blueMaskL", blueMaskL);
+                bakeShader.SetVector("alphaMaskL", alphaMaskL);
+                bakeShader.SetVector("redMaskR", redMaskR);
+                bakeShader.SetVector("greenMaskR", greenMaskR);
+                bakeShader.SetVector("blueMaskR", blueMaskR);
+                bakeShader.SetVector("alphaMaskR", alphaMaskR);
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
                 return bakeTarget.SaveAndReimport();
             }

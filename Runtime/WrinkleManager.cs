@@ -7,25 +7,110 @@ namespace Reallusion.Import
     [ExecuteInEditMode]
     public class WrinkleManager : MonoBehaviour
     {
-        public enum MaskSet { none, set11 = 1, set12 = 2, set2 = 3, set3 = 4 }
+        public enum MaskSet { none = 0, set1A = 1, set1B = 2, set2 = 3, set3 = 4, set12C = 5, set3D = 6 }
         public enum MaskSide { none, left, right, center }        
+
+        public struct WrinkleRule
+        {            
+            public MaskSet mask;
+            public MaskSide side;
+            public int index;
+
+            public WrinkleRule(MaskSet ms, MaskSide s, int i)
+            {                
+                mask = ms;
+                side = s;
+                index = i;
+            }
+        }
+
+        public static Dictionary<string, WrinkleRule> wrinkleRules = new Dictionary<string, WrinkleRule>()
+        {
+            { "head_wm1_normal_head_wm1_blink_L", new WrinkleRule(MaskSet.set1A, MaskSide.left, 0) },
+            { "head_wm1_normal_head_wm1_blink_R", new WrinkleRule(MaskSet.set1A, MaskSide.right, 0) },
+
+            { "head_wm1_normal_head_wm1_browRaiseInner_L", new WrinkleRule(MaskSet.set1A, MaskSide.left, 1) },
+            { "head_wm1_normal_head_wm1_browRaiseInner_R", new WrinkleRule(MaskSet.set1A, MaskSide.right, 1) },
+
+            { "head_wm1_normal_head_wm1_purse_DL", new WrinkleRule(MaskSet.set1A, MaskSide.left, 2) },
+            { "head_wm1_normal_head_wm1_purse_DR", new WrinkleRule(MaskSet.set1A, MaskSide.right, 2) },
+
+            { "head_wm1_normal_head_wm1_purse_UL", new WrinkleRule(MaskSet.set1A, MaskSide.left, 3) },
+            { "head_wm1_normal_head_wm1_purse_UR", new WrinkleRule(MaskSet.set1A, MaskSide.right, 3) },
+
+
+            { "head_wm1_normal_head_wm1_browRaiseOuter_L", new WrinkleRule(MaskSet.set1B, MaskSide.left, 0) },
+            { "head_wm1_normal_head_wm1_browRaiseOuter_R", new WrinkleRule(MaskSet.set1B, MaskSide.right, 0) },
+
+            { "head_wm1_normal_head_wm1_chinRaise_L", new WrinkleRule(MaskSet.set1B, MaskSide.left, 1) },
+            { "head_wm1_normal_head_wm1_chinRaise_R", new WrinkleRule(MaskSet.set1B, MaskSide.right, 1) },
+
+            { "head_wm1_normal_head_wm1_jawOpen", new WrinkleRule(MaskSet.set1B, MaskSide.center, 2) },            
+
+            { "head_wm1_normal_head_wm1_squintInner_L", new WrinkleRule(MaskSet.set1B, MaskSide.left, 3) },
+            { "head_wm1_normal_head_wm1_squintInner_R", new WrinkleRule(MaskSet.set1B, MaskSide.right, 3) },
+
+
+            { "head_wm2_normal_head_wm2_browsDown_L", new WrinkleRule(MaskSet.set2, MaskSide.left, 0) },
+            { "head_wm2_normal_head_wm2_browsDown_R", new WrinkleRule(MaskSet.set2, MaskSide.right, 0) },
+
+            { "head_wm2_normal_head_wm2_browsLateral_L", new WrinkleRule(MaskSet.set2, MaskSide.left, 1) },
+            { "head_wm2_normal_head_wm2_browsLateral_R", new WrinkleRule(MaskSet.set2, MaskSide.right, 1) },
+
+            { "head_wm2_normal_head_wm2_mouthStretch_L", new WrinkleRule(MaskSet.set2, MaskSide.left, 2) },
+            { "head_wm2_normal_head_wm2_mouthStretch_R", new WrinkleRule(MaskSet.set2, MaskSide.right, 2) },
+
+            { "head_wm2_normal_head_wm2_neckStretch_L", new WrinkleRule(MaskSet.set2, MaskSide.left, 3) },
+            { "head_wm2_normal_head_wm2_neckStretch_R", new WrinkleRule(MaskSet.set2, MaskSide.right, 3) },
+
+
+            { "head_wm3_normal_head_wm3_cheekRaiseInner_L", new WrinkleRule(MaskSet.set3, MaskSide.left, 0) },
+            { "head_wm3_normal_head_wm3_cheekRaiseInner_R", new WrinkleRule(MaskSet.set3, MaskSide.right, 0) },
+
+            { "head_wm3_normal_head_wm3_cheekRaiseOuter_L", new WrinkleRule(MaskSet.set3, MaskSide.left, 1) },
+            { "head_wm3_normal_head_wm3_cheekRaiseOuter_R", new WrinkleRule(MaskSet.set3, MaskSide.right, 1) },
+
+            { "head_wm3_normal_head_wm3_cheekRaiseUpper_L", new WrinkleRule(MaskSet.set3, MaskSide.left, 2) },
+            { "head_wm3_normal_head_wm3_cheekRaiseUpper_R", new WrinkleRule(MaskSet.set3, MaskSide.right, 2) },
+
+            { "head_wm3_normal_head_wm3_smile_L", new WrinkleRule(MaskSet.set3, MaskSide.left, 3) },
+            { "head_wm3_normal_head_wm3_smile_R", new WrinkleRule(MaskSet.set3, MaskSide.right, 3) },
+
+
+            { "head_wm3_normal_head_wm13_lips_DL", new WrinkleRule(MaskSet.set12C, MaskSide.left, 0) },
+            { "head_wm3_normal_head_wm13_lips_DR", new WrinkleRule(MaskSet.set12C, MaskSide.right, 0) },
+
+            { "head_wm3_normal_head_wm13_lips_UL", new WrinkleRule(MaskSet.set12C, MaskSide.left, 1) },
+            { "head_wm3_normal_head_wm13_lips_UR", new WrinkleRule(MaskSet.set12C, MaskSide.right, 1) },
+
+            { "head_wm2_normal_head_wm2_noseWrinkler_L", new WrinkleRule(MaskSet.set12C, MaskSide.left, 2) },
+            { "head_wm2_normal_head_wm2_noseWrinkler_R", new WrinkleRule(MaskSet.set12C, MaskSide.right, 2) },
+
+            { "head_wm2_normal_head_wm2_noseCrease_L", new WrinkleRule(MaskSet.set12C, MaskSide.left, 3) },
+            { "head_wm2_normal_head_wm2_noseCrease_R", new WrinkleRule(MaskSet.set12C, MaskSide.right, 3) },
+
+
+            { "head_wm1_normal_head_wm13_lips_DL", new WrinkleRule(MaskSet.set3D, MaskSide.none, 0) },
+            { "head_wm1_normal_head_wm13_lips_DR", new WrinkleRule(MaskSet.set3D, MaskSide.none, 1) },
+
+            { "head_wm1_normal_head_wm13_lips_UL", new WrinkleRule(MaskSet.set3D, MaskSide.none, 2) },
+            { "head_wm1_normal_head_wm13_lips_UR", new WrinkleRule(MaskSet.set3D, MaskSide.none, 3) },
+        };
 
         public class WrinkleMappings
         {
             public string name;
-            public MaskSet set;
-            public MaskSide side;            
-            public int setIndex;
+            public WrinkleRule rule;
             public int blendShapeIndex;
             public bool enabled = false;
-            public float weight = 0f;
+            public float min = 0f, max = 1f;
 
-            public WrinkleMappings(string bsn, MaskSet s, MaskSide d, int i)
+            public WrinkleMappings(string bsn, string ruleName, float min = 0f, float max = 1f)
             {
                 name = bsn;
-                set = s;
-                side = d;
-                setIndex = i;                
+                rule = wrinkleRules[ruleName];
+                this.min = min;
+                this.max = max;
                 blendShapeIndex = -1;
             }
         }
@@ -36,113 +121,261 @@ namespace Reallusion.Import
         [Range(0f, 2f)]
         public float blendScale = 1f;
         [Range(0.5f, 2f)]
-        public float blendCurve = 1f;
+        public float blendCurve = 0.75f;
         [Range(0.1f, 20f)]
-        public float blendFalloff = 8f;
+        public float blendFalloff = 4f;
+        //[Range(0f, 5f)]
+        //public float blendFadeDuration = 2f;
         [Range(1f, 120f)]
         public float updateFrequency = 30f;
-        public Vector4[] valueSets = new Vector4[8];
+        public Vector4[] valueSets = new Vector4[11];
 
         public List<WrinkleMappings> mappings = new List<WrinkleMappings>()
         {   
             // MASK 1-1 (Set 1, Mask 1)
 
-            // eye_squint
-            new WrinkleMappings("Eye_Squint_L", MaskSet.set11, MaskSide.left, 0),
-            new WrinkleMappings("Eye_Squint_R", MaskSet.set11, MaskSide.right, 0),
+            new WrinkleMappings("Brow_Raise_Inner_L", "head_wm1_normal_head_wm1_browRaiseInner_L"),
+            new WrinkleMappings("Brow_Raise_Inner_L", "head_wm2_normal_head_wm2_browsLateral_L", 0f, 0.03f),
 
-            // brow_raise_inner
-            new WrinkleMappings("Brow_Raise_Inner_L", MaskSet.set11, MaskSide.left, 1),
-            new WrinkleMappings("Brow_Raise_Inner_R", MaskSet.set11, MaskSide.right, 1),
+            new WrinkleMappings("Brow_Raise_Inner_R", "head_wm1_normal_head_wm1_browRaiseInner_R"),
+            new WrinkleMappings("Brow_Raise_Inner_R", "head_wm2_normal_head_wm2_browsLateral_R", 0f, 0.03f),
 
-            // mouth_pucker_lower
-            new WrinkleMappings("Mouth_Pucker_Down_L", MaskSet.set11, MaskSide.left, 2),
-            new WrinkleMappings("Mouth_Pucker_Down_R", MaskSet.set11, MaskSide.right, 2),
-                // mouth_pucker_lower
-                new WrinkleMappings("Mouth_L", MaskSet.set11, MaskSide.left, 2),
-                new WrinkleMappings("Mouth_R", MaskSet.set11, MaskSide.right, 2),
+            new WrinkleMappings("Brow_Raise_Outer_L", "head_wm1_normal_head_wm1_browRaiseOuter_L"),
 
-            // chin_up
-            new WrinkleMappings("Mouth_Shrug_Lower", MaskSet.set11, MaskSide.center, 3),            
-                // chin_up
-                new WrinkleMappings("Mouth_Up", MaskSet.set11, MaskSide.center, 3),            
+            new WrinkleMappings("Brow_Raise_Outer_R", "head_wm1_normal_head_wm1_browRaiseOuter_R"),
 
-            // MASK 1-2 (Set 1, Mask 2)   
-            
-            // jaw_open
-            new WrinkleMappings("Jaw_Open", MaskSet.set12, MaskSide.center, 0),
+            new WrinkleMappings("Brow_Drop_L", "head_wm2_normal_head_wm2_browsDown_L", 0f, 0.1f),
+            new WrinkleMappings("Brow_Drop_L", "head_wm2_normal_head_wm2_browsLateral_L"),
 
-            // eye_blink
-            new WrinkleMappings("Eye_Blink_L", MaskSet.set12, MaskSide.left, 1),
-            new WrinkleMappings("Eye_Blink_R", MaskSet.set12, MaskSide.right, 1),
+            new WrinkleMappings("Brow_Drop_R", "head_wm2_normal_head_wm2_browsDown_R", 0f, 0.1f),
+            new WrinkleMappings("Brow_Drop_R", "head_wm2_normal_head_wm2_browsLateral_R"),
 
-            // brow_raise_outer
-            new WrinkleMappings("Brow_Raise_Outer_L", MaskSet.set12, MaskSide.left, 2),
-            new WrinkleMappings("Brow_Raise_Outer_R", MaskSet.set12, MaskSide.right, 2),
+            new WrinkleMappings("Brow_Compress_L", "head_wm2_normal_head_wm2_browsLateral_L"),
 
-            // mouth_pucker_upper
-            new WrinkleMappings("Mouth_Pucker_Up_L", MaskSet.set12, MaskSide.left, 3),
-            new WrinkleMappings("Mouth_Pucker_Up_R", MaskSet.set12, MaskSide.right, 3),            
-                // mouth_pucker_upper
-                new WrinkleMappings("Mouth_L", MaskSet.set12, MaskSide.left, 3),
-                new WrinkleMappings("Mouth_R", MaskSet.set12, MaskSide.right, 3),  
+            new WrinkleMappings("Brow_Compress_R", "head_wm2_normal_head_wm2_browsLateral_R"),
 
-            // MASK 2 (Set 2, Mask 1)            
+            new WrinkleMappings("Eye_Blink_L", "head_wm1_normal_head_wm1_blink_L"),
+            new WrinkleMappings("Eye_Blink_L", "head_wm1_normal_head_wm1_squintInner_L", 0f, 0.3f),
 
-            // neck_tighten
-            new WrinkleMappings("Neck_Tighten_L", MaskSet.set2, MaskSide.left, 0),
-            new WrinkleMappings("Neck_Tighten_R", MaskSet.set2, MaskSide.right, 0),
-            
-            // brow_drop
-            new WrinkleMappings("Brow_Drop_L", MaskSet.set2, MaskSide.left, 1),
-            new WrinkleMappings("Brow_Drop_R", MaskSet.set2, MaskSide.right, 1),
-                // brow_drop
-                new WrinkleMappings("Nose_Sneer_L", MaskSet.set2, MaskSide.left, 1),
-                new WrinkleMappings("Nose_Sneer_R", MaskSet.set2, MaskSide.right, 1),            
+            new WrinkleMappings("Eye_Blink_R", "head_wm1_normal_head_wm1_blink_R"),
+            new WrinkleMappings("Eye_Blink_R", "head_wm1_normal_head_wm1_squintInner_R", 0f, 0.3f),
 
-            // nose_sneer
-            new WrinkleMappings("Nose_Sneer_L", MaskSet.set2, MaskSide.left, 2),
-            new WrinkleMappings("Nose_Sneer_R", MaskSet.set2, MaskSide.right, 2),
-                // nose_sneer
-                new WrinkleMappings("Nose_Nostril_Raise_L", MaskSet.set2, MaskSide.left, 2),
-                new WrinkleMappings("Nose_Nostril_Raise_R", MaskSet.set2, MaskSide.right, 2),
+            new WrinkleMappings("Eye_Squint_L", "head_wm1_normal_head_wm1_squintInner_L"),
 
-            // mouth_stretch
-            new WrinkleMappings("Mouth_Stretch_L", MaskSet.set2, MaskSide.left, 3),
-            new WrinkleMappings("Mouth_Stretch_R", MaskSet.set2, MaskSide.right, 3),
-                // mouth_stretch
-                new WrinkleMappings("Mouth_Frown_L", MaskSet.set2, MaskSide.left, 3),
-                new WrinkleMappings("Mouth_Frown_R", MaskSet.set2, MaskSide.right, 3),
-                     
-            // MASK 3 (Set 3, Mask 1)    
+            new WrinkleMappings("Eye_Squint_R", "head_wm1_normal_head_wm1_squintInner_R"),
 
-            // mouth_smile
-            new WrinkleMappings("Mouth_Smile_L", MaskSet.set3, MaskSide.left, 0),
-            new WrinkleMappings("Mouth_Smile_R", MaskSet.set3, MaskSide.right, 0),
-                // mouth_smile
-                new WrinkleMappings("Mouth_Smile_Sharp_L", MaskSet.set3, MaskSide.left, 0),
-                new WrinkleMappings("Mouth_Smile_Sharp_R", MaskSet.set3, MaskSide.right, 0),            
+            new WrinkleMappings("Eye_L_Look_Down", "head_wm1_normal_head_wm1_blink_L"),
+            new WrinkleMappings("Eye_R_Look_Down", "head_wm1_normal_head_wm1_blink_R"),
 
-            // brow_compress
-            new WrinkleMappings("Brow_Compress_L", MaskSet.set3, MaskSide.left, 1),
-            new WrinkleMappings("Brow_Compress_R", MaskSet.set3, MaskSide.right, 1),
+            new WrinkleMappings("Nose_Sneer_L", "head_wm2_normal_head_wm2_browsDown_L", 0f, 0.7f),
+            new WrinkleMappings("Nose_Sneer_L", "head_wm2_normal_head_wm2_browsLateral_L", 0f, 0.6f),
+            new WrinkleMappings("Nose_Sneer_L", "head_wm2_normal_head_wm2_noseWrinkler_L"),
 
-            // cheek_raise
-            new WrinkleMappings("Cheek_Raise_L", MaskSet.set3, MaskSide.left, 2),
-            new WrinkleMappings("Cheek_Raise_R", MaskSet.set3, MaskSide.right, 2),
-                // cheek_raise
-                new WrinkleMappings("Mouth_L", MaskSet.set3, MaskSide.left, 2),
-                new WrinkleMappings("Mouth_R", MaskSet.set3, MaskSide.right, 2),
+            new WrinkleMappings("Nose_Sneer_R", "head_wm2_normal_head_wm2_browsDown_R", 0f, 0.7f),
+            new WrinkleMappings("Nose_Sneer_R", "head_wm2_normal_head_wm2_browsLateral_R", 0f, 0.6f),
+            new WrinkleMappings("Nose_Sneer_R", "head_wm2_normal_head_wm2_noseWrinkler_R"),
 
-            // nose_crease
-            new WrinkleMappings("Nose_Crease_L", MaskSet.set3, MaskSide.left, 3),
-            new WrinkleMappings("Nose_Crease_R", MaskSet.set3, MaskSide.right, 3),                        
-                // nose_crease
-                new WrinkleMappings("Mouth_Up_Upper_L", MaskSet.set3, MaskSide.left, 3),
-                new WrinkleMappings("Mouth_Up_Upper_R", MaskSet.set3, MaskSide.right, 3),                        
-                // nose_crease
-                new WrinkleMappings("Mouth_L", MaskSet.set3, MaskSide.left, 3),
-                new WrinkleMappings("Mouth_R", MaskSet.set3, MaskSide.right, 3),
+
+
+            new WrinkleMappings("Nose_Nostril_Raise_L", "head_wm2_normal_head_wm2_noseWrinkler_L", 0f, 0.6f),
+
+            new WrinkleMappings("Nose_Nostril_Raise_R", "head_wm2_normal_head_wm2_noseWrinkler_R", 0f, 0.6f),
+
+            new WrinkleMappings("Nose_Crease_L", "head_wm2_normal_head_wm2_noseCrease_L", 0f, 0.7f),
+
+            new WrinkleMappings("Nose_Crease_R", "head_wm2_normal_head_wm2_noseCrease_R", 0f, 0.7f),
+
+
+            new WrinkleMappings("Cheek_Raise_L", "head_wm3_normal_head_wm3_cheekRaiseInner_L"),
+            new WrinkleMappings("Cheek_Raise_L", "head_wm3_normal_head_wm3_cheekRaiseOuter_L"),
+            new WrinkleMappings("Cheek_Raise_L", "head_wm3_normal_head_wm3_cheekRaiseUpper_L"),
+
+            new WrinkleMappings("Cheek_Raise_R", "head_wm3_normal_head_wm3_cheekRaiseInner_R"),
+            new WrinkleMappings("Cheek_Raise_R", "head_wm3_normal_head_wm3_cheekRaiseOuter_R"),
+            new WrinkleMappings("Cheek_Raise_R", "head_wm3_normal_head_wm3_cheekRaiseUpper_R"),
+
+            new WrinkleMappings("Jaw_Open", "head_wm1_normal_head_wm1_jawOpen"),
+
+            new WrinkleMappings("Jaw_L", "head_wm2_normal_head_wm2_neckStretch_L"),
+
+            new WrinkleMappings("Jaw_R", "head_wm2_normal_head_wm2_neckStretch_R"),
+
+            new WrinkleMappings("Mouth_Up", "head_wm1_normal_head_wm1_chinRaise_L"),
+            new WrinkleMappings("Mouth_Up", "head_wm1_normal_head_wm1_chinRaise_R"),
+
+            new WrinkleMappings("Mouth_L", "head_wm3_normal_head_wm3_smile_L", 0f, 0.8f),
+            new WrinkleMappings("Mouth_L", "head_wm3_normal_head_wm3_cheekRaiseOuter_L", 0f, 0.6f),
+            new WrinkleMappings("Mouth_L", "head_wm1_normal_head_wm13_lips_UL", 0f, 0.7f),
+            new WrinkleMappings("Mouth_L", "head_wm1_normal_head_wm13_lips_UR", 0f, 0.7f),
+            new WrinkleMappings("Mouth_L", "head_wm1_normal_head_wm13_lips_DL", 0f, 0.7f),
+            new WrinkleMappings("Mouth_L", "head_wm1_normal_head_wm13_lips_DR", 0f, 0.7f),
+
+            new WrinkleMappings("Mouth_R", "head_wm3_normal_head_wm3_smile_R", 0f, 0.8f),
+            new WrinkleMappings("Mouth_R", "head_wm3_normal_head_wm3_cheekRaiseOuter_R", 0f, 0.6f),
+            new WrinkleMappings("Mouth_R", "head_wm1_normal_head_wm13_lips_UL", 0f, 0.7f),
+            new WrinkleMappings("Mouth_R", "head_wm1_normal_head_wm13_lips_UR", 0f, 0.7f),
+            new WrinkleMappings("Mouth_R", "head_wm1_normal_head_wm13_lips_DL", 0f, 0.7f),
+            new WrinkleMappings("Mouth_R", "head_wm1_normal_head_wm13_lips_DR", 0f, 0.7f),
+
+            new WrinkleMappings("Mouth_Smile_L", "head_wm3_normal_head_wm3_cheekRaiseInner_L", 0f, 0.6f),
+            new WrinkleMappings("Mouth_Smile_L", "head_wm3_normal_head_wm3_cheekRaiseOuter_L", 0f, 0.6f),
+            new WrinkleMappings("Mouth_Smile_L", "head_wm3_normal_head_wm3_smile_L"),
+            new WrinkleMappings("Mouth_Smile_L", "head_wm3_normal_head_wm13_lips_DL"),
+            new WrinkleMappings("Mouth_Smile_L", "head_wm3_normal_head_wm13_lips_UL"),
+
+            new WrinkleMappings("Mouth_Smile_R", "head_wm3_normal_head_wm3_cheekRaiseInner_R", 0f, 0.6f),
+            new WrinkleMappings("Mouth_Smile_R", "head_wm3_normal_head_wm3_cheekRaiseOuter_R", 0f, 0.6f),
+            new WrinkleMappings("Mouth_Smile_R", "head_wm3_normal_head_wm3_smile_R"),
+            new WrinkleMappings("Mouth_Smile_R", "head_wm3_normal_head_wm13_lips_DR"),
+            new WrinkleMappings("Mouth_Smile_R", "head_wm3_normal_head_wm13_lips_UR"),
+
+            new WrinkleMappings("Mouth_Smile_Sharp_L", "head_wm3_normal_head_wm3_cheekRaiseInner_L", 0f, 0.4f),
+            new WrinkleMappings("Mouth_Smile_Sharp_L", "head_wm3_normal_head_wm3_cheekRaiseOuter_L", 0f, 0.4f),
+            new WrinkleMappings("Mouth_Smile_Sharp_L", "head_wm3_normal_head_wm3_smile_L", 0f, 0.8f),
+            new WrinkleMappings("Mouth_Smile_Sharp_L", "head_wm3_normal_head_wm13_lips_DL", 0f, 0.8f),
+            new WrinkleMappings("Mouth_Smile_Sharp_L", "head_wm3_normal_head_wm13_lips_UL", 0f, 0.8f),
+
+            new WrinkleMappings("Mouth_Smile_Sharp_R", "head_wm3_normal_head_wm3_cheekRaiseInner_R", 0f, 0.4f),
+            new WrinkleMappings("Mouth_Smile_Sharp_R", "head_wm3_normal_head_wm3_cheekRaiseOuter_R", 0f, 0.4f),
+            new WrinkleMappings("Mouth_Smile_Sharp_R", "head_wm3_normal_head_wm3_smile_R", 0f, 0.8f),
+            new WrinkleMappings("Mouth_Smile_Sharp_R", "head_wm3_normal_head_wm13_lips_DR", 0f, 0.8f),
+            new WrinkleMappings("Mouth_Smile_Sharp_R", "head_wm3_normal_head_wm13_lips_UR", 0f, 0.8f),
+
+            new WrinkleMappings("Mouth_Dimple_L", "head_wm3_normal_head_wm3_cheekRaiseInner_L", 0f, 0.15f),
+            new WrinkleMappings("Mouth_Dimple_L", "head_wm3_normal_head_wm3_cheekRaiseOuter_L", 0f, 0.15f),
+            new WrinkleMappings("Mouth_Dimple_L", "head_wm3_normal_head_wm3_smile_L", 0f, 0.3f),
+            new WrinkleMappings("Mouth_Dimple_L", "head_wm3_normal_head_wm13_lips_DL", 0f, 0.3f),
+            new WrinkleMappings("Mouth_Dimple_L", "head_wm3_normal_head_wm13_lips_UL", 0f, 0.3f),
+
+            new WrinkleMappings("Mouth_Dimple_R", "head_wm3_normal_head_wm3_cheekRaiseInner_R", 0f, 0.15f),
+            new WrinkleMappings("Mouth_Dimple_R", "head_wm3_normal_head_wm3_cheekRaiseOuter_R", 0f, 0.15f),
+            new WrinkleMappings("Mouth_Dimple_R", "head_wm3_normal_head_wm3_smile_R", 0f, 0.3f),
+            new WrinkleMappings("Mouth_Dimple_R", "head_wm3_normal_head_wm13_lips_DR", 0f, 0.3f),
+            new WrinkleMappings("Mouth_Dimple_R", "head_wm3_normal_head_wm13_lips_UR", 0f, 0.3f),
+
+            new WrinkleMappings("Mouth_Stretch_L", "head_wm2_normal_head_wm2_mouthStretch_L"),
+
+            new WrinkleMappings("Mouth_Stretch_R", "head_wm2_normal_head_wm2_mouthStretch_R"),
+
+            new WrinkleMappings("Mouth_Pucker_Up_L", "head_wm1_normal_head_wm1_purse_UL"),
+            new WrinkleMappings("Mouth_Pucker_Up_L", "head_wm1_normal_head_wm13_lips_UL"),
+
+            new WrinkleMappings("Mouth_Pucker_Up_R", "head_wm1_normal_head_wm1_purse_UR"),
+            new WrinkleMappings("Mouth_Pucker_Up_R", "head_wm1_normal_head_wm13_lips_UR"),
+
+            new WrinkleMappings("Mouth_Pucker_Down_L", "head_wm1_normal_head_wm1_chinRaise_L", 0f, 0.5f),
+            new WrinkleMappings("Mouth_Pucker_Down_L", "head_wm1_normal_head_wm1_purse_DL"),
+            new WrinkleMappings("Mouth_Pucker_Down_L", "head_wm1_normal_head_wm13_lips_DL"),
+
+            new WrinkleMappings("Mouth_Pucker_Down_R", "head_wm1_normal_head_wm1_chinRaise_R", 0f, 0.5f),
+            new WrinkleMappings("Mouth_Pucker_Down_R", "head_wm1_normal_head_wm1_purse_DR"),
+            new WrinkleMappings("Mouth_Pucker_Down_R", "head_wm1_normal_head_wm13_lips_DR"),
+
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm1_purse_DL"),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm1_purse_DR"),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm1_purse_UL"),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm1_purse_UR"),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm13_lips_DL"),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm13_lips_DR"),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm13_lips_UL"),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm13_lips_UR"),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm1_chinRaise_L", 0f, 0.5f),
+            new WrinkleMappings("Mouth_Pucker", "head_wm1_normal_head_wm1_chinRaise_R", 0f, 0.5f),
+
+            new WrinkleMappings("Mouth_Chin_Up", "head_wm1_normal_head_wm1_chinRaise_L"),
+            new WrinkleMappings("Mouth_Chin_Up", "head_wm1_normal_head_wm1_chinRaise_R"),
+
+            new WrinkleMappings("Mouth_Up_Upper_L", "head_wm2_normal_head_wm2_noseCrease_L"),
+
+            new WrinkleMappings("Mouth_Up_Upper_R", "head_wm2_normal_head_wm2_noseCrease_R"),
+
+            new WrinkleMappings("Neck_Tighten_L", "head_wm2_normal_head_wm2_neckStretch_L"),
+
+            new WrinkleMappings("Neck_Tighten_R", "head_wm2_normal_head_wm2_neckStretch_R"),
+
+            new WrinkleMappings("Head_Turn_L", "head_wm2_normal_head_wm2_neckStretch_R", 0f, 0.6f),
+
+            new WrinkleMappings("Head_Turn_R", "head_wm2_normal_head_wm2_neckStretch_L", 0f, 0.6f),
+
+            new WrinkleMappings("Head_Tilt_L", "head_wm2_normal_head_wm2_neckStretch_R", 0f, 0.75f),
+
+            new WrinkleMappings("Head_Tilt_R", "head_wm2_normal_head_wm2_neckStretch_L", 0f, 0.75f),
+
+            new WrinkleMappings("Head_Backward", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.5f),
+
+            new WrinkleMappings("Mouth_Frown_L", "head_wm2_normal_head_wm2_mouthStretch_L"),
+            new WrinkleMappings("Mouth_Frown_R", "head_wm2_normal_head_wm2_mouthStretch_R"),
+            new WrinkleMappings("Mouth_Shrug_Lower", "head_wm1_normal_head_wm1_chinRaise_L"),
+            new WrinkleMappings("Mouth_Shrug_Lower", "head_wm1_normal_head_wm1_chinRaise_R"),
+
+            new WrinkleMappings("V_Open", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.6f),
+
+            new WrinkleMappings("V_Tight_O", "head_wm1_normal_head_wm1_purse_DL", 0f, 0.7f),
+            new WrinkleMappings("V_Tight_O", "head_wm1_normal_head_wm1_purse_DR", 0f, 0.7f),
+            new WrinkleMappings("V_Tight_O", "head_wm1_normal_head_wm1_purse_UL", 0f, 0.7f),
+            new WrinkleMappings("V_Tight_O", "head_wm1_normal_head_wm1_purse_UR", 0f, 0.7f),
+            new WrinkleMappings("V_Tight_O", "head_wm1_normal_head_wm13_lips_DL", 0f, 0.7f),
+            new WrinkleMappings("V_Tight_O", "head_wm1_normal_head_wm13_lips_DR", 0f, 0.7f),
+            new WrinkleMappings("V_Tight_O", "head_wm1_normal_head_wm13_lips_UL", 0f, 0.7f),
+            new WrinkleMappings("V_Tight_O", "head_wm1_normal_head_wm13_lips_UR", 0f, 0.7f),
+
+            new WrinkleMappings("V_Tight", "head_wm1_normal_head_wm1_purse_DL", 0f, 0.7f),
+            new WrinkleMappings("V_Tight", "head_wm1_normal_head_wm1_purse_DR", 0f, 0.7f),
+            new WrinkleMappings("V_Tight", "head_wm1_normal_head_wm1_purse_UL", 0f, 0.7f),
+            new WrinkleMappings("V_Tight", "head_wm1_normal_head_wm1_purse_UR", 0f, 0.7f),
+            new WrinkleMappings("V_Tight", "head_wm1_normal_head_wm13_lips_DL", 0f, 0.7f),
+            new WrinkleMappings("V_Tight", "head_wm1_normal_head_wm13_lips_DR", 0f, 0.7f),
+            new WrinkleMappings("V_Tight", "head_wm1_normal_head_wm13_lips_UL", 0f, 0.7f),
+            new WrinkleMappings("V_Tight", "head_wm1_normal_head_wm13_lips_UR", 0f, 0.7f),
+
+            new WrinkleMappings("V_Wide", "head_wm3_normal_head_wm13_lips_DL", 0f, 0.7f),
+            new WrinkleMappings("V_Wide", "head_wm3_normal_head_wm13_lips_UL", 0f, 0.7f),
+            new WrinkleMappings("V_Wide", "head_wm3_normal_head_wm13_lips_DR", 0f, 0.7f),
+            new WrinkleMappings("V_Wide", "head_wm3_normal_head_wm13_lips_UR", 0f, 0.7f),
+
+            new WrinkleMappings("AE", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.24f),
+            new WrinkleMappings("Ah", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.6f),
+
+            new WrinkleMappings("EE", "head_wm3_normal_head_wm13_lips_DL", 0f, 0.7f),
+            new WrinkleMappings("EE", "head_wm3_normal_head_wm13_lips_UL", 0f, 0.7f),
+            new WrinkleMappings("EE", "head_wm3_normal_head_wm13_lips_DR", 0f, 0.7f),
+            new WrinkleMappings("EE", "head_wm3_normal_head_wm13_lips_UR", 0f, 0.7f),
+            new WrinkleMappings("Ih", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.15f),
+            new WrinkleMappings("K_G_H_NG", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.065f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.6025f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm1_purse_DL", 0f, 0.56f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm1_purse_DR", 0f, 0.56f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm1_purse_UL", 0f, 0.56f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm1_purse_UR", 0f, 0.56f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm13_lips_DL", 0f, 0.56f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm13_lips_DR", 0f, 0.56f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm13_lips_UL", 0f, 0.56f),
+            new WrinkleMappings("Oh", "head_wm1_normal_head_wm13_lips_UR", 0f, 0.56f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.10f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm1_purse_DL", 0f, 0.63f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm1_purse_DR", 0f, 0.63f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm1_purse_UL", 0f, 0.63f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm1_purse_UR", 0f, 0.63f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm13_lips_DL", 0f, 0.63f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm13_lips_DR", 0f, 0.63f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm13_lips_UL", 0f, 0.63f),
+            new WrinkleMappings("R", "head_wm1_normal_head_wm13_lips_UR", 0f, 0.63f),
+
+            new WrinkleMappings("S_Z", "head_wm3_normal_head_wm13_lips_DL", 0f, 0.14f),
+            new WrinkleMappings("S_Z", "head_wm3_normal_head_wm13_lips_UL", 0f, 0.14f),
+            new WrinkleMappings("S_Z", "head_wm3_normal_head_wm13_lips_DR", 0f, 0.14f),
+            new WrinkleMappings("S_Z", "head_wm3_normal_head_wm13_lips_UR", 0f, 0.14f),
+
+            new WrinkleMappings("T_L_D_N", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.0426f),
+            new WrinkleMappings("Th", "head_wm1_normal_head_wm1_jawOpen", 0f, 0.1212f),
+            new WrinkleMappings("W_OO", "head_wm1_normal_head_wm1_purse_DL", 0f, 0.56f),
+            new WrinkleMappings("W_OO", "head_wm1_normal_head_wm1_purse_DR", 0f, 0.56f),
+            new WrinkleMappings("W_OO", "head_wm1_normal_head_wm1_purse_UL", 0f, 0.56f),
+            new WrinkleMappings("W_OO", "head_wm1_normal_head_wm1_purse_UR", 0f, 0.56f),
+            new WrinkleMappings("W_OO", "head_wm1_normal_head_wm13_lips_DL", 0f, 0.56f),
+            new WrinkleMappings("W_OO", "head_wm1_normal_head_wm13_lips_DR", 0f, 0.56f),
+            new WrinkleMappings("W_OO", "head_wm1_normal_head_wm13_lips_UL", 0f, 0.56f),
+            new WrinkleMappings("W_OO", "head_wm1_normal_head_wm13_lips_UR", 0f, 0.56f),            
         };
 
         private void UpdateBlendShapeIndices()
@@ -156,6 +389,9 @@ namespace Reallusion.Import
                     wm.blendShapeIndex = mesh.GetBlendShapeIndex(wm.name);
                     wm.enabled = wm.blendShapeIndex >= 0;                    
                 }
+
+                updateTimer = 1f / updateFrequency;
+                lastTime = Time.time;
 
                 initialized = true;
             }
@@ -175,22 +411,37 @@ namespace Reallusion.Import
         }
 
         float updateTimer = 0f;
+        float lastTime = 0f;
         void Update()
         {
-            if (!initialized) UpdateBlendShapeIndices();
-
-            float delay = 1f / updateFrequency;            
+            if (!initialized) UpdateBlendShapeIndices();            
 
             if (initialized && headMaterial && skinnedMeshRenderer)
             {
                 if (updateTimer <= 0f)
                 {
-                    for (int i = 0; i < 8; i++)
+                    float time = Time.time;
+                    float delay = time - lastTime;
+                    //float fadeScale = delay / blendFadeDuration;
+                    lastTime = time;
+
+                    for (int i = 0; i < 11; i++)
                     {
+                        /*
+                         * Linear falloff
+                        Vector4 vsi = valueSets[i];
+                        vsi -= Vector4.one * fadeScale;
+                        if (vsi.x < 0f) vsi.x = 0f;
+                        if (vsi.y < 0f) vsi.y = 0f;
+                        if (vsi.z < 0f) vsi.z = 0f;
+                        if (vsi.w < 0f) vsi.w = 0f;
+                        valueSets[i] = vsi;
+                        */
+                        
                         if (valueSets[i].sqrMagnitude > 0.0001f)
                             valueSets[i] = Vector4.Lerp(valueSets[i], Vector4.zero, blendFalloff * delay);
                         else 
-                            valueSets[i] = Vector4.zero;
+                            valueSets[i] = Vector4.zero;                        
                     }
 
                     foreach (WrinkleMappings wm in mappings)
@@ -201,34 +452,46 @@ namespace Reallusion.Import
                             weight = Mathf.Pow(
                                 Mathf.Max(0f, Mathf.Min(1f, weight * blendScale)), blendCurve
                             );
+                            weight = Mathf.Lerp(wm.min, wm.max, weight);
 
-                            int il = ((int)wm.set) - 1;
-                            int ir = il + 4;
 
-                            if (wm.side == MaskSide.left || wm.side == MaskSide.center)
-                            {                                
-                                if (weight > valueSets[il][wm.setIndex])
-                                    valueSets[il][wm.setIndex] = weight;
+                            int il = ((int)wm.rule.mask) - 1;
+                            int ir = il + 5;
+                            int inone = il + 5;
+
+                            if (wm.rule.side == MaskSide.left || wm.rule.side == MaskSide.center)
+                            {
+                                if (weight > valueSets[il][wm.rule.index])
+                                    valueSets[il][wm.rule.index] = weight;
                             }
 
-                            if (wm.side == MaskSide.right || wm.side == MaskSide.center)
+                            if (wm.rule.side == MaskSide.right || wm.rule.side == MaskSide.center)
                             {
-                                if (weight > valueSets[ir][wm.setIndex])
-                                    valueSets[ir][wm.setIndex] = weight;
-                            }                            
+                                if (weight > valueSets[ir][wm.rule.index])
+                                    valueSets[ir][wm.rule.index] = weight;
+                            }
+
+                            if (wm.rule.side == MaskSide.none)
+                            {
+                                if (weight > valueSets[inone][wm.rule.index])
+                                    valueSets[inone][wm.rule.index] = weight;
+                            }
                         }
                     }                    
 
-                    headMaterial.SetVector("_WrinkleValueSet11L", valueSets[0]);
-                    headMaterial.SetVector("_WrinkleValueSet12L", valueSets[1]);
+                    headMaterial.SetVector("_WrinkleValueSet1AL", valueSets[0]);
+                    headMaterial.SetVector("_WrinkleValueSet1BL", valueSets[1]);
                     headMaterial.SetVector("_WrinkleValueSet2L", valueSets[2]);
                     headMaterial.SetVector("_WrinkleValueSet3L", valueSets[3]);
-                    headMaterial.SetVector("_WrinkleValueSet11R", valueSets[4]);
-                    headMaterial.SetVector("_WrinkleValueSet12R", valueSets[5]);
-                    headMaterial.SetVector("_WrinkleValueSet2R", valueSets[6]);
-                    headMaterial.SetVector("_WrinkleValueSet3R", valueSets[7]);
+                    headMaterial.SetVector("_WrinkleValueSet12CL", valueSets[4]);
+                    headMaterial.SetVector("_WrinkleValueSet1AR", valueSets[5]);
+                    headMaterial.SetVector("_WrinkleValueSet1BR", valueSets[6]);
+                    headMaterial.SetVector("_WrinkleValueSet2R", valueSets[7]);
+                    headMaterial.SetVector("_WrinkleValueSet3R", valueSets[8]);
+                    headMaterial.SetVector("_WrinkleValueSet12CR", valueSets[9]);
+                    headMaterial.SetVector("_WrinkleValueSet3DB", valueSets[10]);
 
-                    updateTimer = delay;
+                    updateTimer = 1f / updateFrequency;
                 }
                 else
                 {

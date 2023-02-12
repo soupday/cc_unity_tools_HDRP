@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 8a78432bddef4754b81ee600447fc42e
+guid: 537f29ee83525df428770f9d4b22ac8f
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -62,11 +62,11 @@ TextureImporter:
   textureFormatSet: 0
   ignorePngGamma: 0
   applyGammaDecoding: 0
-  cookieLightType: 1
+  cookieLightType: 0
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1

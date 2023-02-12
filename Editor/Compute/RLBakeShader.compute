@@ -56,6 +56,7 @@
 #pragma kernel RLFlowToNormal
 
 #pragma kernel RLChannelPackLinear
+#pragma kernel RLChannelPackSymmetryLinear
 
 // Defines
 //
@@ -199,6 +200,26 @@ TEX2D(RedChannel);
 TEX2D(GreenChannel);
 TEX2D(BlueChannel);
 TEX2D(AlphaChannel);
+
+TEX2D(RedChannelL);
+TEX2D(GreenChannelL);
+TEX2D(BlueChannelL);
+TEX2D(AlphaChannelL);
+
+TEX2D(RedChannelR);
+TEX2D(GreenChannelR);
+TEX2D(BlueChannelR);
+TEX2D(AlphaChannelR);
+
+float4 redMaskL;
+float4 greenMaskL;
+float4 blueMaskL;
+float4 alphaMaskL;
+
+float4 redMaskR;
+float4 greenMaskR;
+float4 blueMaskR;
+float4 alphaMaskR;
 
 // Node functions
 //
@@ -413,6 +434,41 @@ void RLChannelPackLinear(uint3 id : SV_DispatchThreadID)
     float alphaChannel = SAMPLE(AlphaChannel, uv).g;    
 
     float4 packed = float4(redChannel, greenChannel, blueChannel, alphaChannel);
+
+    Result[id.xy] = packed;
+}
+
+[numthreads(1, 1, 1)]
+void RLChannelPackSymmetryLinear(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float4 redChannelL = SAMPLE(RedChannelL, uv);
+    float4 greenChannelL = SAMPLE(GreenChannelL, uv);
+    float4 blueChannelL = SAMPLE(BlueChannelL, uv);
+    float4 alphaChannelL = SAMPLE(AlphaChannelL, uv);
+
+    float4 redChannelR = SAMPLE(RedChannelR, uv);
+    float4 greenChannelR = SAMPLE(GreenChannelR, uv);
+    float4 blueChannelR = SAMPLE(BlueChannelR, uv);
+    float4 alphaChannelR = SAMPLE(AlphaChannelR, uv);
+
+    float redL = dot(redChannelL, redMaskL);
+    float redR = dot(redChannelR, redMaskR);
+
+    float greenL = dot(greenChannelL, greenMaskL);
+    float greenR = dot(greenChannelR, greenMaskR);
+
+    float blueL = dot(blueChannelL, blueMaskL);
+    float blueR = dot(blueChannelR, blueMaskR);
+
+    float alphaL = dot(alphaChannelL, alphaMaskL);
+    float alphaR = dot(alphaChannelR, alphaMaskR);
+
+    float4 packed = float4(saturate(redL+redR),
+        saturate(greenL+greenR),
+        saturate(blueL+blueR),
+        saturate(alphaL+alphaR));
 
     Result[id.xy] = packed;
 }
