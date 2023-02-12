@@ -77,11 +77,11 @@ namespace Reallusion.Import
             { "head_wm3_normal_head_wm3_smile_R", new WrinkleRule(MaskSet.set3, MaskSide.right, 3) },
 
 
-            { "head_wm3_normal_head_wm13_lips_DL", new WrinkleRule(MaskSet.set12C, MaskSide.left, 0) },
-            { "head_wm3_normal_head_wm13_lips_DR", new WrinkleRule(MaskSet.set12C, MaskSide.right, 0) },
+            { "head_wm1_normal_head_wm13_lips_DL", new WrinkleRule(MaskSet.set12C, MaskSide.left, 0) },
+            { "head_wm1_normal_head_wm13_lips_DR", new WrinkleRule(MaskSet.set12C, MaskSide.right, 0) },
 
-            { "head_wm3_normal_head_wm13_lips_UL", new WrinkleRule(MaskSet.set12C, MaskSide.left, 1) },
-            { "head_wm3_normal_head_wm13_lips_UR", new WrinkleRule(MaskSet.set12C, MaskSide.right, 1) },
+            { "head_wm1_normal_head_wm13_lips_UL", new WrinkleRule(MaskSet.set12C, MaskSide.left, 1) },
+            { "head_wm1_normal_head_wm13_lips_UR", new WrinkleRule(MaskSet.set12C, MaskSide.right, 1) },
 
             { "head_wm2_normal_head_wm2_noseWrinkler_L", new WrinkleRule(MaskSet.set12C, MaskSide.left, 2) },
             { "head_wm2_normal_head_wm2_noseWrinkler_R", new WrinkleRule(MaskSet.set12C, MaskSide.right, 2) },
@@ -90,11 +90,11 @@ namespace Reallusion.Import
             { "head_wm2_normal_head_wm2_noseCrease_R", new WrinkleRule(MaskSet.set12C, MaskSide.right, 3) },
 
 
-            { "head_wm1_normal_head_wm13_lips_DL", new WrinkleRule(MaskSet.set3D, MaskSide.none, 0) },
-            { "head_wm1_normal_head_wm13_lips_DR", new WrinkleRule(MaskSet.set3D, MaskSide.none, 1) },
+            { "head_wm3_normal_head_wm13_lips_DL", new WrinkleRule(MaskSet.set3D, MaskSide.none, 0) },
+            { "head_wm3_normal_head_wm13_lips_DR", new WrinkleRule(MaskSet.set3D, MaskSide.none, 1) },
 
-            { "head_wm1_normal_head_wm13_lips_UL", new WrinkleRule(MaskSet.set3D, MaskSide.none, 2) },
-            { "head_wm1_normal_head_wm13_lips_UR", new WrinkleRule(MaskSet.set3D, MaskSide.none, 3) },
+            { "head_wm3_normal_head_wm13_lips_UL", new WrinkleRule(MaskSet.set3D, MaskSide.none, 2) },
+            { "head_wm3_normal_head_wm13_lips_UR", new WrinkleRule(MaskSet.set3D, MaskSide.none, 3) },
         };
 
         public class WrinkleMappings
