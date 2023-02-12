@@ -2348,8 +2348,8 @@ namespace Reallusion.Import
                 return false;
             }            
             return true;
-        }
-
+        } 
+          
         private void AddWrinkleManager(GameObject obj, SkinnedMeshRenderer smr, Material mat)
         {
             WrinkleManager wm = obj.AddComponent<WrinkleManager>();
