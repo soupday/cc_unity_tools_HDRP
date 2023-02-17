@@ -546,40 +546,7 @@ namespace Reallusion.Import
                     }
                 }
             }
-        }
-
-        private bool NameContainsKeywords(string name, params string[] keyword)
-        {
-            foreach (string k in keyword)
-            {
-                // is 'k' in name separated by underscores
-                if (name.iStartsWith(k + "_") ||
-                    name.iEndsWith("_" + k) ||
-                    name.iContains("_" + k + "_") ||
-                    name.iEquals(k))
-                    return true;
-
-                // is 'k' self contained hungarian notation in name
-                if (char.IsUpper(k[0]))
-                {
-                    int s = name.IndexOf(k);                    
-                    if (s >= 0)
-                    {
-                        int e = s + k.Length;
-                        if (e >= name.Length || !char.IsLower(name[e]))
-                            return true;                        
-                    }
-                }
-                else if(name.Length > k.Length)
-                {
-                    if (name.iStartsWith(k) && !char.IsLower(name[k.Length]))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+        }        
 
         private MaterialType GetMaterialType(GameObject obj, Material mat, string sourceName, QuickJSON matJson)
         {            
@@ -587,13 +554,13 @@ namespace Reallusion.Import
             {
                 bool hasOpacity = false;
                 bool blendOpacity = false;
-                if (NameContainsKeywords(sourceName, "Transparency", "Alpha", "Opacity", "Lenses", "Lens", "Glass"))                    
+                if (Util.NameContainsKeywords(sourceName, "Transparency", "Alpha", "Opacity", "Lenses", "Lens", "Glass", "Glasses", "Blend"))
                 {
                     hasOpacity = true;
                     blendOpacity = true;
                 }
 
-                if (NameContainsKeywords(sourceName, "Base", "Scalp", "Eyelash"))
+                if (Util.NameContainsKeywords(sourceName, "Base", "Scalp", "Eyelash"))
                 {
                     hasOpacity = true;
                     blendOpacity = true;
@@ -611,7 +578,7 @@ namespace Reallusion.Import
                     }
                 }                
 
-                if (NameContainsKeywords(sourceName, "Std_Eye_L", "Std_Eye_R"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Eye_L", "Std_Eye_R"))
                 {
                     return MaterialType.Eye;
                 }
@@ -619,7 +586,7 @@ namespace Reallusion.Import
                 // actor build materials that are opaque, but detected as transparent.
                 if (characterInfo.Generation == BaseGeneration.ActorBuild)
                 {
-                    if (NameContainsKeywords(sourceName, "Cornea_L", "Cornea_R",
+                    if (Util.NameContainsKeywords(sourceName, "Cornea_L", "Cornea_R",
                             "Upper_Teeth", "Lower_Teeth", "Tongue"))
                     {
                         return MaterialType.DefaultOpaque;
@@ -628,9 +595,9 @@ namespace Reallusion.Import
 
                 if (hasOpacity)
                 {
-                    if (NameContainsKeywords(sourceName, "Eyelash"))
+                    if (Util.NameContainsKeywords(sourceName, "Eyelash"))
                         return MaterialType.Eyelash;
-                    if (NameContainsKeywords(sourceName, "Scalp", "Base"))
+                    if (Util.NameContainsKeywords(sourceName, "Scalp", "Base"))
                         return MaterialType.Scalp;
                 }
 
@@ -658,34 +625,34 @@ namespace Reallusion.Import
             {
                 // if there is no JSON, try to determine the material types from the names.
 
-                if (NameContainsKeywords(sourceName, "Std_Eye_L", "Std_Eye_R"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Eye_L", "Std_Eye_R"))
                     return MaterialType.Eye;
 
-                if (NameContainsKeywords(sourceName, "Std_Cornea_L", "Std_Cornea_R"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Cornea_L", "Std_Cornea_R"))
                     return MaterialType.Cornea;
 
-                if (NameContainsKeywords(sourceName, "Std_Eye_Occlusion_L", "Std_Eye_Occlusion_R"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Eye_Occlusion_L", "Std_Eye_Occlusion_R"))
                     return MaterialType.EyeOcclusion;
 
-                if (NameContainsKeywords(sourceName, "Std_Tearline_L", "Std_Tearline_R"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Tearline_L", "Std_Tearline_R"))
                     return MaterialType.Tearline;
 
-                if (NameContainsKeywords(sourceName, "Std_Upper_Teeth", "Std_Lowe_Teeth"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Upper_Teeth", "Std_Lowe_Teeth"))
                     return MaterialType.Teeth;
 
-                if (NameContainsKeywords(sourceName, "Std_Tongue"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Tongue"))
                     return MaterialType.Tongue;
 
-                if (NameContainsKeywords(sourceName, "Std_Skin_Head"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Skin_Head"))
                     return MaterialType.Head;
 
-                if (NameContainsKeywords(sourceName, "Std_Skin_"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Skin_"))
                     return MaterialType.Skin;
 
-                if (NameContainsKeywords(sourceName, "Std_Nails"))
+                if (Util.NameContainsKeywords(sourceName, "Std_Nails"))
                     return MaterialType.Skin;
 
-                if (NameContainsKeywords(sourceName, "Eyelash"))
+                if (Util.NameContainsKeywords(sourceName, "Eyelash"))
                     return MaterialType.Eyelash;
 
                 // Detecting the hair is harder to do...

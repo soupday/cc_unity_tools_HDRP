@@ -446,7 +446,7 @@ namespace Reallusion.Import
         
         public BaseGeneration Generation
         { 
-            get 
+            get
             { 
                 if (generation == BaseGeneration.None)
                 {
@@ -479,6 +479,33 @@ namespace Reallusion.Import
         public void CheckGeneration()
         {
             BaseGeneration oldGen = generation;
+            string gen = "";
+
+            string generationPath = name + "/Object/" + name + "/Generation";
+            if (JsonData.PathExists(generationPath))
+            {
+                gen = JsonData.GetStringValue(generationPath);
+            }
+
+            generation = RL.GetCharacterGeneration(Fbx, gen);
+            CheckOverride();            
+
+            // new character detected, initialize settings
+            if (oldGen == BaseGeneration.None)
+            {
+                InitSettings();
+            }
+
+            if (generation != oldGen)
+            {
+                Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
+                Write();
+            }
+        }
+
+        public void CheckGenerationQuick()
+        {
+            BaseGeneration oldGen = generation;
             string gen = Util.GetJsonGenerationString(jsonFilepath);
             generation = RL.GetCharacterGeneration(Fbx, gen);
             CheckOverride();
@@ -496,6 +523,47 @@ namespace Reallusion.Import
                 if (generation == BaseGeneration.Unknown) UnknownRigType = RigOverride.Generic;
                 else UnknownRigType = RigOverride.Humanoid;
             }
+        }
+
+        public void InitSettings()
+        {
+            // if wrinkle map data present, enable wrinkle maps.
+            if (HasWrinkleMaps())
+            {
+                ShaderFlags |= ShaderFeatureFlags.WrinkleMaps;
+            }
+        }
+
+        public bool HasWrinkleMaps()
+        {
+            return AnyJsonMaterialPathExists("Wrinkle/Textures");            
+        }
+
+        public bool AnyJsonMaterialPathExists(string path)
+        {
+            QuickJSON meshJson = MeshJsonData;
+
+            foreach (MultiValue mvMesh in meshJson.values)
+            {
+                if (mvMesh.Type == MultiType.Object)
+                {
+                    QuickJSON objJson = mvMesh.ObjectValue;
+                    QuickJSON materialsJson = objJson.GetObjectAtPath("Materials");
+                    if (materialsJson != null)
+                    {
+                        foreach (MultiValue mvMat in materialsJson.values)
+                        {
+                            if (mvMat.Type == MultiType.Object)
+                            {
+                                QuickJSON matjson = mvMat.ObjectValue;
+                                if (matjson.PathExists(path)) return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         public void Release()
