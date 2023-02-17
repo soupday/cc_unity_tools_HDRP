@@ -137,17 +137,17 @@ namespace Reallusion.Import
             WindowManager.TakeScreenShot();
         }
 
-        /*
-        [MenuItem("Reallusion/Test/Bake Gradient", priority = 220)]
+#if SOUPDEV        
+
+        [MenuItem("Reallusion/Dev/Bake Gradient", priority = 220)]
         public static void DoTest()
         {
             CharacterInfo ci = ImporterWindow.Current.Character;
             ComputeBake baker = new ComputeBake(ci.Fbx, ci);
             Texture2D gradient = baker.BakeGradientMap("Assets" + Path.DirectorySeparatorChar + "Test", "Gradient");
         }
-        */
 
-        [MenuItem("Reallusion/Test/Channel Pack 1A", priority = 220)]
+        [MenuItem("Reallusion/Dev/Channel Pack 1A", priority = 220)]
         public static void DoSet1A()
         {            
             CharacterInfo ci = ImporterWindow.Current.Character;
@@ -189,7 +189,7 @@ namespace Reallusion.Import
                 512, "RL_WrinkleMask_Set1A");
         }
 
-        [MenuItem("Reallusion/Test/Channel Pack 1B", priority = 220)]
+        [MenuItem("Reallusion/Dev/Channel Pack 1B", priority = 220)]
         public static void DoSet1B()
         {
             CharacterInfo ci = ImporterWindow.Current.Character;
@@ -231,7 +231,7 @@ namespace Reallusion.Import
                 512, "RL_WrinkleMask_Set1B");
         }
 
-        [MenuItem("Reallusion/Test/Channel Pack 2", priority = 220)]
+        [MenuItem("Reallusion/Dev/Channel Pack 2", priority = 220)]
         public static void DoSet2()
         {
             CharacterInfo ci = ImporterWindow.Current.Character;
@@ -273,7 +273,7 @@ namespace Reallusion.Import
                 512, "RL_WrinkleMask_Set2");
         }
 
-        [MenuItem("Reallusion/Test/Channel Pack 3", priority = 220)]
+        [MenuItem("Reallusion/Dev/Channel Pack 3", priority = 220)]
         public static void DoSet3()
         {
             CharacterInfo ci = ImporterWindow.Current.Character;
@@ -315,7 +315,7 @@ namespace Reallusion.Import
                 512, "RL_WrinkleMask_Set3");
         }
 
-        [MenuItem("Reallusion/Test/Channel Pack 12", priority = 220)]
+        [MenuItem("Reallusion/Dev/Channel Pack 12", priority = 220)]
         public static void DoSet12()
         {
             CharacterInfo ci = ImporterWindow.Current.Character;
@@ -356,5 +356,6 @@ namespace Reallusion.Import
                 redMaskR, greenMaskR, blueMaskR, alphaMaskR,
                 512, "RL_WrinkleMask_Set12");
         }
+#endif
     }
 }
