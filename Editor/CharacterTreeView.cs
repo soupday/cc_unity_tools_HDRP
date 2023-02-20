@@ -29,7 +29,6 @@ namespace Reallusion.Import
         private string assetPath;
         public List<Object> objList;
         public List<int>[] linkedIndices;
-        public bool selectLinked = true;
         public IList<int> selectedIndices;
         private bool enableMultiPassMaterials;
 
@@ -151,7 +150,7 @@ namespace Reallusion.Import
 
         public void SelectLinked(int index)
         {            
-            if (selectLinked)
+            if (ImporterWindow.SELECT_LINKED)
             {
                 for (int i = 0; i < linkedIndices.Length; i++)
                 {
