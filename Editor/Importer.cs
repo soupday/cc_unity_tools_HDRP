@@ -1904,7 +1904,9 @@ namespace Reallusion.Import
                 mat.SetFloatIf("_DepthPrepass", 0.75f);                
                 mat.SetFloatIf("_AlphaPower", 1.25f);
                 mat.SetFloatIf("_SmoothnessPower", smoothnessPowerMod);
-            }            
+            }
+
+            Color diffuseColor = Color.white;
 
             if (matJson != null)
             {
@@ -1919,7 +1921,8 @@ namespace Reallusion.Import
                 mat.SetFloatIf("_VertexColorStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/VertexColorStrength"));
                 mat.SetFloatIf("_BaseColorStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/BaseColorMapStrength"));
                 mat.SetFloatIf("_DiffuseStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/Diffuse Strength"));
-                mat.SetColorIf("_DiffuseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
+                diffuseColor = Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color"));
+                mat.SetColorIf("_DiffuseColor", diffuseColor);
 
                 // Hair Specular Map Strength = Custom Shader/Variable/Hair Specular Map Strength
                 // == Overall specular multiplier
@@ -1956,7 +1959,7 @@ namespace Reallusion.Import
                     mat.SetFloatIf("_SpecularShiftMin", 
                         matJson.GetFloatValue("Custom Shader/Variable/BlackColor Reflection Offset Z"));
                     mat.SetFloatIf("_SpecularShiftMax",
-                        matJson.GetFloatValue("Custom Shader/Variable/WhiteColor Reflection Offset Z"));
+                        matJson.GetFloatValue("Custom Shader/Variable/WhiteColor Reflection Offset Z"));                    
                 }
                 else
                 {                    
@@ -1976,15 +1979,21 @@ namespace Reallusion.Import
                     {                        
                         mat.SetFloatIf("_SmoothnessMin", Util.CombineSpecularToSmoothness(specMapStrength * specStrength, smoothnessStrength));
                     }
-                }                
+                }
 
-                mat.SetColorIf("_RootColor", Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/RootColor")));
-                mat.SetColorIf("_EndColor", Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/TipColor")));
+                Color rootColor = Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/RootColor"));
+                Color tipColor = Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/TipColor"));
+                Color hairColor = diffuseColor * ((rootColor + tipColor) * 0.5f);
+                Color.RGBToHSV(hairColor, out float H, out float S, out float V);                
+                Color specTint = Color.HSVToRGB(H, S * 0.333f, 1f);
+                mat.SetColorIf("_RootColor", rootColor);
+                mat.SetColorIf("_EndColor", tipColor);
                 mat.SetFloatIf("_GlobalStrength", matJson.GetFloatValue("Custom Shader/Variable/UseRootTipColor"));
                 mat.SetFloatIf("_RootColorStrength", matJson.GetFloatValue("Custom Shader/Variable/RootColorStrength"));
                 mat.SetFloatIf("_EndColorStrength", matJson.GetFloatValue("Custom Shader/Variable/TipColorStrength"));
                 mat.SetFloatIf("_InvertRootMap", matJson.GetFloatValue("Custom Shader/Variable/InvertRootTip"));
-                
+                mat.SetColorIf("_SpecularTint", specTint);
+
                 if (matJson.GetFloatValue("Custom Shader/Variable/ActiveChangeHairColor") > 0f)
                 {
                     mat.EnableKeyword("BOOLEAN_ENABLECOLOR_ON");

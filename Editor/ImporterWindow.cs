@@ -922,8 +922,7 @@ namespace Reallusion.Import
             GUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
-            SELECT_LINKED = GUILayout.Toggle(SELECT_LINKED, "Select Linked");
-            characterTreeView.selectLinked = SELECT_LINKED;
+            SELECT_LINKED = GUILayout.Toggle(SELECT_LINKED, "Select Linked");            
             GUILayout.FlexibleSpace();
 
             GUILayout.EndHorizontal();
