@@ -1904,7 +1904,9 @@ namespace Reallusion.Import
                 mat.SetFloatIf("_DepthPrepass", 0.75f);                
                 mat.SetFloatIf("_AlphaPower", 1.25f);
                 mat.SetFloatIf("_SmoothnessPower", smoothnessPowerMod);
-            }            
+            }
+
+            Color diffuseColor = Color.white;
 
             if (matJson != null)
             {
@@ -1919,7 +1921,8 @@ namespace Reallusion.Import
                 mat.SetFloatIf("_VertexColorStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/VertexColorStrength"));
                 mat.SetFloatIf("_BaseColorStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/BaseColorMapStrength"));
                 mat.SetFloatIf("_DiffuseStrength", 1f * matJson.GetFloatValue("Custom Shader/Variable/Diffuse Strength"));
-                mat.SetColorIf("_DiffuseColor", Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color")));
+                diffuseColor = Util.LinearTosRGB(matJson.GetColorValue("Diffuse Color"));
+                mat.SetColorIf("_DiffuseColor", diffuseColor);
 
                 // Hair Specular Map Strength = Custom Shader/Variable/Hair Specular Map Strength
                 // == Overall specular multiplier
@@ -1980,7 +1983,7 @@ namespace Reallusion.Import
 
                 Color rootColor = Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/RootColor"));
                 Color tipColor = Util.LinearTosRGB(matJson.GetColorValue("Custom Shader/Variable/TipColor"));
-                Color hairColor = (rootColor + tipColor) * 0.5f;
+                Color hairColor = diffuseColor * ((rootColor + tipColor) * 0.5f);
                 Color.RGBToHSV(hairColor, out float H, out float S, out float V);                
                 Color specTint = Color.HSVToRGB(H, S * 0.333f, 1f);
                 mat.SetColorIf("_RootColor", rootColor);
