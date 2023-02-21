@@ -525,7 +525,7 @@ namespace Reallusion.Import
         {
             Type dynamicBoneType = GetTypeInAssemblies("DynamicBone");
 
-            if (!addHairSpringBones)
+            if (!addHairSpringBones && dynamicBoneType != null)
             {
                 var existingDynamicBoneComponent = prefabInstance.GetComponent(dynamicBoneType);
                 if (existingDynamicBoneComponent != null)
@@ -534,6 +534,8 @@ namespace Reallusion.Import
                 }
                 return;
             }
+
+            if (!addHairSpringBones) return;
 
             if (dynamicBoneType == null)
             {
