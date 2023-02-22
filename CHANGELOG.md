@@ -1,6 +1,17 @@
 Changelog
 =========
 
+### v 1.4.4
+- Full wrinkle map specification implemented.
+    - Wrinkle map manager controls script on body mesh.
+    - Added baking of wrinkle map system.
+- Spring Bone (Dynamic Bone) Hair physics, currently set up from Blender pipeline exports.
+- Import blend shape normals settings fixes.
+- Gamebase and PBR, SSS and smoothness adjustments.
+- Hair specular tint based on root + tip color.
+- Fix to bake not working with 2 pass hair materials.
+- Color space correction directives for baking.
+
 ### v 1.4.3
 - Tries to untangle instalod duplication suffixes on accessories.
     - inc. Script error fix that was blocking build materials when instalod meshes were not found in Json data.
