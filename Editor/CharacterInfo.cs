@@ -28,7 +28,7 @@ namespace Reallusion.Import
         public enum ProcessingType { None, Basic, HighQuality }
         public enum EyeQuality { None, Basic, Parallax, Refractive }
         public enum HairQuality { None, Default, TwoPass, Coverage }
-        public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4 } //, SpringBones = 8 }
+        public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4, SpringBoneHair = 8, WrinkleMaps = 16 }
 
         public enum RigOverride { None = 0, Generic, Humanoid }
 
@@ -153,6 +153,8 @@ namespace Reallusion.Import
         }
 
         public ShaderFeatureFlags ShaderFlags { get; set; } = ShaderFeatureFlags.NoFeatures;
+
+        public bool FeatureUseWrinkleMaps => (ShaderFlags & ShaderFeatureFlags.WrinkleMaps) > 0;
         public bool FeatureUseTessellation => (ShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool FeatureUseClothPhysics => (ShaderFlags & ShaderFeatureFlags.ClothPhysics) > 0;
         public bool FeatureUseHairPhysics => (ShaderFlags & ShaderFeatureFlags.HairPhysics) > 0;
@@ -179,6 +181,7 @@ namespace Reallusion.Import
         private bool builtTessellation = false;
 
         public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoFeatures;
+        public bool BuiltFeatureWrinkleMaps => (BuiltShaderFlags & ShaderFeatureFlags.WrinkleMaps) > 0;
         public bool BuiltFeatureTessellation => (BuiltShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool BuiltBasicMaterials => builtLogType == ProcessingType.Basic;
         public bool BuiltHQMaterials => builtLogType == ProcessingType.HighQuality;
@@ -193,6 +196,10 @@ namespace Reallusion.Import
 
         public MaterialQuality BuiltQuality => BuiltHQMaterials ? MaterialQuality.High : MaterialQuality.Default;
         public bool Unprocessed => builtLogType == ProcessingType.None;
+
+        public string CharacterName => name;
+
+        public bool IsBlenderProject { get { return JsonData.GetBoolValue(CharacterName + "/Blender_Project"); } }
 
         private BaseGeneration generation = BaseGeneration.None;
         private GameObject fbx;
@@ -439,7 +446,7 @@ namespace Reallusion.Import
         
         public BaseGeneration Generation
         { 
-            get 
+            get
             { 
                 if (generation == BaseGeneration.None)
                 {
@@ -472,6 +479,33 @@ namespace Reallusion.Import
         public void CheckGeneration()
         {
             BaseGeneration oldGen = generation;
+            string gen = "";
+
+            string generationPath = name + "/Object/" + name + "/Generation";
+            if (JsonData.PathExists(generationPath))
+            {
+                gen = JsonData.GetStringValue(generationPath);
+            }
+
+            generation = RL.GetCharacterGeneration(Fbx, gen);
+            CheckOverride();            
+
+            // new character detected, initialize settings
+            if (oldGen == BaseGeneration.None)
+            {
+                InitSettings();
+            }
+
+            if (generation != oldGen)
+            {
+                Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
+                Write();
+            }
+        }
+
+        public void CheckGenerationQuick()
+        {
+            BaseGeneration oldGen = generation;
             string gen = Util.GetJsonGenerationString(jsonFilepath);
             generation = RL.GetCharacterGeneration(Fbx, gen);
             CheckOverride();
@@ -489,6 +523,47 @@ namespace Reallusion.Import
                 if (generation == BaseGeneration.Unknown) UnknownRigType = RigOverride.Generic;
                 else UnknownRigType = RigOverride.Humanoid;
             }
+        }
+
+        public void InitSettings()
+        {
+            // if wrinkle map data present, enable wrinkle maps.
+            if (HasWrinkleMaps())
+            {
+                ShaderFlags |= ShaderFeatureFlags.WrinkleMaps;
+            }
+        }
+
+        public bool HasWrinkleMaps()
+        {
+            return AnyJsonMaterialPathExists("Wrinkle/Textures");            
+        }
+
+        public bool AnyJsonMaterialPathExists(string path)
+        {
+            QuickJSON meshJson = MeshJsonData;
+
+            foreach (MultiValue mvMesh in meshJson.values)
+            {
+                if (mvMesh.Type == MultiType.Object)
+                {
+                    QuickJSON objJson = mvMesh.ObjectValue;
+                    QuickJSON materialsJson = objJson.GetObjectAtPath("Materials");
+                    if (materialsJson != null)
+                    {
+                        foreach (MultiValue mvMat in materialsJson.values)
+                        {
+                            if (mvMat.Type == MultiType.Object)
+                            {
+                                QuickJSON matjson = mvMat.ObjectValue;
+                                if (matjson.PathExists(path)) return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         public void Release()

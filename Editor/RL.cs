@@ -117,21 +117,32 @@ namespace Reallusion.Import
             return BaseGeneration.Unknown;
         }
 
-        public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, string characterName, BaseGeneration generation, CharacterInfo.RigOverride rigOverride, QuickJSON jsonData)
+        public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, CharacterInfo info)
         {            
-            // import normals to avoid mesh smoothing issues
-            importer.importNormals = ModelImporterNormals.Import;            
-            importer.importBlendShapes = true;
+            // import normals to avoid mesh smoothing issues            
             // importing blend shape normals gives disasterously bad results, they need to be recalculated,
             // ideally using the legacy blend shape normals option, but this has not been exposed to scripts so...
-            importer.importBlendShapeNormals = ModelImporterNormals.Calculate;
-            // when recalculating blend shape normals, recalculate using only area weights,
-            // this produces the best results on CC3/4 body meshes
-            importer.normalCalculationMode = ModelImporterNormalCalculationMode.AreaWeighted;            
-            // prefer smoothing groups (though usually there aren't any)
-            importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.PreferSmoothingGroups;
-            // default angle of 60 degrees
-            importer.normalSmoothingAngle = 60f;
+            int importSet = 0;
+            if (info.IsBlenderProject) importSet = 1;
+            switch(importSet)
+            {
+                case 0: // From CC3/4
+                    importer.importNormals = ModelImporterNormals.Calculate;
+                    importer.importBlendShapes = true;
+                    importer.importBlendShapeNormals = ModelImporterNormals.Calculate;                    
+                    importer.normalCalculationMode = ModelImporterNormalCalculationMode.AreaAndAngleWeighted;                    
+                    importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.FromAngle;
+                    importer.normalSmoothingAngle = 120f;
+                    break;
+                case 1: // From Blender
+                    importer.importNormals = ModelImporterNormals.Import;
+                    importer.importBlendShapes = true;
+                    importer.importBlendShapeNormals = ModelImporterNormals.Import;
+                    importer.normalCalculationMode = ModelImporterNormalCalculationMode.AreaAndAngleWeighted;                    
+                    importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.PreferSmoothingGroups;
+                    importer.normalSmoothingAngle = 120f;
+                    break;                
+            }
             importer.importTangents = ModelImporterTangents.CalculateMikk;
             importer.generateAnimations = ModelImporterGenerateAnimations.GenerateAnimations;
             importer.animationType = ModelImporterAnimationType.Human;
@@ -139,9 +150,9 @@ namespace Reallusion.Import
 
             importer.autoGenerateAvatarMappingIfUnspecified = true;
             
-            if (generation == BaseGeneration.Unknown)
+            if (info.Generation == BaseGeneration.Unknown)
             {
-                switch (rigOverride)
+                switch (info.UnknownRigType)
                 {
                     case CharacterInfo.RigOverride.None:
                         importer.animationType = ModelImporterAnimationType.None;
@@ -166,10 +177,10 @@ namespace Reallusion.Import
             List<HumanBone> boneList = new List<HumanBone>();
 
             #region HumanBoneDescription
-            if (generation == BaseGeneration.G3 || 
-                generation == BaseGeneration.G3Plus || 
-                generation == BaseGeneration.ActorCore ||
-                generation == BaseGeneration.ActorBuild)
+            if (info.Generation == BaseGeneration.G3 ||
+                info.Generation == BaseGeneration.G3Plus ||
+                info.Generation == BaseGeneration.ActorCore ||
+                info.Generation == BaseGeneration.ActorBuild)
             {
                 boneList = new List<HumanBone> {                 
                         Bone("Chest", "CC_Base_Spine01"),
@@ -229,7 +240,7 @@ namespace Reallusion.Import
                         Bone("UpperChest", "CC_Base_Spine02"),
                     };
             }
-            else if (generation == BaseGeneration.G1)
+            else if (info.Generation == BaseGeneration.G1)
             {
                 boneList = new List<HumanBone> {
                         Bone("Chest", "CC_Base_Spine01"),
@@ -289,7 +300,7 @@ namespace Reallusion.Import
                         Bone("UpperChest", "CC_Base_Spine02"),
                     };
             }
-            else if (generation == BaseGeneration.GameBase)
+            else if (info.Generation == BaseGeneration.GameBase)
             {
                 boneList = new List<HumanBone> {
                         Bone("Chest", "spine_02"),
@@ -379,7 +390,7 @@ namespace Reallusion.Import
             human.feetSpacing = 0.0f;
             human.hasTranslationDoF = true;            
 
-            if (jsonData != null)
+            if (info.JsonData != null)
             {
                 Transform[] transforms = fbx.GetComponentsInChildren<Transform>();
                 SkeletonBone[] bones = new SkeletonBone[transforms.Length];

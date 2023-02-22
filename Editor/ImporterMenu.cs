@@ -18,6 +18,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using System.IO;
 
 namespace Reallusion.Import
 {
@@ -136,14 +137,225 @@ namespace Reallusion.Import
             WindowManager.TakeScreenShot();
         }
 
-        /*
-        [MenuItem("Reallusion/Test/Bake Gradient", priority = 220)]
+#if SOUPDEV        
+
+        [MenuItem("Reallusion/Dev/Bake Gradient", priority = 220)]
         public static void DoTest()
         {
             CharacterInfo ci = ImporterWindow.Current.Character;
             ComputeBake baker = new ComputeBake(ci.Fbx, ci);
             Texture2D gradient = baker.BakeGradientMap("Assets" + Path.DirectorySeparatorChar + "Test", "Gradient");
         }
-        */
+
+        [MenuItem("Reallusion/Dev/Channel Pack 1A", priority = 220)]
+        public static void DoSet1A()
+        {            
+            CharacterInfo ci = ImporterWindow.Current.Character;
+            ComputeBake baker = new ComputeBake(ci.Fbx, ci);
+            string[] folders = new string[] { "Assets", "Packages" };
+
+            // Wrinkle Mask Set 1A:
+            //
+            // R: head_wm1_normal_head_wm1_blink_L / R              head_wm1_msk_01: R + G
+            // G: head_wm1_normal_head_wm1_browRaiseInner_L / R     head_wm1_msk_01: B + A
+            // B: head_wm1_normal_head_wm1_purse_DL / R             head_wm1_msk_03: G + B
+            // A: head_wm1_normal_head_wm1_purse_UL / R             head_wm1_msk_03: A + head_wm1_msk_04:R
+
+            Texture2D redChannelL = Util.FindTexture(folders, "head_wm1_msk_01");
+            Texture2D redChannelR = Util.FindTexture(folders, "head_wm1_msk_01");
+            Vector4 redMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 redMaskR = new Vector4(0, 1, 0, 0);
+
+            Texture2D greenChannelL = Util.FindTexture(folders, "head_wm1_msk_01");
+            Texture2D greenChannelR = Util.FindTexture(folders, "head_wm1_msk_01");
+            Vector4 greenMaskL = new Vector4(0, 0, 1, 0);
+            Vector4 greenMaskR = new Vector4(0, 0, 0, 1);
+
+            Texture2D blueChannelL = Util.FindTexture(folders, "head_wm1_msk_03");
+            Texture2D blueChannelR = Util.FindTexture(folders, "head_wm1_msk_03");
+            Vector4 blueMaskL = new Vector4(0, 1, 0, 0);
+            Vector4 blueMaskR = new Vector4(0, 0, 1, 0);
+
+            Texture2D alphaChannelL = Util.FindTexture(folders, "head_wm1_msk_03");
+            Texture2D alphaChannelR = Util.FindTexture(folders, "head_wm1_msk_04");
+            Vector4 alphaMaskL = new Vector4(0, 0, 0, 1);
+            Vector4 alphaMaskR = new Vector4(1, 0, 0, 0);
+
+            Texture2D pack = baker.BakeChannelPackSymmetryLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannelL, greenChannelL, blueChannelL, alphaChannelL,
+                redChannelR, greenChannelR, blueChannelR, alphaChannelR,
+                redMaskL, greenMaskL, blueMaskL, alphaMaskL,
+                redMaskR, greenMaskR, blueMaskR, alphaMaskR, 
+                512, "RL_WrinkleMask_Set1A");
+        }
+
+        [MenuItem("Reallusion/Dev/Channel Pack 1B", priority = 220)]
+        public static void DoSet1B()
+        {
+            CharacterInfo ci = ImporterWindow.Current.Character;
+            ComputeBake baker = new ComputeBake(ci.Fbx, ci);
+            string[] folders = new string[] { "Assets", "Packages" };
+
+            // Wrinkle Mask Set 1B:
+            // 
+            // R: head_wm1_normal_head_wm1_browRaiseOuter_L / R     head_wm1_msk_02: R + G
+            // G: head_wm1_normal_head_wm1_chinRaise_L / R          head_wm1_msk_02: B + A
+            // B: head_wm1_normal_head_wm1_jawOpen                  head_wm1_msk_03:R
+            // A: head_wm1_normal_head_wm1_squintInner_L / R        head_wm1_msk_04: G + B
+
+            Texture2D redChannelL = Util.FindTexture(folders, "head_wm1_msk_02");
+            Texture2D redChannelR = Util.FindTexture(folders, "head_wm1_msk_02");
+            Vector4 redMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 redMaskR = new Vector4(0, 1, 0, 0);
+
+            Texture2D greenChannelL = Util.FindTexture(folders, "head_wm1_msk_02");
+            Texture2D greenChannelR = Util.FindTexture(folders, "head_wm1_msk_02");
+            Vector4 greenMaskL = new Vector4(0, 0, 1, 0);
+            Vector4 greenMaskR = new Vector4(0, 0, 0, 1);
+
+            Texture2D blueChannelL = Util.FindTexture(folders, "head_wm1_msk_03");
+            Texture2D blueChannelR = Util.FindTexture(folders, "head_wm1_msk_03");
+            Vector4 blueMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 blueMaskR = new Vector4(1, 0, 0, 0);
+
+            Texture2D alphaChannelL = Util.FindTexture(folders, "head_wm1_msk_04");
+            Texture2D alphaChannelR = Util.FindTexture(folders, "head_wm1_msk_04");
+            Vector4 alphaMaskL = new Vector4(0, 1, 0, 0);
+            Vector4 alphaMaskR = new Vector4(0, 0, 1, 0);
+
+            Texture2D pack = baker.BakeChannelPackSymmetryLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannelL, greenChannelL, blueChannelL, alphaChannelL,
+                redChannelR, greenChannelR, blueChannelR, alphaChannelR,
+                redMaskL, greenMaskL, blueMaskL, alphaMaskL,
+                redMaskR, greenMaskR, blueMaskR, alphaMaskR,
+                512, "RL_WrinkleMask_Set1B");
+        }
+
+        [MenuItem("Reallusion/Dev/Channel Pack 2", priority = 220)]
+        public static void DoSet2()
+        {
+            CharacterInfo ci = ImporterWindow.Current.Character;
+            ComputeBake baker = new ComputeBake(ci.Fbx, ci);
+            string[] folders = new string[] { "Assets", "Packages" };
+
+            // Wrinkle Mask Set 2:
+
+            // R: head_wm2_normal_head_wm2_browsDown_L / R           head_wm2_msk_01: R + G
+            // G: head_wm2_normal_head_wm2_browsLateral_L / R        head_wm2_msk_01: B + A
+            // B: head_wm2_normal_head_wm2_mouthStretch_L / R        head_wm2_msk_02: R + G
+            // A: head_wm2_normal_head_wm2_neckStretch_L / R         head_wm2_msk_02: B + A
+
+            Texture2D redChannelL = Util.FindTexture(folders, "head_wm2_msk_01");
+            Texture2D redChannelR = Util.FindTexture(folders, "head_wm2_msk_01");
+            Vector4 redMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 redMaskR = new Vector4(0, 1, 0, 0);
+
+            Texture2D greenChannelL = Util.FindTexture(folders, "head_wm2_msk_01");
+            Texture2D greenChannelR = Util.FindTexture(folders, "head_wm2_msk_01");
+            Vector4 greenMaskL = new Vector4(0, 0, 1, 0);
+            Vector4 greenMaskR = new Vector4(0, 0, 0, 1);
+
+            Texture2D blueChannelL = Util.FindTexture(folders, "head_wm2_msk_02");
+            Texture2D blueChannelR = Util.FindTexture(folders, "head_wm2_msk_02");
+            Vector4 blueMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 blueMaskR = new Vector4(0, 1, 0, 0);
+
+            Texture2D alphaChannelL = Util.FindTexture(folders, "head_wm2_msk_02");
+            Texture2D alphaChannelR = Util.FindTexture(folders, "head_wm2_msk_02");
+            Vector4 alphaMaskL = new Vector4(0, 0, 1, 0);
+            Vector4 alphaMaskR = new Vector4(0, 0, 0, 1);
+
+            Texture2D pack = baker.BakeChannelPackSymmetryLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannelL, greenChannelL, blueChannelL, alphaChannelL,
+                redChannelR, greenChannelR, blueChannelR, alphaChannelR,
+                redMaskL, greenMaskL, blueMaskL, alphaMaskL,
+                redMaskR, greenMaskR, blueMaskR, alphaMaskR,
+                512, "RL_WrinkleMask_Set2");
+        }
+
+        [MenuItem("Reallusion/Dev/Channel Pack 3", priority = 220)]
+        public static void DoSet3()
+        {
+            CharacterInfo ci = ImporterWindow.Current.Character;
+            ComputeBake baker = new ComputeBake(ci.Fbx, ci);
+            string[] folders = new string[] { "Assets", "Packages" };
+
+            // Wrinkle Mask Set 3:
+
+            // R: head_wm3_normal_head_wm3_cheekRaiseInner_L / R    head_wm3_msk_01: R + G
+            // G: head_wm3_normal_head_wm3_cheekRaiseOuter_L / R    head_wm3_msk_01: B + A
+            // B: head_wm3_normal_head_wm3_cheekRaiseUpper_L / R    head_wm3_msk_02: R + G
+            // A: head_wm3_normal_head_wm3_smile_L / R              head_wm3_msk_02: B + A
+
+            Texture2D redChannelL = Util.FindTexture(folders, "head_wm3_msk_01");
+            Texture2D redChannelR = Util.FindTexture(folders, "head_wm3_msk_01");
+            Vector4 redMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 redMaskR = new Vector4(0, 1, 0, 0);
+
+            Texture2D greenChannelL = Util.FindTexture(folders, "head_wm3_msk_01");
+            Texture2D greenChannelR = Util.FindTexture(folders, "head_wm3_msk_01");
+            Vector4 greenMaskL = new Vector4(0, 0, 1, 0);
+            Vector4 greenMaskR = new Vector4(0, 0, 0, 1);
+
+            Texture2D blueChannelL = Util.FindTexture(folders, "head_wm3_msk_02");
+            Texture2D blueChannelR = Util.FindTexture(folders, "head_wm3_msk_02");
+            Vector4 blueMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 blueMaskR = new Vector4(0, 1, 0, 0);
+
+            Texture2D alphaChannelL = Util.FindTexture(folders, "head_wm3_msk_02");
+            Texture2D alphaChannelR = Util.FindTexture(folders, "head_wm3_msk_02");
+            Vector4 alphaMaskL = new Vector4(0, 0, 1, 0);
+            Vector4 alphaMaskR = new Vector4(0, 0, 0, 1);
+
+            Texture2D pack = baker.BakeChannelPackSymmetryLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannelL, greenChannelL, blueChannelL, alphaChannelL,
+                redChannelR, greenChannelR, blueChannelR, alphaChannelR,
+                redMaskL, greenMaskL, blueMaskL, alphaMaskL,
+                redMaskR, greenMaskR, blueMaskR, alphaMaskR,
+                512, "RL_WrinkleMask_Set3");
+        }
+
+        [MenuItem("Reallusion/Dev/Channel Pack 12", priority = 220)]
+        public static void DoSet12()
+        {
+            CharacterInfo ci = ImporterWindow.Current.Character;
+            ComputeBake baker = new ComputeBake(ci.Fbx, ci);
+            string[] folders = new string[] { "Assets", "Packages" };
+
+            // Wrinkle Mask Set 12:
+
+            // R: head_wm3_normal_head_wm13_lips_DL / R          head_wm13_msk_01: R + G
+            // G: head_wm3_normal_head_wm13_lips_UL / R          head_wm13_msk_01: B + A
+            // B: head_wm2_normal_head_wm2_noseWrinkler_L / R    head_wm2_msk_03: R + G
+            // A: head_wm2_normal_head_wm2_noseCrease_L / R      head_wm2_msk_03: B + A
+
+            Texture2D redChannelL = Util.FindTexture(folders, "head_wm13_msk_01");
+            Texture2D redChannelR = Util.FindTexture(folders, "head_wm13_msk_01");
+            Vector4 redMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 redMaskR = new Vector4(0, 1, 0, 0);
+
+            Texture2D greenChannelL = Util.FindTexture(folders, "head_wm13_msk_01");
+            Texture2D greenChannelR = Util.FindTexture(folders, "head_wm13_msk_01");
+            Vector4 greenMaskL = new Vector4(0, 0, 1, 0);
+            Vector4 greenMaskR = new Vector4(0, 0, 0, 1);
+
+            Texture2D blueChannelL = Util.FindTexture(folders, "head_wm2_msk_03");
+            Texture2D blueChannelR = Util.FindTexture(folders, "head_wm2_msk_03");
+            Vector4 blueMaskL = new Vector4(1, 0, 0, 0);
+            Vector4 blueMaskR = new Vector4(0, 1, 0, 0);
+
+            Texture2D alphaChannelL = Util.FindTexture(folders, "head_wm2_msk_03");
+            Texture2D alphaChannelR = Util.FindTexture(folders, "head_wm2_msk_03");
+            Vector4 alphaMaskL = new Vector4(0, 0, 1, 0);
+            Vector4 alphaMaskR = new Vector4(0, 0, 0, 1);
+
+            Texture2D pack = baker.BakeChannelPackSymmetryLinear("Assets" + Path.DirectorySeparatorChar + "Test",
+                redChannelL, greenChannelL, blueChannelL, alphaChannelL,
+                redChannelR, greenChannelR, blueChannelR, alphaChannelR,
+                redMaskL, greenMaskL, blueMaskL, alphaMaskL,
+                redMaskR, greenMaskR, blueMaskR, alphaMaskR,
+                512, "RL_WrinkleMask_Set12");
+        }
+#endif
     }
 }

@@ -34,14 +34,14 @@ namespace Reallusion.Import
     public enum MaterialType
     {
         None, Skin, Head, Eye, Cornea, EyeOcclusion, Tearline, Hair, Scalp,
-        Eyelash, Teeth, Tongue, DefaultOpaque, DefaultAlpha, SSS
+        Eyelash, Teeth, Tongue, DefaultOpaque, DefaultAlpha, BlendAlpha, SSS
     }    
 
     public enum MaterialQuality { None, Default, High, Baked }
 
     public static class Pipeline
     {
-        public const string VERSION = "1.4.3";
+        public const string VERSION = "1.4.4";
 
 #if HDRP_10_5_0_OR_NEWER
         // version
@@ -63,6 +63,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_TEETH = "RL_TeethShader_HDRP";
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_HDRP";
         public const string SHADER_HQ_ALPHACLIP = "HDRP/Lit";
+        public const string SHADER_HQ_ALPHABLEND = "HDRP/Lit";
         public const string SHADER_HQ_OPAQUE = "HDRP/Lit";
         public const string SHADER_HQ_SSS = "HDRP/Lit";
         // eye types
@@ -89,6 +90,7 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_HDRP";
         public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_HDRP";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
+        public const string MATERIAL_HQ_ALPHABLEND = "RL_Template_Default_AlphaBlend_HDRP";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_HQ_SSS = "RL_Template_Default_SSS_HDRP";
         // variants
@@ -100,6 +102,8 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_HAIR_1ST_PASS = "RL_Template_HQ_Hair_1st_Pass_HDRP";
         public const string MATERIAL_HQ_HAIR_2ND_PASS = "RL_Template_HQ_Hair_2nd_Pass_HDRP";
         public const string MATERIAL_HQ_HAIR_COVERAGE = "RL_Template_HQ_Hair_HDRP";
+        // wrinkle map
+        public const string MATERIAL_HQ_HEAD_WRINKLE = "RL_Template_HQ_HeadWrinkle_HDRP";
 
         // Default Materials
         //
@@ -115,8 +119,11 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_TEETH = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_TONGUE = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_HDRP";
+        public const string MATERIAL_DEFAULT_ALPHABLEND = "RL_Template_Default_AlphaBlend_HDRP";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_HDRP";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_HDRP";
+        // for gamebase single material or actor core...
+        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_HDRP";
 
         // Baked Materials
         // Note: Non custom materials must bake to HDRP default shaders
@@ -134,6 +141,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_TEETH = "RL_Template_Baked_Skin_HDRP";
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_HDRP";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
+        public const string MATERIAL_BAKED_ALPHABLEND = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
         public const string MATERIAL_BAKED_SSS = "";
         // variants (that differ from the defaults above)
@@ -148,9 +156,9 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HAIR_1ST_PASS = "RL_Template_Baked_Hair_1st_Pass_HDRP";
         public const string MATERIAL_BAKED_HAIR_2ND_PASS = "RL_Template_Baked_Hair_2nd_Pass_HDRP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS = "RL_Template_Baked_HairCustom_1st_Pass_HDRP";
-        public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_HDRP";
-        // for gamebase single material or actor core...
-        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_HDRP";
+        public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_HDRP";        
+        // wrinkle map
+        public const string MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM = "RL_Template_Baked_HeadWrinkleCustom_HDRP";
 #elif URP_10_5_0_OR_NEWER
         // version
         public const string FULL_VERSION = "URP " + VERSION;
@@ -171,6 +179,7 @@ namespace Reallusion.Import
         public const string SHADER_HQ_TEETH = "RL_TeethShader_URP";
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_URP";
         public const string SHADER_HQ_ALPHACLIP = "Universal Render Pipeline/Lit";
+        public const string SHADER_HQ_ALPHABLEND = "Universal Render Pipeline/Lit";
         public const string SHADER_HQ_OPAQUE = "Universal Render Pipeline/Lit";
         public const string SHADER_HQ_SSS = "LitSSS";
         // eye types
@@ -197,6 +206,7 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_URP";
         public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_URP";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_URP";
+        public const string MATERIAL_HQ_ALPHABLEND = "RL_Template_Default_AlphaBlend_URP";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_HQ_SSS = "RL_Template_Default_SSS_URP";
         // variants
@@ -208,6 +218,8 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_HAIR_1ST_PASS = "RL_Template_HQ_Hair_1st_Pass_URP";
         public const string MATERIAL_HQ_HAIR_2ND_PASS = "RL_Template_HQ_Hair_2nd_Pass_URP";
         public const string MATERIAL_HQ_HAIR_COVERAGE = "RL_Template_HQ_Hair_Coverage_URP";
+        // wrinkle map
+        public const string MATERIAL_HQ_HEAD_WRINKLE = "RL_Template_HQ_HeadWrinkle_URP";
 
         // Default Materials
         //
@@ -223,8 +235,11 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_TEETH = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_DEFAULT_TONGUE = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_URP";
+        public const string MATERIAL_DEFAULT_ALPHABLEND = "RL_Template_Default_AlphaBlend_URP";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_URP";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_URP";
+        // for gamebase single material or actor core...
+        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_URP";
 
         // Baked Materials
         // Note: Non custom materials must bake to HDRP default shaders
@@ -242,6 +257,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_TEETH = "RL_Template_Baked_Skin_URP";
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_URP";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
+        public const string MATERIAL_BAKED_ALPHABLEND = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
         public const string MATERIAL_BAKED_SSS = "RL_Template_Baked_SSS_URP";
         // variants (that differ from the defaults above)
@@ -257,8 +273,8 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HAIR_2ND_PASS = "RL_Template_Baked_Hair_2nd_Pass_URP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS = "RL_Template_Baked_HairCustom_1st_Pass_URP";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_URP";
-        // for gamebase single material or actor core...
-        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_URP";
+        // wrinkle map
+        public const string MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM = "RL_Template_Baked_HeadWrinkleCustom_URP";
 #else
         // version
         public const string FULL_VERSION = "3D " + VERSION;
@@ -274,12 +290,13 @@ namespace Reallusion.Import
         public const string SHADER_HQ_EYE_OCCLUSION = "RL_EyeOcclusionShader_3D";
         public const string SHADER_HQ_TEARLINE = "RL_TearlineShader_3D";
         public const string SHADER_HQ_HAIR = "RL_HairShader_Clipped_3D";
-        public const string SHADER_HQ_SCALPBASE = "Universal Render Pipeline/Lit";
-        public const string SHADER_HQ_EYELASH = "Universal Render Pipeline/Lit";
+        public const string SHADER_HQ_SCALPBASE = "Standard";
+        public const string SHADER_HQ_EYELASH = "Standard";
         public const string SHADER_HQ_TEETH = "RL_TeethShader_3D";
         public const string SHADER_HQ_TONGUE = "RL_TongueShader_3D";
-        public const string SHADER_HQ_ALPHACLIP = "Universal Render Pipeline/Lit";
-        public const string SHADER_HQ_OPAQUE = "Universal Render Pipeline/Lit";
+        public const string SHADER_HQ_ALPHACLIP = "Standard";
+        public const string SHADER_HQ_ALPHABLEND = "Standard";
+        public const string SHADER_HQ_OPAQUE = "Standard";
         public const string SHADER_HQ_SSS = "LitSSS";
         // eye types
         public const string SHADER_HQ_CORNEA_PARALLAX = "RL_CorneaShaderParallax_3D";
@@ -305,6 +322,7 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_TEETH = "RL_Template_HQ_Teeth_3D";
         public const string MATERIAL_HQ_TONGUE = "RL_Template_HQ_Tongue_3D";
         public const string MATERIAL_HQ_ALPHACLIP = "RL_Template_Default_AlphaClip_3D";
+        public const string MATERIAL_HQ_ALPHABLEND = "RL_Template_Default_AlphaBlend_3D";
         public const string MATERIAL_HQ_OPAQUE = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_HQ_SSS = "RL_Template_Default_SSS_3D";
         // variants
@@ -316,6 +334,8 @@ namespace Reallusion.Import
         public const string MATERIAL_HQ_HAIR_1ST_PASS = "RL_Template_HQ_Hair_1st_Pass_3D";
         public const string MATERIAL_HQ_HAIR_2ND_PASS = "RL_Template_HQ_Hair_2nd_Pass_3D";
         public const string MATERIAL_HQ_HAIR_COVERAGE = "RL_Template_HQ_Hair_Coverage_3D";
+        // wrinkle map
+        public const string MATERIAL_HQ_HEAD_WRINKLE = "RL_Template_HQ_HeadWrinkle_3D";
 
         // Default Materials
         //
@@ -331,9 +351,12 @@ namespace Reallusion.Import
         public const string MATERIAL_DEFAULT_TEETH = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_DEFAULT_TONGUE = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_DEFAULT_ALPHACLIP = "RL_Template_Default_AlphaClip_3D";
+        public const string MATERIAL_DEFAULT_ALPHABLEND = "RL_Template_Default_AlphaBlend_3D";
         public const string MATERIAL_DEFAULT_OPAQUE = "RL_Template_Default_Opaque_3D";
         public const string MATERIAL_DEFAULT_SSS = "RL_Template_Default_SSS_3D";
-
+        // for gamebase single material or actor core...
+        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_3D";
+        
         // Baked Materials
         // Note: Non custom materials must bake to HDRP default shaders
         //       Only "Custom" materials have custom shaders, or have special settings like refraction.
@@ -350,6 +373,7 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_TEETH = "RL_Template_Baked_Skin_3D";
         public const string MATERIAL_BAKED_TONGUE = "RL_Template_Baked_Skin_3D";
         public const string MATERIAL_BAKED_ALPHACLIP = "";
+        public const string MATERIAL_BAKED_ALPHABLEND = "";
         public const string MATERIAL_BAKED_OPAQUE = "";
         public const string MATERIAL_BAKED_SSS = "";
         // variants (that differ from the defaults above)
@@ -365,8 +389,8 @@ namespace Reallusion.Import
         public const string MATERIAL_BAKED_HAIR_2ND_PASS = "RL_Template_Baked_Hair_2nd_Pass_3D";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_1ST_PASS = "RL_Template_Baked_HairCustom_1st_Pass_3D";
         public const string MATERIAL_BAKED_HAIR_CUSTOM_2ND_PASS = "RL_Template_Baked_HairCustom_2nd_Pass_3D";
-        // for gamebase single material or actor core...
-        public const string MATERIAL_DEFAULT_SINGLE_MATERIAL = "RL_Template_Default_SingleMaterial_3D";
+        // wrinkle map
+        public const string MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM = "RL_Template_Baked_HeadWrinkleCustom_3D";       
 #endif
 
         private static Dictionary<MaterialType, string> DICT_SHADERS = new Dictionary<MaterialType, string>
@@ -383,6 +407,7 @@ namespace Reallusion.Import
             { MaterialType.Teeth, SHADER_HQ_TEETH },
             { MaterialType.Tongue, SHADER_HQ_TONGUE },
             { MaterialType.DefaultAlpha, SHADER_HQ_ALPHACLIP },
+            { MaterialType.BlendAlpha, SHADER_HQ_ALPHABLEND },
             { MaterialType.DefaultOpaque, SHADER_HQ_OPAQUE },
             { MaterialType.SSS, SHADER_HQ_SSS },
         };
@@ -401,6 +426,7 @@ namespace Reallusion.Import
             { MaterialType.Teeth, MATERIAL_DEFAULT_TEETH },
             { MaterialType.Tongue, MATERIAL_DEFAULT_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_DEFAULT_ALPHACLIP },
+            { MaterialType.BlendAlpha, MATERIAL_DEFAULT_ALPHABLEND },
             { MaterialType.DefaultOpaque, MATERIAL_DEFAULT_OPAQUE },
             { MaterialType.SSS, MATERIAL_DEFAULT_SSS },
         };
@@ -419,6 +445,7 @@ namespace Reallusion.Import
             { MaterialType.Teeth, MATERIAL_HQ_TEETH },
             { MaterialType.Tongue, MATERIAL_HQ_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_HQ_ALPHACLIP },
+            { MaterialType.BlendAlpha, MATERIAL_HQ_ALPHABLEND },
             { MaterialType.DefaultOpaque, MATERIAL_HQ_OPAQUE },
             { MaterialType.SSS, MATERIAL_HQ_SSS },
         };
@@ -437,6 +464,7 @@ namespace Reallusion.Import
             { MaterialType.Teeth, MATERIAL_BAKED_TEETH },
             { MaterialType.Tongue, MATERIAL_BAKED_TONGUE },
             { MaterialType.DefaultAlpha, MATERIAL_BAKED_ALPHACLIP },
+            { MaterialType.BlendAlpha, MATERIAL_BAKED_ALPHABLEND },
             { MaterialType.DefaultOpaque, MATERIAL_BAKED_OPAQUE },
             { MaterialType.SSS, MATERIAL_BAKED_SSS },
         };
@@ -470,6 +498,31 @@ namespace Reallusion.Import
 
         public static void ResetMaterial(Material mat)
         {
+            string[] propertyPaths = new string[] { "m_SavedProperties.m_TexEnvs", 
+                                                    "m_SavedProperties.m_Floats", 
+                                                    "m_SavedProperties.m_Colors" };
+
+            SerializedObject so = new SerializedObject(mat);
+
+            foreach (string path in propertyPaths)
+            {
+                var properties = so.FindProperty(path);
+
+                if (properties != null && properties.isArray)
+                {
+                    for (int j = properties.arraySize - 1; j >= 0; j--)
+                    {
+                        string propName = properties.GetArrayElementAtIndex(j).displayName;
+                        if (!mat.HasProperty(propName))
+                        {
+                            properties.DeleteArrayElementAtIndex(j);
+                            so.ApplyModifiedProperties();
+                        }
+                    }
+                }
+            }
+
+
 #if HDRP_10_5_0_OR_NEWER
             HDShaderUtils.ResetMaterialKeywords(mat);
 #endif
@@ -590,6 +643,12 @@ namespace Reallusion.Import
                     if (materialType == MaterialType.Hair)
                         return MATERIAL_HQ_HAIR_COVERAGE;
                 }
+
+                if (info.FeatureUseWrinkleMaps)
+                {
+                    if (materialType == MaterialType.Head)
+                        return MATERIAL_HQ_HEAD_WRINKLE;
+                }
             }
             else if (quality == MaterialQuality.Baked) // option overrides for baked materials
             {
@@ -623,11 +682,19 @@ namespace Reallusion.Import
                                        
                     if (materialType == MaterialType.EyeOcclusion)
                         return MATERIAL_BAKED_EYE_OCCLUSION_CUSTOM;
+
+
+                    if (info.BuiltFeatureWrinkleMaps)
+                    {
+                        if (materialType == MaterialType.Head)                        
+                            return MATERIAL_BAKED_HEAD_WRINKLE_CUSTOM;
+                    }
                 }                
             }
 
             // override game base SSS skin with default skin for correct diffusion profile
-            if (materialType == MaterialType.SSS && sourceName.iContains("Ga_Skin_"))
+            if ((materialType == MaterialType.SSS && sourceName.iContains("Ga_Skin_")) ||
+                sourceName.iContains("Ga_Skin_"))
             {
                 return MATERIAL_DEFAULT_SKIN;
             }
@@ -674,19 +741,21 @@ namespace Reallusion.Import
             return templateName;
         }        
 
-        public static Material GetTemplateMaterial(string sourceName, MaterialType materialType, MaterialQuality quality, CharacterInfo info, bool useAmplify = false, bool useTessellation = false)
+        public static Material GetTemplateMaterial(string sourceName, MaterialType materialType, MaterialQuality quality, 
+            CharacterInfo info, bool useAmplify = false, bool useTessellation = false, bool useWrinkleMaps = false)
         {
             string templateName = GetTemplateMaterialName(sourceName, materialType, quality, info);
 
-            return GetCustomTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation);
+            return GetUpgradedTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation, useWrinkleMaps);
         }
 
-        public static Material GetCustomTemplateMaterial(string sourceName, string templateName, MaterialQuality quality, bool useAmplify, bool useTessellation)
+        public static Material GetUpgradedTemplateMaterial(string sourceName, string templateName, MaterialQuality quality, 
+            bool useAmplify, bool useTessellation, bool useWrinkleMaps)
         {
             string customTemplateName;
             Material customTemplate = null;
             Material foundTemplate = null;
-            
+
             if (useAmplify)
             {
                 customTemplateName = templateName + "_Amplify";

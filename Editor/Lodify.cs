@@ -282,6 +282,7 @@ namespace Reallusion.Import
         {
             Transform boneRoot = Util.FindChildRecursive(root, "CC_Base_BoneRoot");
             if (!boneRoot) boneRoot = Util.FindChildRecursive(root, "RL_BoneRoot");
+            if (!boneRoot) boneRoot = Util.FindChildRecursive(root, "Rigify_BoneRoot");
             if (!boneRoot) boneRoot = Util.FindChildRecursive(root, "root");
             if (!boneRoot) Debug.LogError("Could not find bone root transform from: " + root);
             return boneRoot;

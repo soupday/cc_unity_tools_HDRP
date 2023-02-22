@@ -1048,7 +1048,7 @@ namespace Reallusion.Import
                 FindSceneObjects(root.GetChild(i), search, found);
             }
         }
-
+        
         public static Transform FindChildRecursive(Transform root, string search)
         {
             if (root.name.iEquals(search)) return root;
@@ -1060,13 +1060,40 @@ namespace Reallusion.Import
             }
 
             return null;
-        }
+        }        
 
         public static bool AssetPathIsEmpty(string assetPath)
         {
             const string emptyGuid = "00000000000000000000000000000000";
 
             return AssetDatabase.AssetPathToGUID(assetPath).Equals(emptyGuid);
+        }
+
+        public static bool NameContainsKeywords(string name, params string[] keyword)
+        {
+            foreach (string k in keyword)
+            {
+                int start = name.IndexOf(k);
+                int after = start + k.Length;
+
+                if (start >= 0)
+                {
+                    // is keyword in name separated by underscores
+                    if (name.iStartsWith(k + "_") ||
+                        name.iEndsWith("_" + k) ||
+                        name.iContains("_" + k + "_") ||
+                        name.iEquals(k))
+                        return true;
+
+                    // match distinct keyword at start of name (any capitalization) or captitalized anywhere else
+                    if (start == 0 || char.IsUpper(name[start]))
+                    {
+                        if (after >= name.Length || !char.IsLower(name[after]))
+                            return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public static void LogInfo(string message)
