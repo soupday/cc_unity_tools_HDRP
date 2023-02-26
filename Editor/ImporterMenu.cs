@@ -16,6 +16,8 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+//#define SOUPDEV
+
 using UnityEngine;
 using UnityEditor;
 using System.IO;
@@ -145,6 +147,17 @@ namespace Reallusion.Import
             CharacterInfo ci = ImporterWindow.Current.Character;
             ComputeBake baker = new ComputeBake(ci.Fbx, ci);
             Texture2D gradient = baker.BakeGradientMap("Assets" + Path.DirectorySeparatorChar + "Test", "Gradient");
+        }
+
+        [MenuItem("Reallusion/Dev/Color Convert", priority = 220)]
+        public static void DoCC()
+        {
+            // Aqua
+            Color c = new Color(34f / 255f, 47f / 255f, 46f / 255f);
+            // Authority
+            //Color c = new Color(10f / 255f, 21f / 255f, 29f / 255f);
+            
+            Debug.Log(Util.LinearTosRGB(c));
         }
 
         [MenuItem("Reallusion/Dev/Channel Pack 1A", priority = 220)]

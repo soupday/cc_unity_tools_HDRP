@@ -1492,6 +1492,15 @@ namespace Reallusion.Import
                     ConnectTextureTo(sourceName, mat, "_WrinkleRoughnessBlend3", "Wrinkle_Roughness3",
                         matJson, "Wrinkle/Textures/Roughness_3");
 
+                    ConnectTextureTo(sourceName, mat, "_WrinkleFlowMap1", "Wrinkle_Flow1",
+                        matJson, "Wrinkle/Textures/Flow_1");
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleFlowMap2", "Wrinkle_Flow2",
+                        matJson, "Wrinkle/Textures/Flow_2");
+
+                    ConnectTextureTo(sourceName, mat, "_WrinkleFlowMap3", "Wrinkle_Flow3",
+                        matJson, "Wrinkle/Textures/Flow_3");
+
                     ApplyWrinkleMasks(mat);                    
                 }
 
@@ -1953,7 +1962,7 @@ namespace Reallusion.Import
                     SetFloatPowerRange(mat, "_SecondarySpecularMultiplier", specMapStrength * specStrength2, 0.0125f, 0.125f, specularPowerMod);
                     // set by template
                     //mat.SetFloatIf("_SecondarySmoothness", 0.5f);
-                    mat.SetFloatIf("_RimTransmissionIntensity", 0.31f * Mathf.Pow(rimTransmission, 0.25f));
+                    mat.SetFloatIf("_RimTransmissionIntensity", 0.75f * specMapStrength * Mathf.Pow(rimTransmission, 0.5f));
                     mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                         matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
                     mat.SetFloatIf("_SpecularShiftMin", 

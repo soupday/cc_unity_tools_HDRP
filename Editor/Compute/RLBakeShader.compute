@@ -15,6 +15,7 @@
 #pragma kernel RLHeadMask
 #pragma kernel RLSkinMask
 #pragma kernel RLHeadWrinkleSmoothnessPack
+#pragma kernel RLHeadWrinkleFlowPack
 #pragma kernel RLHeadMetallicGloss
 #pragma kernel RLSkinMetallicGloss
 #pragma kernel RLHeadAO
@@ -100,6 +101,10 @@ TEX2D(SmoothnessLUT);
 TEX2D(Roughness1);
 TEX2D(Roughness2);
 TEX2D(Roughness3);
+
+TEX2D(Flow1);
+TEX2D(Flow2);
+TEX2D(Flow3);
 
 TEX2D(CavityAO);
 float smoothnessMin, smoothnessMax, smoothnessPower;
@@ -777,6 +782,20 @@ void RLHeadMask(uint3 id : SV_DispatchThreadID)
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, ao, detailMask, smoothness);
+
+    Result[id.xy] = packed;
+}
+
+[numthreads(1, 1, 1)]
+void RLHeadWrinkleFlowPack(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+    
+    float flow1 = SAMPLE(Flow1, uv).g;
+    float flow2 = SAMPLE(Flow2, uv).g;
+    float flow3 = SAMPLE(Flow3, uv).g;        
+    
+    float4 packed = float4(flow1, flow2, flow3, 1.0);
 
     Result[id.xy] = packed;
 }

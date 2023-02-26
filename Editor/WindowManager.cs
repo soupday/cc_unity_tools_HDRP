@@ -111,11 +111,19 @@ namespace Reallusion.Import
             if (!prefab) return default;
             if (!IsPreviewScene && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return default;
 
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-            GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
+            if (!IsPreviewScene)
+            {
+                Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+                GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
 
-            previewSceneHandle = scene;
-            previewScene = PreviewScene.FetchPreviewScene(scene);
+                previewSceneHandle = scene;
+                previewScene = PreviewScene.FetchPreviewScene(scene);
+            }
+            else
+            {
+                previewScene.ClearBaked();
+                previewScene.ClearCharacter();
+            }
 
             previewScene.PostProcessingAndLighting();
             previewScene.ShowPreviewCharacter(prefab);

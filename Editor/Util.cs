@@ -121,8 +121,7 @@ namespace Reallusion.Import
 
             return false;
         }
-
-
+        
         public static Color LinearTosRGBOld(Color c)
         {
             if (c.r < 0f) c.r = 0f;
