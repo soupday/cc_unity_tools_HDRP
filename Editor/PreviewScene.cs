@@ -261,15 +261,18 @@ namespace Reallusion.Import
             }
 
 #if UNITY_POST_PROCESSING_3_1_1
-            PostProcessLayer ppl = camera.gameObject.AddComponent<PostProcessLayer>();
-            PostProcessVolume ppv = camera.gameObject.AddComponent<PostProcessVolume>();
-            PostProcessProfile volume = (PostProcessProfile)Util.FindAsset("RL Preview Scene Post Processing Volume Profile 3.1.1");
-            ppl.volumeTrigger = camera.transform;
-            LayerMask everything = ~0;
-            ppl.volumeLayer = everything;
-            ppl.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;
-            ppv.isGlobal = true;
-            ppv.profile = volume;
+            if (Pipeline.is3D)
+            {
+                PostProcessLayer ppl = camera.gameObject.AddComponent<PostProcessLayer>();
+                PostProcessVolume ppv = camera.gameObject.AddComponent<PostProcessVolume>();
+                PostProcessProfile volume = (PostProcessProfile)Util.FindAsset("RL Preview Scene Post Processing Volume Profile 3.1.1");
+                ppl.volumeTrigger = camera.transform;
+                LayerMask everything = ~0;
+                ppl.volumeLayer = everything;
+                ppl.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;
+                ppv.isGlobal = true;
+                ppv.profile = volume;
+            }
 #endif
 
             RestoreLighting();

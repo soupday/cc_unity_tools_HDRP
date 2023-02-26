@@ -258,7 +258,7 @@ namespace Reallusion.Import
 
         private void PreviewCharacter()
         {
-            StoreBackScene();
+            if (!WindowManager.IsPreviewScene) StoreBackScene();
 
             WindowManager.OpenPreviewScene(contextCharacter.Fbx);
 

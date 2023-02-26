@@ -1,6 +1,9 @@
 Changelog
 =========
 
+### v 1.4.4.1
+- URP12 Shader flag pass & enable deferred rendering.
+
 ### v 1.4.4
 - Full wrinkle map specification implemented.
     - Wrinkle map manager controls script on body mesh.
