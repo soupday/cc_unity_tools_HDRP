@@ -124,7 +124,7 @@ Material:
     - _SupportDecals: 1
     - _SurfaceType: 0
     - _TeethBrightness: 0.7
-    - _TeethSSS: 0.5
+    - _TeethSSS: 1
     - _TeethSaturation: 0.9
     - _TeethThickness: 0.7
     - _TransparentBackfaceEnable: 0
