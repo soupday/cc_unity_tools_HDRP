@@ -111,19 +111,11 @@ namespace Reallusion.Import
             if (!prefab) return default;
             if (!IsPreviewScene && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return default;
 
-            if (!IsPreviewScene)
-            {
-                Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-                GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+            GameObject.Instantiate(Util.FindPreviewScenePrefab(), Vector3.zero, Quaternion.identity);
 
-                previewSceneHandle = scene;
-                previewScene = PreviewScene.FetchPreviewScene(scene);
-            }
-            else
-            {
-                previewScene.ClearBaked();
-                previewScene.ClearCharacter();
-            }
+            previewSceneHandle = scene;
+            previewScene = PreviewScene.FetchPreviewScene(scene);
 
             previewScene.PostProcessingAndLighting();
             previewScene.ShowPreviewCharacter(prefab);
@@ -336,19 +328,44 @@ namespace Reallusion.Import
             ScreenCapture.CaptureScreenshot(fileName);
         }
 
+        public static GameObject GetSelectedOrPreviewCharacter()
+        {
+            GameObject characterPrefab = null;
+
+            if (Selection.activeGameObject)
+            {
+                GameObject selectedPrefab = Util.GetScenePrefabInstanceRoot(Selection.activeGameObject);
+                if (selectedPrefab && selectedPrefab.GetComponent<Animator>())
+                {
+                    characterPrefab = selectedPrefab;
+                }
+            }
+
+            if (!characterPrefab && IsPreviewScene)
+            {
+                characterPrefab = GetPreviewScene().GetPreviewCharacter();
+            }
+
+            return characterPrefab;
+        }
+
         public static void ShowAnimationPlayer()
         {
-            GameObject scenePrefab = null;
+            GameObject scenePrefab = GetSelectedOrPreviewCharacter();
 
-            if (IsPreviewScene) scenePrefab = GetPreviewScene().GetPreviewCharacter();            
-            if (!scenePrefab) scenePrefab = Selection.activeGameObject;
+            if (scenePrefab)
+            {
+                AnimPlayerGUI.OpenPlayer(scenePrefab);
+                openedInPreviewScene = IsPreviewScene;
 
-            AnimPlayerGUI.OpenPlayer(scenePrefab);
-            openedInPreviewScene = IsPreviewScene;
+                if (showRetarget) ShowAnimationRetargeter();
 
-            if (showRetarget) ShowAnimationRetargeter();
-
-            showPlayer = true;
+                showPlayer = true;
+            }
+            else
+            {
+                Debug.LogWarning("No compatible animated character!");
+            }
         }
 
         public static void HideAnimationPlayer(bool updateShowPlayer)
