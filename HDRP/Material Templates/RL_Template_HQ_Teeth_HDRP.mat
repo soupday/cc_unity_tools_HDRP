@@ -102,7 +102,7 @@ Material:
     - _RequireSplitLighting: 1
     - _SmoothnessFront: 0.502
     - _SmoothnessMax: 0.88
-    - _SmoothnessPower: 0.5
+    - _SmoothnessPower: 0.75
     - _SmoothnessRear: 0
     - _SrcBlend: 1
     - _StencilRef: 4
