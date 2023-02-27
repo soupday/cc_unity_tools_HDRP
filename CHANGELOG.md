@@ -1,6 +1,12 @@
 Changelog
 =========
 
+### v 1.4.5
+- Flow maps added to wrinkle map system.
+- URP & 3D shader pass and recompile.
+- URP & 3D Baked wrinkle maps normal fix.
+- HDRP Preview scene lighting update (to replicate some CC4 atomsphere setups)
+
 ### v 1.4.4.1
 - URP12 Shader flag pass & enable deferred rendering.
 
