@@ -868,6 +868,9 @@ namespace Reallusion.Import
             Texture2D normal1 = GetMaterialTexture(mat, "_WrinkleNormalBlend1", true);
             Texture2D normal2 = GetMaterialTexture(mat, "_WrinkleNormalBlend2", true);
             Texture2D normal3 = GetMaterialTexture(mat, "_WrinkleNormalBlend3", true);
+            Texture2D flow1 = GetMaterialTexture(mat, "_WrinkleFlowMap1");
+            Texture2D flow2 = GetMaterialTexture(mat, "_WrinkleFlowMap2");
+            Texture2D flow3 = GetMaterialTexture(mat, "_WrinkleFlowMap3");
 
 
             bool isHead = mat.GetFloatIf("BOOLEAN_IS_HEAD") > 0f;
@@ -895,6 +898,7 @@ namespace Reallusion.Import
             Texture2D bakedNormalMap2 = normal2;
             Texture2D bakedNormalMap3 = normal3;
             Texture2D bakedSmoothnessPack = null;
+            Texture2D bakedFlowPack = null;
 
             if (isHead)
             {
@@ -985,6 +989,9 @@ namespace Reallusion.Import
                         smoothnessMin, smoothnessMax, smoothnessPower, microSmoothnessMod,
                         rMSM, gMSM, bMSM, aMSM, earMSM, neckMSM, cheekMSM, foreheadMSM, upperLipMSM, chinMSM, unmaskedMSM,
                         sourceName + "_Wrinkle_SmoothnessPack");
+
+                    bakedFlowPack = BakeHeadWrinkleFlowPack(flow1, flow2, flow3,
+                        sourceName + "_Wrinkle_FlowPack");
                 }
             }
             else
@@ -1083,6 +1090,7 @@ namespace Reallusion.Import
                 result.SetTextureIf("_WrinkleNormalBlend3", bakedNormalMap3);
 
                 result.SetTextureIf("_WrinkleSmoothnessPack", bakedSmoothnessPack);
+                result.SetTextureIf("_WrinkleFlowPack", bakedFlowPack);
             }
 
             return result;
@@ -2327,6 +2335,32 @@ namespace Reallusion.Import
                 bakeShader.SetFloat("upperLipMSM", upperLipMSM);
                 bakeShader.SetFloat("chinMSM", chinMSM);
                 bakeShader.SetFloat("unmaskedMSM", unmaskedMSM);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
+
+        private Texture2D BakeHeadWrinkleFlowPack(Texture2D flow1, Texture2D flow2, Texture2D flow3,
+            string name, string kernelName = "RLHeadWrinkleFlowPack")
+        {
+            Vector2Int maxSize = GetMaxSize(flow1, flow2, flow3);
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(maxSize, texturesFolder, name);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                flow1 = CheckGray(flow1);
+                flow2 = CheckGray(flow2);
+                flow3 = CheckGray(flow3);
+                
+                int kernel = bakeShader.FindKernel(kernelName);
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.SetTexture(kernel, "Flow1", flow1);
+                bakeShader.SetTexture(kernel, "Flow2", flow2);
+                bakeShader.SetTexture(kernel, "Flow3", flow3);                
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
                 return bakeTarget.SaveAndReimport();
             }

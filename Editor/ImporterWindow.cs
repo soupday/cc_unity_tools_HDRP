@@ -821,13 +821,15 @@ namespace Reallusion.Import
             {
                 if (AnimPlayerGUI.IsPlayerShown())
                 {
+                    GameObject characterPrefab = WindowManager.GetSelectedOrPreviewCharacter();
                     WindowManager.HideAnimationPlayer(true);                                        
-                    ResetAllSceneViewCamera();
+                    ResetAllSceneViewCamera(characterPrefab);
                 }
                 else
                 {
+                    GameObject characterPrefab = WindowManager.GetSelectedOrPreviewCharacter();
                     WindowManager.ShowAnimationPlayer();                                        
-                    ResetAllSceneViewCamera();
+                    ResetAllSceneViewCamera(characterPrefab);
                 }
             }
             GUI.enabled = true;
@@ -1291,11 +1293,14 @@ namespace Reallusion.Import
             Repaint();
         }
 
-        public static void ResetAllSceneViewCamera()
+        public static void ResetAllSceneViewCamera(GameObject targetOverride = null)
         {
             if (WindowManager.IsPreviewScene) 
             {
-                GameObject obj = WindowManager.GetPreviewScene().GetPreviewCharacter();
+                GameObject obj;
+                if (targetOverride) obj = targetOverride;
+                else obj = WindowManager.GetPreviewScene().GetPreviewCharacter();                
+
                 if (obj)
                 {
                     GameObject root = Util.GetScenePrefabInstanceRoot(obj);

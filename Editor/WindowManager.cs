@@ -328,19 +328,44 @@ namespace Reallusion.Import
             ScreenCapture.CaptureScreenshot(fileName);
         }
 
+        public static GameObject GetSelectedOrPreviewCharacter()
+        {
+            GameObject characterPrefab = null;
+
+            if (Selection.activeGameObject)
+            {
+                GameObject selectedPrefab = Util.GetScenePrefabInstanceRoot(Selection.activeGameObject);
+                if (selectedPrefab && selectedPrefab.GetComponent<Animator>())
+                {
+                    characterPrefab = selectedPrefab;
+                }
+            }
+
+            if (!characterPrefab && IsPreviewScene)
+            {
+                characterPrefab = GetPreviewScene().GetPreviewCharacter();
+            }
+
+            return characterPrefab;
+        }
+
         public static void ShowAnimationPlayer()
         {
-            GameObject scenePrefab = null;
+            GameObject scenePrefab = GetSelectedOrPreviewCharacter();
 
-            if (IsPreviewScene) scenePrefab = GetPreviewScene().GetPreviewCharacter();            
-            if (!scenePrefab) scenePrefab = Selection.activeGameObject;
+            if (scenePrefab)
+            {
+                AnimPlayerGUI.OpenPlayer(scenePrefab);
+                openedInPreviewScene = IsPreviewScene;
 
-            AnimPlayerGUI.OpenPlayer(scenePrefab);
-            openedInPreviewScene = IsPreviewScene;
+                if (showRetarget) ShowAnimationRetargeter();
 
-            if (showRetarget) ShowAnimationRetargeter();
-
-            showPlayer = true;
+                showPlayer = true;
+            }
+            else
+            {
+                Debug.LogWarning("No compatible animated character!");
+            }
         }
 
         public static void HideAnimationPlayer(bool updateShowPlayer)

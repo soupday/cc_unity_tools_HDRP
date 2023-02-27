@@ -121,8 +121,7 @@ namespace Reallusion.Import
 
             return false;
         }
-
-
+        
         public static Color LinearTosRGBOld(Color c)
         {
             if (c.r < 0f) c.r = 0f;
@@ -948,37 +947,47 @@ namespace Reallusion.Import
             return FindRootPrefabAsset(instanceRoot);
         }        
 
-        public static void ResetPrefabTransforms(GameObject prefabObj)
+        public static void ResetPrefabTransforms(GameObject prefabRoot, GameObject prefabObj = null)
         {
+            if (!prefabObj && prefabRoot)
+            {
+                prefabObj = prefabRoot;
+            }
+
             if (prefabObj)
             {
                 GameObject source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabObj);
+
+                // dont reset the root transform...
                 if (source && source != prefabObj)
                 {
-                    bool resetPos = false;
-                    bool resetRot = false;
-                    bool resetSca = false;
-                    if (prefabObj.transform.position != source.transform.position) resetPos = true;
-                    if (prefabObj.transform.rotation != source.transform.rotation) resetRot = true;
-                    if (prefabObj.transform.localScale != source.transform.localScale) resetSca = true;
-                    if (resetPos) prefabObj.transform.position = source.transform.position;
-                    if (resetRot) prefabObj.transform.rotation = source.transform.rotation;
-                    if (resetSca) prefabObj.transform.localScale = source.transform.localScale;
-                    /*
-                    if (resetPos || resetRot || resetSca) 
-                    { 
-                        string report = "Resetting " + prefabObj.name + ":";
-                        if (resetPos) report += " Position";
-                        if (resetRot) report += " Rotation";
-                        if (resetSca) report += " Scale";
-                        Debug.Log(report);
-                    }
-                    */
+                    if (prefabObj != prefabRoot)
+                    {
+                        bool resetPos = false;
+                        bool resetRot = false;
+                        bool resetSca = false;
+                        if (prefabObj.transform.localPosition != source.transform.localPosition) resetPos = true;
+                        if (prefabObj.transform.localRotation != source.transform.localRotation) resetRot = true;
+                        if (prefabObj.transform.localScale != source.transform.localScale) resetSca = true;
+                        if (resetPos) prefabObj.transform.localPosition = source.transform.localPosition;
+                        if (resetRot) prefabObj.transform.localRotation = source.transform.localRotation;
+                        if (resetSca) prefabObj.transform.localScale = source.transform.localScale;
+                        /*
+                        if (resetPos || resetRot || resetSca) 
+                        { 
+                            string report = "Resetting " + prefabObj.name + ":";
+                            if (resetPos) report += " Position";
+                            if (resetRot) report += " Rotation";
+                            if (resetSca) report += " Scale";
+                            Debug.Log(report);
+                        }
+                        */
+                    }                    
 
                     for (int i = 0; i < prefabObj.transform.childCount; i++)
                     {
                         Transform child = prefabObj.transform.GetChild(i);
-                        ResetPrefabTransforms(child.gameObject);
+                        ResetPrefabTransforms(prefabRoot, child.gameObject);
                     }
                 }
             }
