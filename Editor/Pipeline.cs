@@ -22,10 +22,12 @@ using UnityEngine;
 using UnityEngine.Diagnostics;
 using UnityEngine.Rendering;
 using System.IO;
+using System;
 #if HDRP_10_5_0_OR_NEWER
 using UnityEngine.Rendering.HighDefinition;
 using UnityEditor.Rendering.HighDefinition;
 #endif
+using Object = UnityEngine.Object;
 
 namespace Reallusion.Import
 {
@@ -41,7 +43,7 @@ namespace Reallusion.Import
 
     public static class Pipeline
     {
-        public const string VERSION = "1.4.5";
+        public const string VERSION = "1.4.6";
 
 #if HDRP_10_5_0_OR_NEWER
         // version
@@ -543,13 +545,61 @@ namespace Reallusion.Import
 
             SerializedObject hdrp = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath(assetPath)[0]);
             if (hdrp == null) return;
-            SerializedProperty list = hdrp.FindProperty("diffusionProfileSettingsList");
-            if (list == null) return;
 
-            SerializedProperty item;
             int index;
             bool modified = false;
-            string[] profiles = new string[] { "RL_Skin_Profile", "RL_Teeth_Profile", "RL_Eye_Profile", "RL_SSS_Profile" };            
+            string[] profiles = new string[] { "RL_Skin_Profile", "RL_Teeth_Profile", "RL_Eye_Profile", "RL_SSS_Profile" };
+
+#if HDRP_14_0_0_OR_NEWER
+            SerializedProperty propDefaultVolumeProfile = hdrp.FindProperty("m_DefaultVolumeProfile");
+            if (propDefaultVolumeProfile == null) return;
+            VolumeProfile defaultVolumeAsset = (VolumeProfile)propDefaultVolumeProfile.objectReferenceValue;
+            if (defaultVolumeAsset == null) return;
+
+            if (!defaultVolumeAsset.TryGet<DiffusionProfileList>(out DiffusionProfileList dpl)) return;
+            List<DiffusionProfileSettings> dpsList = new List<DiffusionProfileSettings>(dpl.diffusionProfiles.value);
+
+            foreach (string profile in profiles)
+            {
+                Object asset = Util.FindAsset(profile);
+                if (asset.GetType() == typeof(DiffusionProfileSettings))
+                {
+                    DiffusionProfileSettings dpAsset = (DiffusionProfileSettings)asset;
+                    if (asset)
+                    {
+                        bool add = true;
+
+                        foreach (DiffusionProfileSettings dps in dpsList)
+                        {
+                            if (dps == dpAsset) add = false;
+                        }
+
+                        if (add)
+                        {
+                            if (dpsList.Count < 15)
+                            {
+                                dpsList.Add(dpAsset);
+                                modified = true;
+                            }
+                            else
+                            {
+                                Debug.LogWarning("Unable to add diffusion profile " + dpAsset.name + " to default diffusion profiles!");
+                            }
+                        }
+                    }
+                }
+            }         
+
+            if (modified)
+            {
+                dpl.diffusionProfiles.value = dpsList.ToArray();
+            }
+#else
+            SerializedProperty list = hdrp.FindProperty("diffusionProfileSettingsList");            
+
+            if (list == null) return;
+
+            SerializedProperty item;            
 
             foreach (string profile in profiles)
             {
@@ -582,7 +632,9 @@ namespace Reallusion.Import
             }
 
             if (modified) hdrp.ApplyModifiedProperties();
-#endif
+#endif //HDRP_14_0_0_OR_NEWER
+
+#endif //HDRP_10_5_0_OR_NEWER
         }
 
         public static Shader GetDefaultShader()

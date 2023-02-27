@@ -1,6 +1,10 @@
 Changelog
 =========
 
+### v.1.4.6
+- Added ray tracing settings to preview scene lights.
+- Fix to HDRP diffusion profiles not setting up in HDRP14 (2022.2)
+
 ### v 1.4.5
 - Flow maps added to wrinkle map system.
 - URP & 3D shader pass and recompile.
