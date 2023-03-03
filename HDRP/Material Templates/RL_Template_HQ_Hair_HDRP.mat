@@ -81,8 +81,8 @@ Material:
     - _AlphaClip: 0.05
     - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 10
-    - _AlphaPower: 0.7
-    - _AlphaRemap: 1
+    - _AlphaPower: 1
+    - _AlphaRemap: 0.75
     - _AlphaSrcBlend: 1
     - _AlphaToMask: 1
     - _AlphaToMaskInspectorValue: 1

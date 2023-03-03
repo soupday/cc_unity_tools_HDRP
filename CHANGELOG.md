@@ -1,7 +1,12 @@
 Changelog
 =========
 
-### v.1.4.6
+### v 1.4.7
+- Brow correction added to wrinkle map system.
+- Wrinkle sets additive blending.
+- Wrinkle Manager configuration serialized, to allow for further customization.
+
+### v 1.4.6
 - Added ray tracing settings to preview scene lights.
 - Fix to HDRP diffusion profiles not setting up in HDRP14 (2022.2)
 
