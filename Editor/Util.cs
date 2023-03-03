@@ -1078,11 +1078,26 @@ namespace Reallusion.Import
             return AssetDatabase.AssetPathToGUID(assetPath).Equals(emptyGuid);
         }
 
+        public static bool HasMaterialKeywords(GameObject obj, params string[] keywords)
+        {
+            SkinnedMeshRenderer smr = obj.GetComponent<SkinnedMeshRenderer>();
+
+            if (smr)
+            {
+                foreach (Material mat in smr.sharedMaterials)
+                {
+                    if (Util.NameContainsKeywords(mat.name, keywords)) return true;
+                }
+            }
+
+            return false;
+        }
+
         public static bool NameContainsKeywords(string name, params string[] keyword)
         {
             foreach (string k in keyword)
             {
-                int start = name.IndexOf(k);
+                int start = name.IndexOf(k, System.StringComparison.InvariantCultureIgnoreCase);
                 int after = start + k.Length;
 
                 if (start >= 0)

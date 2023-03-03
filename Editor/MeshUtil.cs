@@ -21,6 +21,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using System.IO;
 using System.Collections.Generic;
+using UnityEngine.Diagnostics;
 
 namespace Reallusion.Import
 {
@@ -1094,8 +1095,7 @@ namespace Reallusion.Import
 
             foreach (Renderer r in renderers)
             {
-                bool hasHairMaterial = false;
-                bool isFacialObject = FacialProfileMapper.MeshHasFacialBlendShapes(r.gameObject);
+                bool hasHairMaterial = false;                
                 bool hasScalpMaterial = false;
                 int subMeshCount = 0;
                 int hairMeshCount = 0;
@@ -1107,9 +1107,7 @@ namespace Reallusion.Import
                         hasHairMaterial = true;
                         hairMeshCount++;
                     }
-                    else if (m.name.iContains("scalp_") ||
-                             m.name.iContains("_base_") ||
-                             m.name.iContains("_transparency"))
+                    else if (Util.NameContainsKeywords(m.name, "scalp", "base"))
                     {
                         hasScalpMaterial = true;
                     }
@@ -1117,6 +1115,8 @@ namespace Reallusion.Import
 
                 if (hasHairMaterial)
                 {
+                    bool isFacialObject = MeshIsFacialHair(r.gameObject);
+
                     List<int> indicesToRemove = new List<int>();
                     bool dontRemoveMaterials = false;
 
@@ -1132,25 +1132,10 @@ namespace Reallusion.Import
                         {
                             float alphaClipValue = 0.666f;
                             if (Pipeline.is3D) alphaClipValue = 0.55f;
-
-                            // set alpha clip and remap to values that work better 
-                            // with the two material system.
-                            if (isFacialObject)
-                            {                                                                
-                                oldMat.SetFloatIf("_AlphaClip", alphaClipValue);
-                                oldMat.SetFloatIf("_AlphaClip2", alphaClipValue);
-                                oldMat.SetFloatIf("_AlphaPower", 1.5f);
-                                oldMat.SetFloatIf("_ShadowClip", 0.5f);
-                                oldMat.SetFloatIf("_AlphaRemap", 1.0f);
-                            }
-                            else
-                            {
-                                oldMat.SetFloatIf("_AlphaClip", alphaClipValue);
-                                oldMat.SetFloatIf("_AlphaClip2", alphaClipValue);
-                                oldMat.SetFloatIf("_AlphaPower", 0.7f);
-                                oldMat.SetFloatIf("_ShadowClip", 0.5f);
-                                oldMat.SetFloatIf("_AlphaRemap", 1.0f);
-                            }
+                                                        
+                            oldMat.SetFloatIf("_AlphaClip", alphaClipValue);
+                            oldMat.SetFloatIf("_AlphaClip2", alphaClipValue);                            
+                            oldMat.SetFloatIf("_ShadowClip", 0.5f);                            
                         }
 
                         bool useTessellation = oldMat.shader.name.iContains("_Tessellation");
@@ -1569,5 +1554,42 @@ namespace Reallusion.Import
             }
         }
 
+        public static bool MeshHasJawWeights(GameObject obj)
+        {
+            SkinnedMeshRenderer smr = obj.GetComponent<SkinnedMeshRenderer>();
+
+            if (smr)
+            {
+                foreach (Transform bone in smr.bones)
+                {
+                    if (bone.gameObject.name.iContains("JawRoot"))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static bool MeshIsFacialHair(GameObject obj)
+        {
+            // if it has facial blend shapes...
+            if (FacialProfileMapper.MeshHasFacialBlendShapes(obj))
+            {
+                if (Util.HasMaterialKeywords(obj, "scalp"))
+                {
+                    return false;
+                }
+                else if (Util.HasMaterialKeywords(obj, "base", "brow", "beard",
+                                                  "mustache", "goatee", "stubble",
+                                                  "bushy", "sword"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

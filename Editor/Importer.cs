@@ -541,7 +541,7 @@ namespace Reallusion.Import
                     {
                         if (renderer.GetType() == typeof(SkinnedMeshRenderer))
                         {                            
-                            AddWrinkleManager(obj, (SkinnedMeshRenderer)renderer, sharedMat);
+                            AddWrinkleManager(obj, (SkinnedMeshRenderer)renderer, sharedMat, matJson);
                         }
                     }
                 }
@@ -1004,7 +1004,7 @@ namespace Reallusion.Import
                             FLAG_SRGB);
                     }
 
-                    if (matJson.GetBoolValue("Two Side"))
+                    if (matJson != null && matJson.GetBoolValue("Two Side"))
                     {
                         mat.SetFloatIf("_Cull", 0f); // 1f - cull front, 2f cull back
                     }
@@ -1622,7 +1622,7 @@ namespace Reallusion.Import
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
                     mat.SetColor("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 if (matJson.PathExists("Textures/Normal/Strength"))
-                    mat.SetFloat("_NormalStrength", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
+                    mat.SetFloat("_NormalStrength", 0.5f * matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
                 mat.SetFloat("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/Teeth MicroNormal Tiling"));
                 mat.SetFloat("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/Teeth MicroNormal Strength"));
                 /*float specular = matJson.GetFloatValue("Custom Shader/Variable/Front Specular");
@@ -1808,15 +1808,15 @@ namespace Reallusion.Import
                     //float pupilScale = Mathf.Clamp(1f / Mathf.Pow((depth * 2f + 1f), 2f), 0.1f, 2.0f);                    
                     mat.SetFloatIf("_IrisDepth", depth);
                     //mat.SetFloat("_PupilScale", pupilScale);
-                    mat.SetFloatIf("_PupilScale", 1f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));
+                    mat.SetFloatIf("_PupilScale", 0.75f * matJson.GetFloatValue("Custom Shader/Variable/Pupil Scale"));
                 }
                 else
                 {                    
-                    mat.SetFloatIf("_PupilScale", 1f);
+                    mat.SetFloatIf("_PupilScale", 0.75f);
                 }
 
                 mat.SetFloatIf("_IrisSmoothness", 0f); // 1f - matJson.GetFloatValue("Custom Shader/Variable/_Iris Roughness"));
-                mat.SetFloatIf("_IrisBrightness", 1.2f * matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));                                
+                mat.SetFloatIf("_IrisBrightness", 1.5f * matJson.GetFloatValue("Custom Shader/Variable/Iris Color Brightness"));
                 mat.SetFloatIf("_IOR", matJson.GetFloatValue("Custom Shader/Variable/_IoR"));
                 float irisScale = matJson.GetFloatValue("Custom Shader/Variable/Iris UV Radius") / 0.16f;
                 mat.SetFloatIf("_IrisScale", irisScale);
@@ -1843,9 +1843,7 @@ namespace Reallusion.Import
 
         private void ConnectHQHairMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
             MaterialType materialType, QuickJSON matJson)
-        {            
-            bool isFacialHair = FacialProfileMapper.MeshHasFacialBlendShapes(obj);
-
+        {                        
             if (!ConnectTextureTo(sourceName, mat, "_DiffuseMap", "Diffuse",
                     matJson, "Textures/Base Color",
                     FLAG_SRGB + FLAG_HAIR))
@@ -1905,13 +1903,15 @@ namespace Reallusion.Import
             float specularMin = ValueByPipeline(0.05f, 0f, 0f);
             float specularMax = ValueByPipeline(0.5f, 0.4f, 0.65f);
 
+            bool isFacialHair = MeshUtil.MeshIsFacialHair(obj);
             if (isFacialHair)
             {
                 // make facial hair thinner and rougher  
                 smoothnessPowerMod = ValueByPipeline(1.5f, 1.5f, 1.5f);
                 specularPowerMod = ValueByPipeline(1f, 1f, 1f);
                 mat.SetFloatIf("_DepthPrepass", 0.75f);                
-                mat.SetFloatIf("_AlphaPower", 1.25f);
+                mat.SetFloatIf("_AlphaPower", 1.5f);
+                mat.SetFloatIf("_AlphaRemap", 1.0f);
                 mat.SetFloatIf("_SmoothnessPower", smoothnessPowerMod);
             }
 
@@ -1976,7 +1976,7 @@ namespace Reallusion.Import
                     {
                         SetFloatPowerRange(mat, "_SmoothnessMin", smoothnessStrength, 0f, smoothnessMax, smoothnessPowerMod);
                         SetFloatPowerRange(mat, "_SpecularMultiplier", specMapStrength * specStrength, specularMin, specularMax, specularPowerMod);
-                        mat.SetFloatIf("_RimTransmissionIntensity", ValueByPipeline(2f, 50f, 50f) * rimTransmission);
+                        mat.SetFloatIf("_RimTransmissionIntensity", ValueByPipeline(1f, 75f, 75f) * specMapStrength * Mathf.Pow(rimTransmission, 0.5f));
                         mat.SetFloatIf("_FlowMapFlipGreen", 1f -
                             matJson.GetFloatValue("Custom Shader/Variable/TangentMapFlipGreen"));
                         mat.SetFloatIf("_SpecularShiftMin", -0.25f +
@@ -2334,12 +2334,42 @@ namespace Reallusion.Import
             }            
             return true;
         } 
+
+        private Dictionary<string, WrinkleProp> BuildWrinkleProps(QuickJSON matJson)
+        {
+            if (matJson != null)
+            {
+                Dictionary<string, WrinkleProp> wrinkleProps = new Dictionary<string, WrinkleProp>();
+
+                QuickJSON wrinkleRulesJson = matJson.GetObjectAtPath("Wrinkle/WrinkleRules");
+                QuickJSON wrinkleEaseJson = matJson.GetObjectAtPath("Wrinkle/WrinkleEaseStrength");
+                QuickJSON wrinkleWeightJson = matJson.GetObjectAtPath("Wrinkle/WrinkleRuleWeights");                
+
+                if (wrinkleRulesJson != null && wrinkleEaseJson != null && wrinkleWeightJson != null)
+                {
+                    for (int i = 0; i < wrinkleRulesJson.values.Count; i++)
+                    {
+                        string ruleName = wrinkleRulesJson.values[i].StringValue;
+                        float easeStrength = wrinkleEaseJson.values[i].FloatValue;
+                        float weight = wrinkleWeightJson.values[i].FloatValue;
+
+                        wrinkleProps.Add(ruleName, new WrinkleProp() { ease = easeStrength, weight = weight });
+                    }
+                }
+
+                return wrinkleProps;
+            }
+
+            return null;
+        }
           
-        private void AddWrinkleManager(GameObject obj, SkinnedMeshRenderer smr, Material mat)
+        private void AddWrinkleManager(GameObject obj, SkinnedMeshRenderer smr, Material mat, QuickJSON matJson)
         {
             WrinkleManager wm = obj.AddComponent<WrinkleManager>();
             wm.headMaterial = mat;
             wm.skinnedMeshRenderer = smr;
+            float overallWeight = matJson.GetFloatValue("Wrinkle/WrinkleOverallWeight");
+            wm.BuildConfig(BuildWrinkleProps(matJson), overallWeight);
         }
 
         private void CopyWrinkleMasks(string folder)
