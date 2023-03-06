@@ -392,20 +392,37 @@ namespace Reallusion.Import
                 }                
                     
                 if (matJson == null)
-                {          
+                {
                     // instalod will generate unique suffixes _0/_1/_2 on character objects where object names and container
                     // transforms have the same name, try to untangle the object name by speculatively removing this suffix.
                     // (seems to happen mostly on accessories)
+                    string specObjName = objName;
                     if (objName[objName.Length - 2] == '_' && char.IsDigit(objName[objName.Length - 1]))
                     {
                         Util.LogWarn("Object name " + objName + " may by suffixed by InstaLod exporter. Attempting to untangle...");
+                        specObjName = objName.Substring(0, objName.Length - 2);                        
+                    }
+                    string specMatName = sourceName;
+                    if (sourceName[sourceName.Length - 2] == '_' && char.IsDigit(sourceName[sourceName.Length - 1]))
+                    {
+                        Util.LogWarn("Material name " + sourceName + " may by suffixed by InstaLod exporter. Attempting to untangle...");
+                        specMatName = sourceName.Substring(0, sourceName.Length - 2);
+                    }
 
-                        string specName = objName.Substring(0, objName.Length - 2);
-                        jsonPath = specName + "/Materials/" + sourceName;
-                        if (jsonMeshData.PathExists(jsonPath))
-                        {
-                            matJson = jsonMeshData.GetObjectAtPath(jsonPath);
-                        }
+                    // try to find all remaining permutations of:
+                    //      <objName or specObjname>/Materials/<sourceName or specMatName>
+                    jsonPath = specObjName + "/Materials/" + sourceName;
+                    if (jsonMeshData.PathExists(specObjName + "/Materials/" + specMatName))
+                    {
+                        matJson = jsonMeshData.GetObjectAtPath(specObjName + "/Materials/" + specMatName);
+                    }
+                    else if (jsonMeshData.PathExists(specObjName + "/Materials/" + sourceName))
+                    {
+                        matJson = jsonMeshData.GetObjectAtPath(specObjName + "/Materials/" + sourceName);
+                    }
+                    else if (jsonMeshData.PathExists(objName + "/Materials/" + specMatName))
+                    {
+                        matJson = jsonMeshData.GetObjectAtPath(objName + "/Materials/" + specMatName);
                     }
                 }
                 

@@ -10,7 +10,8 @@ Material:
   m_Name: RL_Template_HQ_Hair_HDRP_T
   m_Shader: {fileID: -6465566751694194690, guid: c0256c0c7451fb149a1321b58446f275, type: 3}
   m_ShaderKeywords: _ALPHATEST_ON _ALPHATOMASK_ON _DISABLE_SSR_TRANSPARENT _DOUBLESIDED_ON
-    _ENABLE_FOG_ON_TRANSPARENT _SURFACE_TYPE_TRANSPARENT _TRANSPARENT_WRITES_MOTION_VEC
+    _ENABLE_FOG_ON_TRANSPARENT _ENUMCLIPQUALITY_ON_STANDARD _SURFACE_TYPE_TRANSPARENT
+    _TRANSPARENT_WRITES_MOTION_VEC
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
@@ -80,8 +81,8 @@ Material:
     - _AlphaClip: 0.05
     - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 10
-    - _AlphaPower: 0.7
-    - _AlphaRemap: 1
+    - _AlphaPower: 1
+    - _AlphaRemap: 0.75
     - _AlphaSrcBlend: 1
     - _AlphaToMask: 1
     - _AlphaToMaskInspectorValue: 1
