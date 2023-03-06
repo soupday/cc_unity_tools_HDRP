@@ -580,13 +580,23 @@ namespace Reallusion.Import
             if (hairRoots.Count > 0)
             {
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Roots", hairRoots);
+                /*
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Damping", 0.1f);
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Elasticity", 0.05f);
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Stiffness", 0.05f);
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Radius", 0.02f);
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_EndLength", 0f);
                 SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Gravity", new Vector3(0f, -0.0098f, 0f));
-                
+                */
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Damping", 0.11f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Elasticity", 0.04f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Stiffness", 0.33f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Radius", 0.02f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_EndLength", 0f);
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Gravity", new Vector3(0f, -0.0098f, 0f));                
+                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_UpdateMode", 0);
+
+
             }
 
             Type dynamicBoneColliderType = GetTypeInAssemblies("DynamicBoneColliderBase");
