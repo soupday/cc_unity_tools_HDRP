@@ -356,7 +356,7 @@ namespace Reallusion.Import
                     c.direction = (int)collider.colliderAxis;                    
                     float radius = (collider.radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
                     c.radius = radius;
-                    c.height = collider.length * modelScale + radius * 2f;                    
+                    c.height = collider.length * modelScale + radius * 2f;
                     colliderLookup.Add(c, collider.boneName);
                     if (existingCollider) existingLookup.Add(c, existingCollider);
                 }
@@ -750,6 +750,9 @@ namespace Reallusion.Import
             for (int i = 0; i < mesh.subMeshCount; i++)//
             {
                 Material mat = renderer.sharedMaterials[i];
+
+                if (!mat) continue;
+
                 string sourceName = mat.name;
                 if (sourceName.iContains("_2nd_Pass")) continue;
                 if (sourceName.iContains("_1st_Pass"))

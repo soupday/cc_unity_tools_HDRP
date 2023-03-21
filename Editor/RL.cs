@@ -102,6 +102,8 @@ namespace Reallusion.Import
                             Renderer renderer = child.GetComponent<Renderer>();
                             foreach (Material mat in renderer.sharedMaterials)
                             {
+                                if (!mat) continue;
+
                                 string materialName = mat.name;
                                 if (materialName.iContains("Skin_Body"))
                                     return BaseGeneration.G1;
@@ -730,6 +732,8 @@ namespace Reallusion.Import
 
             foreach (Material mat in smr.sharedMaterials)
             {
+                if (!mat) continue;
+
                 if (mat.name.iContains("Std_Skin_")) return true;
                 if (mat.shader.name.iContains(Pipeline.SHADER_HQ_HEAD) ||
                     mat.shader.name.iContains(Pipeline.SHADER_HQ_SKIN)) return true;
@@ -744,6 +748,8 @@ namespace Reallusion.Import
 
             foreach (Material mat in smr.sharedMaterials)
             {
+                if (!mat) continue;
+
                 if (mat.name.iContains("Hair") && mat.name.iContains("Transparency")) return true;
                 if (mat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR)) return true;
             }

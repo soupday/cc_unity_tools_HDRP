@@ -336,6 +336,8 @@ namespace Reallusion.Import
                 {
                     foreach (Material sharedMat in renderer.sharedMaterials)
                     {
+                        if (!sharedMat) continue;
+
                         // don't process duplicates...
                         if (processed.Contains(sharedMat)) continue;
                         processed.Add(sharedMat);
@@ -380,7 +382,7 @@ namespace Reallusion.Import
                             // Get the 2nd pass shared material
                             foreach (Material secondPassMat in renderer.sharedMaterials)
                             {
-                                if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
+                                if (secondPassMat && secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
                                 {
                                     ReplaceMaterial(secondPassMat, secondPass);
                                 }
@@ -420,6 +422,8 @@ namespace Reallusion.Import
                 {
                     foreach (Material sharedMat in renderer.sharedMaterials)
                     {
+                        if (!sharedMat) continue;
+
                         // don't process duplicates...
                         if (processed.Contains(sharedMat)) continue;
                         processed.Add(sharedMat);
@@ -465,7 +469,7 @@ namespace Reallusion.Import
                                     // Get the 2nd pass shared material
                                     foreach (Material secondPassMat in renderer.sharedMaterials)
                                     {
-                                        if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
+                                        if (secondPassMat && secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
                                         {
                                             // set baked diffuse map
                                             secondPassMat.SetTextureIf("_DiffuseMap", bakedMap);
@@ -515,6 +519,8 @@ namespace Reallusion.Import
                 {
                     foreach (Material sharedMat in renderer.sharedMaterials)
                     {
+                        if (!sharedMat) continue;
+
                         // don't process duplicates...
                         if (processed.Contains(sharedMat)) continue;
                         processed.Add(sharedMat);
@@ -559,7 +565,7 @@ namespace Reallusion.Import
                                     // Get the 2nd pass shared material
                                     foreach (Material secondPassMat in renderer.sharedMaterials)
                                     {
-                                        if (secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
+                                        if (secondPassMat && secondPassMat != sharedMat && secondPassMat.name.iEndsWith("_2nd_Pass"))
                                         {
                                             // restore source diffuse map
                                             secondPassMat.SetTextureIf("_DiffuseMap", sourceMap);
@@ -585,7 +591,7 @@ namespace Reallusion.Import
             {
                 for (int j = 0; j < renderer.sharedMaterials.Length; j++)
                 {
-                    if (renderer.sharedMaterials[j] == from)
+                    if (renderer.sharedMaterials[j] && renderer.sharedMaterials[j] == from)
                     {
                         Material[] copy = (Material[])renderer.sharedMaterials.Clone();
                         copy[j] = to;
@@ -651,7 +657,9 @@ namespace Reallusion.Import
 
                     for (int i = 0; i < sharedMats.Length; i++)
                     {
-                        Material sharedMat = sharedMats[i];                        
+                        Material sharedMat = sharedMats[i];
+
+                        if (!sharedMat) continue;
 
                         // don't process duplicates...
                         if (processed.Contains(sharedMat)) continue;
