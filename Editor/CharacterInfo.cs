@@ -483,7 +483,7 @@ namespace Reallusion.Import
                 {
                     foreach (Material m in r.sharedMaterials)
                     {
-                        if (m.HasProperty("BOOLEAN_ENABLECOLOR"))
+                        if (m && m.HasProperty("BOOLEAN_ENABLECOLOR"))
                         {
                             if (m.GetFloat("BOOLEAN_ENABLECOLOR") > 0f) return true;
                         }

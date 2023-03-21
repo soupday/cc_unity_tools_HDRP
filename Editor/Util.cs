@@ -1086,7 +1086,7 @@ namespace Reallusion.Import
             {
                 foreach (Material mat in smr.sharedMaterials)
                 {
-                    if (Util.NameContainsKeywords(mat.name, keywords)) return true;
+                    if (mat && Util.NameContainsKeywords(mat.name, keywords)) return true;
                 }
             }
 

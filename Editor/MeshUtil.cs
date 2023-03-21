@@ -1072,13 +1072,28 @@ namespace Reallusion.Import
                 secondPass.EnableKeyword("BOOLEAN_SECONDPASS_ON");
                 secondPass.SetFloat("BOOLEAN_SECONDPASS", 1f);
                 Pipeline.ResetMaterial(secondPass);
-                
+
                 /*
                 aif.SaveAndReimport();
                 ais.SaveAndReimport();
                 */
-            }            
+            }
         }
+
+        public struct TwoPassPair
+        {
+            public Material sourceMaterial;
+            public Material firstPassMaterial;
+            public Material secondPassMaterial;
+
+            public TwoPassPair(Material s, Material a, Material b)
+            {
+                sourceMaterial = s;
+                firstPassMaterial = a;
+                secondPassMaterial = b;
+            }
+        }
+
 
         public static GameObject Extract2PassHairMeshes(CharacterInfo info, GameObject prefabAsset, GameObject prefabInstance)
         {
@@ -1091,6 +1106,8 @@ namespace Reallusion.Import
 
             int processCount = 0;
 
+            Dictionary<Material, TwoPassPair> done = new Dictionary<Material, TwoPassPair>();
+
             Renderer[] renderers = prefabInstance.GetComponentsInChildren<Renderer>();
 
             foreach (Renderer r in renderers)
@@ -1101,6 +1118,8 @@ namespace Reallusion.Import
                 int hairMeshCount = 0;
                 foreach (Material m in r.sharedMaterials)
                 {
+                    if (!m) continue;
+
                     subMeshCount++;
                     if (m.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                     {
@@ -1127,6 +1146,8 @@ namespace Reallusion.Import
                     for (int index = 0; index < r.sharedMaterials.Length; index++)
                     {
                         Material oldMat = r.sharedMaterials[index];
+
+                        if (!oldMat) continue;
 
                         if (oldMat.shader.name.iContains(Pipeline.SHADER_HQ_HAIR))
                         {
@@ -1169,26 +1190,35 @@ namespace Reallusion.Import
                             // - set skinnedMeshRenderer mesh to extracted mesh
                             smr.sharedMesh = newMesh;
                             Material[] sharedMaterials = new Material[2];
-                            // - add first pass hair shader material
-                            // - add second pass hair shader material
-                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS, useTessellation);
-                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS, useTessellation);
-                            Material firstPass = new Material(firstPassTemplate);
-                            Material secondPass = new Material(secondPassTemplate);                            
-                            CopyMaterialParameters(oldMat, firstPass);
-                            CopyMaterialParameters(oldMat, secondPass);
-                            FixHDRP2PassMaterials(firstPass, secondPass);
-                            // save the materials to the asset database.
-                            AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
-                            AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));
-                            sharedMaterials[0] = firstPass;
-                            sharedMaterials[1] = secondPass;
+                            if (done.ContainsKey(oldMat))
+                            {
+                                sharedMaterials[0] = done[oldMat].firstPassMaterial;
+                                sharedMaterials[1] = done[oldMat].secondPassMaterial;
+                            }
+                            else
+                            {
+                                // - add first pass hair shader material
+                                // - add second pass hair shader material
+                                Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS, useTessellation);
+                                Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS, useTessellation);
+                                Material firstPass = new Material(firstPassTemplate);
+                                Material secondPass = new Material(secondPassTemplate);
+                                CopyMaterialParameters(oldMat, firstPass);
+                                CopyMaterialParameters(oldMat, secondPass);
+                                FixHDRP2PassMaterials(firstPass, secondPass);
+                                // save the materials to the asset database.
+                                AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
+                                AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));
+                                sharedMaterials[0] = firstPass;
+                                sharedMaterials[1] = secondPass;
+                                done.Add(oldMat, new TwoPassPair(oldMat, firstPass, secondPass));
+                                // call the fix again as Unity reverts some settings when first saving...
+                                FixHDRP2PassMaterials(firstPass, secondPass);
+                            }
                             // add the 1st and 2nd pass materials to the mesh renderer
                             // a single submesh with multiple materials will render itself again with each material
                             // effectively acting as a multi-pass shader which fully complies with any SRP batching.
                             smr.sharedMaterials = sharedMaterials;
-                            // call the fix again as Unity reverts some settings when first saving...
-                            FixHDRP2PassMaterials(firstPass, secondPass);
 
                             indicesToRemove.Add(index);
                             subMeshCount--;
@@ -1198,28 +1228,36 @@ namespace Reallusion.Import
                         {
                             Util.LogInfo("Leaving subMesh(" + index.ToString() + ") in Object: " + oldObj.name);
 
-                            Material[] sharedMaterials = new Material[2];
-                            // - add first pass hair shader material
-                            // - add second pass hair shader material
-                            
-                            Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS, useTessellation);
-                            Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS, useTessellation);
-                            Material firstPass = new Material(firstPassTemplate);
-                            Material secondPass = new Material(secondPassTemplate);                            
-                            CopyMaterialParameters(oldMat, firstPass);
-                            CopyMaterialParameters(oldMat, secondPass);
-                            FixHDRP2PassMaterials(firstPass, secondPass);
-                            // save the materials to the asset database.   
-                            AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
-                            AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));
-                            sharedMaterials[0] = firstPass;
-                            sharedMaterials[1] = secondPass;
+                            Material[] sharedMaterials = new Material[2];                            
+                            if (done.ContainsKey(oldMat))
+                            {
+                                sharedMaterials[0] = done[oldMat].firstPassMaterial;
+                                sharedMaterials[1] = done[oldMat].secondPassMaterial;
+                            }
+                            else
+                            {
+                                // - add first pass hair shader material
+                                // - add second pass hair shader material
+                                Material firstPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_1ST_PASS, useTessellation);
+                                Material secondPassTemplate = Util.FindCustomMaterial(Pipeline.MATERIAL_HQ_HAIR_2ND_PASS, useTessellation);
+                                Material firstPass = new Material(firstPassTemplate);
+                                Material secondPass = new Material(secondPassTemplate);
+                                CopyMaterialParameters(oldMat, firstPass);
+                                CopyMaterialParameters(oldMat, secondPass);
+                                FixHDRP2PassMaterials(firstPass, secondPass);
+                                // save the materials to the asset database.   
+                                AssetDatabase.CreateAsset(firstPass, Path.Combine(materialFolder, oldMat.name + "_1st_Pass.mat"));
+                                AssetDatabase.CreateAsset(secondPass, Path.Combine(materialFolder, oldMat.name + "_2nd_Pass.mat"));
+                                sharedMaterials[0] = firstPass;
+                                sharedMaterials[1] = secondPass;
+                                done.Add(oldMat, new TwoPassPair(oldMat, firstPass, secondPass));
+                                // call the fix again as Unity reverts some settings when first saving...
+                                FixHDRP2PassMaterials(firstPass, secondPass);
+                            }
                             // add the 1st and 2nd pass materials to the mesh renderer
                             // a single submesh with multiple materials will render itself again with each material
                             // effectively acting as a multi-pass shader which fully complies with any SRP batching.
-                            oldSmr.sharedMaterials = sharedMaterials;
-                            // call the fix again as Unity reverts some settings when first saving...
-                            FixHDRP2PassMaterials(firstPass, secondPass);
+                            oldSmr.sharedMaterials = sharedMaterials;                            
                             // as we have replaced the materials completely, don't remove any later when removing any submeshes...
                             dontRemoveMaterials = true;
                             processCount++;
