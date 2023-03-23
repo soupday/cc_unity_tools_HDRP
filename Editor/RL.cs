@@ -148,7 +148,9 @@ namespace Reallusion.Import
             importer.importTangents = ModelImporterTangents.CalculateMikk;
             importer.generateAnimations = ModelImporterGenerateAnimations.GenerateAnimations;
             importer.animationType = ModelImporterAnimationType.Human;
-            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;            
+            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            importer.keepQuads = false;
+            importer.weldVertices = true;
 
             importer.autoGenerateAvatarMappingIfUnspecified = true;
             

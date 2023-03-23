@@ -961,12 +961,20 @@ namespace Reallusion.Import
             // finally copy and remap the triangle data last
             int[] triangles = new int[numNewTriangles];
             pointer = 0;
-            for (int tIndex = 0; tIndex < srcTriangles.Length; tIndex++)
+            // only consider the triangle lists from the included submeshes...
+            for (int s = 0; s < srcMesh.subMeshCount; s++)
             {
-                int vertIndex = srcTriangles[tIndex];
-                int remappedIndex = remapping[vertIndex];
-                if (remappedIndex >= 0)
-                    triangles[pointer++] = remappedIndex;
+                if (!indices.Contains(s))
+                {
+                    SubMeshDescriptor meshDesc = srcMesh.GetSubMesh(s);
+                    for (int tIndex = meshDesc.indexStart; tIndex < meshDesc.indexStart + meshDesc.indexCount; tIndex++)
+                    {                    
+                        int vertIndex = srcTriangles[tIndex];
+                        int remappedIndex = remapping[vertIndex];
+                        if (remappedIndex >= 0)
+                            triangles[pointer++] = remappedIndex;
+                    }
+                }
             }
             newMesh.triangles = triangles;
             // copy any blendshapes across
