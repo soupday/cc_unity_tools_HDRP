@@ -151,7 +151,7 @@ Material:
     - _StencilWriteMaskDepth: 8
     - _StencilWriteMaskDistortionVec: 4
     - _StencilWriteMaskGBuffer: 14
-    - _StencilWriteMaskMV: 42
+    - _StencilWriteMaskMV: 40
     - _SupportDecals: 1
     - _SurfaceType: 1
     - _TransparentBackfaceEnable: 1

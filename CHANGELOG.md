@@ -1,6 +1,13 @@
 Changelog
 =========
 
+### v 1.4.8
+- Fix to missing materials in shared material slots.
+- Fix to two pass hair extraction when re-using the same material.
+- Fix to hair mesh extraction when hair and non-hair materials share vertices.
+- Support for updated spring rigs from blender tools add-on.
+- Improved PhysX weight mapping from mesh to cloth vertices.
+
 ### v 1.4.7
 - Brow correction added to wrinkle map system.
 - Wrinkle sets additive blending.

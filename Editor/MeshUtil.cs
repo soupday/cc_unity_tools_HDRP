@@ -527,7 +527,7 @@ namespace Reallusion.Import
             }
 
             return null;
-        }
+        }        
 
         public static GameObject FindCharacterBone(GameObject gameObject, string name1, string name2)
         {
@@ -545,6 +545,24 @@ namespace Reallusion.Import
             }
 
             return null;
+        }
+
+        public static void FindCharacterBones(GameObject gameObject, List<GameObject> bones, params string [] searchNames)
+        {
+            if (gameObject && !bones.Contains(gameObject))
+            {
+                if (Util.NameContainsKeywords(gameObject.name, searchNames))
+                {
+                    bones.Add(gameObject);
+                }
+
+                int children = gameObject.transform.childCount;
+                for (int i = 0; i < children; i++)
+                {
+                    GameObject childObject = gameObject.transform.GetChild(i).gameObject;
+                    FindCharacterBones(childObject, bones, searchNames);
+                }
+            }
         }
 
         public static void CharacterOpenCloseMouth(Object obj)
@@ -961,12 +979,20 @@ namespace Reallusion.Import
             // finally copy and remap the triangle data last
             int[] triangles = new int[numNewTriangles];
             pointer = 0;
-            for (int tIndex = 0; tIndex < srcTriangles.Length; tIndex++)
+            // only consider the triangle lists from the included submeshes...
+            for (int s = 0; s < srcMesh.subMeshCount; s++)
             {
-                int vertIndex = srcTriangles[tIndex];
-                int remappedIndex = remapping[vertIndex];
-                if (remappedIndex >= 0)
-                    triangles[pointer++] = remappedIndex;
+                if (!indices.Contains(s))
+                {
+                    SubMeshDescriptor meshDesc = srcMesh.GetSubMesh(s);
+                    for (int tIndex = meshDesc.indexStart; tIndex < meshDesc.indexStart + meshDesc.indexCount; tIndex++)
+                    {                    
+                        int vertIndex = srcTriangles[tIndex];
+                        int remappedIndex = remapping[vertIndex];
+                        if (remappedIndex >= 0)
+                            triangles[pointer++] = remappedIndex;
+                    }
+                }
             }
             newMesh.triangles = triangles;
             // copy any blendshapes across

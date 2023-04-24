@@ -149,9 +149,10 @@ namespace Reallusion.Import
             Vector3[] meshVertices = mesh.vertices;
             for (int k = 0; k < mesh.vertexCount; k++)
             {
-                if (!uniqueVertices.ContainsKey(SpatialHash(meshVertices[k])))
+                long hash = SpatialHash(meshVertices[k]);
+                if (!uniqueVertices.ContainsKey(hash))
                 {
-                    uniqueVertices.Add(SpatialHash(meshVertices[k]), count++);
+                    uniqueVertices.Add(hash, count++);
                 }
             }                         
 
@@ -244,6 +245,8 @@ namespace Reallusion.Import
                         Color32[] pixels = weightMap.GetPixels32(0);
                         int w = weightMap.width;
                         int h = weightMap.height;
+                        int wm1 = w - 1;
+                        int hm1 = h - 1;
                         int x, y;
 
                         SubMeshDescriptor submesh = mesh.GetSubMesh(i);
@@ -255,8 +258,8 @@ namespace Reallusion.Import
                             if (uniqueVertices.TryGetValue(SpatialHash(vert), out int clothVert))
                             {                                
                                 Vector2 coord = uvs[vertIdx];
-                                x = Mathf.Max(0, Mathf.Min(w - 1, Mathf.FloorToInt(coord.x * w)));
-                                y = Mathf.Max(0, Mathf.Min(h - 1, Mathf.FloorToInt(coord.y * h)));
+                                x = Mathf.Max(0, Mathf.Min(wm1, Mathf.FloorToInt(0.5f + coord.x * wm1)));
+                                y = Mathf.Max(0, Mathf.Min(hm1, Mathf.FloorToInt(0.5f + coord.y * hm1)));
                                 Color32 sample = pixels[x + y * w];
                                 float weight = Mathf.Clamp01((Mathf.Pow(sample.g / 255f, data.weightMapPower) + data.weightMapOffset)) * data.weightMapScale;
                                 float maxDistance = data.maxDistance * weight * modelScale;
@@ -325,7 +328,7 @@ namespace Reallusion.Import
             const long p1 = 73868489;
             const long p2 = 23875351;
             const long p3 = 53885459;
-            const long discrete = 1000;
+            const long discrete = 1000000;
 
             long x = (long)(v.x * discrete);
             long y = (long)(v.y * discrete);
