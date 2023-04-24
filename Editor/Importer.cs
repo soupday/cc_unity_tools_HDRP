@@ -363,6 +363,8 @@ namespace Reallusion.Import
 
                 foreach (Material sharedMat in renderer.sharedMaterials)
                 {
+                    if (!sharedMat) continue;
+
                     // in case any of the materials have been renamed after a previous import, get the source name.
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
 
@@ -419,6 +421,8 @@ namespace Reallusion.Import
             {
                 foreach (Material sharedMat in renderer.sharedMaterials)
                 {
+                    if (!sharedMat) continue;
+
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
                     if (!processedBuildMaterials.Contains(sourceName))
                     {
@@ -471,6 +475,8 @@ namespace Reallusion.Import
             {
                 foreach (Material sharedMat in renderer.sharedMaterials)
                 {
+                    if (!sharedMat) continue;
+
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
                     if (!processedBuildMaterials.Contains(sourceName))
                     {
@@ -524,6 +530,8 @@ namespace Reallusion.Import
 
                 foreach (Material sharedMat in renderer.sharedMaterials)
                 {
+                    if (!sharedMat) continue;
+
                     // in case any of the materials have been renamed after a previous import, get the source name.
                     string sourceName = Util.GetSourceMaterialName(fbxPath, sharedMat);
 
@@ -2497,7 +2505,7 @@ namespace Reallusion.Import
             {
                 foreach (Material mat in smr.sharedMaterials)
                 {
-                    if (mat.name.iContains(match)) count++;
+                    if (mat && mat.name.iContains(match)) count++;
                 }
             }
             return count;

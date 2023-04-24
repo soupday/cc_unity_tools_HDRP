@@ -172,7 +172,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Physics_Weight_Map_Collider_Detect_Threshold"))
                     return EditorPrefs.GetFloat("RL_Physics_Weight_Map_Collider_Detect_Threshold");
-                return 0.25f;
+                return 0.5f;
             }
 
             set
@@ -356,7 +356,7 @@ namespace Reallusion.Import
                     c.direction = (int)collider.colliderAxis;                    
                     float radius = (collider.radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
                     c.radius = radius;
-                    c.height = collider.length * modelScale + radius * 2f;                    
+                    c.height = collider.length * modelScale + radius * 2f;
                     colliderLookup.Add(c, collider.boneName);
                     if (existingCollider) existingLookup.Add(c, existingCollider);
                 }
@@ -543,88 +543,79 @@ namespace Reallusion.Import
                 return;
             }
 
-            var dynamicBoneComponent = prefabInstance.GetComponent(dynamicBoneType);
-            if (dynamicBoneComponent == null)
+            // remove old dynamic bone components
+            var dynamicBoneComponents = prefabInstance.GetComponents(dynamicBoneType);
+            Util.LogInfo("Removing: " + dynamicBoneComponents.Length + " DynamicBone Components");
+            foreach (var dbc in dynamicBoneComponents)
             {
-                dynamicBoneComponent = prefabInstance.AddComponent(dynamicBoneType);
+                Component.DestroyImmediate(dbc);
             }
 
-            if (dynamicBoneComponent == null)
-            {
-                Debug.LogError("Unable to add DynamicBone Component!");
-                return;
-            }
+            // find all spring rigs
+            List<GameObject> springRigs = new List<GameObject>();
+            MeshUtil.FindCharacterBones(prefabInstance, springRigs, "RL_Hair_Rig_", "RLS_");
 
-            GameObject hairRig = MeshUtil.FindCharacterBone(prefabInstance, "RL_Hair_Rig_Head");
-            GameObject beardRig = MeshUtil.FindCharacterBone(prefabInstance, "RL_Hair_Rig_Jaw");
-            List<Transform> hairRoots = new List<Transform>();
-
-            if (hairRig)
+            // build all spring rigs
+            foreach (GameObject rigBone in springRigs)
             {
-                for (int i = 0; i < hairRig.transform.childCount; i++)
+                Util.LogInfo("Processing Spring Bone Rig: " + rigBone.name);
+
+                var dynamicBoneComponent = prefabInstance.AddComponent(dynamicBoneType);
+
+                if (dynamicBoneComponent == null)
                 {
-                    Transform childBone = hairRig.transform.GetChild(i);
+                    Debug.LogError("Unable to add DynamicBone Component!");
+                    return;
+                }
+
+                List<Transform> hairRoots = new List<Transform>();
+
+                for (int i = 0; i < rigBone.transform.childCount; i++)
+                {
+                    Transform childBone = rigBone.transform.GetChild(i);
                     hairRoots.Add(childBone);
                 }
-            }
 
-            if (beardRig)
-            {
-                for (int i = 0; i < beardRig.transform.childCount; i++)
+                if (hairRoots.Count > 0)
                 {
-                    Transform childBone = beardRig.transform.GetChild(i);
-                    hairRoots.Add(childBone);
+                    Util.LogInfo("Found: " + hairRoots.Count + " spring bone chains");
+                    SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Roots", hairRoots);                    
+                    SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Damping", 0.11f);
+                    SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Elasticity", 0.04f);
+                    SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Stiffness", 0.33f);
+                    SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Radius", 0.02f);
+                    SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_EndLength", 0f);
+                    SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Gravity", new Vector3(0f, -0.0098f, 0f));
+                    SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_UpdateMode", 0);
                 }
-            }
 
-            if (hairRoots.Count > 0)
-            {
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Roots", hairRoots);
-                /*
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Damping", 0.1f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Elasticity", 0.05f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Stiffness", 0.05f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Radius", 0.02f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_EndLength", 0f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Gravity", new Vector3(0f, -0.0098f, 0f));
-                */
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Damping", 0.11f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Elasticity", 0.04f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Stiffness", 0.33f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Radius", 0.02f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_EndLength", 0f);
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_Gravity", new Vector3(0f, -0.0098f, 0f));                
-                SetTypeField(dynamicBoneType, dynamicBoneComponent, "m_UpdateMode", 0);
-
-
-            }
-
-            Type dynamicBoneColliderType = GetTypeInAssemblies("DynamicBoneColliderBase");
-            FieldInfo fColliders = dynamicBoneType.GetField("m_Colliders");
-            MethodInfo mCollidersClear = fColliders.FieldType.GetMethod("Clear");
-            MethodInfo mCollidersAdd = fColliders.FieldType.GetMethod("Add");
-            var colliders = fColliders.GetValue(dynamicBoneComponent);
-            if (colliders == null)
-            {
-                dynamic o = CreateGeneric(typeof(List<>), dynamicBoneColliderType);
-                fColliders.SetValue(dynamicBoneComponent, o);
-                colliders = fColliders.GetValue(dynamicBoneComponent);
-            }
-
-            mCollidersClear.Invoke(colliders, null);
-            
-            ColliderManager colliderManager = prefabInstance.GetComponent<ColliderManager>();
-            if (colliderManager)
-            {
-                foreach (Collider c in colliderManager.colliders)
+                Type dynamicBoneColliderType = GetTypeInAssemblies("DynamicBoneColliderBase");
+                FieldInfo fColliders = dynamicBoneType.GetField("m_Colliders");
+                MethodInfo mCollidersClear = fColliders.FieldType.GetMethod("Clear");
+                MethodInfo mCollidersAdd = fColliders.FieldType.GetMethod("Add");
+                var colliders = fColliders.GetValue(dynamicBoneComponent);
+                if (colliders == null)
                 {
-                    var dynamicBoneColliderComponent = c.gameObject.GetComponent(dynamicBoneColliderType);
-                    if (dynamicBoneColliderComponent != null)
+                    dynamic o = CreateGeneric(typeof(List<>), dynamicBoneColliderType);
+                    fColliders.SetValue(dynamicBoneComponent, o);
+                    colliders = fColliders.GetValue(dynamicBoneComponent);
+                }
+
+                mCollidersClear.Invoke(colliders, null);
+
+                ColliderManager colliderManager = prefabInstance.GetComponent<ColliderManager>();
+                if (colliderManager)
+                {
+                    foreach (Collider c in colliderManager.colliders)
                     {
-                        mCollidersAdd.Invoke(colliders, new object[] { dynamicBoneColliderComponent });
+                        var dynamicBoneColliderComponent = c.gameObject.GetComponent(dynamicBoneColliderType);
+                        if (dynamicBoneColliderComponent != null)
+                        {
+                            mCollidersAdd.Invoke(colliders, new object[] { dynamicBoneColliderComponent });
+                        }
                     }
                 }
-            }            
+            }                     
         }
 
         /// See: https://stackoverflow.com/questions/10754150/dynamic-type-with-lists-in-c-sharp
@@ -750,6 +741,9 @@ namespace Reallusion.Import
             for (int i = 0; i < mesh.subMeshCount; i++)//
             {
                 Material mat = renderer.sharedMaterials[i];
+
+                if (!mat) continue;
+
                 string sourceName = mat.name;
                 if (sourceName.iContains("_2nd_Pass")) continue;
                 if (sourceName.iContains("_1st_Pass"))
@@ -858,13 +852,13 @@ namespace Reallusion.Import
             importer.alphaSource = TextureImporterAlphaSource.None;
             importer.mipmapEnabled = false;
             importer.mipmapFilter = TextureImporterMipFilter.BoxFilter;
-            importer.sRGBTexture = false;                                                                        
+            importer.sRGBTexture = true;                                                                        
             importer.alphaIsTransparency = false;                            
             importer.textureType = TextureImporterType.Default;
             importer.isReadable = true;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.compressionQuality = 0;
-            importer.maxTextureSize = 256;
+            importer.maxTextureSize = 2048;
 
             AssetDatabase.WriteImportSettingsIfDirty(path);
         }        
