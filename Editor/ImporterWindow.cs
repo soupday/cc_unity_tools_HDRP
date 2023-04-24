@@ -379,15 +379,29 @@ namespace Reallusion.Import
             RestoreData();
             RestoreSelection();
             
-            if (validCharacters == null || validCharacters.Count == 0)
+            if (validCharacters == null || validCharacters.Count == 0)            
             {
                 GUILayout.BeginVertical();
                 GUILayout.FlexibleSpace();
+
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
-                GUILayout.Label("No CC/iClone Characters detected!");
+                GUILayout.Label("No CC/iClone Characters detected!");                                
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
+
+                GUILayout.Space(20f);
+
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(new GUIContent(iconActionRefresh, "Reload the character list, for after adding or removing characters."),
+                    GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
+                {
+                    refreshAfterGUI = true;
+                }
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
                 GUILayout.FlexibleSpace();
                 GUILayout.EndVertical();                
                 return;

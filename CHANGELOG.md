@@ -7,6 +7,7 @@ Changelog
 - Fix to hair mesh extraction when hair and non-hair materials share vertices.
 - Support for updated spring rigs from blender tools add-on.
 - Improved PhysX weight mapping from mesh to cloth vertices.
+- Added refresh button to importer window when no characters detected.
 
 ### v 1.4.7
 - Brow correction added to wrinkle map system.
