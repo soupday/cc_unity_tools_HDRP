@@ -172,7 +172,7 @@ namespace Reallusion.Import
             {
                 if (EditorPrefs.HasKey("RL_Physics_Weight_Map_Collider_Detect_Threshold"))
                     return EditorPrefs.GetFloat("RL_Physics_Weight_Map_Collider_Detect_Threshold");
-                return 0.25f;
+                return 0.5f;
             }
 
             set
@@ -858,7 +858,7 @@ namespace Reallusion.Import
             importer.isReadable = true;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.compressionQuality = 0;
-            importer.maxTextureSize = 256;
+            importer.maxTextureSize = 2048;
 
             AssetDatabase.WriteImportSettingsIfDirty(path);
         }        
