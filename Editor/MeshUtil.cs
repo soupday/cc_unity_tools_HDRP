@@ -527,7 +527,7 @@ namespace Reallusion.Import
             }
 
             return null;
-        }
+        }        
 
         public static GameObject FindCharacterBone(GameObject gameObject, string name1, string name2)
         {
@@ -545,6 +545,24 @@ namespace Reallusion.Import
             }
 
             return null;
+        }
+
+        public static void FindCharacterBones(GameObject gameObject, List<GameObject> bones, params string [] searchNames)
+        {
+            if (gameObject && !bones.Contains(gameObject))
+            {
+                if (Util.NameContainsKeywords(gameObject.name, searchNames))
+                {
+                    bones.Add(gameObject);
+                }
+
+                int children = gameObject.transform.childCount;
+                for (int i = 0; i < children; i++)
+                {
+                    GameObject childObject = gameObject.transform.GetChild(i).gameObject;
+                    FindCharacterBones(childObject, bones, searchNames);
+                }
+            }
         }
 
         public static void CharacterOpenCloseMouth(Object obj)
