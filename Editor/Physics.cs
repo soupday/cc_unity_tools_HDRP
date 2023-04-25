@@ -279,8 +279,7 @@ namespace Reallusion.Import
 
         public GameObject AddPhysics()
         {
-            bool animationMode = AnimationMode.InAnimationMode();
-            if (animationMode) AnimationMode.StopAnimationMode();
+            bool animationMode = WindowManager.StopAnimationMode();
 
             AddColliders();
             AddCloth();
@@ -288,7 +287,7 @@ namespace Reallusion.Import
 
             prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
 
-            if (animationMode) AnimationMode.StartAnimationMode();
+            WindowManager.RestartAnimationMode(animationMode);
 
             return prefabAsset;
         }

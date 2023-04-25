@@ -397,7 +397,7 @@ namespace Reallusion.Import
                 if (GUILayout.Button(new GUIContent(iconActionRefresh, "Reload the character list, for after adding or removing characters."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
-                    refreshAfterGUI = true;
+                    EditorApplication.delayCall += RefreshCharacterList;
                 }
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
@@ -1290,8 +1290,8 @@ namespace Reallusion.Import
         void RebuildCharacterPhysics()
         {
             WindowManager.HideAnimationPlayer(true);
-            WindowManager.HideAnimationRetargeter(true);            
-            if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+            WindowManager.HideAnimationRetargeter(true);
+            WindowManager.StopAnimationMode();            
 
             GameObject prefabAsset = Physics.RebuildPhysics(contextCharacter);
 
