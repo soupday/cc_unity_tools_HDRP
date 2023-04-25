@@ -1290,8 +1290,8 @@ namespace Reallusion.Import
         void RebuildCharacterPhysics()
         {
             WindowManager.HideAnimationPlayer(true);
-            WindowManager.HideAnimationRetargeter(true);            
-            if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+            WindowManager.HideAnimationRetargeter(true);
+            WindowManager.StopAnimationMode();            
 
             GameObject prefabAsset = Physics.RebuildPhysics(contextCharacter);
 

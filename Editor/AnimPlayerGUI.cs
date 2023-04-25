@@ -74,8 +74,7 @@ namespace Reallusion.Import
             {
                 EditorApplication.update -= UpdateDelegate;
 
-                if (AnimationMode.InAnimationMode())
-                    AnimationMode.StopAnimationMode();
+                WindowManager.StopAnimationMode();
 
                 if (CharacterAnimator)       
                 {
@@ -133,7 +132,7 @@ namespace Reallusion.Import
             if (doneInitFace) ResetFace(true, true);
 
             // stop animation mode
-            if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+            WindowManager.StopAnimationMode();
 
             if (!animator || CharacterAnimator != animator) doneInitFace = false;
 
