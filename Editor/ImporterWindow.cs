@@ -397,7 +397,7 @@ namespace Reallusion.Import
                 if (GUILayout.Button(new GUIContent(iconActionRefresh, "Reload the character list, for after adding or removing characters."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
-                    refreshAfterGUI = true;
+                    EditorApplication.delayCall += RefreshCharacterList;
                 }
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
