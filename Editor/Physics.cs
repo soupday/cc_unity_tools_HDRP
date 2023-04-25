@@ -279,8 +279,7 @@ namespace Reallusion.Import
 
         public GameObject AddPhysics()
         {
-            bool animationMode = AnimationMode.InAnimationMode();
-            if (animationMode) AnimationMode.StopAnimationMode();
+            bool animationMode = WindowManager.StopAnimationMode();
 
             AddColliders();
             AddCloth();
