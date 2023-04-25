@@ -298,7 +298,7 @@ namespace Reallusion.Import
 		{
 			WindowManager.HideAnimationPlayer(true);
 			WindowManager.HideAnimationRetargeter(true);
-			if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+			WindowManager.StopAnimationMode();
 
 			GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(component);			
 			if (prefabRoot)
