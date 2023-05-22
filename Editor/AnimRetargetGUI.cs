@@ -25,6 +25,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using System.IO;
+using UnityEditor.SearchService;
 
 namespace Reallusion.Import
 {
@@ -1290,6 +1291,30 @@ namespace Reallusion.Import
 
             var output = Object.Instantiate(workingClip);  // clone so that workingClip isn't locked to an on-disk asset
             AnimationClip outputClip = output as AnimationClip;
+
+            // **Addition** for the edit mode animator player: the clip settings of the working clip
+            // may contain user set flags that are for evaluation purposes only (e.g. loopBlendPositionXZ)
+            // the original clip's settings should be copied to the output clip and the loop flag set as
+            // per the user preference to auto loop the animation.
+
+            // record the user preferred loop status 
+            AnimationClipSettings outputClipSettings = AnimationUtility.GetAnimationClipSettings(outputClip);
+            bool isLooping = outputClipSettings.loopTime;
+
+            // obtain the original settings
+            AnimationClipSettings originalClipSettings = AnimationUtility.GetAnimationClipSettings(OriginalClip);
+
+            // re-impose the loop status            
+            originalClipSettings.loopTime = isLooping;
+
+            //update the output clip with the looping modified original settings
+            AnimationUtility.SetAnimationClipSettings(outputClip, outputClipSettings);
+
+            // the correct settings can now be written to disk - but the in memory copy used by the
+            // player/re-tartgeter will be untouched so end users dont see a behaviour change after saving
+
+            // **End of addition**
+
             AssetDatabase.CreateAsset(outputClip, assetPath);
 
             AnimationClip asset = AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);

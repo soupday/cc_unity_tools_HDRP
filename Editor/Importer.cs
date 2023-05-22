@@ -672,8 +672,12 @@ namespace Reallusion.Import
         private Material CreateRemapMaterial(MaterialType materialType, Material sharedMaterial, string sourceName)
         {            
             // get the template material.
-            Material templateMaterial = Pipeline.GetTemplateMaterial(sourceName, materialType, characterInfo.BuildQuality, 
-                characterInfo, USE_AMPLIFY_SHADER, characterInfo.FeatureUseTessellation, characterInfo.FeatureUseWrinkleMaps);
+            Material templateMaterial = Pipeline.GetTemplateMaterial(sourceName, materialType, 
+                characterInfo.BuildQuality, 
+                characterInfo, USE_AMPLIFY_SHADER, 
+                characterInfo.FeatureUseTessellation, 
+                characterInfo.FeatureUseWrinkleMaps, 
+                characterInfo.FeatureUseDigitalHuman);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -1433,6 +1437,9 @@ namespace Reallusion.Import
 
             ConnectTextureTo(sourceName, mat, "_ThicknessMap", "TransMap",
                 matJson, "Custom Shader/Image/Transmission Map");
+
+            ConnectTextureTo(sourceName, mat, "_SpecularMask", "SpecMask",
+                matJson, "Custom Shader/Image/Specular Mask");
 
             ConnectTextureTo(sourceName, mat, "_MicroNormalMap", "MicroN",
                 matJson, "Custom Shader/Image/MicroNormal", 
