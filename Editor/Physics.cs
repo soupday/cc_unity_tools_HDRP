@@ -277,7 +277,7 @@ namespace Reallusion.Import
             }
         }
 
-        public GameObject AddPhysics()
+        public GameObject AddPhysics(bool savePrefabAsset = false)
         {
             bool animationMode = WindowManager.StopAnimationMode();
 
@@ -285,7 +285,10 @@ namespace Reallusion.Import
             AddCloth();
             AddSpringBones();
 
-            prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
+            if (savePrefabAsset)
+            {
+                prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
+            }
 
             WindowManager.RestartAnimationMode(animationMode);
 
@@ -874,7 +877,7 @@ namespace Reallusion.Import
                 {
                     characterInfo.ShaderFlags |= CharacterInfo.ShaderFeatureFlags.ClothPhysics;
                     Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance);
-                    physics.AddPhysics();
+                    physics.AddPhysics(true);
                     characterInfo.Write();
                 }
 

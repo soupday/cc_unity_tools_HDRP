@@ -22,6 +22,8 @@ using UnityEngine;
 using System;
 using System.IO;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
+using UnityEngine.Diagnostics;
 
 namespace Reallusion.Import
 {
@@ -590,16 +592,23 @@ namespace Reallusion.Import
                 sceneInstance.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;                
             }
 
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(sceneInstance, prefabPath);
-
+            bool assetExists = Util.AssetPathExists(prefabPath);
+            if (assetExists)
+            {
+                AssetDatabase.DeleteAsset(prefabPath);
+            }
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(sceneInstance, prefabPath, InteractionMode.AutomatedAction);
             return prefab;
         }
 
         public static GameObject SaveAndRemovePrefabInstance(GameObject prefabAsset, GameObject prefabInstance)
-        {            
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
+        {
+            //PrefabUtility.SavePrefabAsset(prefabInstance);
+            string assetPath = AssetDatabase.GetAssetPath(prefabAsset);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(prefabInstance, assetPath, 
+                                                                          InteractionMode.AutomatedAction);
             UnityEngine.Object.DestroyImmediate(prefabInstance);
-            return prefab;
+            return prefabAsset;
         }
 
         public static int CountLODs(GameObject fbx)
@@ -720,7 +729,8 @@ namespace Reallusion.Import
                 lodGroup.RecalculateBounds();
             }
 
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(sceneLODInstance, prefabPath);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(sceneLODInstance, prefabPath, 
+                                                                          InteractionMode.AutomatedAction);
 
             return prefab;
         }        

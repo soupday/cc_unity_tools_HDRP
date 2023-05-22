@@ -28,7 +28,16 @@ namespace Reallusion.Import
         public enum ProcessingType { None, Basic, HighQuality }
         public enum EyeQuality { None, Basic, Parallax, Refractive }
         public enum HairQuality { None, Default, TwoPass, Coverage }
-        public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4, SpringBoneHair = 8, WrinkleMaps = 16 }
+        public enum ShaderFeatureFlags 
+        { 
+            NoFeatures = 0, 
+            Tessellation = 1, 
+            ClothPhysics = 2, 
+            HairPhysics = 4, 
+            SpringBoneHair = 8, 
+            WrinkleMaps = 16,
+            DigitalHuman = 32,
+        }
 
         public enum RigOverride { None = 0, Generic, Humanoid }
 
@@ -159,6 +168,7 @@ namespace Reallusion.Import
         public bool FeatureUseClothPhysics => (ShaderFlags & ShaderFeatureFlags.ClothPhysics) > 0;
         public bool FeatureUseHairPhysics => (ShaderFlags & ShaderFeatureFlags.HairPhysics) > 0;
         //public bool FeatureUseSpringBones => (ShaderFlags & ShaderFeatureFlags.SpringBones) > 0;
+        public bool FeatureUseDigitalHuman => (ShaderFlags & ShaderFeatureFlags.DigitalHuman) > 0;
         public bool BasicMaterials => logType == ProcessingType.Basic;
         public bool HQMaterials => logType == ProcessingType.HighQuality;
         public EyeQuality QualEyes { get { return qualEyes; } set { qualEyes = value; } }
@@ -183,6 +193,7 @@ namespace Reallusion.Import
         public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoFeatures;
         public bool BuiltFeatureWrinkleMaps => (BuiltShaderFlags & ShaderFeatureFlags.WrinkleMaps) > 0;
         public bool BuiltFeatureTessellation => (BuiltShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
+        public bool BuiltFeatureDigitalHuman => (BuiltShaderFlags & ShaderFeatureFlags.DigitalHuman) > 0;
         public bool BuiltBasicMaterials => builtLogType == ProcessingType.Basic;
         public bool BuiltHQMaterials => builtLogType == ProcessingType.HighQuality;
         public bool BuiltDualMaterialHair => builtQualHair == HairQuality.TwoPass;
@@ -192,7 +203,7 @@ namespace Reallusion.Import
         public HairQuality BuiltQualHair => builtQualHair;
         public bool BuiltRefractiveEyes => BuiltQualEyes == EyeQuality.Refractive;
         public bool BuiltBasicEyes => BuiltQualEyes == EyeQuality.Basic;
-        public bool BuiltParallaxEyes => BuiltQualEyes == EyeQuality.Parallax;        
+        public bool BuiltParallaxEyes => BuiltQualEyes == EyeQuality.Parallax;
 
         public MaterialQuality BuiltQuality => BuiltHQMaterials ? MaterialQuality.High : MaterialQuality.Default;
         public bool Unprocessed => builtLogType == ProcessingType.None;

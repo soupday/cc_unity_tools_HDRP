@@ -43,7 +43,7 @@ namespace Reallusion.Import
 
     public static class Pipeline
     {
-        public const string VERSION = "1.4.9";
+        public const string VERSION = "1.5.0";
 
 #if HDRP_10_5_0_OR_NEWER
         // version
@@ -545,8 +545,7 @@ namespace Reallusion.Import
 
             SerializedObject hdrp = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath(assetPath)[0]);
             if (hdrp == null) return;
-
-            int index;
+            
             bool modified = false;
             string[] profiles = new string[] { "RL_Skin_Profile", "RL_Teeth_Profile", "RL_Eye_Profile", "RL_SSS_Profile" };
 
@@ -615,7 +614,7 @@ namespace Reallusion.Import
 
                     if (add)
                     {
-                        index = list.arraySize;
+                        int index = list.arraySize;
                         if (index < 15)
                         {
                             list.InsertArrayElementAtIndex(index);
@@ -794,15 +793,15 @@ namespace Reallusion.Import
         }        
 
         public static Material GetTemplateMaterial(string sourceName, MaterialType materialType, MaterialQuality quality, 
-            CharacterInfo info, bool useAmplify = false, bool useTessellation = false, bool useWrinkleMaps = false)
+            CharacterInfo info, bool useAmplify = false, bool useTessellation = false, bool useWrinkleMaps = false, bool useDigitalHuman = false)
         {
             string templateName = GetTemplateMaterialName(sourceName, materialType, quality, info);
 
-            return GetUpgradedTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation, useWrinkleMaps);
+            return GetUpgradedTemplateMaterial(sourceName, templateName, quality, useAmplify, useTessellation, useWrinkleMaps, useDigitalHuman);
         }
 
         public static Material GetUpgradedTemplateMaterial(string sourceName, string templateName, MaterialQuality quality, 
-            bool useAmplify, bool useTessellation, bool useWrinkleMaps)
+            bool useAmplify, bool useTessellation, bool useWrinkleMaps, bool useDigitalHuman)
         {
             string customTemplateName;
             Material customTemplate = null;
@@ -811,6 +810,17 @@ namespace Reallusion.Import
             if (useAmplify)
             {
                 customTemplateName = templateName + "_Amplify";
+                foundTemplate = Util.FindMaterial(customTemplateName);
+                if (foundTemplate)
+                {
+                    templateName = customTemplateName;
+                    customTemplate = foundTemplate;
+                }
+            }
+
+            if (useDigitalHuman)
+            {
+                customTemplateName = templateName + "_DH";
                 foundTemplate = Util.FindMaterial(customTemplateName);
                 if (foundTemplate)
                 {

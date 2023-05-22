@@ -250,6 +250,7 @@ namespace Reallusion.Import
 
         public void PostProcessingAndLighting()
         {
+            Debug.Log("PostProcessingAndLighting");
             if (Pipeline.is3D || Pipeline.isURP)
             {
                 Material skybox = (Material)Util.FindAsset("RL Preview Gradient Skybox");
@@ -269,9 +270,10 @@ namespace Reallusion.Import
                 ppl.volumeTrigger = camera.transform;
                 LayerMask everything = ~0;
                 ppl.volumeLayer = everything;
-                ppl.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;
+                ppl.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;                
                 ppv.isGlobal = true;
-                ppv.profile = volume;
+                //ppv.profile = volume;
+                ppv.sharedProfile = volume;
             }
 #endif
 

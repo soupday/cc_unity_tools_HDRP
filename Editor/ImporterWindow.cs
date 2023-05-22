@@ -28,8 +28,19 @@ using Object = UnityEngine.Object;
 
 namespace Reallusion.Import
 {
+    [System.Serializable]
     public class ImporterWindow : EditorWindow
     {
+        
+        [SerializeField]
+        private static bool sceneFocus = false;
+
+        public static bool isSceneFocus { get { return sceneFocus; } }
+        public static void SetSceneFocus(bool val)
+        {
+            sceneFocus = val;
+        }
+
         public enum Mode { none, single, multi }
 
         private static readonly string windowTitle = "CC/iC Importer " + Pipeline.FULL_VERSION;
