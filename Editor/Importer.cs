@@ -43,6 +43,7 @@ namespace Reallusion.Import
         private List<string> doneTextureGUIDS = new List<string>();
         private Dictionary<Material, Texture2D> bakedDetailMaps;
         private Dictionary<Material, Texture2D> bakedThicknessMaps;
+        private Dictionary<Material, Texture2D> bakedHDRPMaps;
         private readonly BaseGeneration generation;
         private readonly bool blenderProject;
 
@@ -193,6 +194,7 @@ namespace Reallusion.Import
 
             bakedDetailMaps = new Dictionary<Material, Texture2D>();
             bakedThicknessMaps = new Dictionary<Material, Texture2D>();
+            bakedHDRPMaps = new Dictionary<Material, Texture2D>();
         }
 
         public GameObject Import()
@@ -443,6 +445,11 @@ namespace Reallusion.Import
                                     PrepDefaultMap(sourceName, "TransMap", matJson, "Custom Shader/Image/Transmission Map");
                                     PrepDefaultMap(sourceName, "MicroN", matJson, "Custom Shader/Image/MicroNormal", FLAG_NORMAL);
                                 }
+                            }
+                            
+                            if (materialType == MaterialType.Skin || materialType == MaterialType.Head)
+                            {
+                                FixHDRPMap(sharedMat, sourceName, matJson);
                             }
                         }
                     }
@@ -1421,10 +1428,18 @@ namespace Reallusion.Import
 
             ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
                 matJson, "Textures/Normal",
-                FLAG_NORMAL);            
+                FLAG_NORMAL);
 
-            ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
-                matJson, "Textures/HDRP");
+            // try to use corrected HDRP mask mask
+            if (bakedHDRPMaps.TryGetValue(sharedMat, out Texture2D bakedHDRP))
+            {
+                mat.SetTextureIf("_MaskMap", bakedHDRP);
+            }
+            else
+            {
+                ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
+                    matJson, "Textures/HDRP");
+            }
 
             ConnectTextureTo(sourceName, mat, "_MetallicAlphaMap", "MetallicAlpha",
                 matJson, "Textures/MetallicAlpha");
@@ -2163,6 +2178,36 @@ namespace Reallusion.Import
             if (!DoneTexture(tex)) SetTextureImport(tex, name, FLAG_FOR_BAKE + flags);
         }
 
+        private void FixHDRPMap(Material sharedMat, string sourceName, QuickJSON jsonData, 
+            string maskJsonPath = "Textures/HDRP", string maskSuffix = "HDRP",
+            string detailJsonPath = "Custom Shader/Image/MicroNormalMask", string detailSuffix = "MicroNMask")
+        {            
+            int flags = 0;
+            string maskJsonTexturePath = jsonData?.GetStringValue(maskJsonPath + "/Texture Path");
+            string detailJsonTexturePath = jsonData?.GetStringValue(detailJsonPath + "/Texture Path");            
+
+            Texture2D mask = GetTextureFrom(maskJsonTexturePath, sourceName, maskSuffix, out string maskName, true);
+            Texture2D detail = GetTextureFrom(detailJsonTexturePath, sourceName, detailSuffix, out string detailName, true);
+            
+            // make sure to set the correct import settings for 
+            // these textures before using them for baking...                        
+            if (!DoneTexture(mask)) SetTextureImport(mask, maskName, FLAG_FOR_BAKE + flags);
+            if (!DoneTexture(detail)) SetTextureImport(detail, detailName, FLAG_FOR_BAKE + flags);
+
+            ComputeBake baker = new ComputeBake(fbx, characterInfo);
+            
+            Texture2D bakedTex = null;
+
+            if (mask && detail)
+            {
+                bakedTex = baker.BakeCorrectedHDRPMap(mask, detail, maskName);
+                if (bakedTex)
+                {
+                    bakedHDRPMaps.Add(sharedMat, bakedTex);
+                }
+            }
+        }
+
         private void BakeDefaultMap(Material sharedMat, string sourceName, string shaderRef, string suffix, QuickJSON jsonData, string jsonPath)
         {
             ComputeBake baker = new ComputeBake(fbx, characterInfo);
@@ -2182,12 +2227,18 @@ namespace Reallusion.Import
                 {
                     case "_ThicknessMap":                        
                         bakedTex = baker.BakeDefaultSkinThicknessMap(tex, name);
-                        bakedThicknessMaps.Add(sharedMat, bakedTex);
+                        if (bakedTex)
+                        {
+                            bakedThicknessMaps.Add(sharedMat, bakedTex);
+                        }
                         break;
 
                     case "_DetailMap":                        
                         bakedTex = baker.BakeDefaultDetailMap(tex, name);
-                        bakedDetailMaps.Add(sharedMat, bakedTex);
+                        if (bakedTex)
+                        {
+                            bakedDetailMaps.Add(sharedMat, bakedTex);
+                        }
                         break;
                 }
             }

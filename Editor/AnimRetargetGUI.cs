@@ -476,7 +476,7 @@ namespace Reallusion.Import
                 if (fbxAsset)
                 {
                     string assetPath = GenerateClipAssetPath(OriginalClip, fbxAsset);
-                    WriteAnimationToAssetDatabase(WorkingClip, assetPath);
+                    WriteAnimationToAssetDatabase(WorkingClip, assetPath, true);
                 }
             }
             GUILayout.EndVertical();
@@ -1283,7 +1283,10 @@ namespace Reallusion.Import
             return assetPath;
         }
 
-        static AnimationClip WriteAnimationToAssetDatabase(AnimationClip workingClip, string assetPath)
+        
+
+
+        static AnimationClip WriteAnimationToAssetDatabase(AnimationClip workingClip, string assetPath, bool originalSettings = false)
         {            
             if (string.IsNullOrEmpty(assetPath)) return null;
 
@@ -1292,28 +1295,31 @@ namespace Reallusion.Import
             var output = Object.Instantiate(workingClip);  // clone so that workingClip isn't locked to an on-disk asset
             AnimationClip outputClip = output as AnimationClip;
 
-            // **Addition** for the edit mode animator player: the clip settings of the working clip
-            // may contain user set flags that are for evaluation purposes only (e.g. loopBlendPositionXZ)
-            // the original clip's settings should be copied to the output clip and the loop flag set as
-            // per the user preference to auto loop the animation.
+            if (originalSettings)
+            {
+                // **Addition** for the edit mode animator player: the clip settings of the working clip
+                // may contain user set flags that are for evaluation purposes only (e.g. loopBlendPositionXZ)
+                // the original clip's settings should be copied to the output clip and the loop flag set as
+                // per the user preference to auto loop the animation.
 
-            // record the user preferred loop status 
-            AnimationClipSettings outputClipSettings = AnimationUtility.GetAnimationClipSettings(outputClip);
-            bool isLooping = outputClipSettings.loopTime;
+                // record the user preferred loop status 
+                AnimationClipSettings outputClipSettings = AnimationUtility.GetAnimationClipSettings(outputClip);
+                bool isLooping = outputClipSettings.loopTime;
 
-            // obtain the original settings
-            AnimationClipSettings originalClipSettings = AnimationUtility.GetAnimationClipSettings(OriginalClip);
+                // obtain the original settings
+                AnimationClipSettings originalClipSettings = AnimationUtility.GetAnimationClipSettings(OriginalClip);
 
-            // re-impose the loop status            
-            originalClipSettings.loopTime = isLooping;
+                // re-impose the loop status            
+                originalClipSettings.loopTime = isLooping;
 
-            //update the output clip with the looping modified original settings
-            AnimationUtility.SetAnimationClipSettings(outputClip, outputClipSettings);
+                //update the output clip with the looping modified original settings
+                AnimationUtility.SetAnimationClipSettings(outputClip, outputClipSettings);
 
-            // the correct settings can now be written to disk - but the in memory copy used by the
-            // player/re-tartgeter will be untouched so end users dont see a behaviour change after saving
+                // the correct settings can now be written to disk - but the in memory copy used by the
+                // player/re-tartgeter will be untouched so end users dont see a behaviour change after saving
 
-            // **End of addition**
+                // **End of addition**
+            }
 
             AssetDatabase.CreateAsset(outputClip, assetPath);
 
@@ -1471,7 +1477,7 @@ namespace Reallusion.Import
                     if (File.Exists(assetPath) && !replace) continue;
                     AnimationClip workingClip = AnimPlayerGUI.CloneClip(clip);
                     RetargetBlendShapes(clip, workingClip, prefabAsset, false);
-                    AnimationClip asset = WriteAnimationToAssetDatabase(workingClip, assetPath);
+                    AnimationClip asset = WriteAnimationToAssetDatabase(workingClip, assetPath, false);
                     index++;
                 }
 

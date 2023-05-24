@@ -40,10 +40,6 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - Texture2D_280f2ae3ed8e4fbfafbec67a6e3fa14b:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _CFULCMask:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -94,6 +90,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _SpecularMask:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecularMask_1:
+        m_Texture: {fileID: 2800000, guid: 87f14e2b52f83e646a8168875ec6afb5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ThicknessMap:
@@ -210,7 +210,6 @@ Material:
     - _DstBlend: 0
     - _EarScatterScale: 1
     - _EarSmoothnessMod: 0
-    - _EdgePower: 4
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
     - _ForeheadScatterScale: 1
@@ -230,25 +229,18 @@ Material:
     - _OpaqueCullMode: 2
     - _RScatterScale: 1
     - _RSmoothnessMod: 0
-    - _RayTracing: 0
     - _ReceivesSSR: 1
     - _ReceivesSSRTransparent: 0
-    - _RefractionModel: 0
     - _RenderQueueType: 1
     - _RequireSplitLighting: 1
     - _Smoothness2: 0.75
     - _SmoothnessMax: 0.8
-    - _SmoothnessMax_1: 4
     - _SmoothnessMin: 0
-    - _SmoothnessMin_1: 2
-    - _SmoothnessMin_2: 0.627
-    - _SmoothnessMin_3: 0.969
-    - _SmoothnessMix: 0.05
-    - _SmoothnessMix_1: 1.5
+    - _SmoothnessMix: 0.25
     - _SmoothnessPower: 1.25
-    - _SpecularMaskMax: 0.969
-    - _SpecularMaskMin: 0.627
-    - _SpecularMaskPower: 2
+    - _SpecularMaskMax_1: 0.5
+    - _SpecularMaskMin_1: -0.5
+    - _SpecularMaskPower_1: 2
     - _SrcBlend: 1
     - _StencilRef: 4
     - _StencilRefDepth: 8

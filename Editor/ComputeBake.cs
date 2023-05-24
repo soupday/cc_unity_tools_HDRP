@@ -3283,6 +3283,12 @@ namespace Reallusion.Import
             return null;
         }
 
+        public Texture2D BakeCorrectedHDRPMap(Texture2D mask, Texture2D detail, string name)
+        {
+            Texture2D bakedThickness = BakeHDRPMap(mask, detail, name);
+            return bakedThickness;
+        }
+
         public Texture2D BakeDefaultSkinThicknessMap(Texture2D thickness, string name)
         {
             Texture2D bakedThickness = BakeThicknessMap(thickness, 0f, 1.0f, Color.white, Texture2D.whiteTexture, true, name);
@@ -3312,6 +3318,30 @@ namespace Reallusion.Import
                 bakeShader.SetTexture(kernel, "Flow", flowMap);
                 bakeShader.SetFloat("tangentFlipY", tangentFlipY ? 1f : 0f);
                 bakeShader.SetVector("tangentVector", tangentVector);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
+
+        private Texture2D BakeHDRPMap(Texture2D mask, Texture2D detail,
+            string name, string kernelName = "RLHDRPCorrected")
+        {
+            Vector2Int maxSize = GetMaxSize(mask);            
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(maxSize, texturesFolder, name);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                mask = CheckMask(mask);
+                detail = CheckMask(detail);
+
+                int kernel = bakeShader.FindKernel(kernelName);
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.SetTexture(kernel, "Mask", mask);
+                bakeShader.SetTexture(kernel, "Detail", detail);                
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
                 return bakeTarget.SaveAndReimport();
             }

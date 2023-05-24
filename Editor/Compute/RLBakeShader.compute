@@ -55,6 +55,7 @@
 #pragma kernel RLHairAO
 #pragma kernel RLEyeOcclusionDiffuse
 #pragma kernel RLFlowToNormal
+#pragma kernel RLHDRPCorrected
 
 #pragma kernel RLChannelPackLinear
 #pragma kernel RLChannelPackSymmetryLinear
@@ -90,6 +91,7 @@ float normalBlendStrength;
 float sssNormalSoften;
 
 TEX2D(Mask);
+TEX2D(Detail);
 TEX2D(MetallicGloss);
 TEX2D(AO);
 TEX2D(Metallic);
@@ -1635,6 +1637,18 @@ void RLFlowToNormal(uint3 id : SV_DispatchThreadID)
     float4 color = float4(saturate(modified.xyz * 0.5 + 0.5), 1.0);
 
     Result[id.xy] = color;
+}
+
+[numthreads(1, 1, 1)] 
+void RLHDRPCorrected(uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = GetUV(id.xy);
+
+    float4 mask = SAMPLE(Mask, uv);    
+    float detail = SAMPLE(Detail, uv).g;
+    mask.b = sqrt(detail);
+
+    Result[id.xy] = mask;
 }
 
 
