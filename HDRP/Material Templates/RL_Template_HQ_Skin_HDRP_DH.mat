@@ -93,7 +93,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SpecularMask_1:
-        m_Texture: {fileID: 2800000, guid: 87f14e2b52f83e646a8168875ec6afb5, type: 3}
+        m_Texture: {fileID: 2800000, guid: 725163539542b7143948df1f4ebb4df3, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ThicknessMap:
@@ -233,14 +233,14 @@ Material:
     - _ReceivesSSRTransparent: 0
     - _RenderQueueType: 1
     - _RequireSplitLighting: 1
-    - _Smoothness2: 0.75
+    - _Smoothness2: 0.25
     - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
-    - _SmoothnessMix: 0.25
-    - _SmoothnessPower: 1.25
-    - _SpecularMaskMax_1: 0.5
-    - _SpecularMaskMin_1: -0.5
-    - _SpecularMaskPower_1: 2
+    - _SmoothnessMix: 0.3
+    - _SmoothnessPower: 1.33
+    - _SpecularMaskMax_1: 0.575
+    - _SpecularMaskMin_1: 0.375
+    - _SpecularMaskPower_1: 1
     - _SrcBlend: 1
     - _StencilRef: 4
     - _StencilRefDepth: 8

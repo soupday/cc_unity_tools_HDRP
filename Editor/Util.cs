@@ -1319,14 +1319,6 @@ namespace Reallusion.Import
             }
         }
 
-
-
-
-
-
-
-
-
         public static void LogInfo(string message)
         {
             if (LOG_LEVEL >= 2)

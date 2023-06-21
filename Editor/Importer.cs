@@ -97,6 +97,21 @@ namespace Reallusion.Import
             }
         }
 
+        public static bool USE_DIGITAL_HUMAN_SHADER
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Use_Digital_Human_Shaders"))
+                    return EditorPrefs.GetBool("RL_Importer_Use_Digital_Human_Shaders");
+                return false;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_Use_Digital_Human_Shaders", value);
+            }
+        }
+
         public static bool ANIMPLAYER_ON_BY_DEFAULT
         {
             get
@@ -683,8 +698,8 @@ namespace Reallusion.Import
                 characterInfo.BuildQuality, 
                 characterInfo, USE_AMPLIFY_SHADER, 
                 characterInfo.FeatureUseTessellation, 
-                characterInfo.FeatureUseWrinkleMaps, 
-                characterInfo.FeatureUseDigitalHuman);
+                characterInfo.FeatureUseWrinkleMaps,
+                USE_DIGITAL_HUMAN_SHADER);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -1557,6 +1572,10 @@ namespace Reallusion.Import
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
                 float smoothnessMax = Util.CombineSpecularToSmoothness(specular, ValueByPipeline(1f, 0.9f, 1f));
                 mat.SetFloatIf("_SmoothnessMax", smoothnessMax);
+                //float secondarySmoothness = 0.85f * smoothnessMax;
+                //float smoothnessMix = Mathf.Clamp(0.15f * ((1f / Mathf.Pow(secondarySmoothness, 4f)) - 1f), 0.05f, 0.9f);
+                //mat.SetFloatIf("_Smoothness2", secondarySmoothness);
+                //mat.SetFloatIf("_SmoothnessMix", smoothnessMix);
                 // URP's lights affect the AMP SSS more than 3D or HDRP
                 mat.SetFloatIf("_SubsurfaceScale", matJson.GetFloatValue("Subsurface Scatter/Lerp"));                
                 mat.SetFloatIf("_MicroSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale"));

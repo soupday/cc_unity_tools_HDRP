@@ -885,7 +885,7 @@ namespace Reallusion.Import
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
             bool useTessellation = characterInfo.BuiltFeatureTessellation;
             bool useWrinkleMaps = characterInfo.BakeCustomShaders && characterInfo.BuiltFeatureWrinkleMaps;
-            bool useDigitalHuman = characterInfo.BuiltFeatureDigitalHuman;
+            bool useDigitalHuman = characterInfo.BakeCustomShaders && mat.shader.name.iEndsWith("_DH");
 
             if (!IS_HDRP && !useAmplify) sssNormalSoften = 0f;
 
@@ -1140,7 +1140,7 @@ namespace Reallusion.Import
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
             bool useTessellation = characterInfo.BuiltFeatureTessellation;
-            bool useDigitalHuman = characterInfo.BuiltFeatureDigitalHuman;
+            bool useDigitalHuman = characterInfo.BakeCustomShaders && mat.shader.name.iEndsWith("_DH");
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -1237,7 +1237,7 @@ namespace Reallusion.Import
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
             bool useTessellation = characterInfo.BuiltFeatureTessellation;
-            bool useDigitalHuman = characterInfo.BuiltFeatureDigitalHuman;
+            bool useDigitalHuman = characterInfo.BakeCustomShaders && mat.shader.name.iEndsWith("_DH");
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -1361,7 +1361,7 @@ namespace Reallusion.Import
 
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
             bool useTessellation = characterInfo.BuiltFeatureTessellation;
-            bool useDigitalHuman = characterInfo.BuiltFeatureDigitalHuman;
+            bool useDigitalHuman = characterInfo.BakeCustomShaders && mat.shader.name.iEndsWith("_DH");
 
             Texture2D bakedBaseMap = cornea;
             Texture2D bakedMaskMap = mask;
@@ -1567,7 +1567,7 @@ namespace Reallusion.Import
             bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
             bool useTessellation = characterInfo.BuiltFeatureTessellation;
             bool useWrinkleMaps = characterInfo.BuiltFeatureWrinkleMaps;
-            bool useDigitalHuman = characterInfo.BuiltFeatureDigitalHuman;
+            bool useDigitalHuman = characterInfo.BakeCustomShaders && mat.shader.name.iEndsWith("_DH");
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;

@@ -271,12 +271,15 @@ namespace Reallusion.Import
         {
             StoreBackScene();
 
-            WindowManager.OpenPreviewScene(contextCharacter.Fbx);
+            PreviewScene ps = WindowManager.OpenPreviewScene(contextCharacter.Fbx);
 
             if (WindowManager.showPlayer)
                 WindowManager.ShowAnimationPlayer();
 
             ResetAllSceneViewCamera();
+
+            // lighting doesn't update correctly when first previewing a scene in HDRP
+            EditorApplication.delayCall += ForceUpdateLighting;
         }
 
         private void RefreshCharacterList()
@@ -636,11 +639,24 @@ namespace Reallusion.Import
             int features = 2;
             if (Pipeline.isHDRP12) features++; // tessellation
             if (Pipeline.is3D || Pipeline.isURP) features++; // Amplify
-            
+
             if (features == 1)
+            {
                 contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(contextCharacter.ShaderFlags);
+            }
             else if (features > 1)
+            {
+                EditorGUI.BeginChangeCheck();
                 contextCharacter.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(contextCharacter.ShaderFlags);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    if ((contextCharacter.ShaderFlags & CharacterInfo.ShaderFeatureFlags.SpringBoneHair) > 0 &&
+                        (contextCharacter.ShaderFlags & CharacterInfo.ShaderFeatureFlags.HairPhysics) > 0)
+                    {
+                        contextCharacter.ShaderFlags -= CharacterInfo.ShaderFeatureFlags.SpringBoneHair;
+                    }
+                }
+            }
 
             GUI.enabled = true;
 
@@ -975,7 +991,14 @@ namespace Reallusion.Import
             GUILayout.EndHorizontal();
             GUILayout.Space(TITLE_SPACE);
 
-            if (!Pipeline.isHDRP)
+            if (Pipeline.isHDRP)
+            {
+                Importer.USE_DIGITAL_HUMAN_SHADER = GUILayout.Toggle(Importer.USE_DIGITAL_HUMAN_SHADER,
+                    new GUIContent("Use Dual Specular Shaders", "Use Dual Specular shaders where possible. Dual specular shaders use the stack lit master node which is forward only. "+
+                    "The dual specular shader setups are based principles used in the Heretic digital human shaders."));
+                GUILayout.Space(ROW_SPACE);
+            }
+            else
             {
                 Importer.USE_AMPLIFY_SHADER = GUILayout.Toggle(Importer.USE_AMPLIFY_SHADER,
                     new GUIContent("Use Amplify Shaders", "Use the more advanced Amplify shaders where possible. " +
@@ -1029,6 +1052,7 @@ namespace Reallusion.Import
             GUILayout.EndVertical();
             GUILayout.Space(ROW_SPACE);
 
+            /*
             GUILayout.Space(10f);
             GUILayout.BeginVertical(new GUIContent("", "When assigning weight maps, the system analyses the weights of the mesh to determine which colliders affect the cloth simulation.Only cloth weights above this threshold will be considered for collider detection. Note: This is the default value supplied to the WeightMapper component, it can be further modified there."), importerStyles.labelStyle);
             GUILayout.Label("Collider Detection Threshold");
@@ -1040,6 +1064,7 @@ namespace Reallusion.Import
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
             GUILayout.Space(ROW_SPACE);
+            */
 
             GUILayout.Space(10f);
             string label = "Log Everything";
@@ -1354,6 +1379,11 @@ namespace Reallusion.Import
             }
         }
 
+        public static void ForceUpdateLighting()
+        {
+            PreviewScene.PokeLighting();
+        }
+
         public static void ResetOptions()
         {
             Importer.MIPMAP_BIAS = 0f;
@@ -1361,6 +1391,7 @@ namespace Reallusion.Import
             Importer.REBAKE_BLENDER_UNITY_MAPS = false;
             Importer.ANIMPLAYER_ON_BY_DEFAULT = false;
             Importer.USE_AMPLIFY_SHADER = true;
+            Importer.USE_DIGITAL_HUMAN_SHADER = false;
             Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = 0.5f;
             Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = 0.25f;
             Util.LOG_LEVEL = 0;

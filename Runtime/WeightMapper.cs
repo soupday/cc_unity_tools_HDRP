@@ -66,10 +66,11 @@ namespace Reallusion.Import
             public float bending;
             [Space(8)]
             public bool softRigidCollision;
+            [Range(0f, 100f)]
             public float softRigidMargin;
-            [HideInInspector]
+            [Space(8)]
             public bool selfCollision;
-            [HideInInspector]
+            [Range(0f, 10f)]
             public float selfMargin;
             [Space(8)]
             [Range(1f, 5000f)]
@@ -77,6 +78,7 @@ namespace Reallusion.Import
             [Range(1f, 500f)]
             public float stiffnessFrequency;
             [Space(8)]
+            [HideInInspector]
             [Range(0f, 1f)]            
             public float colliderThreshold;
 
@@ -163,6 +165,7 @@ namespace Reallusion.Import
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
+            List<uint> selfCollisionIndices = new List<uint>();
             List<Collider> colliders = new List<Collider>();
             List<Collider> detectedColliders = new List<Collider>(colliders.Count);
             ColliderManager colliderManager = gameObject.GetComponentInParent<ColliderManager>();                        
@@ -175,7 +178,8 @@ namespace Reallusion.Import
             // reset coefficients
             for (int i = 0; i < cloth.coefficients.Length; i++)
             {
-                coefficients[i].maxDistance = 0;
+                coefficients[i].maxDistance = 0f;
+                coefficients[i].collisionSphereDistance = 0f;
             }
 
             // apply weight maps to cloth coefficients and cloth settings
@@ -193,6 +197,8 @@ namespace Reallusion.Import
                 {
                     if (data.name == sourceName && data.activate)
                     {
+                        float rigidMargin = data.softRigidMargin * modelScale;
+                        float selfMargin = data.selfCollision ? data.selfMargin * modelScale : 0f;
                         cloth.useGravity = data.gravity;
                         cloth.bendingStiffness = Mathf.Pow(1f - (data.bending / 100f), 0.5f);
                         cloth.stretchingStiffness = Mathf.Pow(1f - (data.stretch / 100f), 0.5f);
@@ -201,8 +207,8 @@ namespace Reallusion.Import
                         cloth.collisionMassScale = data.mass;
                         cloth.friction = data.friction;
                         cloth.damping = Mathf.Pow(data.damping, 0.333f);
-                        cloth.selfCollisionDistance = data.selfMargin * modelScale;
-                        cloth.selfCollisionStiffness = 1f;                        
+                        cloth.selfCollisionDistance = selfMargin;
+                        cloth.selfCollisionStiffness = 0.2f;                        
 
                         bool doColliders = updateColliders && data.softRigidCollision;
 
@@ -265,16 +271,18 @@ namespace Reallusion.Import
                                 float maxDistance = data.maxDistance * weight * modelScale;
                                 float maxPenetration = data.maxPenetration * weight * modelScale;
                                 float modelMax = Mathf.Max(maxDistance, maxPenetration);
-                                float worldMax = modelMax * worldScale;
-                                if (data.softRigidCollision)
-                                {
-                                    coefficients[clothVert].maxDistance = maxDistance;
-                                    coefficients[clothVert].collisionSphereDistance = maxPenetration;
-                                }
+                                float worldMax = modelMax * worldScale;                                
+                                coefficients[clothVert].maxDistance = maxDistance;
+                                coefficients[clothVert].collisionSphereDistance = maxPenetration;
 
+                                if (data.selfCollision && modelMax > selfMargin)
+                                {
+                                    selfCollisionIndices.Add((uint)clothVert);
+                                }
+                                
                                 if (doColliders && optimizeColliders &&
-                                    weight >= data.colliderThreshold &&
-                                    modelMax > data.softRigidMargin * modelScale)
+                                    //weight >= data.colliderThreshold &&
+                                    modelMax > rigidMargin)
                                 {
                                     Vector3 world = transform.localToWorldMatrix * vert;
                                     
@@ -307,6 +315,8 @@ namespace Reallusion.Import
             {                
                 cloth.coefficients = coefficients;
             }
+            
+            cloth.SetSelfAndInterCollisionIndices(selfCollisionIndices);
 
             // set colliders
             if (updateColliders)
@@ -328,7 +338,7 @@ namespace Reallusion.Import
             const long p1 = 73868489;
             const long p2 = 23875351;
             const long p3 = 53885459;
-            const long discrete = 1000000;
+            const long discrete = 10000000;
 
             long x = (long)(v.x * discrete);
             long y = (long)(v.y * discrete);
