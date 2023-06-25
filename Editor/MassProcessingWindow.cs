@@ -70,7 +70,8 @@ namespace Reallusion.Import
         List<CharacterInfo> workingList;
         List<CharacterListDisplay> displayList;
         CharacterInfo characterSettings;
-
+        private bool isMassSelected = false;
+        private string searchString = string.Empty;
 
 
         [MenuItem("Reallusion/Processing Tools/Batch Processing", priority = 300)]
@@ -263,6 +264,24 @@ namespace Reallusion.Import
 
                 foreach (CharacterInfo c in query)
                 {
+                    bool searchMatch = false;
+
+                    if (string.IsNullOrEmpty(searchString))
+                    {
+                        searchMatch = true;
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrEmpty(c.name))
+                        {
+                            bool contains = c.name.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0;
+                            if (contains)
+                            {
+                                searchMatch = true;
+                            }
+                        }
+                    }
+
                     CharacterListDisplay newInfo = new CharacterListDisplay(c.guid, masterList);
                     CharacterInfo originalInfo = (CharacterInfo)workingList.Where(t => t.guid.Equals(c.guid)).FirstOrDefault();
                     if (originalInfo != null)
@@ -274,18 +293,25 @@ namespace Reallusion.Import
                     {
                         case FilterType.all:
                             {
-                                output.Add(newInfo);
+                                if (searchMatch) 
+                                    output.Add(newInfo);
                                 break;
                             }
                         case FilterType.processed:
                             {
-                                if (newInfo.BuiltBasicMaterials || newInfo.BuiltHQMaterials) output.Add(newInfo);
+                                if (searchMatch)
+                                {
+                                    if (newInfo.BuiltBasicMaterials || newInfo.BuiltHQMaterials) output.Add(newInfo);
+                                }
                                 break;
 
                             }
                         case FilterType.unprocessed:
                             {
-                                if (!newInfo.BuiltBasicMaterials && !newInfo.BuiltHQMaterials) output.Add(newInfo);
+                                if (searchMatch)
+                                {
+                                    if (!newInfo.BuiltBasicMaterials && !newInfo.BuiltHQMaterials) output.Add(newInfo);
+                                }
                                 break;
                             }
                     }
@@ -377,7 +403,8 @@ namespace Reallusion.Import
             if (windowMode == WindowMode.standard) PROC_LIST_WIDTH = width;
 
             Rect controlsRect = new Rect(0f, TOP_PADDING, PROC_LIST_WIDTH + WINDOW_MARGIN, PROC_CTRL_HEIGHT);
-            Rect listRect = new Rect(0f, controlsRect.yMax + TOP_PADDING, PROC_LIST_WIDTH + WINDOW_MARGIN, listHeight);
+            Rect nameFilterRect = new Rect(0f, controlsRect.yMax, PROC_LIST_WIDTH + WINDOW_MARGIN, 20f);
+            Rect listRect = new Rect(0f, nameFilterRect.yMax + TOP_PADDING, PROC_LIST_WIDTH + WINDOW_MARGIN, listHeight);
             Rect extendedDragBarRect = new Rect(listRect.xMax, TOP_PADDING, DRAG_BAR_WIDTH, innerHeight);
             Rect extendedSettingsRect = new Rect(extendedDragBarRect.xMax, TOP_PADDING, width - PROC_LIST_WIDTH, innerHeight);
 
@@ -387,6 +414,7 @@ namespace Reallusion.Import
             //TestShowArea(listRect, Color.magenta);
 
             ONGUIControlsArea(controlsRect);
+            OnGUINameFlterArea(nameFilterRect);
             OnGUIDetailWorkingDisplayListArea(listRect);
 
             if (windowMode == WindowMode.extended)
@@ -440,7 +468,9 @@ namespace Reallusion.Import
                 windowFilterType = FilterType.all;
                 FilterDisplayedList();
             }
-
+                        
+            string buttonName = "resetButtonName";
+            GUI.SetNextControlName(buttonName);
             if (GUILayout.Button(new GUIContent(iconRefreshList, "Reset list and all settings."),
                                      GUILayout.Width(ICON_SIZE_MID),
                                      GUILayout.Height(ICON_SIZE_MID)))
@@ -449,6 +479,10 @@ namespace Reallusion.Import
                 workingList = BuildCharacterInfoList();
                 windowSortType = SortType.ascending;
                 windowFilterType = FilterType.all;
+                isMassSelected = false;
+                searchString = string.Empty;
+                GUI.FocusControl(buttonName);
+                GUI.FocusControl("");
                 FilterDisplayedList();
             }
 
@@ -463,6 +497,75 @@ namespace Reallusion.Import
             }
 
             GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
+        
+        private void OnGUINameFlterArea(Rect areaRect)
+        {
+            Rect selectAllBoxRect = new Rect(areaRect.x, areaRect.y, 20f, areaRect.height);
+            Rect nameFilterRect = new Rect(selectAllBoxRect.xMax, areaRect.y, areaRect.width - selectAllBoxRect.width, areaRect.height);
+            Texture2D massSelectedIcon = isMassSelected ? iconListChecked : iconListUnchecked;
+
+            GUILayout.BeginArea(selectAllBoxRect);
+
+            GUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
+
+            GUILayout.BeginHorizontal(); 
+            GUILayout.Space(LIST_MEMBER_LEFT_MARGIN);
+            GUILayout.BeginVertical(); 
+            GUILayout.FlexibleSpace();
+            GUILayout.Box(massSelectedIcon, new GUIStyle(),
+                            GUILayout.Width(16f),
+                            GUILayout.Height(16f));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
+
+            GUILayout.EndArea();
+
+            if (HandleListClick(selectAllBoxRect))
+            {
+                isMassSelected = !isMassSelected;
+                ToggleSelectAllDisplayed();
+                Repaint();
+            }
+
+            GUILayout.BeginArea(nameFilterRect);
+
+            GUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
+            //GUILayout.Space(1f);
+
+            GUILayout.BeginHorizontal(); // horizontal container for image and label
+            GUILayout.Space(10f);
+            EditorGUI.BeginChangeCheck();
+            searchString = EditorGUILayout.TextField(searchString, EditorStyles.toolbarSearchField);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                FilterDisplayedList();
+            }
+
+            // The TextField does not update until it loses focus, so clearing the string wont clear the text field
+            
+            string buttonName = "clearButtonName";
+            GUI.SetNextControlName(buttonName); //name the clear button
+            if (GUILayout.Button(EditorGUIUtility.IconContent("winbtn_win_close_h"), EditorStyles.toolbarButton, GUILayout.Width(22)))
+            {
+                searchString = string.Empty;
+                GUI.FocusControl(buttonName); // after clearing the search string, force focus onto the named button to force the textfield to update
+                GUI.FocusControl("");
+                FilterDisplayedList();
+            } 
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
+
             GUILayout.EndArea();
         }
 
@@ -786,6 +889,20 @@ namespace Reallusion.Import
                 FilterDisplayedList();
             }
         }
+
+        private void ToggleSelectAllDisplayed()
+        {
+            foreach (CharacterListDisplay character in displayList)
+            {
+                character.selectedInList = isMassSelected;
+                CharacterInfo workingListChar = workingList.Where(t => t.guid == character.guid).FirstOrDefault();
+                if (workingListChar != null)
+                {
+                    workingListChar.selectedInList = isMassSelected;
+                }
+            }
+        }
+
 
         private bool ValidateSettings(CharacterInfo characterSettings, bool refresh = true)
         {
