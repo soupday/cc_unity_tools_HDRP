@@ -141,6 +141,7 @@ namespace Reallusion.Import
             Importer import = new Importer(character);
             GameObject prefab = import.Import();
             character.Write();
+            character.Release();
         }
 
         public void BeginMassProcessing()
