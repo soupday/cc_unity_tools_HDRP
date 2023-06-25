@@ -249,14 +249,14 @@ namespace Reallusion.Import
                     case SortType.ascending:
                         {
                             query = from character in processingList
-                                    orderby character.name.Substring(0, 1) ascending
+                                    orderby character.name ascending //.Substring(0, 1) ascending
                                     select character;
                             break;
                         }
                     case SortType.descending:
                         {
                             query = from character in processingList
-                                    orderby character.name.Substring(0, 1) descending
+                                    orderby character.name descending //.Substring(0, 1) descending
                                     select character;
                             break;
                         }
