@@ -49,8 +49,9 @@ namespace Reallusion.Import
         private static string backScenePath;
         private static Mode mode;        
         public static ImporterWindow Current { get; private set; }        
-        public CharacterInfo Character { get { return contextCharacter; } }        
-                        
+        public CharacterInfo Character { get { return contextCharacter; } }
+        public static List<CharacterInfo> ValidCharacters => validCharacters;
+
         private Vector2 iconScrollView;
         private bool previewCharacterAfterGUI;
         private bool refreshAfterGUI;

@@ -53,6 +53,9 @@ namespace Reallusion.Import
         public bool animationSetup = false;
         public int animationRetargeted = 0;
 
+        public bool selectedInList;
+        public bool settingsChanged;
+
         // these are the settings the character is currently set to build
         private ProcessingType logType = ProcessingType.None;
         private EyeQuality qualEyes = EyeQuality.Parallax;
@@ -60,7 +63,6 @@ namespace Reallusion.Import
         public RigOverride UnknownRigType { get; set; }
         private bool bakeCustomShaders = true;
         private bool bakeSeparatePrefab = true;
-        private bool useTessellation = false;
         private GameObject prefabAsset;
 
         public struct GUIDRemap
@@ -242,10 +244,26 @@ namespace Reallusion.Import
             if (path.iContains("_lod")) isLOD = true;
             guidRemaps = new List<GUIDRemap>();
 
+            selectedInList = false;
+            settingsChanged = false;
+
             if (File.Exists(infoFilepath))            
                 Read();
             else
                 Write();            
+        }
+
+        public void ApplySettings(CharacterInfo from)
+        {
+            UnknownRigType = from.UnknownRigType;
+            logType = from.logType;
+            qualEyes = from.qualEyes;
+            qualHair = from.qualHair;
+            bakeCustomShaders = from.bakeCustomShaders;
+            bakeSeparatePrefab = from.bakeSeparatePrefab;  
+            ShaderFlags = from.ShaderFlags;
+            Debug.Log(logType);
+            ApplySettings();
         }
 
         public void ApplySettings()
@@ -258,7 +276,6 @@ namespace Reallusion.Import
             builtQualHair = qualHair;
             builtBakeCustomShaders = bakeCustomShaders;
             builtBakeSeparatePrefab = bakeSeparatePrefab;
-            builtTessellation = useTessellation;
             BuiltShaderFlags = ShaderFlags;
         }        
 
