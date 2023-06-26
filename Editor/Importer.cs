@@ -214,8 +214,6 @@ namespace Reallusion.Import
 
         public GameObject Import(bool batchMode = false)
         {
-            Selection.activeObject = null;
-
             // make sure custom diffusion profiles are installed
             Pipeline.AddDiffusionProfilesHDRP();
 

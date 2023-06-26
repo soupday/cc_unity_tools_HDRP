@@ -190,6 +190,16 @@ namespace Reallusion.Import
             BatchQueueNextBuild(1f);
         }
 
+        private bool IsInFilteredDisplayList(CharacterInfo character)
+        {
+            foreach (CharacterListDisplay cld in displayList)
+            {
+                if (cld.guid == character.guid) return true;
+            }
+
+            return false;
+        }
+
         public void BeginMassProcessing()
         {
             buildQueue = new List<CharacterInfo>();
@@ -197,7 +207,7 @@ namespace Reallusion.Import
             foreach (CharacterInfo character in workingList)
             {
                 // all individual settings are stored in CharacterInfoList character (base class CharacterInfo)
-                if (character.selectedInList)
+                if (character.selectedInList && IsInFilteredDisplayList(character))
                 {
                     // process character.
                     CharacterInfo originalCharacterFromImporterWindow = ImporterWindow.ValidCharacters.Where(t => t.guid == character.guid).FirstOrDefault();
