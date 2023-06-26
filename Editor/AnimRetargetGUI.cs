@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
@@ -25,7 +24,6 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using System.IO;
-using UnityEditor.SearchService;
 
 namespace Reallusion.Import
 {

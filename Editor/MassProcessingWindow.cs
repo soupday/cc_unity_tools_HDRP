@@ -68,11 +68,11 @@ namespace Reallusion.Import
         private bool fakeButtonDoubleClick = false;
         private ImporterWindow importerWindow;
         List<CharacterInfo> workingList;
-        List<CharacterListDisplay> displayList;
+        List<CharacterListDisplay> displayList;        
         CharacterInfo characterSettings;
         private bool isMassSelected = false;
         private string searchString = string.Empty;
-
+        List<CharacterInfo> buildQueue;
 
         [MenuItem("Reallusion/Processing Tools/Batch Processing", priority = 300)]
         public static void ATInitAssetProcessing()
@@ -127,9 +127,50 @@ namespace Reallusion.Import
             initDone = true;
         }
 
-        private void BuildCharacter(CharacterInfo character)
+        private float batchTimer = 0f;
+        public void BatchUpdateTimer()
         {
-            Util.LogInfo("Batch processing materials: " + character.name);
+            if (batchTimer > 0f)
+            {
+                if (Time.realtimeSinceStartup > batchTimer)
+                {
+                    batchTimer = 0f;
+                    EditorApplication.update -= BatchUpdateTimer;
+                    BatchBuildNextQueueCharacter();
+                }
+            }
+            else
+            {
+                batchTimer = 0f;
+                EditorApplication.update -= BatchUpdateTimer;
+            }
+        }
+
+        public void BatchQueueNextBuild(float delay)
+        {
+            EditorApplication.update -= BatchUpdateTimer;
+            Selection.activeObject = null;
+
+            if (buildQueue == null || buildQueue.Count == 0)
+            {
+                Debug.Log("Done batch processing!");
+                batchTimer = 0f;                
+            }
+            else
+            {
+                Debug.Log("Building: " + buildQueue[0].name + " (" + buildQueue.Count + " remaining) in " + delay + "s");
+                batchTimer = Time.realtimeSinceStartup + delay;
+                EditorApplication.update += BatchUpdateTimer;
+            }
+        }
+
+        public void BatchBuildNextQueueCharacter()
+        {
+            if (buildQueue == null || buildQueue.Count == 0) return;
+
+            CharacterInfo character = buildQueue[0];
+
+            Util.LogInfo("Batch Queue Processing: " + character.name);
 
             // refresh the character info for any Json changes
             character.Refresh();
@@ -140,13 +181,19 @@ namespace Reallusion.Import
 
             // import and build the materials from the Json data
             Importer import = new Importer(character);
-            GameObject prefab = import.Import();
+            GameObject prefab = import.Import(true);
             character.Write();
             character.Release();
+
+            buildQueue.Remove(character);
+
+            BatchQueueNextBuild(1f);
         }
 
         public void BeginMassProcessing()
         {
+            buildQueue = new List<CharacterInfo>();
+
             foreach (CharacterInfo character in workingList)
             {
                 // all individual settings are stored in CharacterInfoList character (base class CharacterInfo)
@@ -155,12 +202,17 @@ namespace Reallusion.Import
                     // process character.
                     CharacterInfo originalCharacterFromImporterWindow = ImporterWindow.ValidCharacters.Where(t => t.guid == character.guid).FirstOrDefault();
                     if (originalCharacterFromImporterWindow != null)
-                    {
-                        originalCharacterFromImporterWindow.ApplySettings(character);
-                        BuildCharacter(originalCharacterFromImporterWindow);
+                    {                        
+                        if (!buildQueue.Contains(character))
+                        {
+                            originalCharacterFromImporterWindow.ApplySettings(character);
+                            buildQueue.Add(character);
+                        }
                     }                    
                 }
             }
+
+            BatchQueueNextBuild(1f);
         }
 
         public static Vector2 GetMinSize()
@@ -223,7 +275,7 @@ namespace Reallusion.Import
         {
             List<CharacterInfo> output = new List<CharacterInfo>();
 
-            if (ImporterWindow.ValidCharacters.Count > 0)
+            if (ImporterWindow.ValidCharacters?.Count > 0)
             {
                 foreach (Reallusion.Import.CharacterInfo c in ImporterWindow.ValidCharacters)
                 {

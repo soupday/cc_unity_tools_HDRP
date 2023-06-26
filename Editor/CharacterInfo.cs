@@ -187,8 +187,7 @@ namespace Reallusion.Import
         private EyeQuality builtQualEyes = EyeQuality.Parallax;
         private HairQuality builtQualHair = HairQuality.TwoPass;
         private bool builtBakeCustomShaders = true;
-        private bool builtBakeSeparatePrefab = true;
-        private bool builtTessellation = false;
+        private bool builtBakeSeparatePrefab = true;        
 
         public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoFeatures;
         public bool BuiltFeatureWrinkleMaps => (BuiltShaderFlags & ShaderFeatureFlags.WrinkleMaps) > 0;

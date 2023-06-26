@@ -16,11 +16,9 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 #if UNITY_POST_PROCESSING_3_1_1
 using UnityEngine.Rendering.PostProcessing;

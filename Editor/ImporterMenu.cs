@@ -21,7 +21,6 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using static TreeEditor.TextureAtlas;
 
 namespace Reallusion.Import
 {

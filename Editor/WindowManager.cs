@@ -16,17 +16,11 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using UnityEditor.Compilation;
 using System;
-using UnityEditor.SearchService;
 using Scene = UnityEngine.SceneManagement.Scene;
-
 
 namespace Reallusion.Import
 {
@@ -39,6 +33,7 @@ namespace Reallusion.Import
         public static bool openedInPreviewScene;
         public static bool showPlayer = true;
         public static bool showRetarget = false;
+        public static bool batchProcess = false;
         private static bool eventsAdded = false;
         private static bool showPlayerAfterPlayMode = false;
         private static bool showRetargetAfterPlayMode = false;
@@ -569,6 +564,6 @@ namespace Reallusion.Import
         public static void StartTimer(float delay)
         {
             timer = delay;
-        }
+        }        
     }
 }

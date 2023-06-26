@@ -212,8 +212,10 @@ namespace Reallusion.Import
             bakedHDRPMaps = new Dictionary<Material, Texture2D>();
         }
 
-        public GameObject Import()
+        public GameObject Import(bool batchMode = false)
         {
+            Selection.activeObject = null;
+
             // make sure custom diffusion profiles are installed
             Pipeline.AddDiffusionProfilesHDRP();
 
@@ -350,7 +352,8 @@ namespace Reallusion.Import
 
             Util.LogAlways("Done building materials for character " + characterName + "!");
 
-            Selection.activeObject = prefabAsset;
+            if (!batchMode) Selection.activeObject = prefabAsset;
+            else Selection.activeObject = null;
 
             //System.Media.SystemSounds.Asterisk.Play();
 
