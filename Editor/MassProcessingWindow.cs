@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using System.Linq;
 using System.IO;
+using UnityEditor.PackageManager.UI;
 
 namespace Reallusion.Import
 {
@@ -78,6 +79,15 @@ namespace Reallusion.Import
         public static void ATInitAssetProcessing()
         {
             OpenProcessingWindow();
+        }
+
+        [MenuItem("Reallusion/Processing Tools/Batch Processing", true)]
+        public static bool ValidateATInitAssetProcessing()
+        {
+            if (ImporterWindow.Current != null && !EditorWindow.HasOpenInstances<MassProcessingWindow>())
+                return true;
+            else
+                return false;
         }
 
         public static MassProcessingWindow OpenProcessingWindow()
@@ -530,9 +540,7 @@ namespace Reallusion.Import
                 windowFilterType = FilterType.all;
                 FilterDisplayedList();
             }
-                        
-            string buttonName = "resetButtonName";
-            GUI.SetNextControlName(buttonName);
+            
             if (GUILayout.Button(new GUIContent(iconRefreshList, "Reset list and all settings."),
                                      GUILayout.Width(ICON_SIZE_MID),
                                      GUILayout.Height(ICON_SIZE_MID)))
@@ -543,7 +551,6 @@ namespace Reallusion.Import
                 windowFilterType = FilterType.all;
                 isMassSelected = false;
                 searchString = string.Empty;
-                GUI.FocusControl(buttonName);
                 GUI.FocusControl("");
                 FilterDisplayedList();
             }
@@ -612,13 +619,9 @@ namespace Reallusion.Import
             }
 
             // The TextField does not update until it loses focus, so clearing the string wont clear the text field
-            
-            string buttonName = "clearButtonName";
-            GUI.SetNextControlName(buttonName); //name the clear button
             if (GUILayout.Button(EditorGUIUtility.IconContent("winbtn_win_close_h"), EditorStyles.toolbarButton, GUILayout.Width(22)))
             {
                 searchString = string.Empty;
-                GUI.FocusControl(buttonName); // after clearing the search string, force focus onto the named button to force the textfield to update
                 GUI.FocusControl("");
                 FilterDisplayedList();
             } 
@@ -1249,6 +1252,7 @@ namespace Reallusion.Import
         private void OnDisable()
         {
             ResetWindow();
+            buildQueue = null;
         }
 
         private void ResetWindow()
