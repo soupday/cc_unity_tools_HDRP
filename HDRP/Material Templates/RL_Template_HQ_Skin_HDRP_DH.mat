@@ -236,10 +236,10 @@ Material:
     - _Smoothness2: 0.25
     - _SmoothnessMax: 0.8
     - _SmoothnessMin: 0
-    - _SmoothnessMix: 0.3
+    - _SmoothnessMix: 0.15
     - _SmoothnessPower: 1.33
     - _SpecularMaskMax_1: 0.575
-    - _SpecularMaskMin_1: 0.375
+    - _SpecularMaskMin_1: 0.1875
     - _SpecularMaskPower_1: 1
     - _SrcBlend: 1
     - _StencilRef: 4

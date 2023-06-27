@@ -1,3 +1,21 @@
+/* 
+ * Copyright (C) 2021 Victor Soupday
+ * This file is part of CC_Unity_Tools <https://github.com/soupday/CC_Unity_Tools>
+ * 
+ * CC_Unity_Tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * CC_Unity_Tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -21,12 +39,12 @@ namespace Reallusion.Import
         const float WINDOW_MARGIN = 2f;
         const float TOP_PADDING = 2f;
         const float SETTINGS_TOP_PADDING = 20f;
-        const float INITIAL_PROC_LIST_WIDTH = 280f;
+        const float INITIAL_PROC_LIST_WIDTH = 360f;
         const float INITIAL_PROC_FLAGS_WIDTH = 60f;
         const float PROC_LIST_MIN_W = 180f;
         const float PROC_FLAGS_MIN_W = 30f;
         const float PROC_CTRL_HEIGHT = 48f;
-        const float INITIAL_PROC_LIST_HEIGHT = 350f;
+        const float INITIAL_PROC_LIST_HEIGHT = 500f;
         const float PROC_LIST_MIN_H = 250f;
         const float INITIAL_SETTINGS_WIDTH = 220f;
         const float SETTINGS_MIN_W = 75f;
@@ -64,9 +82,7 @@ namespace Reallusion.Import
         private Texture2D iconFilterRemove;
         private Texture2D iconRefreshList;
 
-        private bool initDone = false;
-        private bool doubleClick = false;
-        private bool fakeButtonDoubleClick = false;
+        private bool initDone = false;                
         private ImporterWindow importerWindow;
         List<CharacterInfo> workingList;
         List<CharacterListDisplay> displayList;        
@@ -75,7 +91,7 @@ namespace Reallusion.Import
         private string searchString = string.Empty;
         List<CharacterInfo> buildQueue;
 
-        [MenuItem("Reallusion/Processing Tools/Batch Processing", priority = 300)]
+        [MenuItem("Reallusion/Processing Tools/Batch Processing", priority = 400)]
         public static void ATInitAssetProcessing()
         {
             OpenProcessingWindow();
@@ -163,12 +179,12 @@ namespace Reallusion.Import
 
             if (buildQueue == null || buildQueue.Count == 0)
             {
-                Debug.Log("Done batch processing!");
+                Util.LogInfo("Done batch processing!");
                 batchTimer = 0f;                
             }
             else
             {
-                Debug.Log("Building: " + buildQueue[0].name + " (" + buildQueue.Count + " remaining) in " + delay + "s");
+                Util.LogInfo("Building: " + buildQueue[0].name + " (" + buildQueue.Count + " remaining) in " + delay + "s");
                 batchTimer = Time.realtimeSinceStartup + delay;
                 EditorApplication.update += BatchUpdateTimer;
             }
@@ -411,20 +427,17 @@ namespace Reallusion.Import
 
                 switch (sortType)
                 {
-                    case SortType.ascending:
-                        {
-                            query = from character in processingList
-                                    orderby character.name.Substring(0, 1) ascending
-                                    select character;
-                            break;
-                        }
+                    case SortType.ascending:                        
+                        query = from character in processingList
+                                orderby character.name.Substring(0, 1) ascending
+                                select character;
+                        break;                        
                     case SortType.descending:
-                        {
-                            query = from character in processingList
-                                    orderby character.name.Substring(0, 1) descending
-                                    select character;
-                            break;
-                        }
+                    default:                        
+                        query = from character in processingList
+                                orderby character.name.Substring(0, 1) descending
+                                select character;
+                        break;                        
                 }
 
                 foreach (Reallusion.Import.CharacterInfo c in query)
@@ -437,23 +450,17 @@ namespace Reallusion.Import
                     }
 
                     switch (filterType)
-                    {
-                        case FilterType.all:
-                            {
-                                output.Add(newInfo);
-                                break;
-                            }
-                        case FilterType.processed:
-                            {
-                                if (newInfo.BuiltBasicMaterials || newInfo.BuiltHQMaterials) output.Add(newInfo);
-                                break;
-
-                            }
+                    {                        
+                        case FilterType.processed:                            
+                            if (newInfo.BuiltBasicMaterials || newInfo.BuiltHQMaterials) output.Add(newInfo);
+                            break;
                         case FilterType.unprocessed:
-                            {
-                                if (!newInfo.BuiltBasicMaterials && !newInfo.BuiltHQMaterials) output.Add(newInfo);
-                                break;
-                            }
+                            if (!newInfo.BuiltBasicMaterials && !newInfo.BuiltHQMaterials) output.Add(newInfo);
+                            break;
+                        case FilterType.all:
+                        default:
+                            output.Add(newInfo);
+                            break;
                     }
                 }
             }
@@ -1043,10 +1050,12 @@ namespace Reallusion.Import
                 {
                     if (mouseEvent.clickCount == 2)
                     {
-                        fakeButtonDoubleClick = true;
+                        //fakeButtonDoubleClick = true;
                     }
                     else
-                        fakeButtonDoubleClick = false;
+                    {
+                        //fakeButtonDoubleClick = false;
+                    }
                     return true;
                 }
             }

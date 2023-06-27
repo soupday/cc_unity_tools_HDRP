@@ -361,6 +361,17 @@ namespace Reallusion.Import
                     colliderLookup.Add(c, collider.boneName);
                     if (existingCollider) existingLookup.Add(c, existingCollider);
                 }
+                else if (collider.colliderType.Equals(ColliderType.Sphere))
+                {
+                    CapsuleCollider c = g.AddComponent<CapsuleCollider>();
+
+                    c.direction = (int)collider.colliderAxis;
+                    float radius = (collider.radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
+                    c.radius = radius;
+                    c.height = 0f;
+                    colliderLookup.Add(c, collider.boneName);
+                    if (existingCollider) existingLookup.Add(c, existingCollider);
+                }
                 else
                 {
                     //BoxCollider b = g.gameObject.AddComponent<BoxCollider>();
@@ -461,7 +472,7 @@ namespace Reallusion.Import
                 {
                     foreach (CollisionShapeData collider in boneColliders)
                     {
-                        if (collider.colliderType == ColliderType.Capsule && springColliderBones.Contains(collider.boneName))
+                        if (springColliderBones.Contains(collider.boneName))
                         {
                             string colliderName = collider.boneName + "_" + collider.name;
                             Transform bone = FindBone(collider.boneName);

@@ -1,6 +1,14 @@
 Changelog
 =========
 
+### v 1.5.0
+- Animation player system rebuilt to remove AnimationMode.
+    - New system includes foot IK preview, variable speed and camera bone targeting and play mode operation.
+- Optional (settings) dual specular skin shader.
+- HDRP mask detail mask correction. (Export from CC4 not using correct micro normal mask in HDRP mask pack)
+- HDRP Preview scene applies correct skybox when first opened.
+- Batch processing window.
+
 ### v 1.4.8
 - Fix to missing materials in shared material slots.
 - Fix to two pass hair extraction when re-using the same material.
