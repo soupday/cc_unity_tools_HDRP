@@ -205,7 +205,8 @@ namespace Reallusion.Import
                         cloth.collisionMassScale = data.mass;
                         cloth.friction = data.friction;
                         cloth.damping = Mathf.Pow(data.damping, 0.333f);
-                        cloth.selfCollisionDistance = selfMargin;
+                        bool IGNORESELFCOLLISION = true;
+                        cloth.selfCollisionDistance = IGNORESELFCOLLISION ? 0f : selfMargin;
                         cloth.selfCollisionStiffness = 0.2f;                        
 
                         bool doColliders = updateColliders && data.softRigidCollision;

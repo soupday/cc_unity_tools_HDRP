@@ -701,11 +701,13 @@ namespace Reallusion.Import
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             if (GUILayout.Button(buildContent,                
                 GUILayout.Height(BUTTON_HEIGHT), GUILayout.Width(160f)))
             {
                 buildAfterGUI = true;
             }
+            EditorGUI.EndDisabledGroup();
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
