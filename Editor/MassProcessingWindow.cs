@@ -23,6 +23,7 @@ using System;
 using System.Linq;
 using System.IO;
 using UnityEditor.PackageManager.UI;
+using JetBrains.Annotations;
 
 namespace Reallusion.Import
 {
@@ -44,7 +45,8 @@ namespace Reallusion.Import
         const float PROC_LIST_MIN_W = 180f;
         const float PROC_FLAGS_MIN_W = 30f;
         const float PROC_CTRL_HEIGHT = 48f;
-        const float INITIAL_PROC_LIST_HEIGHT = 500f;
+        const float SEARCH_BAR_HEIGHT = 20f;
+        const float INITIAL_PROC_LIST_HEIGHT = 480f;//500f;
         const float PROC_LIST_MIN_H = 250f;
         const float INITIAL_SETTINGS_WIDTH = 220f;
         const float SETTINGS_MIN_W = 75f;
@@ -123,7 +125,7 @@ namespace Reallusion.Import
             //initial window dimensions
             Rect centerPosition = GetRectToCenterWindow(INITIAL_PROC_LIST_WIDTH, INITIAL_PROC_LIST_HEIGHT);
             window.position = centerPosition;
-
+            window.titleContent = new GUIContent("CC/iC Importer - Batch Processing");
             return window;
         }
 
@@ -180,7 +182,9 @@ namespace Reallusion.Import
             if (buildQueue == null || buildQueue.Count == 0)
             {
                 Util.LogInfo("Done batch processing!");
-                batchTimer = 0f;                
+                batchTimer = 0f;
+                // reset the window and displayed list at the end of the build process
+                ResetSettings();
             }
             else
             {
@@ -214,6 +218,26 @@ namespace Reallusion.Import
             buildQueue.Remove(character);
 
             BatchQueueNextBuild(1f);
+
+            EditorApplication.delayCall += ProcessingRefresh;
+        }
+
+        private void ProcessingRefresh()
+        {
+            importerWindow.RefreshCharacterList();
+            FilterDisplayedList();
+        }
+
+        private void ResetSettings()
+        {
+            ResetWindow();
+            workingList = BuildCharacterInfoList();
+            windowSortType = SortType.ascending;
+            windowFilterType = FilterType.all;
+            isMassSelected = false;
+            searchString = string.Empty;
+            GUI.FocusControl("");
+            FilterDisplayedList();
         }
 
         private bool IsInFilteredDisplayList(CharacterInfo character)
@@ -228,6 +252,8 @@ namespace Reallusion.Import
 
         public void BeginMassProcessing()
         {
+            // add a delayed call to refresh the char list in the importer window and the batch window
+            EditorApplication.delayCall += ProcessingRefresh;
             buildQueue = new List<CharacterInfo>();
 
             foreach (CharacterInfo character in workingList)
@@ -477,12 +503,12 @@ namespace Reallusion.Import
             float width = position.width - WINDOW_MARGIN;
             float height = position.height - WINDOW_MARGIN;
             float innerHeight = height - TOP_PADDING;
-            float listHeight = height - TOP_PADDING * 2 - PROC_CTRL_HEIGHT;
+            float listHeight = height - TOP_PADDING * 2 - PROC_CTRL_HEIGHT - SEARCH_BAR_HEIGHT;
 
             if (windowMode == WindowMode.standard) PROC_LIST_WIDTH = width;
 
             Rect controlsRect = new Rect(0f, TOP_PADDING, PROC_LIST_WIDTH + WINDOW_MARGIN, PROC_CTRL_HEIGHT);
-            Rect nameFilterRect = new Rect(0f, controlsRect.yMax, PROC_LIST_WIDTH + WINDOW_MARGIN, 20f);
+            Rect nameFilterRect = new Rect(0f, controlsRect.yMax, PROC_LIST_WIDTH + WINDOW_MARGIN, SEARCH_BAR_HEIGHT);
             Rect listRect = new Rect(0f, nameFilterRect.yMax + TOP_PADDING, PROC_LIST_WIDTH + WINDOW_MARGIN, listHeight);
             Rect extendedDragBarRect = new Rect(listRect.xMax, TOP_PADDING, DRAG_BAR_WIDTH, innerHeight);
             Rect extendedSettingsRect = new Rect(extendedDragBarRect.xMax, TOP_PADDING, width - PROC_LIST_WIDTH, innerHeight);
@@ -552,6 +578,8 @@ namespace Reallusion.Import
                                      GUILayout.Width(ICON_SIZE_MID),
                                      GUILayout.Height(ICON_SIZE_MID)))
             {
+                ResetSettings();
+                /*
                 ResetWindow();
                 workingList = BuildCharacterInfoList();
                 windowSortType = SortType.ascending;
@@ -560,6 +588,7 @@ namespace Reallusion.Import
                 searchString = string.Empty;
                 GUI.FocusControl("");
                 FilterDisplayedList();
+                */
             }
 
             GUILayout.FlexibleSpace();
@@ -649,23 +678,32 @@ namespace Reallusion.Import
             Rect boxRect = new Rect(0f, 0f, PROC_LIST_WIDTH - PROC_FLAGS_WIDTH - 4f, rowHeight);
             Rect flagsBoxRect = new Rect(boxRect.xMax + 2f, 0f, PROC_FLAGS_WIDTH, rowHeight);
             Rect posRect = new Rect(iconBlock);
-            Rect viewRect = new Rect(0f, 0f, PROC_LIST_WIDTH - 14f, rowHeight * displayList.Count);
+            Rect viewRect = new Rect(0f, 0f, PROC_LIST_WIDTH - 14f, rowHeight * (displayList.Count + 0.5f));
 
             listScrollPosition = GUI.BeginScrollView(posRect, listScrollPosition, viewRect, false, false);
             for (int idx = 0; idx < displayList.Count; idx++)
             {
                 CharacterListDisplay info = displayList[idx];
+                CharacterInfo importerWindowInfo = ImporterWindow.ValidCharacters.Where(t => t.guid == info.guid).FirstOrDefault();
                 Texture2D iconTexture = iconUnprocessed;
-                string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
-                if (info.bakeIsBaked)
+                string name = "";
+                if (importerWindowInfo != null)
                 {
-                    if (info.BuiltBasicMaterials) iconTexture = iconMixed;
-                    else if (info.BuiltHQMaterials) iconTexture = iconBaked;
+                    name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(importerWindowInfo.guid));
+                    if (importerWindowInfo.bakeIsBaked)
+                    {
+                        if (importerWindowInfo.BuiltBasicMaterials) iconTexture = iconMixed;
+                        else if (importerWindowInfo.BuiltHQMaterials) iconTexture = iconBaked;
+                    }
+                    else
+                    {
+                        if (importerWindowInfo.BuiltBasicMaterials) iconTexture = iconBasic;
+                        else if (importerWindowInfo.BuiltHQMaterials) iconTexture = iconHQ;
+                    }
                 }
                 else
                 {
-                    if (info.BuiltBasicMaterials) iconTexture = iconBasic;
-                    else if (info.BuiltHQMaterials) iconTexture = iconHQ;
+                    name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(info.guid));
                 }
 
                 float heightDelta = ICON_SIZE_SMALL + 2 * ICON_DETAIL_MARGIN;

@@ -283,7 +283,7 @@ namespace Reallusion.Import
             EditorApplication.delayCall += ForceUpdateLighting;
         }
 
-        private void RefreshCharacterList()
+        public void RefreshCharacterList()
         {
             if (validCharacters == null)
                 validCharacters = new List<CharacterInfo>();
@@ -393,7 +393,8 @@ namespace Reallusion.Import
 
             RestoreData();
             RestoreSelection();
-            
+
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             if (validCharacters == null || validCharacters.Count == 0)            
             {
                 GUILayout.BeginVertical();
@@ -420,7 +421,8 @@ namespace Reallusion.Import
                 GUILayout.FlexibleSpace();
                 GUILayout.EndVertical();                
                 return;
-            }            
+            }
+            EditorGUI.EndDisabledGroup();
 
             float width = position.width - WINDOW_MARGIN;
             float height = position.height - WINDOW_MARGIN;
@@ -461,8 +463,10 @@ namespace Reallusion.Import
             CheckDragAndDrop();
 
             //OnGUIIconArea(iconBlock);
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             OnGUIFlexibleIconArea(iconBlock);
             OnGUIDragBarArea(dragBar);
+            EditorGUI.EndDisabledGroup();
 
             if (windowMode == ImporterWindowMode.Build)
                 OnGUIInfoArea(infoBlock);
@@ -568,12 +572,12 @@ namespace Reallusion.Import
         private void OnGUIOptionArea(Rect optionBlock)
         {            
             GUILayout.BeginArea(optionBlock);
-
+            
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
 
-            GUILayout.BeginVertical();            
-
+            GUILayout.BeginVertical();
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             if (contextCharacter.Generation == BaseGeneration.Unknown)
             {                
                 if (EditorGUILayout.DropdownButton(
@@ -600,10 +604,12 @@ namespace Reallusion.Import
                     menu.AddItem(new GUIContent("High Quality Materials"), contextCharacter.HQMaterials, MaterialOptionSelected, false);
                 menu.ShowAsContext();
             }
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(1f);
 
-            if (contextCharacter.BasicMaterials) GUI.enabled = false;
+            //if (contextCharacter.BasicMaterials) GUI.enabled = false;
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying || contextCharacter.BasicMaterials);
             if (EditorGUILayout.DropdownButton(                
                 content: new GUIContent(contextCharacter.QualEyes.ToString() + " Eyes"),
                 focusType: FocusType.Passive))
@@ -658,12 +664,13 @@ namespace Reallusion.Import
                     }
                 }
             }
-
-            GUI.enabled = true;
+            EditorGUI.EndDisabledGroup();
+            //GUI.enabled = true;
 
             GUILayout.Space(8f);
 
-            if (contextCharacter.BuiltBasicMaterials) GUI.enabled = false;
+            //if (contextCharacter.BuiltBasicMaterials) GUI.enabled = false;
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying || contextCharacter.BuiltBasicMaterials);
             if (EditorGUILayout.DropdownButton(
                 content: new GUIContent(contextCharacter.BakeCustomShaders ? "Bake Custom Shaders":"Bake Default Shaders"),
                 focusType: FocusType.Passive))
@@ -686,7 +693,8 @@ namespace Reallusion.Import
                 menu.AddItem(new GUIContent("Separate Baked Prefab"), contextCharacter.BakeSeparatePrefab, BakePrefabOptionSelected, true);
                 menu.ShowAsContext();
             }
-            GUI.enabled = true;
+            EditorGUI.EndDisabledGroup();
+            //GUI.enabled = true;
 
             GUILayout.Space(8f);
 
@@ -716,7 +724,7 @@ namespace Reallusion.Import
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-
+            EditorGUI.EndDisabledGroup();
             GUILayout.EndArea();            
         }
         
@@ -729,6 +737,7 @@ namespace Reallusion.Import
 
             GUILayout.BeginVertical();
 
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             if (false && !string.IsNullOrEmpty(backScenePath) && File.Exists(backScenePath))
             {               
                 if (GUILayout.Button(new GUIContent("<", "Go back to the last valid scene."), 
@@ -759,43 +768,50 @@ namespace Reallusion.Import
 
                 GUILayout.Space(ACTION_BUTTON_SPACE);
             }
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(ACTION_BUTTON_SPACE + 11f);
 
-            if (contextCharacter.BuiltBasicMaterials) GUI.enabled = false;
+            //if (contextCharacter.BuiltBasicMaterials) GUI.enabled = false;
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying || contextCharacter.BuiltBasicMaterials);
             if (GUILayout.Button(new GUIContent(contextCharacter.bakeIsBaked ? iconActionBakeOn : iconActionBake, "Bake high quality materials down to compatible textures for the default shaders. i.e. HDRP/Lit, URP/Lut or Standard shader."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 bakeAfterGUI = true;
             }
-            GUI.enabled = true;
+            EditorGUI.EndDisabledGroup();
+            //GUI.enabled = true;
 
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
             
             if (contextCharacter.tempHairBake)
             {
+                EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
                 if (GUILayout.Button(new GUIContent(iconActionBakeHairOn, "Restore original hair diffuse textures."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
                     restoreHairAfterGUI = true;
                 }
+                EditorGUI.EndDisabledGroup();
             }
             else //if (!contextCharacter.BuiltBasicMaterials && contextCharacter.HasColorEnabledHair())
             {
-                if (contextCharacter.BuiltBasicMaterials || !contextCharacter.HasColorEnabledHair()) GUI.enabled = false;
-
+                //if (contextCharacter.BuiltBasicMaterials || !contextCharacter.HasColorEnabledHair()) GUI.enabled = false;
+                EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying || contextCharacter.BuiltBasicMaterials || !contextCharacter.HasColorEnabledHair());
                 if (GUILayout.Button(new GUIContent(iconActionBakeHair, "Bake hair diffuse textures, to preview the baked results of the 'Enable Color' in the hair materials."),
                     GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
                 {
                     bakeHairAfterGUI = true;
                 }
+                EditorGUI.EndDisabledGroup();
             }
-            GUI.enabled = true;
+            //GUI.enabled = true;
 
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
-            if (contextCharacter.Unprocessed) GUI.enabled = false;
+            //if (contextCharacter.Unprocessed) GUI.enabled = false;
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying || contextCharacter.Unprocessed);
             if (GUILayout.Button(new GUIContent(iconActionAnims, "Process, extract and rename character animations and create a default animtor controller."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
@@ -805,27 +821,30 @@ namespace Reallusion.Import
                 contextCharacter.animationRetargeted = animationRetargeted;
                 contextCharacter.Write();
             }
-            
+            EditorGUI.EndDisabledGroup();
             //
 
             GUILayout.Space(ACTION_BUTTON_SPACE);
-            
+
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             if (GUILayout.Button(new GUIContent(iconActionPhysics, "Rebuilds the character physics."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 physicsAfterGUI = true;
             }
-            GUI.enabled = true;
+            EditorGUI.EndDisabledGroup();
+            //GUI.enabled = true;
 
 #if UNITY_ALEMBIC_1_0_7
             GUILayout.Space(ACTION_BUTTON_SPACE);
-            
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             if (GUILayout.Button(new GUIContent(iconAlembic, "Process alembic animations with this character's materials."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
                 Alembic.ProcessAlembics(contextCharacter.Fbx, contextCharacter.name, contextCharacter.folder);
             }
-            GUI.enabled = true;
+            EditorGUI.EndDisabledGroup();
+            //GUI.enabled = true;
 #endif
 
             /*
@@ -848,6 +867,7 @@ namespace Reallusion.Import
 
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             if (GUILayout.Button(new GUIContent(iconActionLOD, "Run the LOD combining tool on the prefabs associated with this character."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
@@ -855,11 +875,13 @@ namespace Reallusion.Import
                 Selection.activeObject = AssetDatabase.LoadAssetAtPath(prefabsFolder, typeof(Object)) as Object;
                 LodSelectionWindow.InitTool();
             }
-            GUI.enabled = true;
+            EditorGUI.EndDisabledGroup();
+            //GUI.enabled = true;
 
             GUILayout.Space(ACTION_BUTTON_SPACE * 2f + 11f);
 
-            if (contextCharacter == null) GUI.enabled = false;
+            //if (contextCharacter == null) GUI.enabled = false;
+            EditorGUI.BeginDisabledGroup(contextCharacter == null);
             if (GUILayout.Button(new GUIContent(AnimPlayerGUI.IsPlayerShown() ? iconActionAnimPlayerOn : iconActionAnimPlayer, "Show animation preview player."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
@@ -876,11 +898,13 @@ namespace Reallusion.Import
                     ResetAllSceneViewCamera(characterPrefab);
                 }
             }
-            GUI.enabled = true;
-            
+            EditorGUI.EndDisabledGroup();
+            //GUI.enabled = true;
+
             GUILayout.Space(ACTION_BUTTON_SPACE);
 
-            if (contextCharacter == null) GUI.enabled = false;
+            //if (contextCharacter == null) GUI.enabled = false;
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying || contextCharacter == null);
             if (GUILayout.Button(new GUIContent(AnimRetargetGUI.IsPlayerShown() ? iconActionAvatarAlignOn : iconActionAvatarAlign, "Animation Adjustment & Retargeting."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
@@ -894,7 +918,8 @@ namespace Reallusion.Import
                         WindowManager.ShowAnimationRetargeter();
                 }
             }
-            GUI.enabled = true;
+            //GUI.enabled = true;
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.FlexibleSpace();
 
@@ -927,7 +952,7 @@ namespace Reallusion.Import
             
 
             GUILayout.Space(ACTION_BUTTON_SPACE);
-
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             GUIContent settingsIconGC;
             if (windowMode != ImporterWindowMode.Settings)
                 settingsIconGC = new GUIContent(iconSettings, "Settings.");
@@ -941,6 +966,7 @@ namespace Reallusion.Import
                 else
                     windowMode = ImporterWindowMode.Build;
             }
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.EndVertical();
 
@@ -980,7 +1006,14 @@ namespace Reallusion.Import
 
         private void OnGUISettingsArea(Rect settingsBlock)
         {
+            if (EditorApplication.isPlaying)
+            {
+                windowMode = ImporterWindowMode.Build;
+                return;
+            }
+
             GUILayout.BeginArea(settingsBlock);
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -1103,6 +1136,7 @@ namespace Reallusion.Import
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
+            EditorGUI.EndDisabledGroup();
             GUILayout.EndArea();
         }
 
