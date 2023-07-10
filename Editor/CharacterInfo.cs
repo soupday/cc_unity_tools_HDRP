@@ -214,7 +214,7 @@ namespace Reallusion.Import
         private GameObject fbx;
         private QuickJSON jsonData;
 
-        private void FixCharSettings()
+        public void FixCharSettings()
         {
             if (logType == ProcessingType.HighQuality && !CanHaveHighQualityMaterials)
                 logType = ProcessingType.Basic;
@@ -252,7 +252,7 @@ namespace Reallusion.Import
                 Write();            
         }
 
-        public void ApplySettings(CharacterInfo from)
+        public void CopySettings(CharacterInfo from)
         {
             UnknownRigType = from.UnknownRigType;
             logType = from.logType;
@@ -261,8 +261,7 @@ namespace Reallusion.Import
             bakeCustomShaders = from.bakeCustomShaders;
             bakeSeparatePrefab = from.bakeSeparatePrefab;  
             ShaderFlags = from.ShaderFlags;
-            Debug.Log(logType);
-            ApplySettings();
+            FixCharSettings();
         }
 
         public void ApplySettings()

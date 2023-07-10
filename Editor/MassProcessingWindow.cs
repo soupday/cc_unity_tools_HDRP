@@ -198,24 +198,30 @@ namespace Reallusion.Import
         {
             if (buildQueue == null || buildQueue.Count == 0) return;
 
-            CharacterInfo character = buildQueue[0];
+            CharacterInfo batchCharacter = buildQueue[0];
 
-            Util.LogInfo("Batch Queue Processing: " + character.name);
+            CharacterInfo character = ImporterWindow.ValidCharacters.Where(t => t.guid == batchCharacter.guid).FirstOrDefault();
+            if (character != null)
+            {
+                Util.LogInfo("Batch Queue Processing: " + character.name);
+                
+                character.CopySettings(batchCharacter);
 
-            // refresh the character info for any Json changes
-            character.Refresh();
+                // default to high quality if never set before
+                if (character.BuildQuality == MaterialQuality.None)
+                    character.BuildQuality = MaterialQuality.High;
 
-            // default to high quality if never set before
-            if (character.BuildQuality == MaterialQuality.None)
-                character.BuildQuality = MaterialQuality.High;
+                // refresh the character info for any Json changes
+                character.Refresh();                
 
-            // import and build the materials from the Json data
-            Importer import = new Importer(character);
-            GameObject prefab = import.Import(true);
-            character.Write();
-            character.Release();
+                // import and build the materials from the Json data
+                Importer import = new Importer(character);
+                GameObject prefab = import.Import(true);
+                character.Write();
+                character.Release();
+            }
 
-            buildQueue.Remove(character);
+            buildQueue.Remove(batchCharacter);
 
             BatchQueueNextBuild(1f);
 
@@ -262,15 +268,11 @@ namespace Reallusion.Import
                 if (character.selectedInList && IsInFilteredDisplayList(character))
                 {
                     // process character.
-                    CharacterInfo originalCharacterFromImporterWindow = ImporterWindow.ValidCharacters.Where(t => t.guid == character.guid).FirstOrDefault();
-                    if (originalCharacterFromImporterWindow != null)
-                    {                        
-                        if (!buildQueue.Contains(character))
-                        {
-                            originalCharacterFromImporterWindow.ApplySettings(character);
-                            buildQueue.Add(character);
-                        }
-                    }                    
+                    if (!buildQueue.Contains(character))
+                    {
+                        character.FixCharSettings();
+                        buildQueue.Add(character);
+                    }
                 }
             }
 
@@ -981,13 +983,13 @@ namespace Reallusion.Import
 
             if (characterSettings != null)
             {
-                characterSettings.ApplySettings();
+                characterSettings.FixCharSettings();
 
                 foreach (CharacterInfo character in workingList)
                 {                    
                     if (character != characterSettings && character.selectedInList)
                     {                        
-                        character.ApplySettings(characterSettings);
+                        character.CopySettings(characterSettings);
                         if (ValidateSettings(character))
                             dirty = true;
                     }
