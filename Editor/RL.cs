@@ -428,18 +428,43 @@ namespace Reallusion.Import
                     AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
 
                     UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+                    AnimationClip TPoseClip = null;
+                    AnimationClip previewClip = null;
+                    AnimationClip foundClip = null;
                     foreach (UnityEngine.Object obj in assets)
                     {
-                        AnimationClip clip = obj as AnimationClip;
-                        clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(fbx, clip);
-
-                        if (clip)
+                        if (obj.GetType() == typeof(AnimationClip))
                         {
-                            if (clip.name.iContains("__preview__") || clip.name.iContains("t-pose"))
-                                continue;
+                            AnimationClip clip = obj as AnimationClip;
+                            clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(fbx, clip);
+                            if (clip)
+                            {
+                                if (!clip.name.iContains("__preview__") && clip.name.iContains("t-pose"))
+                                {
+                                    TPoseClip = clip;
+                                    continue;
+                                }
 
-                            controller.AddMotion(clip, 0);
+                                if (clip.name.iContains("__preview__"))
+                                {
+                                    previewClip = clip;
+                                    continue;
+                                }     
+                                
+                                controller.AddMotion(clip, 0);
+                                foundClip = clip;
+                                break;                                
+                            }
                         }
+                    }
+
+                    if (!foundClip && TPoseClip)
+                    {
+                        controller.AddMotion(TPoseClip, 0);
+                    }
+                    else if (!foundClip && previewClip)
+                    {
+                        controller.AddMotion(previewClip, 0);
                     }
 
                     if (AssetDatabase.WriteImportSettingsIfDirty(assetPath))

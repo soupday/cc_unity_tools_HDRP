@@ -1485,6 +1485,10 @@ namespace Reallusion.Import
             }
         }
 
+        /// <summary>
+        /// Tries to get the retargeted version of the animation clip from the given source animation clip, 
+        /// usually from the original character fbx.
+        /// </summary>        
         public static AnimationClip TryGetRetargetedAnimationClip(GameObject fbxAsset, AnimationClip clip)
         {
             try
