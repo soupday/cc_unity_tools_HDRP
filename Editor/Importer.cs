@@ -127,6 +127,21 @@ namespace Reallusion.Import
             }
         }
 
+        public static bool USE_SELF_COLLISION
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Use_Self_Collision"))
+                    return EditorPrefs.GetBool("RL_Importer_Use_Self_Collision");
+                return false;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_Use_Self_Collision", value);
+            }
+        }
+
         public static bool RECONSTRUCT_FLOW_NORMALS
         {
             get

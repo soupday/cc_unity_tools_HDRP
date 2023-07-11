@@ -179,7 +179,7 @@ namespace Reallusion.Import
             EditorApplication.update -= BatchUpdateTimer;
             Selection.activeObject = null;
 
-            if (buildQueue == null || buildQueue.Count == 0)
+            if (buildQueue == null || buildQueue.Count == 0 || ImporterWindow.Current == null)
             {
                 Util.LogInfo("Done batch processing!");
                 batchTimer = 0f;
@@ -196,6 +196,12 @@ namespace Reallusion.Import
 
         public void BatchBuildNextQueueCharacter()
         {
+            if (ImporterWindow.Current == null) 
+            {
+                buildQueue = null;
+                return;
+            }
+
             if (buildQueue == null || buildQueue.Count == 0) return;
 
             CharacterInfo batchCharacter = buildQueue[0];
@@ -497,6 +503,11 @@ namespace Reallusion.Import
 
         private void OnGUI()
         {
+            if (ImporterWindow.Current == null)
+            {
+                CloseWindow();
+                return;
+            }
             if (!initDone) InitData();
             if (windowStyles == null) windowStyles = new Styles();
             if (workingList == null) workingList = BuildCharacterInfoList();
@@ -520,9 +531,11 @@ namespace Reallusion.Import
             //TestShowArea(controlsRect, Color.red);
             //TestShowArea(listRect, Color.magenta);
 
+            EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
             ONGUIControlsArea(controlsRect);
             OnGUINameFlterArea(nameFilterRect);
             OnGUIDetailWorkingDisplayListArea(listRect);
+            EditorGUI.EndDisabledGroup();
 
             if (windowMode == WindowMode.extended)
             {
@@ -1301,7 +1314,12 @@ namespace Reallusion.Import
         private void OnDisable()
         {
             ResetWindow();
-            buildQueue = null;
+            buildQueue = null;            
+        }
+
+        private void OnEnable()
+        {
+            initDone = false;  //if the window is open during play mode - then this forces a refresh of the character list after exiting play mode (currently the window is closed on entering play mode)
         }
 
         private void ResetWindow()
@@ -1309,6 +1327,13 @@ namespace Reallusion.Import
             characterSettings = null;
             windowMode = WindowMode.standard;
             SetWindowSize();
+        }
+
+        private void CloseWindow()
+        {
+            ResetWindow();
+            buildQueue = null;
+            this.Close();
         }
     }
 }

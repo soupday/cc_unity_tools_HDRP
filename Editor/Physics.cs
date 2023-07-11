@@ -774,7 +774,7 @@ namespace Reallusion.Import
                         settings.name = sourceName;
                         settings.activate = data.activate;
                         settings.gravity = data.gravity;
-                        settings.selfCollision = data.selfCollision;
+                        settings.selfCollision = Importer.USE_SELF_COLLISION ? data.selfCollision : false;
                         settings.softRigidCollision = data.softRigidCollision;
                         settings.softRigidMargin = data.softRigidMargin;
 

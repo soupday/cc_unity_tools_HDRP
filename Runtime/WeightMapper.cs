@@ -57,7 +57,7 @@ namespace Reallusion.Import
             public float damping;
             [HideInInspector]
             [Range(0f, 1f)]
-            public float drag;            
+            public float drag;
             [Range(0f, 100f)]
             public float stretch;
             [Range(0f, 100f)]
@@ -77,7 +77,7 @@ namespace Reallusion.Import
             public float stiffnessFrequency;
             [Space(8)]
             [HideInInspector]
-            [Range(0f, 1f)]            
+            [Range(0f, 1f)]
             public float colliderThreshold;
 
             public PhysicsSettings()
@@ -114,8 +114,8 @@ namespace Reallusion.Import
                 solverFrequency = p.solverFrequency;
                 stiffnessFrequency = p.stiffnessFrequency;
                 colliderThreshold = p.colliderThreshold;
+            }
         }
-        }                
 
         public PhysicsSettings[] settings;
         public bool updateColliders = true;
@@ -127,7 +127,7 @@ namespace Reallusion.Import
         public string characterGUID;
 
         public void ApplyWeightMap()
-        {            
+        {
             GameObject clothTarget = gameObject;
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
             if (!renderer) return;
@@ -135,14 +135,14 @@ namespace Reallusion.Import
             if (!mesh) return;
 
             // object scale
-            Vector3 objectScale = renderer.gameObject.transform.localScale;            
+            Vector3 objectScale = renderer.gameObject.transform.localScale;
             float modelScale = 0.03f / (objectScale.x + objectScale.y + objectScale.z);
             float worldScale = (objectScale.x + objectScale.y + objectScale.z) / 3f;
 
             // add cloth component
             Cloth cloth = clothTarget.GetComponent<Cloth>();
             if (!cloth) cloth = clothTarget.AddComponent<Cloth>();
-            
+
             // generate a mapping dictionary of cloth vertices to mesh vertices
             Dictionary<long, int> uniqueVertices = new Dictionary<long, int>();
             int count = 0;
@@ -154,22 +154,22 @@ namespace Reallusion.Import
                 {
                     uniqueVertices.Add(hash, count++);
                 }
-            }                         
+            }
 
             // fetch UV's
             List<Vector2> uvs = new List<Vector2>();
             mesh.GetUVs(0, uvs);
-            
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             List<uint> selfCollisionIndices = new List<uint>();
             List<Collider> colliders = new List<Collider>();
             List<Collider> detectedColliders = new List<Collider>(colliders.Count);
-            ColliderManager colliderManager = gameObject.GetComponentInParent<ColliderManager>();                        
+            ColliderManager colliderManager = gameObject.GetComponentInParent<ColliderManager>();
             if (colliderManager) colliders.AddRange(colliderManager.colliders);
             else colliders.AddRange(gameObject.transform.parent.GetComponentsInChildren<Collider>());
-                        
+
             ClothSkinningCoefficient[] coefficients = new ClothSkinningCoefficient[cloth.coefficients.Length];
             Array.Copy(cloth.coefficients, coefficients, coefficients.Length);
 
@@ -205,9 +205,8 @@ namespace Reallusion.Import
                         cloth.collisionMassScale = data.mass;
                         cloth.friction = data.friction;
                         cloth.damping = Mathf.Pow(data.damping, 0.333f);
-                        bool IGNORESELFCOLLISION = true;
-                        cloth.selfCollisionDistance = IGNORESELFCOLLISION ? 0f : selfMargin;
-                        cloth.selfCollisionStiffness = 0.2f;                        
+                        cloth.selfCollisionDistance = USE_SELF_COLLISION ? selfMargin : 0f;
+                        cloth.selfCollisionStiffness = 0.2f;
 
                         bool doColliders = updateColliders && data.softRigidCollision;
 
@@ -261,7 +260,7 @@ namespace Reallusion.Import
                         {
                             Vector3 vert = meshVertices[vertIdx];
                             if (uniqueVertices.TryGetValue(SpatialHash(vert), out int clothVert))
-                            {                                
+                            {
                                 Vector2 coord = uvs[vertIdx];
                                 x = Mathf.Max(0, Mathf.Min(wm1, Mathf.FloorToInt(0.5f + coord.x * wm1)));
                                 y = Mathf.Max(0, Mathf.Min(hm1, Mathf.FloorToInt(0.5f + coord.y * hm1)));
@@ -270,7 +269,7 @@ namespace Reallusion.Import
                                 float maxDistance = data.maxDistance * weight * modelScale;
                                 float maxPenetration = data.maxPenetration * weight * modelScale;
                                 float modelMax = Mathf.Max(maxDistance, maxPenetration);
-                                float worldMax = modelMax * worldScale;                                
+                                float worldMax = modelMax * worldScale;
                                 coefficients[clothVert].maxDistance = maxDistance;
                                 coefficients[clothVert].collisionSphereDistance = maxPenetration;
 
@@ -278,25 +277,25 @@ namespace Reallusion.Import
                                 {
                                     selfCollisionIndices.Add((uint)clothVert);
                                 }
-                                
+
                                 if (doColliders && optimizeColliders &&
                                     //weight >= data.colliderThreshold &&
                                     modelMax > rigidMargin)
                                 {
                                     Vector3 world = transform.localToWorldMatrix * vert;
-                                    
+
                                     for (int ci = 0; ci < colliders.Count; ci++)
                                     {
                                         Collider cc = colliders[ci];
-                                        
+
                                         if (cc.bounds.Contains(world))
-                                        {                                            
+                                        {
                                             detectedColliders.Add(cc);
                                             colliders.Remove(cc);
                                             ci--;
                                         }
                                         else if (cc.bounds.SqrDistance(world) < worldMax * worldMax)
-                                        {                                            
+                                        {
                                             detectedColliders.Add(cc);
                                             colliders.Remove(cc);
                                             ci--;
@@ -311,10 +310,10 @@ namespace Reallusion.Import
 
             // set coefficients
             if (updateConstraints)
-            {                
+            {
                 cloth.coefficients = coefficients;
             }
-            
+
             cloth.SetSelfAndInterCollisionIndices(selfCollisionIndices);
 
             // set colliders
@@ -330,7 +329,7 @@ namespace Reallusion.Import
                 }
                 cloth.capsuleColliders = detectedCapsuleColliders.ToArray();
             }
-        }        
+        }
 
         private static long SpatialHash(Vector3 v)
         {
@@ -344,7 +343,18 @@ namespace Reallusion.Import
             long z = (long)(v.z * discrete);
 
             return (x * p1) ^ (y * p2) ^ (z * p3);
-        }        
+        }
+
+        private static bool USE_SELF_COLLISION
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Use_Self_Collision"))
+                    return EditorPrefs.GetBool("RL_Importer_Use_Self_Collision");
+                return false;
+            }
+        }
+
 #endif
     }
 }

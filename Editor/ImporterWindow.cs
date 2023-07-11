@@ -1064,6 +1064,10 @@ namespace Reallusion.Import
                     new GUIContent("Animation Player On", "Always show the animation player when opening the preview scene."));
             GUILayout.Space(ROW_SPACE);
 
+            Importer.USE_SELF_COLLISION = GUILayout.Toggle(Importer.USE_SELF_COLLISION,
+                    new GUIContent("Use self collision", "Use the self collision distances from the Character Creator export."));
+            GUILayout.Space(ROW_SPACE);
+
             GUILayout.Space(10f);
             GUILayout.BeginVertical(new GUIContent("", "Override mip-map bias for all textures setup for the characters."), importerStyles.labelStyle);
             GUILayout.Label("Mip-map Bias");
@@ -1427,6 +1431,7 @@ namespace Reallusion.Import
             Importer.RECONSTRUCT_FLOW_NORMALS = false;
             Importer.REBAKE_BLENDER_UNITY_MAPS = false;
             Importer.ANIMPLAYER_ON_BY_DEFAULT = false;
+            Importer.USE_SELF_COLLISION = false;
             Importer.USE_AMPLIFY_SHADER = true;
             Importer.USE_DIGITAL_HUMAN_SHADER = false;
             Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = 0.5f;
