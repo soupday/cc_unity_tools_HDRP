@@ -16,7 +16,6 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -277,7 +276,7 @@ namespace Reallusion.Import
             }
         }
 
-        public GameObject AddPhysics()
+        public GameObject AddPhysics(bool savePrefabAsset = false)
         {
             bool animationMode = WindowManager.StopAnimationMode();
 
@@ -285,7 +284,10 @@ namespace Reallusion.Import
             AddCloth();
             AddSpringBones();
 
-            prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
+            if (savePrefabAsset)
+            {
+                prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
+            }
 
             WindowManager.RestartAnimationMode(animationMode);
 
@@ -356,6 +358,17 @@ namespace Reallusion.Import
                     float radius = (collider.radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
                     c.radius = radius;
                     c.height = collider.length * modelScale + radius * 2f;
+                    colliderLookup.Add(c, collider.boneName);
+                    if (existingCollider) existingLookup.Add(c, existingCollider);
+                }
+                else if (collider.colliderType.Equals(ColliderType.Sphere))
+                {
+                    CapsuleCollider c = g.AddComponent<CapsuleCollider>();
+
+                    c.direction = (int)collider.colliderAxis;
+                    float radius = (collider.radius - collider.margin * PHYSICS_SHRINK_COLLIDER_RADIUS) * modelScale;
+                    c.radius = radius;
+                    c.height = 0f;
                     colliderLookup.Add(c, collider.boneName);
                     if (existingCollider) existingLookup.Add(c, existingCollider);
                 }
@@ -459,7 +472,7 @@ namespace Reallusion.Import
                 {
                     foreach (CollisionShapeData collider in boneColliders)
                     {
-                        if (collider.colliderType == ColliderType.Capsule && springColliderBones.Contains(collider.boneName))
+                        if (springColliderBones.Contains(collider.boneName))
                         {
                             string colliderName = collider.boneName + "_" + collider.name;
                             Transform bone = FindBone(collider.boneName);
@@ -761,7 +774,7 @@ namespace Reallusion.Import
                         settings.name = sourceName;
                         settings.activate = data.activate;
                         settings.gravity = data.gravity;
-                        settings.selfCollision = data.selfCollision;
+                        settings.selfCollision = Importer.USE_SELF_COLLISION ? data.selfCollision : false;
                         settings.softRigidCollision = data.softRigidCollision;
                         settings.softRigidMargin = data.softRigidMargin;
 
@@ -874,7 +887,7 @@ namespace Reallusion.Import
                 {
                     characterInfo.ShaderFlags |= CharacterInfo.ShaderFeatureFlags.ClothPhysics;
                     Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance);
-                    physics.AddPhysics();
+                    physics.AddPhysics(true);
                     characterInfo.Write();
                 }
 

@@ -21,7 +21,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using System.IO;
 using System.Collections.Generic;
-using UnityEngine.Diagnostics;
 
 namespace Reallusion.Import
 {
@@ -1121,7 +1120,9 @@ namespace Reallusion.Import
         }
 
 
-        public static GameObject Extract2PassHairMeshes(CharacterInfo info, GameObject prefabAsset, GameObject prefabInstance)
+        public static GameObject Extract2PassHairMeshes(CharacterInfo info, 
+                GameObject prefabAsset, GameObject prefabInstance,
+                bool savePrefabAsset = false)
         {
             if (!prefabInstance) return null;
 
@@ -1328,10 +1329,13 @@ namespace Reallusion.Import
             
             if (prefabInstance && processCount > 0)
             {
-                Util.LogInfo("Updating character prefab...");
-                // save the clone as the prefab for this character         
-                string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);
-                prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, prefabPath);
+                if (savePrefabAsset)
+                {
+                    Util.LogInfo("Updating character prefab...");
+                    // save the clone as the prefab for this character         
+                    string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);
+                    prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, prefabPath);
+                }
             }
             else
             {

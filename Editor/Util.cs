@@ -725,7 +725,6 @@ namespace Reallusion.Import
                     string searchName = Path.GetFileNameWithoutExtension(searchPath).ToLowerInvariant();
                     if (searchName.Contains(name))
                     {
-                        //Debug.Log(searchName);
                         results.Add(AssetDatabase.LoadAssetAtPath<Material>(searchPath));
                     }
                 }
@@ -846,13 +845,13 @@ namespace Reallusion.Import
             return found;
         }
 
-        public static AnimationClip[] GetAllAnimationClipsFromCharacter(GameObject sourceFbx)
+        public static AnimationClip[] GetAllAnimationClipsFromCharacter(string sourceFbxPath)
         {
             List<AnimationClip> clips = new List<AnimationClip>();
 
-            if (sourceFbx)
+            if (!string.IsNullOrEmpty(sourceFbxPath))
             {
-                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(sourceFbx));
+                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(sourceFbxPath);
                 foreach (Object subObject in data)
                 {
                     if (subObject.GetType().Equals(typeof(AnimationClip)))
@@ -875,6 +874,23 @@ namespace Reallusion.Import
                 if (path.iEndsWith(".prefab")) return fbxAsset;
                 string folder = Path.GetDirectoryName(path);
                 string name = Path.GetFileNameWithoutExtension(path);
+                string searchName = name;
+                if (baked) searchName = name + Importer.BAKE_SUFFIX;
+                string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
+                if (File.Exists(prefabPath))
+                    return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            }
+            return null;
+        }
+
+        public static GameObject FindCharacterPrefabAsset(string fbxPath, bool baked = false)
+        {            
+            if (!string.IsNullOrEmpty(fbxPath))
+            {
+                if (fbxPath.iEndsWith(".prefab")) 
+                    return AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+                string folder = Path.GetDirectoryName(fbxPath);
+                string name = Path.GetFileNameWithoutExtension(fbxPath);
                 string searchName = name;
                 if (baked) searchName = name + Importer.BAKE_SUFFIX;
                 string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
@@ -1069,7 +1085,12 @@ namespace Reallusion.Import
             }
 
             return null;
-        }        
+        }     
+        
+        public static bool AssetPathExists(string assetPath)
+        {
+            return File.Exists(assetPath);
+        }
 
         public static bool AssetPathIsEmpty(string assetPath)
         {
@@ -1091,7 +1112,7 @@ namespace Reallusion.Import
             }
 
             return false;
-        }
+        }        
 
         public static bool NameContainsKeywords(string name, params string[] keyword)
         {
@@ -1118,6 +1139,189 @@ namespace Reallusion.Import
                 }
             }
             return false;
+        }
+
+
+
+        const string prefsFailString = "xxxxxxxxxxxxxx";
+        const char delimiterChar = ',';
+
+        public static bool TrySerializeAssetToEditorPrefs(Object asset, string editorPrefsKey)
+        {            
+            int assetInstanceID = asset.GetInstanceID();
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(assetInstanceID, out string guid, out long localid))
+            {
+                string outString = assetInstanceID.ToString() + delimiterChar + guid.ToString() + delimiterChar + localid.ToString();
+                LogInfo("Instance ID: " + assetInstanceID.ToString());
+                LogInfo("GUID: " + guid.ToString());
+                LogInfo("localID: " + localid.ToString());
+                LogInfo("outString: " + outString);
+
+                EditorPrefs.SetString(editorPrefsKey, outString);
+                return true;
+            }
+            else
+            {
+                string path = AssetDatabase.GetAssetPath(assetInstanceID);
+                LogWarn("Cannot get GUID and ID for: " + asset.name + " at path: " + path);
+                EditorPrefs.SetString(editorPrefsKey, prefsFailString);
+                return false;
+            }
+        }
+
+        public static bool TryDeSerializeAssetFromEditorPrefs<T>(out Object asset, string editorPrefsKey)
+        {            
+            bool storedAsset = false;
+            string assetString = "";
+            if (EditorPrefs.HasKey(editorPrefsKey))
+            {
+                assetString = EditorPrefs.GetString(editorPrefsKey);
+                if (assetString == prefsFailString)
+                {
+                    LogInfo("Asset storage had failed - no asset to recover");
+                }
+                else
+                {
+                    storedAsset = true;
+                }
+            }
+            else
+            {
+                LogWarn("No asset reference found");
+            }
+
+            if (storedAsset)
+            {
+                string[] split = assetString.Split(new char[] { delimiterChar });
+
+                LogInfo("assetString: " + assetString);
+                LogInfo("split count: " + split.Length);                
+
+                if (split.Length == 3)
+                {
+                    int assetInstanceID = int.Parse(split[0]);
+                    string guid = split[1];
+                    long localid = long.Parse(split[2]);
+
+                    LogInfo("Found Instance ID: " + assetInstanceID.ToString());
+                    LogInfo("Found GUID: " + guid.ToString());
+                    LogInfo("Found localID: " + localid.ToString());
+
+                    Object[] potentials = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GUIDToAssetPath(guid));
+
+                    LogInfo(potentials.Length + " Sub objects found for GUID: " + guid);
+                    if (potentials.Length == 0)
+                    {
+                        Object potentialAsset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(Object));
+                        if (potentialAsset != null)
+                        {
+                            LogInfo(potentialAsset.GetType().Name);
+                            if (potentialAsset.GetType() == typeof(T))
+                            {
+                                LogInfo("Successfully found single asset: " + potentialAsset.GetType().Name + " Named: " + potentialAsset.name);
+                                asset = potentialAsset;
+                                return true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (Object potential in potentials)
+                        {
+                            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(potential.GetInstanceID(), out string tryGuid, out long tryLocalid))
+                            {
+                                if (guid == tryGuid && tryLocalid == localid)
+                                {
+                                    if (potential.GetType() == typeof(T))
+                                    {
+                                        LogInfo("Successfully found embedded asset: " + potential.GetType().Name + " Named: " + potential.name);
+                                        asset = potential;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            asset = null;
+            return false;
+        }
+
+        public static void SerializeBoolToEditorPrefs(bool value, string editorPrefsKey)
+        {
+            EditorPrefs.SetBool(editorPrefsKey, value);
+        }
+
+        public static bool TryDeSerializeBoolFromEditorPrefs(out bool value, string editorPrefsKey)
+        {
+            if (!EditorPrefs.HasKey(editorPrefsKey))
+            {
+                value = false;
+                return false;
+            }
+            else
+            {
+                value = EditorPrefs.GetBool(editorPrefsKey);
+                return true;
+            }
+        }
+
+        public static void SerializeFloatToEditorPrefs(float value, string editorPrefsKey)
+        {
+            EditorPrefs.SetFloat(editorPrefsKey, value);
+        }
+
+        public static bool TryDeSerializeFloatFromEditorPrefs(out float value, string editorPrefsKey)
+        {
+            if (!EditorPrefs.HasKey(editorPrefsKey))
+            {
+                value = 0f;
+                return false;
+            }
+            else
+            {
+                value = EditorPrefs.GetFloat(editorPrefsKey);
+                return true;
+            }
+        }
+
+        public static void SerializeStringToEditorPrefs(string value, string editorPrefsKey)
+        {
+            EditorPrefs.SetString(editorPrefsKey, value);
+        }
+
+        public static bool TryDeserializeStringFromEditorPrefs(out string value, string editorPrefsKey)
+        {
+            if (!EditorPrefs.HasKey(editorPrefsKey))
+            {
+                value = null;
+                return false;
+            }
+            else
+            {
+                value = EditorPrefs.GetString(editorPrefsKey);
+                return true;
+            }
+        }
+
+        public static void SerializeIntToEditorPrefs(int value, string editorPrefsKey)
+        {
+            EditorPrefs.SetInt(editorPrefsKey, value);
+        }
+
+        public static bool TryDeserializeIntFromEditorPrefs(out int value, string editorPrefsKey)
+        {
+            if (!EditorPrefs.HasKey(editorPrefsKey))
+            {
+                value = 0;
+                return false;
+            }
+            else
+            {
+                value = EditorPrefs.GetInt(editorPrefsKey);
+                return true;
+            }
         }
 
         public static void LogInfo(string message)

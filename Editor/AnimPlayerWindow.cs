@@ -36,7 +36,7 @@ namespace Reallusion.Import
         public static void OnSceneGUI(SceneView sceneView)
         {
             height = 72f;
-            if (AnimPlayerGUI.AnimFoldOut) height += 84f;
+            if (AnimPlayerGUI.AnimFoldOut) height += 140f;
             if (AnimPlayerGUI.FaceFoldOut) height += 90f;
             
             float x = sceneView.position.width - width - xpadding;
@@ -45,15 +45,35 @@ namespace Reallusion.Import
             sceneView.autoRepaintOnSceneChange = true;            
 
             var windowOverlayRect = new Rect(x, y, width, height);
-            GUILayout.Window("Animation Playback".GetHashCode(), windowOverlayRect, DoWindow, "Character Preview Tools");
-        }
 
+
+            //GUILayout.Window("Animation Playback".GetHashCode(), windowOverlayRect, DoWindow, "Character Preview Tools");
+
+
+            // to counter: Resolve of invalid GC handle. The handle is from a previous domain. The resolve operation is skipped.
+
+            string name = EditorApplication.isPlaying ? "Character Preview Tools (Runtime)" : "Character Preview Tools";
+            int id = EditorApplication.isPlaying ? "Animation Playback".GetHashCode() : "Animation Playback (Runtime)".GetHashCode();
+            if (EditorApplication.isPlaying)
+            {
+                if (!doneOnce)
+                {
+                    GUILayout.Window(id, new Rect(), Empty, name);
+                    doneOnce = true;
+                }
+            }
+            GUILayout.Window(id, windowOverlayRect, DoWindow, name);
+        }
+        private static bool doneOnce = false;
         public static void ShowPlayer() 
         {
             if (!isShown)
             {
+                Debug.Log("WINDOW: SHOWING PLAYER");
+                SceneView.duringSceneGui -= AnimPlayerWindow.OnSceneGUI;
                 SceneView.duringSceneGui += AnimPlayerWindow.OnSceneGUI;
                 isShown = true;
+                doneOnce = false;
             }
         }
         
@@ -61,6 +81,7 @@ namespace Reallusion.Import
         {
             if (isShown)
             {
+                Debug.Log("WINDOW: HIDING PLAYER");
                 SceneView.duringSceneGui -= AnimPlayerWindow.OnSceneGUI;
                 AnimPlayerGUI.CleanUp();
                 
@@ -72,6 +93,11 @@ namespace Reallusion.Import
         {            
             AnimPlayerGUI.DrawPlayer();
             AnimPlayerGUI.DrawFacialMorph();
-        }        
+        }
+        
+        public static void Empty(int id)
+        {
+            Debug.Log("Showing " + id);
+        }
     }
 }

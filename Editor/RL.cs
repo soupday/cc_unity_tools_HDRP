@@ -119,7 +119,7 @@ namespace Reallusion.Import
             return BaseGeneration.Unknown;
         }
 
-        public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, CharacterInfo info)
+        public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, CharacterInfo info, Avatar avatar = null)
         {            
             // import normals to avoid mesh smoothing issues            
             // importing blend shape normals gives disasterously bad results, they need to be recalculated,
@@ -172,21 +172,31 @@ namespace Reallusion.Import
                 return;
             }
 
-            HumanDescription human = importer.humanDescription;
-            Func<string, string, HumanBone> Bone = (humanName, boneName) => new HumanBone()
+            if (avatar)
             {
-                humanName = humanName,
-                boneName = boneName
-            };
-            List<HumanBone> boneList = new List<HumanBone>();
+                importer.avatarSetup = ModelImporterAvatarSetup.CopyFromOther;
 
-            #region HumanBoneDescription
-            if (info.Generation == BaseGeneration.G3 ||
-                info.Generation == BaseGeneration.G3Plus ||
-                info.Generation == BaseGeneration.ActorCore ||
-                info.Generation == BaseGeneration.ActorBuild)
+                importer.sourceAvatar = avatar;
+            }
+            else
             {
-                boneList = new List<HumanBone> {                 
+                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+
+                HumanDescription human = importer.humanDescription;
+                Func<string, string, HumanBone> Bone = (humanName, boneName) => new HumanBone()
+                {
+                    humanName = humanName,
+                    boneName = boneName
+                };
+                List<HumanBone> boneList = new List<HumanBone>();
+
+                #region HumanBoneDescription
+                if (info.Generation == BaseGeneration.G3 ||
+                    info.Generation == BaseGeneration.G3Plus ||
+                    info.Generation == BaseGeneration.ActorCore ||
+                    info.Generation == BaseGeneration.ActorBuild)
+                {
+                    boneList = new List<HumanBone> {
                         Bone("Chest", "CC_Base_Spine01"),
                         Bone("Head", "CC_Base_Head"),
                         Bone("Hips", "CC_Base_Hip"),
@@ -243,10 +253,10 @@ namespace Reallusion.Import
                         Bone("Spine", "CC_Base_Waist"),
                         Bone("UpperChest", "CC_Base_Spine02"),
                     };
-            }
-            else if (info.Generation == BaseGeneration.G1)
-            {
-                boneList = new List<HumanBone> {
+                }
+                else if (info.Generation == BaseGeneration.G1)
+                {
+                    boneList = new List<HumanBone> {
                         Bone("Chest", "CC_Base_Spine01"),
                         Bone("Head", "CC_Base_Head"),
                         Bone("Hips", "CC_Base_Hip"),
@@ -303,10 +313,10 @@ namespace Reallusion.Import
                         Bone("Spine", "CC_Base_Waist"),
                         Bone("UpperChest", "CC_Base_Spine02"),
                     };
-            }
-            else if (info.Generation == BaseGeneration.GameBase)
-            {
-                boneList = new List<HumanBone> {
+                }
+                else if (info.Generation == BaseGeneration.GameBase)
+                {
+                    boneList = new List<HumanBone> {
                         Bone("Chest", "spine_02"),
                         Bone("Head", "head"),
                         Bone("Hips", "pelvis"),
@@ -363,52 +373,53 @@ namespace Reallusion.Import
                         Bone("Spine", "spine_01"),
                         Bone("UpperChest", "spine_03"),
                     };
-            }
-
-            // clean up bone list for missing bones (from bone LOD exports)
-            for (int b = 0; b < boneList.Count; b++)
-            {
-                if (Util.FindChildRecursive(fbx.transform, boneList[b].boneName) == null)
-                {
-                    //Debug.LogWarning("Missing bone: " + boneList[b].boneName);
-                    boneList.RemoveAt(b--);
                 }
-            }
-            
-            if (boneList.Count > 0)
-                human.human = boneList.ToArray();
 
-            #endregion
-
-            for (int i = 0; i < human.human.Length; ++i)
-            {
-                human.human[i].limit.useDefaultValues = true;
-            }
-
-            human.upperArmTwist = 0.5f;
-            human.lowerArmTwist = 0.5f;
-            human.upperLegTwist = 0.5f;
-            human.lowerLegTwist = 0.5f;
-            human.armStretch = 0.05f;
-            human.legStretch = 0.05f;
-            human.feetSpacing = 0.0f;
-            human.hasTranslationDoF = true;            
-
-            if (info.JsonData != null)
-            {
-                Transform[] transforms = fbx.GetComponentsInChildren<Transform>();
-                SkeletonBone[] bones = new SkeletonBone[transforms.Length];
-                for (int i = 0; i < transforms.Length; i++)
+                // clean up bone list for missing bones (from bone LOD exports)
+                for (int b = 0; b < boneList.Count; b++)
                 {
-                    bones[i].name = transforms[i].name;
-                    bones[i].position = transforms[i].localPosition;
-                    bones[i].rotation = transforms[i].localRotation;
-                    bones[i].scale = transforms[i].localScale;
+                    if (Util.FindChildRecursive(fbx.transform, boneList[b].boneName) == null)
+                    {
+                        //Debug.LogWarning("Missing bone: " + boneList[b].boneName);
+                        boneList.RemoveAt(b--);
+                    }
                 }
-                human.skeleton = bones;
-            }
 
-            importer.humanDescription = human;
+                if (boneList.Count > 0)
+                    human.human = boneList.ToArray();
+
+                #endregion
+
+                for (int i = 0; i < human.human.Length; ++i)
+                {
+                    human.human[i].limit.useDefaultValues = true;
+                }
+
+                human.upperArmTwist = 0.5f;
+                human.lowerArmTwist = 0.5f;
+                human.upperLegTwist = 0.5f;
+                human.lowerLegTwist = 0.5f;
+                human.armStretch = 0.05f;
+                human.legStretch = 0.05f;
+                human.feetSpacing = 0.0f;
+                human.hasTranslationDoF = true;
+
+                if (info.JsonData != null)
+                {
+                    Transform[] transforms = fbx.GetComponentsInChildren<Transform>();
+                    SkeletonBone[] bones = new SkeletonBone[transforms.Length];
+                    for (int i = 0; i < transforms.Length; i++)
+                    {
+                        bones[i].name = transforms[i].name;
+                        bones[i].position = transforms[i].localPosition;
+                        bones[i].rotation = transforms[i].localRotation;
+                        bones[i].scale = transforms[i].localScale;
+                    }
+                    human.skeleton = bones;
+                }
+
+                importer.humanDescription = human;
+            }
         }
         
         public static AnimatorController AutoCreateAnimator(GameObject fbx, string assetPath, ModelImporter importer)
@@ -428,18 +439,43 @@ namespace Reallusion.Import
                     AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
 
                     UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+                    AnimationClip TPoseClip = null;
+                    AnimationClip previewClip = null;
+                    AnimationClip foundClip = null;
                     foreach (UnityEngine.Object obj in assets)
                     {
-                        AnimationClip clip = obj as AnimationClip;
-                        clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(fbx, clip);
-
-                        if (clip)
+                        if (obj.GetType() == typeof(AnimationClip))
                         {
-                            if (clip.name.iContains("__preview__") || clip.name.iContains("t-pose"))
-                                continue;
+                            AnimationClip clip = obj as AnimationClip;
+                            clip = AnimRetargetGUI.TryGetRetargetedAnimationClip(fbx, clip);
+                            if (clip)
+                            {
+                                if (!clip.name.iContains("__preview__") && clip.name.iContains("t-pose"))
+                                {
+                                    TPoseClip = clip;
+                                    continue;
+                                }
 
-                            controller.AddMotion(clip, 0);
+                                if (clip.name.iContains("__preview__"))
+                                {
+                                    previewClip = clip;
+                                    continue;
+                                }     
+                                
+                                controller.AddMotion(clip, 0);
+                                foundClip = clip;
+                                break;                                
+                            }
                         }
+                    }
+
+                    if (!foundClip && TPoseClip)
+                    {
+                        controller.AddMotion(TPoseClip, 0);
+                    }
+                    else if (!foundClip && previewClip)
+                    {
+                        controller.AddMotion(previewClip, 0);
                     }
 
                     if (AssetDatabase.WriteImportSettingsIfDirty(assetPath))
@@ -498,10 +534,10 @@ namespace Reallusion.Import
 
             if (changed)
             {
-                importer.clipAnimations = animations;
+                importer.clipAnimations = animations;                
                 if (forceUpdate)
                 {
-                    AssetDatabase.WriteImportSettingsIfDirty(characterInfo.path);
+                    AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath);
                     AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
                 }
@@ -510,12 +546,33 @@ namespace Reallusion.Import
             characterInfo.animationSetup = true;
         }
 
-        public static void SetAnimationImport(CharacterInfo info, GameObject fbx)
-        {            
-            ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(info.path);                        
+        public static void DoAnimationImport(CharacterInfo info, GameObject fbx)
+        {
+            string path = info.path;
+            ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(path);
+            HumanoidImportSettings(fbx, importer, info);
             SetupAnimation(importer, info, true);            
             ApplyAnimatorController(info, AutoCreateAnimator(fbx, info.path, importer));
+
+            Avatar sourceAvatar = info.GetCharacterAvatar();
+
+            List<string> motionGuids = info.GetMotionGuids();
+            if (motionGuids.Count > 0)
+            {
+                foreach (string guid in motionGuids)
+                {
+                    string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                    DoMotionImport(info, sourceAvatar, assetPath);
+                }
+            }
         }
+
+        public static void DoMotionImport(CharacterInfo info, Avatar sourceAvatar, string motionFbxPath)
+        {            
+            ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(motionFbxPath);            
+            HumanoidImportSettings(null, importer, info, sourceAvatar);
+            SetupAnimation(importer, info, true);            
+        }        
 
         public static void ApplyAnimatorController(CharacterInfo info, AnimatorController controller)
         {
@@ -590,16 +647,23 @@ namespace Reallusion.Import
                 sceneInstance.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;                
             }
 
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(sceneInstance, prefabPath);
-
+            bool assetExists = Util.AssetPathExists(prefabPath);
+            if (assetExists)
+            {
+                AssetDatabase.DeleteAsset(prefabPath);
+            }
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(sceneInstance, prefabPath, InteractionMode.AutomatedAction);
             return prefab;
         }
 
         public static GameObject SaveAndRemovePrefabInstance(GameObject prefabAsset, GameObject prefabInstance)
-        {            
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
+        {
+            //PrefabUtility.SavePrefabAsset(prefabInstance);
+            string assetPath = AssetDatabase.GetAssetPath(prefabAsset);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(prefabInstance, assetPath, 
+                                                                          InteractionMode.AutomatedAction);
             UnityEngine.Object.DestroyImmediate(prefabInstance);
-            return prefab;
+            return prefabAsset;
         }
 
         public static int CountLODs(GameObject fbx)
@@ -720,7 +784,8 @@ namespace Reallusion.Import
                 lodGroup.RecalculateBounds();
             }
 
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(sceneLODInstance, prefabPath);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(sceneLODInstance, prefabPath, 
+                                                                          InteractionMode.AutomatedAction);
 
             return prefab;
         }        

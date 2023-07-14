@@ -28,7 +28,15 @@ namespace Reallusion.Import
         public enum ProcessingType { None, Basic, HighQuality }
         public enum EyeQuality { None, Basic, Parallax, Refractive }
         public enum HairQuality { None, Default, TwoPass, Coverage }
-        public enum ShaderFeatureFlags { NoFeatures = 0, Tessellation = 1, ClothPhysics = 2, HairPhysics = 4, SpringBoneHair = 8, WrinkleMaps = 16 }
+        public enum ShaderFeatureFlags 
+        { 
+            NoFeatures = 0, 
+            Tessellation = 1, 
+            ClothPhysics = 2, 
+            HairPhysics = 4, 
+            SpringBoneHair = 8, 
+            WrinkleMaps = 16,
+        }
 
         public enum RigOverride { None = 0, Generic, Humanoid }
 
@@ -45,6 +53,9 @@ namespace Reallusion.Import
         public bool animationSetup = false;
         public int animationRetargeted = 0;
 
+        public bool selectedInList;
+        public bool settingsChanged;
+
         // these are the settings the character is currently set to build
         private ProcessingType logType = ProcessingType.None;
         private EyeQuality qualEyes = EyeQuality.Parallax;
@@ -52,7 +63,6 @@ namespace Reallusion.Import
         public RigOverride UnknownRigType { get; set; }
         private bool bakeCustomShaders = true;
         private bool bakeSeparatePrefab = true;
-        private bool useTessellation = false;
         private GameObject prefabAsset;
 
         public struct GUIDRemap
@@ -158,7 +168,7 @@ namespace Reallusion.Import
         public bool FeatureUseTessellation => (ShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
         public bool FeatureUseClothPhysics => (ShaderFlags & ShaderFeatureFlags.ClothPhysics) > 0;
         public bool FeatureUseHairPhysics => (ShaderFlags & ShaderFeatureFlags.HairPhysics) > 0;
-        //public bool FeatureUseSpringBones => (ShaderFlags & ShaderFeatureFlags.SpringBones) > 0;
+        //public bool FeatureUseSpringBones => (ShaderFlags & ShaderFeatureFlags.SpringBones) > 0;        
         public bool BasicMaterials => logType == ProcessingType.Basic;
         public bool HQMaterials => logType == ProcessingType.HighQuality;
         public EyeQuality QualEyes { get { return qualEyes; } set { qualEyes = value; } }
@@ -177,12 +187,11 @@ namespace Reallusion.Import
         private EyeQuality builtQualEyes = EyeQuality.Parallax;
         private HairQuality builtQualHair = HairQuality.TwoPass;
         private bool builtBakeCustomShaders = true;
-        private bool builtBakeSeparatePrefab = true;
-        private bool builtTessellation = false;
+        private bool builtBakeSeparatePrefab = true;        
 
         public ShaderFeatureFlags BuiltShaderFlags { get; private set; } = ShaderFeatureFlags.NoFeatures;
         public bool BuiltFeatureWrinkleMaps => (BuiltShaderFlags & ShaderFeatureFlags.WrinkleMaps) > 0;
-        public bool BuiltFeatureTessellation => (BuiltShaderFlags & ShaderFeatureFlags.Tessellation) > 0;
+        public bool BuiltFeatureTessellation => (BuiltShaderFlags & ShaderFeatureFlags.Tessellation) > 0;        
         public bool BuiltBasicMaterials => builtLogType == ProcessingType.Basic;
         public bool BuiltHQMaterials => builtLogType == ProcessingType.HighQuality;
         public bool BuiltDualMaterialHair => builtQualHair == HairQuality.TwoPass;
@@ -192,7 +201,7 @@ namespace Reallusion.Import
         public HairQuality BuiltQualHair => builtQualHair;
         public bool BuiltRefractiveEyes => BuiltQualEyes == EyeQuality.Refractive;
         public bool BuiltBasicEyes => BuiltQualEyes == EyeQuality.Basic;
-        public bool BuiltParallaxEyes => BuiltQualEyes == EyeQuality.Parallax;        
+        public bool BuiltParallaxEyes => BuiltQualEyes == EyeQuality.Parallax;
 
         public MaterialQuality BuiltQuality => BuiltHQMaterials ? MaterialQuality.High : MaterialQuality.Default;
         public bool Unprocessed => builtLogType == ProcessingType.None;
@@ -205,7 +214,7 @@ namespace Reallusion.Import
         private GameObject fbx;
         private QuickJSON jsonData;
 
-        private void FixCharSettings()
+        public void FixCharSettings()
         {
             if (logType == ProcessingType.HighQuality && !CanHaveHighQualityMaterials)
                 logType = ProcessingType.Basic;
@@ -214,7 +223,13 @@ namespace Reallusion.Import
                 qualEyes = EyeQuality.Parallax;
 
             if (qualHair == HairQuality.Coverage && Pipeline.isHDRP)
-                qualHair = HairQuality.Default;            
+                qualHair = HairQuality.Default;
+
+            if ((ShaderFlags & ShaderFeatureFlags.SpringBoneHair) > 0 &&
+                (ShaderFlags & ShaderFeatureFlags.HairPhysics) > 0)
+            {
+                ShaderFlags -= ShaderFeatureFlags.SpringBoneHair;
+            }
         }
 
         public CharacterInfo(string guid)
@@ -228,10 +243,25 @@ namespace Reallusion.Import
             if (path.iContains("_lod")) isLOD = true;
             guidRemaps = new List<GUIDRemap>();
 
+            selectedInList = false;
+            settingsChanged = false;
+
             if (File.Exists(infoFilepath))            
                 Read();
             else
                 Write();            
+        }
+
+        public void CopySettings(CharacterInfo from)
+        {
+            UnknownRigType = from.UnknownRigType;
+            logType = from.logType;
+            qualEyes = from.qualEyes;
+            qualHair = from.qualHair;
+            bakeCustomShaders = from.bakeCustomShaders;
+            bakeSeparatePrefab = from.bakeSeparatePrefab;  
+            ShaderFlags = from.ShaderFlags;
+            FixCharSettings();
         }
 
         public void ApplySettings()
@@ -244,7 +274,6 @@ namespace Reallusion.Import
             builtQualHair = qualHair;
             builtBakeCustomShaders = bakeCustomShaders;
             builtBakeSeparatePrefab = bakeSeparatePrefab;
-            builtTessellation = useTessellation;
             BuiltShaderFlags = ShaderFlags;
         }        
 
@@ -264,6 +293,39 @@ namespace Reallusion.Import
         public bool FbxLoaded
         {
             get { return fbx != null; }
+        }
+
+        public Avatar GetCharacterAvatar()
+        {                        
+            Object[] objects = AssetDatabase.LoadAllAssetsAtPath(path);
+            foreach (Object obj in objects)
+            {
+                if (obj.GetType() == typeof(Avatar))
+                {
+                    return obj as Avatar;
+                }
+            }
+
+            return null;
+        }
+
+        public List<string> GetMotionGuids()
+        {
+            List<string> motionGuids = new List<string>();
+            DirectoryInfo di = new DirectoryInfo(folder);
+            string prefix = name + "_";
+            string suffix = "_Motion.fbx";
+            foreach (FileInfo fi in di.GetFiles("*.fbx"))
+            {
+                if (fi.Name.iStartsWith(prefix) && fi.Name.iEndsWith(suffix))
+                {
+                    string path = Path.Combine(folder, fi.Name);
+                    string guid = AssetDatabase.AssetPathToGUID(path);
+                    motionGuids.Add(guid);
+                }
+            }
+
+            return motionGuids;
         }
 
         public string GetPrefabsFolder()
