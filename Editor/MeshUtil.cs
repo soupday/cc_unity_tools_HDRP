@@ -21,7 +21,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using System.IO;
 using System.Collections.Generic;
-using UnityEngine.Diagnostics;
 
 namespace Reallusion.Import
 {

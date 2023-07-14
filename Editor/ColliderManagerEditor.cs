@@ -17,10 +17,7 @@
  */
 
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
-using System.IO;
 using ColliderSettings = Reallusion.Import.ColliderManager.ColliderSettings;
 
 namespace Reallusion.Import

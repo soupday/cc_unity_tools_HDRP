@@ -1,6 +1,19 @@
 Changelog
 =========
 
+### v 1.5.0
+- Animation player system rebuilt to remove AnimationMode.
+    - New system includes foot IK preview, variable speed and camera bone targeting and play mode operation.
+- Optional (WIP) dual specular shader added for HQ skin. (Enabled in the import window options)
+- HDRP mask detail mask correction. (Export from CC4 not using correct micro normal mask)
+- HDRP lighting fix when first loading preview scene.
+- Batch processing window added.
+- Physics sphere collider support added.
+- Import procedure now processes all <character_name>_Motion.Fbx files with the character.
+
+### v 1.4.9
+- Refresh button fix...
+
 ### v 1.4.8
 - Fix to missing materials in shared material slots.
 - Fix to two pass hair extraction when re-using the same material.

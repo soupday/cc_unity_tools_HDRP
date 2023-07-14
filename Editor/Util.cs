@@ -725,7 +725,6 @@ namespace Reallusion.Import
                     string searchName = Path.GetFileNameWithoutExtension(searchPath).ToLowerInvariant();
                     if (searchName.Contains(name))
                     {
-                        //Debug.Log(searchName);
                         results.Add(AssetDatabase.LoadAssetAtPath<Material>(searchPath));
                     }
                 }
@@ -846,13 +845,13 @@ namespace Reallusion.Import
             return found;
         }
 
-        public static AnimationClip[] GetAllAnimationClipsFromCharacter(GameObject sourceFbx)
+        public static AnimationClip[] GetAllAnimationClipsFromCharacter(string sourceFbxPath)
         {
             List<AnimationClip> clips = new List<AnimationClip>();
 
-            if (sourceFbx)
+            if (!string.IsNullOrEmpty(sourceFbxPath))
             {
-                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(sourceFbx));
+                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(sourceFbxPath);
                 foreach (Object subObject in data)
                 {
                     if (subObject.GetType().Equals(typeof(AnimationClip)))
@@ -875,6 +874,23 @@ namespace Reallusion.Import
                 if (path.iEndsWith(".prefab")) return fbxAsset;
                 string folder = Path.GetDirectoryName(path);
                 string name = Path.GetFileNameWithoutExtension(path);
+                string searchName = name;
+                if (baked) searchName = name + Importer.BAKE_SUFFIX;
+                string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
+                if (File.Exists(prefabPath))
+                    return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            }
+            return null;
+        }
+
+        public static GameObject FindCharacterPrefabAsset(string fbxPath, bool baked = false)
+        {            
+            if (!string.IsNullOrEmpty(fbxPath))
+            {
+                if (fbxPath.iEndsWith(".prefab")) 
+                    return AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+                string folder = Path.GetDirectoryName(fbxPath);
+                string name = Path.GetFileNameWithoutExtension(fbxPath);
                 string searchName = name;
                 if (baked) searchName = name + Importer.BAKE_SUFFIX;
                 string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
@@ -1096,7 +1112,7 @@ namespace Reallusion.Import
             }
 
             return false;
-        }
+        }        
 
         public static bool NameContainsKeywords(string name, params string[] keyword)
         {
@@ -1131,19 +1147,15 @@ namespace Reallusion.Import
         const char delimiterChar = ',';
 
         public static bool TrySerializeAssetToEditorPrefs(Object asset, string editorPrefsKey)
-        {
-            bool showMessages = true;
+        {            
             int assetInstanceID = asset.GetInstanceID();
             if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(assetInstanceID, out string guid, out long localid))
             {
                 string outString = assetInstanceID.ToString() + delimiterChar + guid.ToString() + delimiterChar + localid.ToString();
-                if (showMessages)
-                {
-                    Debug.Log("Instance ID: " + assetInstanceID.ToString());
-                    Debug.Log("GUID: " + guid.ToString());
-                    Debug.Log("localID: " + localid.ToString());
-                    Debug.Log("outString: " + outString);
-                }
+                LogInfo("Instance ID: " + assetInstanceID.ToString());
+                LogInfo("GUID: " + guid.ToString());
+                LogInfo("localID: " + localid.ToString());
+                LogInfo("outString: " + outString);
 
                 EditorPrefs.SetString(editorPrefsKey, outString);
                 return true;
@@ -1151,15 +1163,14 @@ namespace Reallusion.Import
             else
             {
                 string path = AssetDatabase.GetAssetPath(assetInstanceID);
-                if (showMessages) Debug.Log("Cannot get GUID and ID for: " + asset.name + " at path: " + path);
+                LogWarn("Cannot get GUID and ID for: " + asset.name + " at path: " + path);
                 EditorPrefs.SetString(editorPrefsKey, prefsFailString);
                 return false;
             }
         }
 
         public static bool TryDeSerializeAssetFromEditorPrefs<T>(out Object asset, string editorPrefsKey)
-        {
-            bool showMessages = true;
+        {            
             bool storedAsset = false;
             string assetString = "";
             if (EditorPrefs.HasKey(editorPrefsKey))
@@ -1167,7 +1178,7 @@ namespace Reallusion.Import
                 assetString = EditorPrefs.GetString(editorPrefsKey);
                 if (assetString == prefsFailString)
                 {
-                    if (showMessages) Debug.Log("Asset storage had failed - no asset to recover");
+                    LogInfo("Asset storage had failed - no asset to recover");
                 }
                 else
                 {
@@ -1176,18 +1187,15 @@ namespace Reallusion.Import
             }
             else
             {
-                if (showMessages) Debug.Log("No asset reference found");
+                LogWarn("No asset reference found");
             }
 
             if (storedAsset)
             {
                 string[] split = assetString.Split(new char[] { delimiterChar });
 
-                if (showMessages)
-                {
-                    Debug.Log("assetString: " + assetString);
-                    Debug.Log("split count: " + split.Length);
-                }
+                LogInfo("assetString: " + assetString);
+                LogInfo("split count: " + split.Length);                
 
                 if (split.Length == 3)
                 {
@@ -1195,25 +1203,22 @@ namespace Reallusion.Import
                     string guid = split[1];
                     long localid = long.Parse(split[2]);
 
-                    if (showMessages)
-                    {
-                        Debug.Log("Found Instance ID: " + assetInstanceID.ToString());
-                        Debug.Log("Found GUID: " + guid.ToString());
-                        Debug.Log("Found localID: " + localid.ToString());
-                    }
+                    LogInfo("Found Instance ID: " + assetInstanceID.ToString());
+                    LogInfo("Found GUID: " + guid.ToString());
+                    LogInfo("Found localID: " + localid.ToString());
 
                     Object[] potentials = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GUIDToAssetPath(guid));
 
-                    if (showMessages) Debug.Log(potentials.Length + " Sub objects found for GUID: " + guid);
+                    LogInfo(potentials.Length + " Sub objects found for GUID: " + guid);
                     if (potentials.Length == 0)
                     {
                         Object potentialAsset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(Object));
                         if (potentialAsset != null)
                         {
-                            Debug.Log(potentialAsset.GetType().Name);
+                            LogInfo(potentialAsset.GetType().Name);
                             if (potentialAsset.GetType() == typeof(T))
                             {
-                                if (showMessages) Debug.Log("Successfully found single asset: " + potentialAsset.GetType().Name + " Named: " + potentialAsset.name);
+                                LogInfo("Successfully found single asset: " + potentialAsset.GetType().Name + " Named: " + potentialAsset.name);
                                 asset = potentialAsset;
                                 return true;
                             }
@@ -1229,7 +1234,7 @@ namespace Reallusion.Import
                                 {
                                     if (potential.GetType() == typeof(T))
                                     {
-                                        if (showMessages) Debug.Log("Successfully found embedded asset: " + potential.GetType().Name + " Named: " + potential.name);
+                                        LogInfo("Successfully found embedded asset: " + potential.GetType().Name + " Named: " + potential.name);
                                         asset = potential;
                                         return true;
                                     }
@@ -1318,14 +1323,6 @@ namespace Reallusion.Import
                 return true;
             }
         }
-
-
-
-
-
-
-
-
 
         public static void LogInfo(string message)
         {

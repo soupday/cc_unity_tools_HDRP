@@ -906,7 +906,11 @@ namespace Reallusion.Import
         {
             if (EditorApplication.isPlaying)
             {
-                CharacterAnimator.SetFloat(paramDirection, playbackSpeed);
+                if (play)
+                    CharacterAnimator.SetFloat(paramDirection, playbackSpeed);
+                else
+                    CharacterAnimator.SetFloat(paramDirection, 0f);
+
                 CharacterAnimator.Play(controlStateHash, 0, time);
             }
         }
@@ -1126,7 +1130,7 @@ namespace Reallusion.Import
             if (CharacterAnimator.runtimeAnimatorController.name == overrideName)
             {
                 CharacterAnimator.Update(0f);
-                CharacterAnimator.Play(controlStateHash, 0, time);
+                CharacterAnimator.Play(controlStateHash, 0, time);                
             }
         }
 

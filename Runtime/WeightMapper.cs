@@ -16,13 +16,11 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEditor;
 using System;
-using System.IO;
 
 namespace Reallusion.Import
 {
@@ -59,17 +57,18 @@ namespace Reallusion.Import
             public float damping;
             [HideInInspector]
             [Range(0f, 1f)]
-            public float drag;            
+            public float drag;
             [Range(0f, 100f)]
             public float stretch;
             [Range(0f, 100f)]
             public float bending;
             [Space(8)]
             public bool softRigidCollision;
+            [Range(0f, 100f)]
             public float softRigidMargin;
-            [HideInInspector]
+            [Space(8)]
             public bool selfCollision;
-            [HideInInspector]
+            [Range(0f, 10f)]
             public float selfMargin;
             [Space(8)]
             [Range(1f, 5000f)]
@@ -77,7 +76,8 @@ namespace Reallusion.Import
             [Range(1f, 500f)]
             public float stiffnessFrequency;
             [Space(8)]
-            [Range(0f, 1f)]            
+            [HideInInspector]
+            [Range(0f, 1f)]
             public float colliderThreshold;
 
             public PhysicsSettings()
@@ -114,8 +114,8 @@ namespace Reallusion.Import
                 solverFrequency = p.solverFrequency;
                 stiffnessFrequency = p.stiffnessFrequency;
                 colliderThreshold = p.colliderThreshold;
+            }
         }
-        }                
 
         public PhysicsSettings[] settings;
         public bool updateColliders = true;
@@ -127,7 +127,7 @@ namespace Reallusion.Import
         public string characterGUID;
 
         public void ApplyWeightMap()
-        {            
+        {
             GameObject clothTarget = gameObject;
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
             if (!renderer) return;
@@ -135,14 +135,14 @@ namespace Reallusion.Import
             if (!mesh) return;
 
             // object scale
-            Vector3 objectScale = renderer.gameObject.transform.localScale;            
+            Vector3 objectScale = renderer.gameObject.transform.localScale;
             float modelScale = 0.03f / (objectScale.x + objectScale.y + objectScale.z);
             float worldScale = (objectScale.x + objectScale.y + objectScale.z) / 3f;
 
             // add cloth component
             Cloth cloth = clothTarget.GetComponent<Cloth>();
             if (!cloth) cloth = clothTarget.AddComponent<Cloth>();
-            
+
             // generate a mapping dictionary of cloth vertices to mesh vertices
             Dictionary<long, int> uniqueVertices = new Dictionary<long, int>();
             int count = 0;
@@ -154,28 +154,30 @@ namespace Reallusion.Import
                 {
                     uniqueVertices.Add(hash, count++);
                 }
-            }                         
+            }
 
             // fetch UV's
             List<Vector2> uvs = new List<Vector2>();
             mesh.GetUVs(0, uvs);
-            
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
+            List<uint> selfCollisionIndices = new List<uint>();
             List<Collider> colliders = new List<Collider>();
             List<Collider> detectedColliders = new List<Collider>(colliders.Count);
-            ColliderManager colliderManager = gameObject.GetComponentInParent<ColliderManager>();                        
+            ColliderManager colliderManager = gameObject.GetComponentInParent<ColliderManager>();
             if (colliderManager) colliders.AddRange(colliderManager.colliders);
             else colliders.AddRange(gameObject.transform.parent.GetComponentsInChildren<Collider>());
-                        
+
             ClothSkinningCoefficient[] coefficients = new ClothSkinningCoefficient[cloth.coefficients.Length];
             Array.Copy(cloth.coefficients, coefficients, coefficients.Length);
 
             // reset coefficients
             for (int i = 0; i < cloth.coefficients.Length; i++)
             {
-                coefficients[i].maxDistance = 0;
+                coefficients[i].maxDistance = 0f;
+                coefficients[i].collisionSphereDistance = 0f;
             }
 
             // apply weight maps to cloth coefficients and cloth settings
@@ -193,6 +195,8 @@ namespace Reallusion.Import
                 {
                     if (data.name == sourceName && data.activate)
                     {
+                        float rigidMargin = data.softRigidMargin * modelScale;
+                        float selfMargin = data.selfCollision ? data.selfMargin * modelScale : 0f;
                         cloth.useGravity = data.gravity;
                         cloth.bendingStiffness = Mathf.Pow(1f - (data.bending / 100f), 0.5f);
                         cloth.stretchingStiffness = Mathf.Pow(1f - (data.stretch / 100f), 0.5f);
@@ -201,8 +205,8 @@ namespace Reallusion.Import
                         cloth.collisionMassScale = data.mass;
                         cloth.friction = data.friction;
                         cloth.damping = Mathf.Pow(data.damping, 0.333f);
-                        cloth.selfCollisionDistance = data.selfMargin * modelScale;
-                        cloth.selfCollisionStiffness = 1f;                        
+                        cloth.selfCollisionDistance = USE_SELF_COLLISION ? selfMargin : 0f;
+                        cloth.selfCollisionStiffness = 0.2f;
 
                         bool doColliders = updateColliders && data.softRigidCollision;
 
@@ -256,7 +260,7 @@ namespace Reallusion.Import
                         {
                             Vector3 vert = meshVertices[vertIdx];
                             if (uniqueVertices.TryGetValue(SpatialHash(vert), out int clothVert))
-                            {                                
+                            {
                                 Vector2 coord = uvs[vertIdx];
                                 x = Mathf.Max(0, Mathf.Min(wm1, Mathf.FloorToInt(0.5f + coord.x * wm1)));
                                 y = Mathf.Max(0, Mathf.Min(hm1, Mathf.FloorToInt(0.5f + coord.y * hm1)));
@@ -266,30 +270,32 @@ namespace Reallusion.Import
                                 float maxPenetration = data.maxPenetration * weight * modelScale;
                                 float modelMax = Mathf.Max(maxDistance, maxPenetration);
                                 float worldMax = modelMax * worldScale;
-                                if (data.softRigidCollision)
+                                coefficients[clothVert].maxDistance = maxDistance;
+                                coefficients[clothVert].collisionSphereDistance = maxPenetration;
+
+                                if (data.selfCollision && modelMax > selfMargin)
                                 {
-                                    coefficients[clothVert].maxDistance = maxDistance;
-                                    coefficients[clothVert].collisionSphereDistance = maxPenetration;
+                                    selfCollisionIndices.Add((uint)clothVert);
                                 }
 
                                 if (doColliders && optimizeColliders &&
-                                    weight >= data.colliderThreshold &&
-                                    modelMax > data.softRigidMargin * modelScale)
+                                    //weight >= data.colliderThreshold &&
+                                    modelMax > rigidMargin)
                                 {
                                     Vector3 world = transform.localToWorldMatrix * vert;
-                                    
+
                                     for (int ci = 0; ci < colliders.Count; ci++)
                                     {
                                         Collider cc = colliders[ci];
-                                        
+
                                         if (cc.bounds.Contains(world))
-                                        {                                            
+                                        {
                                             detectedColliders.Add(cc);
                                             colliders.Remove(cc);
                                             ci--;
                                         }
                                         else if (cc.bounds.SqrDistance(world) < worldMax * worldMax)
-                                        {                                            
+                                        {
                                             detectedColliders.Add(cc);
                                             colliders.Remove(cc);
                                             ci--;
@@ -304,9 +310,11 @@ namespace Reallusion.Import
 
             // set coefficients
             if (updateConstraints)
-            {                
+            {
                 cloth.coefficients = coefficients;
             }
+
+            cloth.SetSelfAndInterCollisionIndices(selfCollisionIndices);
 
             // set colliders
             if (updateColliders)
@@ -321,21 +329,32 @@ namespace Reallusion.Import
                 }
                 cloth.capsuleColliders = detectedCapsuleColliders.ToArray();
             }
-        }        
+        }
 
         private static long SpatialHash(Vector3 v)
         {
             const long p1 = 73868489;
             const long p2 = 23875351;
             const long p3 = 53885459;
-            const long discrete = 1000000;
+            const long discrete = 10000000;
 
             long x = (long)(v.x * discrete);
             long y = (long)(v.y * discrete);
             long z = (long)(v.z * discrete);
 
             return (x * p1) ^ (y * p2) ^ (z * p3);
-        }        
+        }
+
+        private static bool USE_SELF_COLLISION
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Use_Self_Collision"))
+                    return EditorPrefs.GetBool("RL_Importer_Use_Self_Collision");
+                return false;
+            }
+        }
+
 #endif
     }
 }

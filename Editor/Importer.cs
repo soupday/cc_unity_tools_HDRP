@@ -43,6 +43,7 @@ namespace Reallusion.Import
         private List<string> doneTextureGUIDS = new List<string>();
         private Dictionary<Material, Texture2D> bakedDetailMaps;
         private Dictionary<Material, Texture2D> bakedThicknessMaps;
+        private Dictionary<Material, Texture2D> bakedHDRPMaps;
         private readonly BaseGeneration generation;
         private readonly bool blenderProject;
 
@@ -96,6 +97,21 @@ namespace Reallusion.Import
             }
         }
 
+        public static bool USE_DIGITAL_HUMAN_SHADER
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Use_Digital_Human_Shaders"))
+                    return EditorPrefs.GetBool("RL_Importer_Use_Digital_Human_Shaders");
+                return false;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_Use_Digital_Human_Shaders", value);
+            }
+        }
+
         public static bool ANIMPLAYER_ON_BY_DEFAULT
         {
             get
@@ -108,6 +124,21 @@ namespace Reallusion.Import
             set
             {
                 EditorPrefs.SetBool("RL_Importer_Animation_Player_On", value);
+            }
+        }
+
+        public static bool USE_SELF_COLLISION
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Importer_Use_Self_Collision"))
+                    return EditorPrefs.GetBool("RL_Importer_Use_Self_Collision");
+                return false;
+            }
+
+            set
+            {
+                EditorPrefs.SetBool("RL_Importer_Use_Self_Collision", value);
             }
         }
 
@@ -193,9 +224,10 @@ namespace Reallusion.Import
 
             bakedDetailMaps = new Dictionary<Material, Texture2D>();
             bakedThicknessMaps = new Dictionary<Material, Texture2D>();
+            bakedHDRPMaps = new Dictionary<Material, Texture2D>();
         }
 
-        public GameObject Import()
+        public GameObject Import(bool batchMode = false)
         {
             // make sure custom diffusion profiles are installed
             Pipeline.AddDiffusionProfilesHDRP();
@@ -325,7 +357,7 @@ namespace Reallusion.Import
             int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
             bool replace = characterInfo.animationRetargeted != animationRetargeted;
             if (replace) Util.LogInfo("Retargeting all imported animations.");
-            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbx, prefabAsset, replace);
+            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbxPath, prefabAsset, replace);
             characterInfo.animationRetargeted = animationRetargeted;
 
             // create default animator if there isn't one.
@@ -333,7 +365,23 @@ namespace Reallusion.Import
 
             Util.LogAlways("Done building materials for character " + characterName + "!");
 
-            Selection.activeObject = prefabAsset;
+
+
+            List<string> motionGuids = characterInfo.GetMotionGuids();
+            if (motionGuids.Count > 0)
+            {
+                Avatar sourceAvatar = characterInfo.GetCharacterAvatar();
+                if (sourceAvatar)
+                {
+                    foreach (string guid in motionGuids)
+                    {
+                        ProcessMotionFbx(guid, sourceAvatar, prefabAsset);
+                    }
+                }
+            }
+
+            if (!batchMode) Selection.activeObject = prefabAsset;
+            else Selection.activeObject = null;
 
             //System.Media.SystemSounds.Asterisk.Play();
 
@@ -443,6 +491,11 @@ namespace Reallusion.Import
                                     PrepDefaultMap(sourceName, "TransMap", matJson, "Custom Shader/Image/Transmission Map");
                                     PrepDefaultMap(sourceName, "MicroN", matJson, "Custom Shader/Image/MicroNormal", FLAG_NORMAL);
                                 }
+                            }
+                            
+                            if (materialType == MaterialType.Skin || materialType == MaterialType.Head)
+                            {
+                                FixHDRPMap(sharedMat, sourceName, matJson);
                             }
                         }
                     }
@@ -676,8 +729,8 @@ namespace Reallusion.Import
                 characterInfo.BuildQuality, 
                 characterInfo, USE_AMPLIFY_SHADER, 
                 characterInfo.FeatureUseTessellation, 
-                characterInfo.FeatureUseWrinkleMaps, 
-                characterInfo.FeatureUseDigitalHuman);
+                characterInfo.FeatureUseWrinkleMaps,
+                USE_DIGITAL_HUMAN_SHADER);
 
             // get the appropriate shader to use            
             Shader shader;
@@ -1421,10 +1474,18 @@ namespace Reallusion.Import
 
             ConnectTextureTo(sourceName, mat, "_NormalMap", "Normal",
                 matJson, "Textures/Normal",
-                FLAG_NORMAL);            
+                FLAG_NORMAL);
 
-            ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
-                matJson, "Textures/HDRP");
+            // try to use corrected HDRP mask mask
+            if (bakedHDRPMaps.TryGetValue(sharedMat, out Texture2D bakedHDRP))
+            {
+                mat.SetTextureIf("_MaskMap", bakedHDRP);
+            }
+            else
+            {
+                ConnectTextureTo(sourceName, mat, "_MaskMap", "HDRP",
+                    matJson, "Textures/HDRP");
+            }
 
             ConnectTextureTo(sourceName, mat, "_MetallicAlphaMap", "MetallicAlpha",
                 matJson, "Textures/MetallicAlpha");
@@ -1542,6 +1603,10 @@ namespace Reallusion.Import
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
                 float smoothnessMax = Util.CombineSpecularToSmoothness(specular, ValueByPipeline(1f, 0.9f, 1f));
                 mat.SetFloatIf("_SmoothnessMax", smoothnessMax);
+                //float secondarySmoothness = 0.85f * smoothnessMax;
+                //float smoothnessMix = Mathf.Clamp(0.15f * ((1f / Mathf.Pow(secondarySmoothness, 4f)) - 1f), 0.05f, 0.9f);
+                //mat.SetFloatIf("_Smoothness2", secondarySmoothness);
+                //mat.SetFloatIf("_SmoothnessMix", smoothnessMix);
                 // URP's lights affect the AMP SSS more than 3D or HDRP
                 mat.SetFloatIf("_SubsurfaceScale", matJson.GetFloatValue("Subsurface Scatter/Lerp"));                
                 mat.SetFloatIf("_MicroSmoothnessMod", -matJson.GetFloatValue("Custom Shader/Variable/Micro Roughness Scale"));
@@ -2163,6 +2228,36 @@ namespace Reallusion.Import
             if (!DoneTexture(tex)) SetTextureImport(tex, name, FLAG_FOR_BAKE + flags);
         }
 
+        private void FixHDRPMap(Material sharedMat, string sourceName, QuickJSON jsonData, 
+            string maskJsonPath = "Textures/HDRP", string maskSuffix = "HDRP",
+            string detailJsonPath = "Custom Shader/Image/MicroNormalMask", string detailSuffix = "MicroNMask")
+        {            
+            int flags = 0;
+            string maskJsonTexturePath = jsonData?.GetStringValue(maskJsonPath + "/Texture Path");
+            string detailJsonTexturePath = jsonData?.GetStringValue(detailJsonPath + "/Texture Path");            
+
+            Texture2D mask = GetTextureFrom(maskJsonTexturePath, sourceName, maskSuffix, out string maskName, true);
+            Texture2D detail = GetTextureFrom(detailJsonTexturePath, sourceName, detailSuffix, out string detailName, true);
+            
+            // make sure to set the correct import settings for 
+            // these textures before using them for baking...                        
+            if (!DoneTexture(mask)) SetTextureImport(mask, maskName, FLAG_FOR_BAKE + flags);
+            if (!DoneTexture(detail)) SetTextureImport(detail, detailName, FLAG_FOR_BAKE + flags);
+
+            ComputeBake baker = new ComputeBake(fbx, characterInfo);
+            
+            Texture2D bakedTex = null;
+
+            if (mask && detail)
+            {
+                bakedTex = baker.BakeCorrectedHDRPMap(mask, detail, maskName);
+                if (bakedTex)
+                {
+                    bakedHDRPMaps.Add(sharedMat, bakedTex);
+                }
+            }
+        }
+
         private void BakeDefaultMap(Material sharedMat, string sourceName, string shaderRef, string suffix, QuickJSON jsonData, string jsonPath)
         {
             ComputeBake baker = new ComputeBake(fbx, characterInfo);
@@ -2182,12 +2277,18 @@ namespace Reallusion.Import
                 {
                     case "_ThicknessMap":                        
                         bakedTex = baker.BakeDefaultSkinThicknessMap(tex, name);
-                        bakedThicknessMaps.Add(sharedMat, bakedTex);
+                        if (bakedTex)
+                        {
+                            bakedThicknessMaps.Add(sharedMat, bakedTex);
+                        }
                         break;
 
                     case "_DetailMap":                        
                         bakedTex = baker.BakeDefaultDetailMap(tex, name);
-                        bakedDetailMaps.Add(sharedMat, bakedTex);
+                        if (bakedTex)
+                        {
+                            bakedDetailMaps.Add(sharedMat, bakedTex);
+                        }
                         break;
                 }
             }
@@ -2549,6 +2650,23 @@ namespace Reallusion.Import
         private void SetFloatPowerRange(Material mat, string shaderRef, float value, float min, float max, float power = 1f)
         {
             mat.SetFloatIf(shaderRef, Mathf.Lerp(min, max, Mathf.Pow(value, power)));
+        }
+
+        public void ProcessMotionFbx(string guid, Avatar sourceAvatar, GameObject sourcePrefabAsset)
+        {
+            string motionAssetPath = AssetDatabase.GUIDToAssetPath(guid);
+            if (!string.IsNullOrEmpty(motionAssetPath))
+            {
+                Util.LogInfo("Processing motion Fbx: " + motionAssetPath);
+                RL.DoMotionImport(characterInfo, sourceAvatar, motionAssetPath);                
+
+                // extract and retarget animations if needed.                
+                int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
+                bool replace = characterInfo.animationRetargeted != animationRetargeted;
+                if (replace) Util.LogInfo("Retargeting all imported animations: " + motionAssetPath);
+                AnimRetargetGUI.GenerateCharacterTargetedAnimations(motionAssetPath, sourcePrefabAsset, replace);
+                characterInfo.animationRetargeted = animationRetargeted;
+            }            
         }
     }
 }

@@ -16,11 +16,9 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 #if UNITY_POST_PROCESSING_3_1_1
 using UnityEngine.Rendering.PostProcessing;
@@ -137,6 +135,23 @@ namespace Reallusion.Import
             }
         }
 
+        public static void PokeLighting()
+        {
+            PreviewScene ps = WindowManager.GetPreviewScene();
+
+            List<GameObject> lightingContainers = new List<GameObject>();
+            Util.FindSceneObjects(ps.lighting, "LightingConfig", lightingContainers);
+
+            for (int i = 0; i < lightingContainers.Count; i++)
+            {
+                if (lightingContainers[i].activeInHierarchy)
+                {
+                    lightingContainers[i].SetActive(false);
+                    lightingContainers[i].SetActive(true);
+                }                        
+            }                
+        }
+
         public GameObject GetPreviewCharacter()
         {
             if (character.transform.childCount > 0)
@@ -250,7 +265,7 @@ namespace Reallusion.Import
 
         public void PostProcessingAndLighting()
         {
-            Debug.Log("PostProcessingAndLighting");
+            Util.LogInfo("PostProcessingAndLighting");
             if (Pipeline.is3D || Pipeline.isURP)
             {
                 Material skybox = (Material)Util.FindAsset("RL Preview Gradient Skybox");
