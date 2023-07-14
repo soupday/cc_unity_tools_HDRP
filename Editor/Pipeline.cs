@@ -589,6 +589,8 @@ namespace Reallusion.Import
             if (modified)
             {
                 dpl.diffusionProfiles.value = dpsList.ToArray();
+                EditorUtility.SetDirty(defaultVolumeAsset);
+                AssetDatabase.SaveAssetIfDirty(defaultVolumeAsset);
             }
 #else
             SerializedProperty list = hdrp.FindProperty("diffusionProfileSettingsList");            

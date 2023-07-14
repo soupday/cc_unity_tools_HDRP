@@ -4,12 +4,14 @@ Changelog
 ### v 1.5.0
 - Animation player system rebuilt to remove AnimationMode.
     - New system includes foot IK preview, variable speed and camera bone targeting and play mode operation.
-- Optional (WIP) dual specular shader added for HQ skin. (Enabled in the import window options)
+- Optional (WIP) HDRP dual specular shader added for HQ skin. (Enabled in the import window options)
 - HDRP mask detail mask correction. (Export from CC4 not using correct micro normal mask)
 - HDRP lighting fix when first loading preview scene.
 - Batch processing window added.
 - Physics sphere collider support added.
 - Import procedure now processes all <character_name>_Motion.Fbx files with the character.
+- Fix to character build crash in Unity 2023.1
+- Fix to Diffusion profiles not saving to default volume asset in 2023.1.
 
 ### v 1.4.9
 - Refresh button fix...
