@@ -295,6 +295,39 @@ namespace Reallusion.Import
             get { return fbx != null; }
         }
 
+        public Avatar GetCharacterAvatar()
+        {                        
+            Object[] objects = AssetDatabase.LoadAllAssetsAtPath(path);
+            foreach (Object obj in objects)
+            {
+                if (obj.GetType() == typeof(Avatar))
+                {
+                    return obj as Avatar;
+                }
+            }
+
+            return null;
+        }
+
+        public List<string> GetMotionGuids()
+        {
+            List<string> motionGuids = new List<string>();
+            DirectoryInfo di = new DirectoryInfo(folder);
+            string prefix = name + "_";
+            string suffix = "_Motion.fbx";
+            foreach (FileInfo fi in di.GetFiles("*.fbx"))
+            {
+                if (fi.Name.iStartsWith(prefix) && fi.Name.iEndsWith(suffix))
+                {
+                    string path = Path.Combine(folder, fi.Name);
+                    string guid = AssetDatabase.AssetPathToGUID(path);
+                    motionGuids.Add(guid);
+                }
+            }
+
+            return motionGuids;
+        }
+
         public string GetPrefabsFolder()
         {
             return Path.Combine(folder, Importer.PREFABS_FOLDER);

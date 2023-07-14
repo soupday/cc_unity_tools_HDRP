@@ -845,13 +845,13 @@ namespace Reallusion.Import
             return found;
         }
 
-        public static AnimationClip[] GetAllAnimationClipsFromCharacter(GameObject sourceFbx)
+        public static AnimationClip[] GetAllAnimationClipsFromCharacter(string sourceFbxPath)
         {
             List<AnimationClip> clips = new List<AnimationClip>();
 
-            if (sourceFbx)
+            if (!string.IsNullOrEmpty(sourceFbxPath))
             {
-                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(sourceFbx));
+                Object[] data = AssetDatabase.LoadAllAssetRepresentationsAtPath(sourceFbxPath);
                 foreach (Object subObject in data)
                 {
                     if (subObject.GetType().Equals(typeof(AnimationClip)))
@@ -874,6 +874,23 @@ namespace Reallusion.Import
                 if (path.iEndsWith(".prefab")) return fbxAsset;
                 string folder = Path.GetDirectoryName(path);
                 string name = Path.GetFileNameWithoutExtension(path);
+                string searchName = name;
+                if (baked) searchName = name + Importer.BAKE_SUFFIX;
+                string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
+                if (File.Exists(prefabPath))
+                    return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            }
+            return null;
+        }
+
+        public static GameObject FindCharacterPrefabAsset(string fbxPath, bool baked = false)
+        {            
+            if (!string.IsNullOrEmpty(fbxPath))
+            {
+                if (fbxPath.iEndsWith(".prefab")) 
+                    return AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+                string folder = Path.GetDirectoryName(fbxPath);
+                string name = Path.GetFileNameWithoutExtension(fbxPath);
                 string searchName = name;
                 if (baked) searchName = name + Importer.BAKE_SUFFIX;
                 string prefabPath = Path.Combine(folder, Importer.PREFABS_FOLDER, searchName + ".prefab");
@@ -1095,7 +1112,7 @@ namespace Reallusion.Import
             }
 
             return false;
-        }
+        }        
 
         public static bool NameContainsKeywords(string name, params string[] keyword)
         {

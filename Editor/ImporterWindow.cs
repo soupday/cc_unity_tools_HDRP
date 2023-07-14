@@ -815,8 +815,18 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAnims, "Process, extract and rename character animations and create a default animtor controller."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                RL.SetAnimationImport(contextCharacter, contextCharacter.Fbx);                
-                AnimRetargetGUI.GenerateCharacterTargetedAnimations(contextCharacter.Fbx, null, true);
+                RL.DoAnimationImport(contextCharacter, contextCharacter.Fbx);
+                AnimRetargetGUI.GenerateCharacterTargetedAnimations(contextCharacter.path, contextCharacter.Fbx, true);
+                List<string> motionGuids = contextCharacter.GetMotionGuids();
+                if (motionGuids.Count > 0)
+                {
+                    Avatar sourceAvatar = contextCharacter.GetCharacterAvatar();
+                    foreach (string motionGuid in motionGuids)
+                    {
+                        string motionPath = AssetDatabase.GUIDToAssetPath(motionGuid);
+                        AnimRetargetGUI.GenerateCharacterTargetedAnimations(motionPath, contextCharacter.Fbx, true);
+                    }
+                }
                 int animationRetargeted = contextCharacter.DualMaterialHair ? 2 : 1;
                 contextCharacter.animationRetargeted = animationRetargeted;
                 contextCharacter.Write();

@@ -357,13 +357,28 @@ namespace Reallusion.Import
             int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
             bool replace = characterInfo.animationRetargeted != animationRetargeted;
             if (replace) Util.LogInfo("Retargeting all imported animations.");
-            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbx, prefabAsset, replace);
+            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbxPath, prefabAsset, replace);
             characterInfo.animationRetargeted = animationRetargeted;
 
             // create default animator if there isn't one.
             RL.ApplyAnimatorController(characterInfo, RL.AutoCreateAnimator(fbx, characterInfo.path, importer));
 
             Util.LogAlways("Done building materials for character " + characterName + "!");
+
+
+
+            List<string> motionGuids = characterInfo.GetMotionGuids();
+            if (motionGuids.Count > 0)
+            {
+                Avatar sourceAvatar = characterInfo.GetCharacterAvatar();
+                if (sourceAvatar)
+                {
+                    foreach (string guid in motionGuids)
+                    {
+                        ProcessMotionFbx(guid, sourceAvatar, prefabAsset);
+                    }
+                }
+            }
 
             if (!batchMode) Selection.activeObject = prefabAsset;
             else Selection.activeObject = null;
@@ -2635,6 +2650,23 @@ namespace Reallusion.Import
         private void SetFloatPowerRange(Material mat, string shaderRef, float value, float min, float max, float power = 1f)
         {
             mat.SetFloatIf(shaderRef, Mathf.Lerp(min, max, Mathf.Pow(value, power)));
+        }
+
+        public void ProcessMotionFbx(string guid, Avatar sourceAvatar, GameObject sourcePrefabAsset)
+        {
+            string motionAssetPath = AssetDatabase.GUIDToAssetPath(guid);
+            if (!string.IsNullOrEmpty(motionAssetPath))
+            {
+                Util.LogInfo("Processing motion Fbx: " + motionAssetPath);
+                RL.DoMotionImport(characterInfo, sourceAvatar, motionAssetPath);                
+
+                // extract and retarget animations if needed.                
+                int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
+                bool replace = characterInfo.animationRetargeted != animationRetargeted;
+                if (replace) Util.LogInfo("Retargeting all imported animations: " + motionAssetPath);
+                AnimRetargetGUI.GenerateCharacterTargetedAnimations(motionAssetPath, sourcePrefabAsset, replace);
+                characterInfo.animationRetargeted = animationRetargeted;
+            }            
         }
     }
 }
