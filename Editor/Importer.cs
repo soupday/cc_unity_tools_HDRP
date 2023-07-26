@@ -361,7 +361,9 @@ namespace Reallusion.Import
             characterInfo.animationRetargeted = animationRetargeted;
 
             // create default animator if there isn't one.
-            RL.ApplyAnimatorController(characterInfo, RL.AutoCreateAnimator(fbx, characterInfo.path, importer));
+            //RL.ApplyAnimatorController(characterInfo, RL.AutoCreateAnimator(fbx, characterInfo.path, importer));
+            RL.ApplyAnimatorController(characterInfo, RL.AutoLoadAnimator(fbx, characterInfo.path));
+            
 
             Util.LogAlways("Done building materials for character " + characterName + "!");
 

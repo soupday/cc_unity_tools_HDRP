@@ -22,6 +22,8 @@ using UnityEngine;
 using System;
 using System.IO;
 using UnityEditor.Animations;
+using Codice.Client.Common;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Reallusion.Import
 {
@@ -421,7 +423,36 @@ namespace Reallusion.Import
                 importer.humanDescription = human;
             }
         }
-        
+
+        public static AnimatorController AutoLoadAnimator(GameObject fbx, string assetPath)
+        {
+            string animatorPath = Path.GetDirectoryName(assetPath) + "/" + fbx.name + "_default_animator.controller";
+
+            string[] folders = new string[] { "Packages" };
+            string animatorName = "RL_Default_Animator_Controller";
+
+            string[] guids = AssetDatabase.FindAssets(animatorName, folders);
+            foreach (string guid in guids)
+            {
+
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                string name = Path.GetFileNameWithoutExtension(path);
+                if (name.iEquals(animatorName))
+                {   
+                    UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+                    if (asset.GetType() == typeof(AnimatorController))
+                    {
+                        if (AssetDatabase.CopyAsset(path, animatorPath))
+                        {
+                            return AssetDatabase.LoadAssetAtPath<AnimatorController>(animatorPath);
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+
         public static AnimatorController AutoCreateAnimator(GameObject fbx, string assetPath, ModelImporter importer)
         {
             string animatorPath = Path.GetDirectoryName(assetPath) + "/" + fbx.name + "_animator.controller";
@@ -551,8 +582,9 @@ namespace Reallusion.Import
             string path = info.path;
             ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(path);
             HumanoidImportSettings(fbx, importer, info);
-            SetupAnimation(importer, info, true);            
-            ApplyAnimatorController(info, AutoCreateAnimator(fbx, info.path, importer));
+            SetupAnimation(importer, info, true);
+            //ApplyAnimatorController(info, AutoCreateAnimator(fbx, info.path, importer));
+            ApplyAnimatorController(info, AutoLoadAnimator(fbx, info.path));
 
             Avatar sourceAvatar = info.GetCharacterAvatar();
 
