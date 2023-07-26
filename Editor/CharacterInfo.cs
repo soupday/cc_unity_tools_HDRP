@@ -647,9 +647,12 @@ namespace Reallusion.Import
 
         public void Release()
         {
-            jsonData = null;
-            fbx = null;
-            Util.LogInfo("CharInfo: " + name + " Data Released!");
+            if (jsonData != null || fbx != null)
+            {
+                jsonData = null;
+                fbx = null;
+                Util.LogInfo("CharInfo: " + name + " Data Released!");
+            }
         }
 
         public bool CanHaveHighQualityMaterials

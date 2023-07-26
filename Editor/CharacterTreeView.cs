@@ -242,5 +242,10 @@ namespace Reallusion.Import
         {
             ExpandToDepth(rootItem, 0, maxDepth);            
         }        
+
+        public void Release()
+        {
+            objList.Clear();
+        }
     }
 }
