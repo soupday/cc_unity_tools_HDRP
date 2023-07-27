@@ -226,7 +226,7 @@ namespace Reallusion.Import
             return new MultiValue("None");
         }
 
-        public QuickJSON FindObjectWithKey(string keySearch)
+        public QuickJSON FindObjectWithKey(string keySearch, bool recursive = false)
         {
             for (int i = 0; i < values.Count; i++)
             {
@@ -236,9 +236,36 @@ namespace Reallusion.Import
                     {
                         return values[i].ObjectValue;
                     }
-                    else
+                    else if (recursive)
                     {
-                        QuickJSON found = values[i].ObjectValue.FindObjectWithKey(keySearch);
+                        QuickJSON found = values[i].ObjectValue.FindObjectWithKey(keySearch, recursive);
+                        if (found != null) return found;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public string FindKeyName(string path, string keySearch, bool recursive = false)
+        {
+            QuickJSON pathJson = GetObjectAtPath(path);
+            return pathJson.FindKeyName(keySearch, recursive);
+        }
+
+        public string FindKeyName(string keySearch, bool recursive = false)
+        {
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (values[i].Type == MultiType.Object)
+                {
+                    if (values[i].Key.iContains(keySearch))
+                    {
+                        return values[i].Key;
+                    }
+                    else if (recursive)
+                    {
+                        string found = values[i].ObjectValue.FindKeyName(keySearch);
                         if (found != null) return found;
                     }
                 }

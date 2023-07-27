@@ -1120,11 +1120,9 @@ namespace Reallusion.Import
         }
 
 
-        public static GameObject Extract2PassHairMeshes(CharacterInfo info, 
-                GameObject prefabAsset, GameObject prefabInstance,
-                bool savePrefabAsset = false)
+        public static bool Extract2PassHairMeshes(CharacterInfo info, GameObject prefabInstance)
         {
-            if (!prefabInstance) return null;
+            if (!prefabInstance) return false;
 
             string name = info.name;
             string fbxFolder = info.folder;
@@ -1326,23 +1324,10 @@ namespace Reallusion.Import
                     }
                 }                
             }
-            
-            if (prefabInstance && processCount > 0)
-            {
-                if (savePrefabAsset)
-                {
-                    Util.LogInfo("Updating character prefab...");
-                    // save the clone as the prefab for this character         
-                    string prefabPath = AssetDatabase.GetAssetPath(prefabAsset);
-                    prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, prefabPath);
-                }
-            }
-            else
-            {
-                Util.LogInfo("Nothing to process (or already processed)...");
-            }            
 
-            return prefabAsset;
+            if (processCount > 0) return true;
+
+            return false;
         }
 
         public struct SmoothVertData
