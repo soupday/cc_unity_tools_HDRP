@@ -89,6 +89,16 @@
             "name": "com.unity.render-pipelines.high-definition",
             "expression": "14.0.0",
             "define": "HDRP_14_0_0_OR_NEWER"
+        },
+        {
+            "name": "Unity",
+            "expression": "2021.2.0",
+            "define": "UNITY_2021_2_OR_NEWER"
+        },
+        {
+            "name": "Unity",
+            "expression": "2020.3.0",
+            "define": "UNITY_2020_3_OR_NEWER"
         }
     ],
     "noEngineReferences": false

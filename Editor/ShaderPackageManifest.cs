@@ -83,7 +83,7 @@ namespace Reallusion.Import
         {
             EditorUtility.SetDirty(manifest);
 #if UNITY_2021_2_OR_NEWER
-				AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(manifest)));
+			AssetDatabase.SaveAssetIfDirty(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(manifest)));
 #else
             AssetDatabase.SaveAssets();
 #endif

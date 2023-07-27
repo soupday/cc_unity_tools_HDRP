@@ -1213,8 +1213,11 @@ namespace Reallusion.Import
 
         public static Rect GetRectToCenterWindow(float width, float height)
         {
-            //Rect appRect = GetEditorApplicationWindowRect();  // alas
-            Rect appRect = EditorGUIUtility.GetMainWindowPosition();
+#if UNITY_2020_3_OR_NEWER
+            Rect appRect = EditorGUIUtility.GetMainWindowPosition();            
+#else
+            Rect appRect = GetEditorApplicationWindowRect();
+#endif
 
             if (appRect == new Rect())
             {
