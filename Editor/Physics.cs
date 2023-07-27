@@ -633,6 +633,9 @@ namespace Reallusion.Import
         private void AddCloth()
         {
             clothMeshes.Clear();
+
+            PrepWeightMaps();
+
             List<string> hairMeshNames = FindHairMeshes();
             Transform[] transforms = prefabInstance.GetComponentsInChildren<Transform>();
             foreach (Transform t in transforms)
@@ -723,25 +726,31 @@ namespace Reallusion.Import
             return hairMeshNames;
         }
 
+        private void PrepWeightMaps()
+        {
+            if (addClothPhysics || addHairPhysics)
+            {
+                foreach (SoftPhysicsData data in softPhysics)
+                {
+                    Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
+                    SetWeightMapImport(weightMap);
+                }
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+        }
+
         private void DoCloth(GameObject clothTarget, string meshName)
         {            
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
             if (!renderer) return;
             Mesh mesh = renderer.sharedMesh;
-            if (!mesh) return;
-                       
-            foreach (SoftPhysicsData data in softPhysics)
-            {
-                Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
-                SetWeightMapImport(weightMap);
-            }
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            WeightMapper mapper = clothTarget.GetComponent<WeightMapper>();
-            if (!mapper) mapper = clothTarget.AddComponent<WeightMapper>();
+            if (!mesh) return;            
+            
             List<WeightMapper.PhysicsSettings> settingsList = new List<WeightMapper.PhysicsSettings>();
+
+            bool hasPhysics = false;
 
             for (int i = 0; i < mesh.subMeshCount; i++)//
             {
@@ -799,13 +808,20 @@ namespace Reallusion.Import
                         settings.weightMap = weightMap;
 
                         settingsList.Add(settings);
+                        hasPhysics = true;
                     }
                 }
             }
 
-            mapper.settings = settingsList.ToArray();
-            mapper.characterGUID = characterGUID;
-            mapper.ApplyWeightMap();
+            if (hasPhysics)
+            {
+                WeightMapper mapper = clothTarget.GetComponent<WeightMapper>();
+                if (!mapper) mapper = clothTarget.AddComponent<WeightMapper>();
+
+                mapper.settings = settingsList.ToArray();
+                mapper.characterGUID = characterGUID;
+                mapper.ApplyWeightMap();
+            }
         }
 
         public void RemoveCloth(GameObject obj)
