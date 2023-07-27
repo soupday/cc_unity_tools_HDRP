@@ -424,9 +424,18 @@ namespace Reallusion.Import
             }
         }
 
-        public static AnimatorController AutoLoadAnimator(GameObject fbx, string assetPath)
+        public static AnimatorController CreateDefaultAnimator(GameObject fbx, string assetPath)
         {
-            string animatorPath = Path.GetDirectoryName(assetPath) + "/" + fbx.name + "_default_animator.controller";
+            string animatorPath = assetPath + "/" + fbx.name + "_default_animator.controller";
+
+            if (File.Exists(animatorPath))
+            {
+                UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(animatorPath);
+                if (asset.GetType() == typeof(AnimatorController))
+                {                    
+                    return AssetDatabase.LoadAssetAtPath<AnimatorController>(animatorPath);
+                }
+            }
 
             string[] folders = new string[] { "Packages" };
             string animatorName = "RL_Default_Animator_Controller";
@@ -434,7 +443,6 @@ namespace Reallusion.Import
             string[] guids = AssetDatabase.FindAssets(animatorName, folders);
             foreach (string guid in guids)
             {
-
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 string name = Path.GetFileNameWithoutExtension(path);
                 if (name.iEquals(animatorName))
@@ -449,6 +457,7 @@ namespace Reallusion.Import
                     }
                 }
             }
+
             return null;
         }
 
@@ -582,9 +591,8 @@ namespace Reallusion.Import
             string path = info.path;
             ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(path);
             HumanoidImportSettings(fbx, importer, info);
-            SetupAnimation(importer, info, true);
-            //ApplyAnimatorController(info, AutoCreateAnimator(fbx, info.path, importer));
-            ApplyAnimatorController(info, AutoLoadAnimator(fbx, info.path));
+            SetupAnimation(importer, info, true);            
+            AddDefaultAnimatorController(info, fbx);
 
             Avatar sourceAvatar = info.GetCharacterAvatar();
 
@@ -604,98 +612,167 @@ namespace Reallusion.Import
             ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(motionFbxPath);            
             HumanoidImportSettings(null, importer, info, sourceAvatar);
             SetupAnimation(importer, info, true);            
-        }        
+        }      
 
-        public static void ApplyAnimatorController(CharacterInfo info, AnimatorController controller)
+        public static void AddDefaultAnimatorController(CharacterInfo info, GameObject prefab)
         {
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
             string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
             string prefabBakedPath = Path.Combine(prefabFolder, info.name + Importer.BAKE_SUFFIX + ".prefab");
 
-            if (controller)
+            AnimatorController defaultController = CreateDefaultAnimator(info.Fbx, info.folder);
+            Animator animator = prefab.GetComponent<Animator>();
+
+            if (!animator || !defaultController) return;            
+            
+            animator.runtimeAnimatorController = defaultController;
+            animator.applyRootMotion = true;
+            animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+                
+            // replace baked prefab animator too
+            if (File.Exists(prefabBakedPath))
             {
-                if (File.Exists(prefabPath))
+                GameObject prefabBaked = AssetDatabase.LoadAssetAtPath<GameObject>(prefabBakedPath);
+                animator = prefabBaked.GetComponent<Animator>();
+
+                if (animator)
                 {
-                    GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                    Animator animator = prefab.GetComponent<Animator>();
-
-                    if (animator && !animator.runtimeAnimatorController)
-                    {
-                        animator.runtimeAnimatorController = controller;
-                        animator.applyRootMotion = true;
-                        animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-                    }
-                }
-
-                if (File.Exists(prefabBakedPath))
-                {
-                    GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabBakedPath);
-                    Animator animator = prefab.GetComponent<Animator>();
-
-                    if (animator && !animator.runtimeAnimatorController)
-                    {
-                        animator.runtimeAnimatorController = controller;
-                        animator.applyRootMotion = true;
-                        animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-                    }
+                    animator.runtimeAnimatorController = defaultController;
+                    animator.applyRootMotion = true;
+                    animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
                 }
             }
         }
 
-        public static GameObject CreatePrefabFromFbx(CharacterInfo info, GameObject fbx, out GameObject sceneInstance)
+        public static string InitCharacterPrefab(CharacterInfo info)
+        {            
+            string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);            
+            string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
+
+            // Unity 2023.1 crashes if saving a new instance over an existing prefab, so delete it first
+            bool assetExists = Util.AssetPathExists(prefabPath);
+            if (assetExists)
+            {
+                AssetDatabase.DeleteAsset(prefabPath);
+                AssetDatabase.Refresh();
+            }
+
+            return prefabPath;
+        }
+
+        public static GameObject InstantiateModelFromSource(CharacterInfo info, GameObject fbx)
         {            
             if (info.path.iContains("_lod") && CountLODs(fbx) > 1)
             {
-                return CreateOneLODPrefabFromModel(info, fbx, "", out sceneInstance);
+                return CreateLODInstanceFromModel(info, fbx);
             }
             else
             {
-                return CreatePrefabFromModel(info, fbx, out sceneInstance);
+                return CreateInstanceFromModel(info, fbx);
             }
         }
 
         /// <summary>
         ///     Note: no longer deletes the clone. Use SaveAndRemoveScenePrefab() to finalize the prefab.
         /// </summary>
-        public static GameObject CreatePrefabFromModel(CharacterInfo info, GameObject fbx, out GameObject sceneInstance)
-        {
-            // Create a Prefab folder:          
-            string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
-            //string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
-            string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
-            string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");            
-
-            // Apply to the scene:
-            sceneInstance = PrefabUtility.InstantiatePrefab(fbx) as GameObject;            
-
-            // Apply Animator:
-            if (!sceneInstance.GetComponent<Animator>().runtimeAnimatorController)
-            {
-                if (File.Exists(animatorControllerPath))
-                    sceneInstance.GetComponent<Animator>().runtimeAnimatorController = 
-                            AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(animatorControllerPath);
-
-                sceneInstance.GetComponent<Animator>().applyRootMotion = true;
-                sceneInstance.GetComponent<Animator>().cullingMode = AnimatorCullingMode.CullUpdateTransforms;                
-            }
-
-            bool assetExists = Util.AssetPathExists(prefabPath);
-            if (assetExists)
-            {
-                AssetDatabase.DeleteAsset(prefabPath);
-            }
-            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(sceneInstance, prefabPath, InteractionMode.AutomatedAction);
-            return prefab;
+        public static GameObject CreateInstanceFromModel(CharacterInfo info, GameObject modelSource)
+        {                        
+            return PrefabUtility.InstantiatePrefab(modelSource) as GameObject;                       
         }
 
-        public static GameObject SaveAndRemovePrefabInstance(GameObject prefabAsset, GameObject prefabInstance)
+        public static GameObject CreateLODInstanceFromModel(CharacterInfo info, GameObject modelSource)
         {
-            //PrefabUtility.SavePrefabAsset(prefabInstance);
-            string assetPath = AssetDatabase.GetAssetPath(prefabAsset);
+            GameObject sceneLODInstance = new GameObject();
+            LODGroup lodGroup = sceneLODInstance.AddComponent<LODGroup>();            
+
+            Renderer[] renderers = modelSource.transform.GetComponentsInChildren<Renderer>(true);
+            int lodLevels = 0;
+            foreach (Renderer child in renderers)
+            {
+                if (child.name.Contains("_LOD"))
+                {
+                    string level = child.name.Substring((child.name.Length - 1), 1);
+                    lodLevels = Math.Max(lodLevels, int.Parse(level));
+                }
+            }
+
+            if (renderers.Length == lodLevels)
+            {
+                LOD[] lods = new LOD[lodLevels];
+                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(modelSource) as GameObject;
+                lodPrefabTemp.transform.SetParent(sceneLODInstance.transform, false);
+                Renderer[] prefabRenderers = lodPrefabTemp.transform.GetComponentsInChildren<Renderer>(true);
+
+                for (int i = 0; i < lodLevels; i++) // Does not process LOD0
+                {
+                    string LODLevel = "_LOD" + (i + 1);
+                    for (int j = 0; j < prefabRenderers.Length; j++)
+                    {
+                        if (prefabRenderers[j].name.Contains(LODLevel))
+                        {
+                            Renderer[] rendererLOD = new Renderer[1];
+                            rendererLOD[0] = prefabRenderers[j];
+                            lods[i] = new LOD(1.0F / (i + 2), rendererLOD);
+                        }
+
+                        if (i == lodLevels - 1)
+                        {
+                            lods[i].screenRelativeTransitionHeight = (0.02f);
+                        }
+                    }
+                }
+
+                lodGroup.SetLODs(lods);
+                lodGroup.RecalculateBounds();
+            }
+            else
+            {
+                lodLevels++;
+                LOD[] lods = new LOD[lodLevels];
+                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(modelSource) as GameObject;
+                lodPrefabTemp.transform.SetParent(sceneLODInstance.transform, false);
+                Renderer[] prefabRenderers = lodPrefabTemp.transform.GetComponentsInChildren<Renderer>(true);                
+
+                List<Renderer> renderersListLOD0 = new List<Renderer>();
+                for (int i = 0; i < prefabRenderers.Length; i++) // Process LOD0
+                {
+                    if (!prefabRenderers[i].name.Contains("_LOD"))
+                    {
+                        renderersListLOD0.Add(prefabRenderers[i]);
+                    }
+                }
+                Renderer[] renderersLOD0 = renderersListLOD0.ToArray();
+                lods[0] = new LOD((1.0F / (2)), renderersLOD0);
+                for (int i = 1; i < lodLevels; i++)
+                {
+                    string LODLevel = "_LOD" + i;
+                    for (int j = 0; j < prefabRenderers.Length; j++)
+                    {
+                        if (prefabRenderers[j].name.Contains(LODLevel))
+                        {
+                            Renderer[] rendererLOD = new Renderer[1];
+                            rendererLOD[0] = prefabRenderers[j];
+                            lods[i] = new LOD(1.0F / (i + 2), rendererLOD);
+                        }
+                        if (i == lodLevels - 1)
+                        {
+                            lods[i].screenRelativeTransitionHeight = (0.02f);
+                        }
+                    }
+                }
+                lodGroup.SetLODs(lods);
+                lodGroup.RecalculateBounds();
+            }            
+
+            return sceneLODInstance;
+        }
+
+        public static GameObject SaveAndRemovePrefabInstance(GameObject prefabInstance, string assetPath)
+        {
             GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(prefabInstance, assetPath, 
                                                                           InteractionMode.AutomatedAction);
             UnityEngine.Object.DestroyImmediate(prefabInstance);
-            return prefabAsset;
+            return prefab;
         }
 
         public static int CountLODs(GameObject fbx)
@@ -723,104 +800,6 @@ namespace Reallusion.Import
             }
             return levels.Count;
         }
-        
-        public static GameObject CreateOneLODPrefabFromModel(CharacterInfo info, GameObject fbx, string suffix, out GameObject sceneLODInstance)
-        {
-            sceneLODInstance = new GameObject();
-            LODGroup lodGroup = sceneLODInstance.AddComponent<LODGroup>();
-            string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);
-            //string namedPrefabFolder = Util.CreateFolder(prefabFolder, info.name);
-            string prefabPath = Path.Combine(prefabFolder, info.name + suffix + ".prefab");
-            string animatorControllerPath = Path.Combine(info.folder, info.name + "_animator.controller");            
-
-            Renderer[] renderers = fbx.transform.GetComponentsInChildren<Renderer>(true);
-            int lodLevel = 0;
-            foreach (Renderer child in renderers)
-            {
-                if (child.name.Contains("_LOD"))
-                {
-                    string level = child.name.Substring((child.name.Length - 1), 1);
-                    lodLevel = Math.Max(lodLevel, int.Parse(level));
-                }
-            }
-
-            if (renderers.Length == lodLevel)
-            {
-                LOD[] lods = new LOD[lodLevel];
-                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(fbx) as GameObject;
-                lodPrefabTemp.transform.SetParent(sceneLODInstance.transform, false);
-                Renderer[] prefabRenderers = lodPrefabTemp.transform.GetComponentsInChildren<Renderer>(true);
-
-                for (int i = 0; i < lodLevel; ++i) // Does not process LOD0
-                {
-                    string LODLevel = "_LOD" + (i + 1);
-                    for (int j = 0; j < prefabRenderers.Length; j++)
-                    {
-                        if (prefabRenderers[j].name.Contains(LODLevel))
-                        {
-                            Renderer[] rendererLOD = new Renderer[1];
-                            rendererLOD[0] = prefabRenderers[j];
-                            lods[i] = new LOD(1.0F / (i + 2), rendererLOD);
-                        }
-
-                        if (i == lodLevel - 1)
-                        {
-                            lods[i].screenRelativeTransitionHeight = (0.02f);
-                        }
-                    }
-                }
-
-                lodGroup.SetLODs(lods);
-                lodGroup.RecalculateBounds();
-            }
-            else
-            {
-                lodLevel++;
-                LOD[] lods = new LOD[lodLevel];
-                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(fbx) as GameObject;
-                lodPrefabTemp.transform.SetParent(sceneLODInstance.transform, false);
-                Renderer[] prefabRenderers = lodPrefabTemp.transform.GetComponentsInChildren<Renderer>(true);
-
-                if (File.Exists(animatorControllerPath))
-                    lodPrefabTemp.GetComponent<Animator>().runtimeAnimatorController = 
-                            AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(animatorControllerPath);
-
-                List<Renderer> renderersListLOD0 = new List<Renderer>();
-                for (int i = 0; i < prefabRenderers.Length; i++) // Process LOD0
-                {
-                    if (!prefabRenderers[i].name.Contains("_LOD"))
-                    {
-                        renderersListLOD0.Add(prefabRenderers[i]);
-                    }
-                }
-                Renderer[] renderersLOD0 = renderersListLOD0.ToArray();
-                lods[0] = new LOD((1.0F / (2)), renderersLOD0);
-                for (int i = 1; i < lodLevel; i++)
-                {
-                    string LODLevel = "_LOD" + i;
-                    for (int j = 0; j < prefabRenderers.Length; j++)
-                    {
-                        if (prefabRenderers[j].name.Contains(LODLevel))
-                        {
-                            Renderer[] rendererLOD = new Renderer[1];
-                            rendererLOD[0] = prefabRenderers[j];
-                            lods[i] = new LOD(1.0F / (i + 2), rendererLOD);
-                        }
-                        if (i == lodLevel - 1)
-                        {
-                            lods[i].screenRelativeTransitionHeight = (0.02f);
-                        }
-                    }
-                }
-                lodGroup.SetLODs(lods);
-                lodGroup.RecalculateBounds();
-            }
-
-            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(sceneLODInstance, prefabPath, 
-                                                                          InteractionMode.AutomatedAction);
-
-            return prefab;
-        }        
         
         public static bool IsBodyMesh(SkinnedMeshRenderer smr)
         {
