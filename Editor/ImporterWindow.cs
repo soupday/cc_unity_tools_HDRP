@@ -1234,11 +1234,14 @@ namespace Reallusion.Import
                 validCharacters.Clear();
                 validCharacters = null;
             }
-                        
-            Current = null;
 
-            ImporterWindow window = ImporterWindow.Current;
-            window.characterTreeView.Release();
+            if (Current && Current.characterTreeView != null)
+            {
+                ImporterWindow window = Current;
+                window.characterTreeView.Release();
+            }
+
+            Current = null;            
         }
 
         private void OnDestroy()
