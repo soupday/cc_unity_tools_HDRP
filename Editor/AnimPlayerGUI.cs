@@ -435,8 +435,11 @@ namespace Reallusion.Import
             // replace the runtime animator controller of the scene model with the animatorcontroller asset at path
             // destroy the disk asset temp override controller (that was created above)
 
-            GameObject characterPrefab = WindowManager.GetPreviewScene().GetPreviewCharacter();
-            Debug.Log(("Attempting to reset: " + characterPrefab.name));
+            GameObject characterPrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator);
+
+            if (!characterPrefab) return;
+
+            Debug.Log(("Attempting to reset: " + characterPrefab.name));            
 
             GameObject basePrefab = PrefabUtility.GetCorrespondingObjectFromSource(characterPrefab);
 
@@ -474,6 +477,7 @@ namespace Reallusion.Import
                         else
                         {
                             Debug.Log("NO Prefab Animator Controller");
+                            CharacterAnimator.runtimeAnimatorController = null;
                         }
                     }
                 }

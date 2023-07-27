@@ -677,7 +677,7 @@ namespace Reallusion.Import
         /// </summary>
         public static GameObject CreateInstanceFromModel(CharacterInfo info, GameObject modelSource)
         {                        
-            return PrefabUtility.InstantiatePrefab(modelSource) as GameObject;                       
+            return PrefabUtility.InstantiatePrefab(modelSource) as GameObject;
         }
 
         public static GameObject CreateLODInstanceFromModel(CharacterInfo info, GameObject modelSource)

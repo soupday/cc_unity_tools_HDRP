@@ -359,8 +359,11 @@ namespace Reallusion.Import
             AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbxPath, prefabInstance, replace);
             characterInfo.animationRetargeted = animationRetargeted;
 
-            // create default animator if there isn't one.            
-            RL.AddDefaultAnimatorController(characterInfo, prefabInstance);            
+            // create default animator if there isn't one:
+            //  commenting out due to a unity bug in 2022+,
+            //  adding any animator controller to a skinned mesh renderer prefab
+            //  generates a memory leak warning.
+            //RL.AddDefaultAnimatorController(characterInfo, prefabInstance);
 
             List<string> motionGuids = characterInfo.GetMotionGuids();
             if (motionGuids.Count > 0)

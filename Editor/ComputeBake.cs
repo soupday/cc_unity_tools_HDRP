@@ -614,33 +614,7 @@ namespace Reallusion.Import
 
         public GameObject SaveAsPrefab()
         {            
-            string prefabFolder = Util.CreateFolder(fbxFolder, Importer.PREFABS_FOLDER);
-            //string namedPrefabFolder = Util.CreateFolder(prefabFolder, characterName);            
-
-            /*
-            if (characterInfo.isLOD && RL.CountLODs(clone) > 1)
-            {
-                string lodPrefabPath = Path.Combine(prefabFolder, characterName + "_LODModels.prefab");
-                GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, lodPrefabPath);
-                GameObject.DestroyImmediate(clone);
-                GameObject bakedPrefab = RL.CreateLODInstanceFromModel(characterInfo, variant, 
-                    characterInfo.BakeSeparatePrefab ? Importer.BAKE_SUFFIX : "", out GameObject prefabInstance);
-                GameObject.DestroyImmediate(prefabInstance);
-                return bakedPrefab;
-            }
-            else
-            {
-                string prefabPath;
-                if (characterInfo.BakeSeparatePrefab)
-                    prefabPath = Path.Combine(prefabFolder, characterName + Importer.BAKE_SUFFIX + ".prefab");
-                else
-                    prefabPath = Path.Combine(prefabFolder, characterName + ".prefab");
-
-                GameObject variant = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
-                Selection.activeObject = variant;
-                GameObject.DestroyImmediate(clone);
-                return variant;
-            } */
+            string prefabFolder = Util.CreateFolder(fbxFolder, Importer.PREFABS_FOLDER);            
 
             string prefabPath;
             if (characterInfo.BakeSeparatePrefab)

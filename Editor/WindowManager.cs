@@ -256,7 +256,7 @@ namespace Reallusion.Import
             if (IsPreviewScene) 
             {
                 return previewScene;
-            }            
+            }
 
             return default;
         }        
