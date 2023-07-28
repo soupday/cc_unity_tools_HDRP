@@ -1131,10 +1131,13 @@ namespace Reallusion.Import
         public static void UpdateAnimator()
         {
             if (EditorApplication.isPlaying || CharacterAnimator == null) return;
-            if (CharacterAnimator.runtimeAnimatorController.name == overrideName)
+            if (CharacterAnimator.runtimeAnimatorController)  // delayed call to grab scene focus may cause null reference error with absent controller
             {
-                CharacterAnimator.Update(0f);
-                CharacterAnimator.Play(controlStateHash, 0, time);                
+                if (CharacterAnimator.runtimeAnimatorController.name == overrideName)
+                {
+                    CharacterAnimator.Update(0f);
+                    CharacterAnimator.Play(controlStateHash, 0, time);
+                }
             }
         }
 
