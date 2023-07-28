@@ -50,7 +50,11 @@ namespace Reallusion.Import
 
             if (!camera)
             {
+#if UNITY_2023_OR_NEWER
+                Camera[] cams = GameObject.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+#else
                 Camera[] cams = GameObject.FindObjectsOfType<Camera>();
+#endif
                 foreach (Camera cam in cams)
                 {
                     if (cam.isActiveAndEnabled)

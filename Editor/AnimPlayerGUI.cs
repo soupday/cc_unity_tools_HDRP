@@ -445,13 +445,14 @@ namespace Reallusion.Import
 
             if (basePrefab != null)
             {
-                if (PrefabUtility.IsAnyPrefabInstanceRoot(basePrefab))
+                if (true) //(PrefabUtility.IsAnyPrefabInstanceRoot(basePrefab))
                 {
                     string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
                     Debug.Log((basePrefab.name + "Prefab instance root found: " + prefabPath));
 
                     Debug.Log("Loaded Prefab: " + basePrefab.name);
                     Animator baseAnimator = basePrefab.GetComponent<Animator>();
+                    if (!baseAnimator) baseAnimator = basePrefab.GetComponentInChildren<Animator>();
                     if (baseAnimator != null)
                     {
                         Debug.Log("Prefab Animator: " + baseAnimator.name);

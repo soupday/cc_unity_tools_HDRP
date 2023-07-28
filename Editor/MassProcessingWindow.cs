@@ -670,7 +670,8 @@ namespace Reallusion.Import
             }
 
             // The TextField does not update until it loses focus, so clearing the string wont clear the text field
-            if (GUILayout.Button(EditorGUIUtility.IconContent("winbtn_win_close_h"), EditorStyles.toolbarButton, GUILayout.Width(22)))
+            // was: winbtn_win_close_h - not available in 2023.1
+            if (GUILayout.Button(EditorGUIUtility.IconContent("d_clear"), EditorStyles.toolbarButton, GUILayout.Width(22)))
             {
                 searchString = string.Empty;
                 GUI.FocusControl("");
