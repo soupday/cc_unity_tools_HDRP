@@ -99,6 +99,11 @@
             "name": "Unity",
             "expression": "2020.3.0",
             "define": "UNITY_2020_3_OR_NEWER"
+        },
+        {
+            "name": "Unity",
+            "expression": "2023",
+            "define": "UNITY_2023_OR_NEWER"
         }
     ],
     "noEngineReferences": false
