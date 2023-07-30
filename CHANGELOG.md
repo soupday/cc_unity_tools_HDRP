@@ -1,8 +1,14 @@
 Changelog
 =========
 
+### 1.5.1
+- Character Build no longer creates and adds a default animation controller due to bugs in Unity 2022/2023 causing memory leaks when applying animation controllers to prefabs.
+- Instalod and other renamed object/material name matching improvements.
+- Cloth physics fix for extracted non physics materials using 2-pass hair.
+- Shaders recompiled for URP10/12/15.
+
 ### 1.5.0
-- Animation player system rebuilt to remove AnimationMode.
+- Animation player system rebuilt to remove AnimationMode and operate in play mode (in Editor).
     - New system includes foot IK preview, variable speed and camera bone targeting and play mode operation.
 - Optional (WIP) HDRP dual specular shader added for HQ skin. (Enabled in the import window options)
 - HDRP mask detail mask correction. (Export from CC4 not using correct micro normal mask)
