@@ -322,13 +322,14 @@ namespace Reallusion.Import
             AssetDatabase.Refresh();
 
             // create prefab.
-            GameObject prefabAsset = RL.CreatePrefabFromFbx(characterInfo, fbx, out GameObject prefabInstance);            
+            string prefabAssetPath = RL.InitCharacterPrefab(characterInfo);
+            GameObject prefabInstance = RL.InstantiateModelFromSource(characterInfo, fbx);
 
             // setup 2 pass hair in the prefab.
             if (characterInfo.DualMaterialHair)
             {
                 Util.LogInfo("Extracting 2 Pass hair meshes.");
-                prefabAsset = MeshUtil.Extract2PassHairMeshes(characterInfo, prefabAsset, prefabInstance);
+                MeshUtil.Extract2PassHairMeshes(characterInfo, prefabInstance);
                 ImporterWindow.TrySetMultiPass(true);
             }
 
@@ -337,9 +338,8 @@ namespace Reallusion.Import
             bool springBoneHair = (characterInfo.ShaderFlags & CharacterInfo.ShaderFeatureFlags.SpringBoneHair) > 0;
             if ((clothPhysics || hairPhysics || springBoneHair) && jsonPhysicsData != null)
             {
-                Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance);
-
-                prefabAsset = physics.AddPhysics();
+                Physics physics = new Physics(characterInfo, prefabInstance);
+                physics.AddPhysics(false);
             }
 
             if (blenderProject)
@@ -350,22 +350,20 @@ namespace Reallusion.Import
             // apply post setup to prefab instance
             ProcessObjectTreePostPass(prefabInstance);
 
-            // save final prefab instance and remove from scene
-            RL.SaveAndRemovePrefabInstance(prefabAsset, prefabInstance);
+            Util.LogAlways("Done building materials for character " + characterName + "!");
 
             // extract and retarget animations if needed.
             int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
             bool replace = characterInfo.animationRetargeted != animationRetargeted;
             if (replace) Util.LogInfo("Retargeting all imported animations.");
-            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbxPath, prefabAsset, replace);
+            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbxPath, prefabInstance, replace);
             characterInfo.animationRetargeted = animationRetargeted;
 
-            // create default animator if there isn't one.
-            RL.ApplyAnimatorController(characterInfo, RL.AutoCreateAnimator(fbx, characterInfo.path, importer));
-
-            Util.LogAlways("Done building materials for character " + characterName + "!");
-
-
+            // create default animator if there isn't one:
+            //  commenting out due to a unity bug in 2022+,
+            //  adding any animator controller to a skinned mesh renderer prefab
+            //  generates a memory leak warning.
+            //RL.AddDefaultAnimatorController(characterInfo, prefabInstance);
 
             List<string> motionGuids = characterInfo.GetMotionGuids();
             if (motionGuids.Count > 0)
@@ -375,15 +373,16 @@ namespace Reallusion.Import
                 {
                     foreach (string guid in motionGuids)
                     {
-                        ProcessMotionFbx(guid, sourceAvatar, prefabAsset);
+                        ProcessMotionFbx(guid, sourceAvatar, prefabInstance);
                     }
                 }
             }
 
-            if (!batchMode) Selection.activeObject = prefabAsset;
-            else Selection.activeObject = null;
+            // save final prefab instance and remove from scene
+            GameObject prefabAsset = RL.SaveAndRemovePrefabInstance(prefabInstance, prefabAssetPath);
 
-            //System.Media.SystemSounds.Asterisk.Play();
+            if (!batchMode) Selection.activeObject = prefabAsset;
+            else Selection.activeObject = null;            
 
             return prefabAsset;
         }        
@@ -2652,7 +2651,7 @@ namespace Reallusion.Import
             mat.SetFloatIf(shaderRef, Mathf.Lerp(min, max, Mathf.Pow(value, power)));
         }
 
-        public void ProcessMotionFbx(string guid, Avatar sourceAvatar, GameObject sourcePrefabAsset)
+        public void ProcessMotionFbx(string guid, Avatar sourceAvatar, GameObject targetCharacterModel)
         {
             string motionAssetPath = AssetDatabase.GUIDToAssetPath(guid);
             if (!string.IsNullOrEmpty(motionAssetPath))
@@ -2664,7 +2663,7 @@ namespace Reallusion.Import
                 int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
                 bool replace = characterInfo.animationRetargeted != animationRetargeted;
                 if (replace) Util.LogInfo("Retargeting all imported animations: " + motionAssetPath);
-                AnimRetargetGUI.GenerateCharacterTargetedAnimations(motionAssetPath, sourcePrefabAsset, replace);
+                AnimRetargetGUI.GenerateCharacterTargetedAnimations(motionAssetPath, targetCharacterModel, replace);
                 characterInfo.animationRetargeted = animationRetargeted;
             }            
         }

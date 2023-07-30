@@ -99,8 +99,7 @@ namespace Reallusion.Import
                         showPlayer = false;
                         showRetarget = false;
                         AnimPlayerGUI.ClosePlayer();
-                        AnimRetargetGUI.CloseRetargeter();
-                        
+                        AnimRetargetGUI.CloseRetargeter();                        
 
                         if (Util.TryDeSerializeBoolFromEditorPrefs(out bool val, WindowManager.sceneFocus))
                         {
@@ -109,7 +108,7 @@ namespace Reallusion.Import
                                 Debug.Log("Reverting Scene Focus");
                                 //GrabLastSceneFocus();                                
                                 Util.SerializeBoolToEditorPrefs(false, WindowManager.sceneFocus);
-                                ShowAnimationPlayer();
+                                ShowAnimationPlayer();                                
                                 if (Util.TryDeSerializeFloatFromEditorPrefs(out float timeCode, WindowManager.timeKey))
                                 {
                                     //set the play position
@@ -256,7 +255,7 @@ namespace Reallusion.Import
             if (IsPreviewScene) 
             {
                 return previewScene;
-            }            
+            }
 
             return default;
         }        
@@ -480,8 +479,14 @@ namespace Reallusion.Import
 
         public static void GrabLastSceneFocus()
         {
+            EditorApplication.delayCall += DelayedGrabSceneFocus; // GC error caused when moving scene focus back during the same frame as opening the player window
+        }
+
+        private static void DelayedGrabSceneFocus()
+        {
             SceneView.lastActiveSceneView.Focus();
         }
+
 
         public static void ShowAnimationPlayer()
         {

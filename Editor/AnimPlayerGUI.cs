@@ -435,20 +435,24 @@ namespace Reallusion.Import
             // replace the runtime animator controller of the scene model with the animatorcontroller asset at path
             // destroy the disk asset temp override controller (that was created above)
 
-            GameObject characterPrefab = WindowManager.GetPreviewScene().GetPreviewCharacter();
-            Debug.Log(("Attempting to reset: " + characterPrefab.name));
+            GameObject characterPrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator);
+
+            if (!characterPrefab) return;
+
+            Debug.Log(("Attempting to reset: " + characterPrefab.name));            
 
             GameObject basePrefab = PrefabUtility.GetCorrespondingObjectFromSource(characterPrefab);
 
             if (basePrefab != null)
             {
-                if (PrefabUtility.IsAnyPrefabInstanceRoot(basePrefab))
+                if (true) //(PrefabUtility.IsAnyPrefabInstanceRoot(basePrefab))
                 {
                     string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
                     Debug.Log((basePrefab.name + "Prefab instance root found: " + prefabPath));
 
                     Debug.Log("Loaded Prefab: " + basePrefab.name);
                     Animator baseAnimator = basePrefab.GetComponent<Animator>();
+                    if (!baseAnimator) baseAnimator = basePrefab.GetComponentInChildren<Animator>();
                     if (baseAnimator != null)
                     {
                         Debug.Log("Prefab Animator: " + baseAnimator.name);
@@ -474,6 +478,7 @@ namespace Reallusion.Import
                         else
                         {
                             Debug.Log("NO Prefab Animator Controller");
+                            CharacterAnimator.runtimeAnimatorController = null;
                         }
                     }
                 }
@@ -1127,10 +1132,13 @@ namespace Reallusion.Import
         public static void UpdateAnimator()
         {
             if (EditorApplication.isPlaying || CharacterAnimator == null) return;
-            if (CharacterAnimator.runtimeAnimatorController.name == overrideName)
+            if (CharacterAnimator.runtimeAnimatorController)  // delayed call to grab scene focus may cause null reference error with absent controller
             {
-                CharacterAnimator.Update(0f);
-                CharacterAnimator.Play(controlStateHash, 0, time);                
+                if (CharacterAnimator.runtimeAnimatorController.name == overrideName)
+                {
+                    CharacterAnimator.Update(0f);
+                    CharacterAnimator.Play(controlStateHash, 0, time);
+                }
             }
         }
 

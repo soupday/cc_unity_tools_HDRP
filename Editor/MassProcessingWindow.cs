@@ -670,7 +670,8 @@ namespace Reallusion.Import
             }
 
             // The TextField does not update until it loses focus, so clearing the string wont clear the text field
-            if (GUILayout.Button(EditorGUIUtility.IconContent("winbtn_win_close_h"), EditorStyles.toolbarButton, GUILayout.Width(22)))
+            // was: winbtn_win_close_h - not available in 2023.1
+            if (GUILayout.Button(EditorGUIUtility.IconContent("d_clear"), EditorStyles.toolbarButton, GUILayout.Width(22)))
             {
                 searchString = string.Empty;
                 GUI.FocusControl("");
@@ -1213,8 +1214,11 @@ namespace Reallusion.Import
 
         public static Rect GetRectToCenterWindow(float width, float height)
         {
-            //Rect appRect = GetEditorApplicationWindowRect();  // alas
-            Rect appRect = EditorGUIUtility.GetMainWindowPosition();
+#if UNITY_2020_3_OR_NEWER
+            Rect appRect = EditorGUIUtility.GetMainWindowPosition();            
+#else
+            Rect appRect = GetEditorApplicationWindowRect();
+#endif
 
             if (appRect == new Rect())
             {
@@ -1240,9 +1244,10 @@ namespace Reallusion.Import
             // The main window has the field m_ShowMode == 4 (field object .GetValue(window))
             // The main window is obtained with property object .GetValue(window)
 
+#if UNITY_2020_3_OR_NEWER
             System.Reflection.Assembly coreModuleAssembly = AppDomain.CurrentDomain.GetAssemblies().Where(t => t.FullName.Contains("UnityEditor.CoreModule")).FirstOrDefault();
             if (coreModuleAssembly != null)
-            {
+            {                
                 System.Reflection.TypeInfo containerWindowTypeInfo = coreModuleAssembly.DefinedTypes.Where(t => t.FullName.Contains("ContainerWindow")).FirstOrDefault();
                 if (containerWindowTypeInfo != null)
                 {
@@ -1263,6 +1268,34 @@ namespace Reallusion.Import
                     }
                 }
             }
+#else
+            //Unity 2019 ContainerWindow type is in the UnityEditor assembly
+            foreach (System.Reflection.Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (System.Reflection.TypeInfo t in assembly.DefinedTypes)
+                {
+                    if (t.FullName.iContains("ContainerWindow"))
+                    {
+                        //Debug.Log("Type: " + t.FullName + " Found In: " + assembly.FullName);
+                        var showModeField = t.GetField("m_ShowMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        var positionProperty = t.GetProperty("position", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        if (showModeField != null && positionProperty != null)
+                        {
+                            var allContainerWindows = Resources.FindObjectsOfTypeAll(t);
+                            foreach (var win in allContainerWindows)
+                            {
+                                var showmode = (int)showModeField.GetValue(win);
+                                if (showmode == 4) // main window
+                                {
+                                    var mainWindowPosition = (Rect)positionProperty.GetValue(win, null);
+                                    return mainWindowPosition;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+#endif
             return new Rect(0f, 0f, 0f, 0f);  // something was null - return a new empty Rect
         }
 

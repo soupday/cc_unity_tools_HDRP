@@ -1061,14 +1061,15 @@ namespace Reallusion.Import
             return false;
         }
 
-        static void RetargetBlendShapes(AnimationClip originalClip, AnimationClip workingClip, GameObject targetCharacter, bool log = true)
+        static void RetargetBlendShapes(AnimationClip originalClip, AnimationClip workingClip, 
+            GameObject targetCharacterModel, bool log = true)
         {
             if (!(originalClip && workingClip)) return;
 
             const string blendShapePrefix = "blendShape."; 
             
-            Transform[] targetAssetData = targetCharacter.GetComponentsInChildren<Transform>();
-            FacialProfile meshProfile = FacialProfileMapper.GetMeshFacialProfile(targetCharacter);
+            Transform[] targetAssetData = targetCharacterModel.GetComponentsInChildren<Transform>();
+            FacialProfile meshProfile = FacialProfileMapper.GetMeshFacialProfile(targetCharacterModel);
             if (!meshProfile.HasFacialShapes)
             {
                 if (log) Util.LogWarn("Character has no facial blend shapes!");
@@ -1454,12 +1455,12 @@ namespace Reallusion.Import
         }
 
         public static void GenerateCharacterTargetedAnimations(string motionAssetPath, 
-            GameObject prefabAsset, bool replaceIfExists)
+            GameObject targetCharacterModel, bool replaceIfExists)
         {
             AnimationClip[] clips = Util.GetAllAnimationClipsFromCharacter(motionAssetPath);            
 
-            if (!prefabAsset) prefabAsset = Util.FindCharacterPrefabAsset(motionAssetPath);
-            if (!prefabAsset) return;            
+            if (!targetCharacterModel) targetCharacterModel = Util.FindCharacterPrefabAsset(motionAssetPath);
+            if (!targetCharacterModel) return;
 
             string firstPath = null;
 
@@ -1472,7 +1473,7 @@ namespace Reallusion.Import
                     if (string.IsNullOrEmpty(firstPath)) firstPath = assetPath;
                     if (File.Exists(assetPath) && !replaceIfExists) continue;
                     AnimationClip workingClip = AnimPlayerGUI.CloneClip(clip);
-                    RetargetBlendShapes(clip, workingClip, prefabAsset, false);
+                    RetargetBlendShapes(clip, workingClip, targetCharacterModel, false);
                     AnimationClip asset = WriteAnimationToAssetDatabase(workingClip, assetPath, false);
                     index++;
                 }

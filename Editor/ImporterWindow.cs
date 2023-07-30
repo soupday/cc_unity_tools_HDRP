@@ -1223,12 +1223,25 @@ namespace Reallusion.Import
         private static void ClearAllData()
         {
             if (contextCharacter != null) contextCharacter.Release();
-            contextCharacter = null;            
+            contextCharacter = null;
+            
+            if (validCharacters != null)
+            {
+                foreach (CharacterInfo ci in validCharacters)
+                {
+                    ci.Release();
+                }
+                validCharacters.Clear();
+                validCharacters = null;
+            }
 
-            if (validCharacters != null) validCharacters.Clear();
-            validCharacters = null;
-                        
-            Current = null;
+            if (Current && Current.characterTreeView != null)
+            {
+                ImporterWindow window = Current;
+                window.characterTreeView.Release();
+            }
+
+            Current = null;            
         }
 
         private void OnDestroy()

@@ -17,23 +17,23 @@ Links
 [HDRP Version](https://github.com/soupday/cc_unity_tools_HDRP)
 
 Note: There are two verions of the HDRP package
-- [**CC Unity Tools HDRP10**](https://github.com/soupday/cc_unity_tools_HDRP/releases/tag/1.5.0.HDRP10) for Unity 2020.3 to 2021.1
-- [**CC Unity Tools HDRP12**](https://github.com/soupday/cc_unity_tools_HDRP/releases/tag/1.5.0.HDRP12) for Unity 2021.2 and upwards
+- [**CC Unity Tools HDRP10**](https://github.com/soupday/cc_unity_tools_HDRP/releases/tag/1.5.1.HDRP10) for Unity 2020.3 to 2021.1
+- [**CC Unity Tools HDRP12**](https://github.com/soupday/cc_unity_tools_HDRP/releases/tag/1.5.1.HDRP12) for Unity 2021.2 and upwards
 
 The main repository contains the HDRP10 version. See the releases page for the HDRP12 version.
 
 [URP Version](https://github.com/soupday/cc_unity_tools_URP)
 
 Note: There are two verions of the URP package
-- [**CC Unity Tools URP10**](https://github.com/soupday/cc_unity_tools_URP/releases/tag/1.5.0.URP10) for Unity 2020.3 to 2021.1
-- [**CC Unity Tools URP12**](https://github.com/soupday/cc_unity_tools_URP/releases/tag/1.5.0.URP12) for Unity 2021.2 and upwards
+- [**CC Unity Tools URP10**](https://github.com/soupday/cc_unity_tools_URP/releases/tag/1.5.1.URP10) for Unity 2020.3 to 2021.1
+- [**CC Unity Tools URP12**](https://github.com/soupday/cc_unity_tools_URP/releases/tag/1.5.1.URP12) for Unity 2021.2 and upwards
 
 The main repository contains the URP10 version. See the releases page for the URP12 version.
 
 [3D/Built-in Version](https://github.com/soupday/cc_unity_tools_3D)
 
 The built-in pipeline version is for Unity 2019.4 and upwards.
-- [**CC Unity Tools 3D**](https://github.com/soupday/cc_unity_tools_3D/releases/tag/1.5.0) for Unity 2019.4 and upwards
+- [**CC Unity Tools 3D**](https://github.com/soupday/cc_unity_tools_3D/releases/tag/1.5.1) for Unity 2019.4 and upwards
 
 How it works
 ============

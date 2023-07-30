@@ -184,8 +184,7 @@ namespace Reallusion.Import
         private List<string> springColliderBones = new List<string> { 
             "CC_Base_Head", "CC_Base_Spine01", "CC_Base_NeckTwist01", "CC_Base_R_Upperarm", "CC_Base_R_Upperarm",
         };
-
-        private GameObject prefabAsset;        
+        
         private GameObject prefabInstance;
         private float modelScale = 0.01f;
         private bool addClothPhysics = false;
@@ -203,9 +202,8 @@ namespace Reallusion.Import
         private QuickJSON jsonData;
         private bool aPose;
 
-        public Physics(CharacterInfo info, GameObject prefabAsset, GameObject prefabInstance)
+        public Physics(CharacterInfo info, GameObject prefabInstance)
         {
-            this.prefabAsset = prefabAsset;
             this.prefabInstance = prefabInstance;
             boneColliders = new List<CollisionShapeData>();
             softPhysics = new List<SoftPhysicsData>();
@@ -276,7 +274,7 @@ namespace Reallusion.Import
             }
         }
 
-        public GameObject AddPhysics(bool savePrefabAsset = false)
+        public void AddPhysics(bool applyInstance)
         {
             bool animationMode = WindowManager.StopAnimationMode();
 
@@ -284,14 +282,9 @@ namespace Reallusion.Import
             AddCloth();
             AddSpringBones();
 
-            if (savePrefabAsset)
-            {
-                prefabAsset = PrefabUtility.SaveAsPrefabAsset(prefabInstance, AssetDatabase.GetAssetPath(prefabAsset));
-            }
+            if (applyInstance) PrefabUtility.ApplyPrefabInstance(prefabInstance, InteractionMode.AutomatedAction);
 
-            WindowManager.RestartAnimationMode(animationMode);
-
-            return prefabAsset;
+            WindowManager.RestartAnimationMode(animationMode);            
         }
 
         public void RemoveAllPhysics()
@@ -640,6 +633,9 @@ namespace Reallusion.Import
         private void AddCloth()
         {
             clothMeshes.Clear();
+
+            PrepWeightMaps();
+
             List<string> hairMeshNames = FindHairMeshes();
             Transform[] transforms = prefabInstance.GetComponentsInChildren<Transform>();
             foreach (Transform t in transforms)
@@ -730,25 +726,31 @@ namespace Reallusion.Import
             return hairMeshNames;
         }
 
+        private void PrepWeightMaps()
+        {
+            if (addClothPhysics || addHairPhysics)
+            {
+                foreach (SoftPhysicsData data in softPhysics)
+                {
+                    Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
+                    SetWeightMapImport(weightMap);
+                }
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+        }
+
         private void DoCloth(GameObject clothTarget, string meshName)
         {            
             SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
             if (!renderer) return;
             Mesh mesh = renderer.sharedMesh;
-            if (!mesh) return;
-                       
-            foreach (SoftPhysicsData data in softPhysics)
-            {
-                Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
-                SetWeightMapImport(weightMap);
-            }
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            WeightMapper mapper = clothTarget.GetComponent<WeightMapper>();
-            if (!mapper) mapper = clothTarget.AddComponent<WeightMapper>();
+            if (!mesh) return;            
+            
             List<WeightMapper.PhysicsSettings> settingsList = new List<WeightMapper.PhysicsSettings>();
+
+            bool hasPhysics = false;
 
             for (int i = 0; i < mesh.subMeshCount; i++)//
             {
@@ -806,13 +808,20 @@ namespace Reallusion.Import
                         settings.weightMap = weightMap;
 
                         settingsList.Add(settings);
+                        hasPhysics = true;
                     }
                 }
             }
 
-            mapper.settings = settingsList.ToArray();
-            mapper.characterGUID = characterGUID;
-            mapper.ApplyWeightMap();
+            if (hasPhysics)
+            {
+                WeightMapper mapper = clothTarget.GetComponent<WeightMapper>();
+                if (!mapper) mapper = clothTarget.AddComponent<WeightMapper>();
+
+                mapper.settings = settingsList.ToArray();
+                mapper.characterGUID = characterGUID;
+                mapper.ApplyWeightMap();
+            }
         }
 
         public void RemoveCloth(GameObject obj)
@@ -886,9 +895,9 @@ namespace Reallusion.Import
                 if (prefabAsset && prefabInstance && characterInfo.PhysicsJsonData != null)
                 {
                     characterInfo.ShaderFlags |= CharacterInfo.ShaderFeatureFlags.ClothPhysics;
-                    Physics physics = new Physics(characterInfo, prefabAsset, prefabInstance);
-                    physics.AddPhysics(true);
-                    characterInfo.Write();
+                    Physics physics = new Physics(characterInfo, prefabInstance);
+                    physics.AddPhysics(true);                    
+                    characterInfo.Write();                    
                 }
 
                 if (prefabInstance) GameObject.DestroyImmediate(prefabInstance);
