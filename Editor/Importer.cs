@@ -323,7 +323,7 @@ namespace Reallusion.Import
 
             // create prefab.
             string prefabAssetPath = RL.InitCharacterPrefab(characterInfo);
-            GameObject prefabInstance = RL.InstantiateModelFromSource(characterInfo, fbx);
+            GameObject prefabInstance = RL.InstantiateModelFromSource(characterInfo, fbx, prefabAssetPath);
 
             // setup 2 pass hair in the prefab.
             if (characterInfo.DualMaterialHair)

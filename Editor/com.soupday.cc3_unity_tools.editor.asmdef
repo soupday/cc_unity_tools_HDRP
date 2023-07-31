@@ -104,6 +104,11 @@
             "name": "Unity",
             "expression": "2023",
             "define": "UNITY_2023_OR_NEWER"
+        },
+        {
+            "name": "Unity",
+            "expression": "2023.1.6",
+            "define": "UNITY_2023_1_6_OR_NEWER"
         }
     ],
     "noEngineReferences": false
