@@ -22,8 +22,6 @@ using UnityEngine;
 using System;
 using System.Linq;
 using System.IO;
-using UnityEditor.PackageManager.UI;
-using JetBrains.Annotations;
 
 namespace Reallusion.Import
 {
