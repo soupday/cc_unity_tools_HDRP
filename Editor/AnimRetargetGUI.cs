@@ -445,7 +445,7 @@ namespace Reallusion.Import
             // Lower close, reset and save controls
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical("box");  // close button
-            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_winbtn_win_close_a@2x").image, "Close this window."), GUILayout.Width(smallIconDim), GUILayout.Height(smallIconDim)))
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_clear").image, "Close this window."), GUILayout.Width(smallIconDim), GUILayout.Height(smallIconDim)))
             {
                 CloseRetargeter();
             }
@@ -1316,11 +1316,24 @@ namespace Reallusion.Import
                 // player/re-tartgeter will be untouched so end users dont see a behaviour change after saving
 
                 // **End of addition**
+            }            
+            
+            AnimationClip asset = AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+            if (asset == null)
+            {
+                // New
+                Util.LogInfo("Writing New Asset: " + assetPath);
+                AssetDatabase.CreateAsset(outputClip, assetPath);
+            }
+            else
+            {
+                Util.LogInfo("Updating Existing Asset: " + assetPath);
+                outputClip.name = asset.name;
+                EditorUtility.CopySerialized(outputClip, asset);
+                AssetDatabase.SaveAssets();
             }
 
-            AssetDatabase.CreateAsset(outputClip, assetPath);
-
-            AnimationClip asset = AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+            asset = AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
             Selection.objects = new Object[] { asset };
             return asset;
         }
