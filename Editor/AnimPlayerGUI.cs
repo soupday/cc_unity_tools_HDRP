@@ -123,9 +123,7 @@ namespace Reallusion.Import
         public static void SetCharacter(GameObject scenePrefab)
         {
             if (scenePrefab)
-                Debug.Log("scenePrefab.name: " + scenePrefab.name + " " + PrefabUtility.IsPartOfPrefabInstance(scenePrefab));
-
-            
+                Util.LogInfo("scenePrefab.name: " + scenePrefab.name + " " + PrefabUtility.IsPartOfPrefabInstance(scenePrefab));            
 
             if (!scenePrefab && WindowManager.IsPreviewScene)
                 scenePrefab = WindowManager.GetPreviewScene().GetPreviewCharacter();
@@ -338,7 +336,7 @@ namespace Reallusion.Import
         {
             controllerPath = dirString + controllerName + ".controller";
 
-            if (showMessages) Debug.Log("Creating Temporary file " + controllerPath);
+            Util.LogInfo("Creating Temporary file " + controllerPath);
             AnimatorController a = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
             a.name = controllerName;
             // play mode parameters
@@ -388,7 +386,7 @@ namespace Reallusion.Import
 
             foreach (var v in overrides)
             {
-                if (showMessages) Debug.Log("Overrides: " + " Key: " + v.Key + " Value: " + v.Value);
+                Util.LogInfo("Overrides: " + " Key: " + v.Key + " Value: " + v.Value);
             }
 
             overrides[0] = new KeyValuePair<AnimationClip, AnimationClip>(overrides[0].Key, WorkingClip);
@@ -439,7 +437,7 @@ namespace Reallusion.Import
 
             if (!characterPrefab) return;
 
-            Debug.Log(("Attempting to reset: " + characterPrefab.name));            
+            Util.LogInfo(("Attempting to reset: " + characterPrefab.name));            
 
             GameObject basePrefab = PrefabUtility.GetCorrespondingObjectFromSource(characterPrefab);
 
@@ -448,36 +446,36 @@ namespace Reallusion.Import
                 if (true) //(PrefabUtility.IsAnyPrefabInstanceRoot(basePrefab))
                 {
                     string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
-                    Debug.Log((basePrefab.name + "Prefab instance root found: " + prefabPath));
+                    Util.LogInfo((basePrefab.name + "Prefab instance root found: " + prefabPath));
 
-                    Debug.Log("Loaded Prefab: " + basePrefab.name);
+                    Util.LogInfo("Loaded Prefab: " + basePrefab.name);
                     Animator baseAnimator = basePrefab.GetComponent<Animator>();
                     if (!baseAnimator) baseAnimator = basePrefab.GetComponentInChildren<Animator>();
                     if (baseAnimator != null)
                     {
-                        Debug.Log("Prefab Animator: " + baseAnimator.name);
+                        Util.LogInfo("Prefab Animator: " + baseAnimator.name);
                         if (baseAnimator.runtimeAnimatorController)
                         {
-                            Debug.Log("Prefab Animator Controller: " + baseAnimator.runtimeAnimatorController.name);
+                            Util.LogInfo("Prefab Animator Controller: " + baseAnimator.runtimeAnimatorController.name);
                             string controllerpath = AssetDatabase.GetAssetPath(baseAnimator.runtimeAnimatorController);
-                            Debug.Log("Prefab Animator Controller Path: " + controllerpath);
+                            Util.LogInfo("Prefab Animator Controller Path: " + controllerpath);
                             AnimatorController baseController = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerpath);
 
                             if (CharacterAnimator.runtimeAnimatorController != null)
                             {
                                 // ensure the created override controller is the one on the animator
                                 // to avoid wiping user generated controller (it will have to be a disk asset - but nevertheless)
-                                Debug.Log("Current controller on character: " + CharacterAnimator.runtimeAnimatorController.name);
+                                Util.LogInfo("Current controller on character: " + CharacterAnimator.runtimeAnimatorController.name);
                                 if (CharacterAnimator.runtimeAnimatorController.GetType() == typeof(AnimatorOverrideController) && CharacterAnimator.runtimeAnimatorController.name == overrideName)
                                 {
-                                    Debug.Log("Created override controller found: can reset");
+                                    Util.LogInfo("Created override controller found: can reset");
                                     CharacterAnimator.runtimeAnimatorController = baseController;
                                 }
                             }
                         }
                         else
                         {
-                            Debug.Log("NO Prefab Animator Controller");
+                            Util.LogInfo("NO Prefab Animator Controller");
                             CharacterAnimator.runtimeAnimatorController = null;
                         }
                     }
@@ -495,7 +493,7 @@ namespace Reallusion.Import
                 {
                     //if (showMessages) 
 
-                    Debug.Log("Override controller: " + controllerPath + " exists -- removing");
+                    Util.LogInfo("Override controller: " + controllerPath + " exists -- removing");
                     AssetDatabase.DeleteAsset(controllerPath);
                 }
             }
@@ -1167,7 +1165,7 @@ namespace Reallusion.Import
             }
             if (!canFindAvatar)
             {
-                if (showMessages) Debug.LogWarning("No Avatar found to reset pose to.");
+                Util.LogWarn("No Avatar found to reset pose to.");
                 return;
             }
 

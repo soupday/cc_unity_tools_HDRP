@@ -815,7 +815,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(iconActionAnims, "Process, extract and rename character animations and create a default animtor controller."),
                 GUILayout.Width(ACTION_BUTTON_SIZE), GUILayout.Height(ACTION_BUTTON_SIZE)))
             {
-                RL.DoAnimationImport(contextCharacter, contextCharacter.Fbx);
+                RL.DoAnimationImport(contextCharacter);
                 AnimRetargetGUI.GenerateCharacterTargetedAnimations(contextCharacter.path, contextCharacter.Fbx, true);
                 List<string> motionGuids = contextCharacter.GetMotionGuids();
                 if (motionGuids.Count > 0)

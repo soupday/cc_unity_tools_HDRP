@@ -112,7 +112,7 @@ namespace Reallusion.Import
             {
                 if (lodObject.polyCount == lodObjects[i].polyCount)
                 {
-                    Debug.LogWarning("LOD level with same poly count detected: skipping " + lodObj.name);
+                    Util.LogWarn("LOD level with same poly count detected: skipping " + lodObj.name);
                     return;
                 }
                 if (lodObject.polyCount > lodObjects[i].polyCount)

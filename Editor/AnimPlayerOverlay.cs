@@ -97,7 +97,6 @@ namespace Reallusion.Import
                 Hide();
                 createdOverlays.Remove(this);
             }
-            Debug.Log("OnWillBeDestroyed");
             base.OnWillBeDestroyed();
         }
 

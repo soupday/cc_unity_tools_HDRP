@@ -85,15 +85,10 @@ namespace Reallusion.Import
             {
                 case PlayModeStateChange.ExitingEditMode:
                     {
-                        Debug.Log(state);
-                        
-
                         break;
                     }
                 case PlayModeStateChange.EnteredPlayMode:
                     {
-                        Debug.Log(state);
-                        
                         showPlayerAfterPlayMode = showPlayer;
                         showRetargetAfterPlayMode = showRetarget;
                         showPlayer = false;
@@ -105,7 +100,6 @@ namespace Reallusion.Import
                         {
                             if (val)
                             {
-                                Debug.Log("Reverting Scene Focus");
                                 //GrabLastSceneFocus();                                
                                 Util.SerializeBoolToEditorPrefs(false, WindowManager.sceneFocus);
                                 ShowAnimationPlayer();                                
@@ -147,7 +141,6 @@ namespace Reallusion.Import
                     }
                 case PlayModeStateChange.EnteredEditMode:
                     {
-                        Debug.Log(state);
                         showPlayer = showPlayerAfterPlayMode;
                         showRetarget = showRetargetAfterPlayMode;
 
@@ -156,8 +149,7 @@ namespace Reallusion.Import
             }
             /*
             if (state == PlayModeStateChange.EnteredPlayMode)
-            {
-                Debug.Log(state);
+            {                
                 showPlayerAfterPlayMode = showPlayer;
                 showRetargetAfterPlayMode = showRetarget;
                 showPlayer = false;
@@ -166,8 +158,7 @@ namespace Reallusion.Import
                 AnimRetargetGUI.CloseRetargeter();
 
                 /*
-                // original
-                Debug.Log(state);
+                // original                
                 showPlayerAfterPlayMode = showPlayer;
                 showRetargetAfterPlayMode = showRetarget;
                 showPlayer = false;
@@ -179,8 +170,7 @@ namespace Reallusion.Import
                 if (Util.TryDeSerializeBoolFromEditorPrefs(out bool val, WindowManager.sceneFocus))
                 {
                     if (val)
-                    {
-                        Debug.Log("Reverting Scene Focus");
+                    {                        
                         SceneView.lastActiveSceneView.Focus();
                         Util.SerializeBoolToEditorPrefs(false, WindowManager.sceneFocus);
                         ShowAnimationPlayer();
@@ -205,8 +195,7 @@ namespace Reallusion.Import
                 }
             }
             else if (state == PlayModeStateChange.EnteredEditMode)
-            {
-                Debug.Log(state);
+            {                
                 showPlayer = showPlayerAfterPlayMode;
                 showRetarget = showRetargetAfterPlayMode;
             }
@@ -459,8 +448,6 @@ namespace Reallusion.Import
                 string s = AssetDatabase.GetAssetPath(Selection.activeObject);
                 if (string.IsNullOrEmpty(s))
                 {
-                    Debug.Log("SELECTED PATH: IsNullOrEmpty");
-
                     GameObject selectedPrefab = Util.GetScenePrefabInstanceRoot(Selection.activeGameObject);
                     if (selectedPrefab && selectedPrefab.GetComponent<Animator>())
                     {
@@ -507,7 +494,7 @@ namespace Reallusion.Import
             }
             else
             {
-                Debug.LogWarning("No compatible animated character!");
+                Util.LogWarn("No compatible animated character!");
             }
         }
 
