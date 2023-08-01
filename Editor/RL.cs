@@ -584,13 +584,25 @@ namespace Reallusion.Import
             characterInfo.animationSetup = true;
         }
 
-        public static void DoAnimationImport(CharacterInfo info, GameObject fbx)
+        public static void ResetFbxAnimator(GameObject fbx)
+        {
+            Animator animator = fbx.GetComponentInChildren<Animator>();
+            if (animator)
+            {
+                if (animator.runtimeAnimatorController != null)
+                {
+                    animator.runtimeAnimatorController = null;
+                }
+            }
+        }
+
+        public static void DoAnimationImport(CharacterInfo info)
         {
             string path = info.path;
+            ResetFbxAnimator(info.Fbx);
             ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(path);
-            HumanoidImportSettings(fbx, importer, info);
+            HumanoidImportSettings(info.Fbx, importer, info);
             SetupAnimation(importer, info, true);            
-            AddDefaultAnimatorController(info, fbx);
 
             Avatar sourceAvatar = info.GetCharacterAvatar();
 
@@ -659,7 +671,10 @@ namespace Reallusion.Import
                 AssetDatabase.Refresh();
             }
 #endif
-#endif
+#endif            
+
+            // remove any animator controllers set in the fbx
+            ResetFbxAnimator(info.Fbx);
 
             return prefabPath;
         }
