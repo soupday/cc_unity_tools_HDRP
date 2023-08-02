@@ -59,11 +59,7 @@ namespace Reallusion.Import
 			GUI.backgroundColor = Color.Lerp(background, Color.white, 0.25f);
 			if (GUILayout.Button("Rebuild Constraints", GUILayout.Width(BUTTON_WIDTH)))
 			{
-				bool animationMode = WindowManager.StopAnimationMode();
-
 				weightMapper.ApplyWeightMap();
-
-				WindowManager.RestartAnimationMode(animationMode);
 			}
 			GUI.backgroundColor = background;
 			GUILayout.FlexibleSpace();
@@ -117,7 +113,6 @@ namespace Reallusion.Import
 		{
 			WindowManager.HideAnimationPlayer(true);
 			WindowManager.HideAnimationRetargeter(true);
-			WindowManager.StopAnimationMode();
 
 			GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(component);
 			if (prefabRoot)

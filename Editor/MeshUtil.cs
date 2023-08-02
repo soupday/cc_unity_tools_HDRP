@@ -238,9 +238,7 @@ namespace Reallusion.Import
         }
 
         public static bool ReplaceMesh(Object obj, Mesh mesh)
-        {            
-            bool animationMode = WindowManager.StopAnimationMode(obj);
-
+        {          
             bool replaced = false;
             Object o = null;
 
@@ -275,8 +273,6 @@ namespace Reallusion.Import
                 // only this works:
                 PrefabUtility.ApplyPrefabInstance(sceneRoot, InteractionMode.UserAction);
             }
-
-            WindowManager.RestartAnimationMode(animationMode);            
 
             return replaced;
         }

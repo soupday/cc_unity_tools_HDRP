@@ -1267,11 +1267,7 @@ namespace Reallusion.Import
         {
             if (WindowManager.IsPreviewScene)
             {
-                bool animationMode = WindowManager.StopAnimationMode();
-
                 WindowManager.GetPreviewScene().UpdatePreviewCharacter(prefabAsset);
-
-                WindowManager.RestartAnimationMode(animationMode);
             }            
 
             return WindowManager.IsPreviewScene;
@@ -1369,11 +1365,7 @@ namespace Reallusion.Import
         {
             if (WindowManager.IsPreviewScene)
             {
-                bool animationMode = WindowManager.StopAnimationMode();
-
                 WindowManager.GetPreviewScene().ShowBakedCharacter(bakedAsset);
-
-                WindowManager.RestartAnimationMode(animationMode);
             }            
 
             return WindowManager.IsPreviewScene;
@@ -1383,7 +1375,6 @@ namespace Reallusion.Import
         {
             WindowManager.HideAnimationPlayer(true);
             WindowManager.HideAnimationRetargeter(true);
-            WindowManager.StopAnimationMode();            
 
             GameObject prefabAsset = Physics.RebuildPhysics(contextCharacter);
 

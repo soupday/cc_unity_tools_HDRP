@@ -147,66 +147,13 @@ namespace Reallusion.Import
                         break;
                     }
             }
-            /*
-            if (state == PlayModeStateChange.EnteredPlayMode)
-            {                
-                showPlayerAfterPlayMode = showPlayer;
-                showRetargetAfterPlayMode = showRetarget;
-                showPlayer = false;
-                showRetarget = false;
-                AnimPlayerGUI.ClosePlayer();
-                AnimRetargetGUI.CloseRetargeter();
-
-                /*
-                // original                
-                showPlayerAfterPlayMode = showPlayer;
-                showRetargetAfterPlayMode = showRetarget;
-                showPlayer = false;
-                showRetarget = false;
-                AnimPlayerGUI.ClosePlayer();
-                AnimRetargetGUI.CloseRetargeter();
-                */
-            /*
-                if (Util.TryDeSerializeBoolFromEditorPrefs(out bool val, WindowManager.sceneFocus))
-                {
-                    if (val)
-                    {                        
-                        SceneView.lastActiveSceneView.Focus();
-                        Util.SerializeBoolToEditorPrefs(false, WindowManager.sceneFocus);
-                        ShowAnimationPlayer();
-                        if (Util.TryDeSerializeFloatFromEditorPrefs(out float timeCode, WindowManager.timeKey))
-                        {
-                            //set the play position
-                            AnimPlayerGUI.time = timeCode;
-                            //slightly delay startup to allow the animator to initialize
-                            AnimPlayerGUI.delayFrames = 10;
-                        }
-                    }
-                    else //no scene view focus grab - replace the oringinal runtime animator controller
-                    {
-                        if (Util.TryDeSerializeBoolFromEditorPrefs(out bool restore, WindowManager.animatorControllerKey))
-                        {
-                            if (restore)
-                            {
-                                AnimPlayerGUI.RestoreBaseAnimatorController();
-                            }
-                        }
-                    }
-                }
-            }
-            else if (state == PlayModeStateChange.EnteredEditMode)
-            {                
-                showPlayer = showPlayerAfterPlayMode;
-                showRetarget = showRetargetAfterPlayMode;
-            }
-            */
         }
 
         public static void OnBeforeAssemblyReload()
         {
             if (AnimationMode.InAnimationMode())  
             { 
-                Util.LogInfo("Disabling Animation Mode on editor assembly reload.");
+                Util.LogWarn("Disabling Animation Mode on editor assembly reload.");
                 AnimationMode.StopAnimationMode();
             }
 
@@ -527,32 +474,6 @@ namespace Reallusion.Import
                 showRetarget = false;
         }      
         
-        public static bool StopAnimationMode(UnityEngine.Object obj = null)
-        {
-            bool inAnimationMode = false;
-            if (AnimationMode.InAnimationMode())
-            {
-                inAnimationMode = true;
-                AnimationMode.StopAnimationMode();
-                if (obj)
-                {
-                    GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(obj);
-                    Util.TryResetScenePrefab(scenePrefab);
-                }
-            }
-
-            return inAnimationMode;
-        }
-
-        public static void RestartAnimationMode(bool inAnimationMode)
-        {
-            if (inAnimationMode)
-            {
-                if (!AnimationMode.InAnimationMode())
-                    AnimationMode.StartAnimationMode();
-            }
-        }        
-
         public static void StartTimer(float delay)
         {
             timer = delay;
