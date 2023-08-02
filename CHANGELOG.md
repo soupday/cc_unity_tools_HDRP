@@ -1,6 +1,18 @@
 Changelog
 =========
 
+### 1.5.2
+- Animation Retargeter fixes.
+    - AnimationMode removed.
+    - Clip generation file name suffix corrected.
+    - Animation Clip overwrite no longer breaks references in Unity 2023.1.
+    - Clip settings (foot IK, mirror, speed) reset to defaults on opening retarget window.
+- Character prefab generation no longer breaks references. (Except 2023.1.1-5 due to Unity bugs)
+- Rogue usings removed from code.
+- Animation processing fixes.
+    - Correct character prefab used to retarget _motion.fbx files.
+    - Animation Clip overwrite no longer breaks references in Unity 2023.1.
+
 ### 1.5.1
 - Character Build no longer creates and adds a default animation controller due to bugs in Unity 2022/2023 causing memory leaks when applying animation controllers to prefabs.
 - Instalod and other renamed object/material name matching improvements.

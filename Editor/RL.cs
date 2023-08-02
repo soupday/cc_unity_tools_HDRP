@@ -22,8 +22,6 @@ using UnityEngine;
 using System;
 using System.IO;
 using UnityEditor.Animations;
-using Codice.Client.Common;
-using System.Diagnostics.Eventing.Reader;
 
 namespace Reallusion.Import
 {
@@ -586,13 +584,25 @@ namespace Reallusion.Import
             characterInfo.animationSetup = true;
         }
 
-        public static void DoAnimationImport(CharacterInfo info, GameObject fbx)
+        public static void ResetFbxAnimator(GameObject fbx)
+        {
+            Animator animator = fbx.GetComponentInChildren<Animator>();
+            if (animator)
+            {
+                if (animator.runtimeAnimatorController != null)
+                {
+                    animator.runtimeAnimatorController = null;
+                }
+            }
+        }
+
+        public static void DoAnimationImport(CharacterInfo info)
         {
             string path = info.path;
+            ResetFbxAnimator(info.Fbx);
             ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(path);
-            HumanoidImportSettings(fbx, importer, info);
+            HumanoidImportSettings(info.Fbx, importer, info);
             SetupAnimation(importer, info, true);            
-            AddDefaultAnimatorController(info, fbx);
 
             Avatar sourceAvatar = info.GetCharacterAvatar();
 
@@ -649,27 +659,41 @@ namespace Reallusion.Import
             string prefabFolder = Util.CreateFolder(info.folder, Importer.PREFABS_FOLDER);            
             string prefabPath = Path.Combine(prefabFolder, info.name + ".prefab");
 
-            // Unity 2023.1 crashes if saving a new instance over an existing prefab, so delete it first
+#if UNITY_2023_OR_NEWER
+            // Unity 2023.1.1 to 2023.1.5 crashes if saving a new instance over an existing prefab, so delete it first
+#if UNITY_2023_1_6_OR_NEWER
+            // prefab bug fixed in 2023.1.6
+#else
             bool assetExists = Util.AssetPathExists(prefabPath);
             if (assetExists)
             {
                 AssetDatabase.DeleteAsset(prefabPath);
                 AssetDatabase.Refresh();
             }
+#endif
+#endif            
+
+            // remove any animator controllers set in the fbx
+            ResetFbxAnimator(info.Fbx);
 
             return prefabPath;
         }
 
-        public static GameObject InstantiateModelFromSource(CharacterInfo info, GameObject fbx)
-        {            
+        public static GameObject InstantiateModelFromSource(CharacterInfo info, GameObject fbx, string assetPath)
+        {
+            GameObject prefabInstance = null;
+
             if (info.path.iContains("_lod") && CountLODs(fbx) > 1)
             {
-                return CreateLODInstanceFromModel(info, fbx);
+                prefabInstance = CreateLODInstanceFromModel(info, fbx);
             }
             else
             {
-                return CreateInstanceFromModel(info, fbx);
+                prefabInstance = CreateInstanceFromModel(info, fbx);
             }
+
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(prefabInstance, assetPath, InteractionMode.AutomatedAction);
+            return prefabInstance;
         }
 
         /// <summary>
@@ -769,10 +793,10 @@ namespace Reallusion.Import
 
         public static GameObject SaveAndRemovePrefabInstance(GameObject prefabInstance, string assetPath)
         {
-            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(prefabInstance, assetPath, 
-                                                                          InteractionMode.AutomatedAction);
+            //GameObject prefab = PrefabUtility.SaveAsPrefabAsset(prefabInstance, assetPath);
+            PrefabUtility.ApplyPrefabInstance(prefabInstance, InteractionMode.AutomatedAction);
             UnityEngine.Object.DestroyImmediate(prefabInstance);
-            return prefab;
+            return AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
         }
 
         public static int CountLODs(GameObject fbx)

@@ -85,15 +85,10 @@ namespace Reallusion.Import
             {
                 case PlayModeStateChange.ExitingEditMode:
                     {
-                        Debug.Log(state);
-                        
-
                         break;
                     }
                 case PlayModeStateChange.EnteredPlayMode:
                     {
-                        Debug.Log(state);
-                        
                         showPlayerAfterPlayMode = showPlayer;
                         showRetargetAfterPlayMode = showRetarget;
                         showPlayer = false;
@@ -105,7 +100,6 @@ namespace Reallusion.Import
                         {
                             if (val)
                             {
-                                Debug.Log("Reverting Scene Focus");
                                 //GrabLastSceneFocus();                                
                                 Util.SerializeBoolToEditorPrefs(false, WindowManager.sceneFocus);
                                 ShowAnimationPlayer();                                
@@ -147,77 +141,19 @@ namespace Reallusion.Import
                     }
                 case PlayModeStateChange.EnteredEditMode:
                     {
-                        Debug.Log(state);
                         showPlayer = showPlayerAfterPlayMode;
                         showRetarget = showRetargetAfterPlayMode;
 
                         break;
                     }
             }
-            /*
-            if (state == PlayModeStateChange.EnteredPlayMode)
-            {
-                Debug.Log(state);
-                showPlayerAfterPlayMode = showPlayer;
-                showRetargetAfterPlayMode = showRetarget;
-                showPlayer = false;
-                showRetarget = false;
-                AnimPlayerGUI.ClosePlayer();
-                AnimRetargetGUI.CloseRetargeter();
-
-                /*
-                // original
-                Debug.Log(state);
-                showPlayerAfterPlayMode = showPlayer;
-                showRetargetAfterPlayMode = showRetarget;
-                showPlayer = false;
-                showRetarget = false;
-                AnimPlayerGUI.ClosePlayer();
-                AnimRetargetGUI.CloseRetargeter();
-                */
-            /*
-                if (Util.TryDeSerializeBoolFromEditorPrefs(out bool val, WindowManager.sceneFocus))
-                {
-                    if (val)
-                    {
-                        Debug.Log("Reverting Scene Focus");
-                        SceneView.lastActiveSceneView.Focus();
-                        Util.SerializeBoolToEditorPrefs(false, WindowManager.sceneFocus);
-                        ShowAnimationPlayer();
-                        if (Util.TryDeSerializeFloatFromEditorPrefs(out float timeCode, WindowManager.timeKey))
-                        {
-                            //set the play position
-                            AnimPlayerGUI.time = timeCode;
-                            //slightly delay startup to allow the animator to initialize
-                            AnimPlayerGUI.delayFrames = 10;
-                        }
-                    }
-                    else //no scene view focus grab - replace the oringinal runtime animator controller
-                    {
-                        if (Util.TryDeSerializeBoolFromEditorPrefs(out bool restore, WindowManager.animatorControllerKey))
-                        {
-                            if (restore)
-                            {
-                                AnimPlayerGUI.RestoreBaseAnimatorController();
-                            }
-                        }
-                    }
-                }
-            }
-            else if (state == PlayModeStateChange.EnteredEditMode)
-            {
-                Debug.Log(state);
-                showPlayer = showPlayerAfterPlayMode;
-                showRetarget = showRetargetAfterPlayMode;
-            }
-            */
         }
 
         public static void OnBeforeAssemblyReload()
         {
             if (AnimationMode.InAnimationMode())  
             { 
-                Util.LogInfo("Disabling Animation Mode on editor assembly reload.");
+                Util.LogWarn("Disabling Animation Mode on editor assembly reload.");
                 AnimationMode.StopAnimationMode();
             }
 
@@ -459,8 +395,6 @@ namespace Reallusion.Import
                 string s = AssetDatabase.GetAssetPath(Selection.activeObject);
                 if (string.IsNullOrEmpty(s))
                 {
-                    Debug.Log("SELECTED PATH: IsNullOrEmpty");
-
                     GameObject selectedPrefab = Util.GetScenePrefabInstanceRoot(Selection.activeGameObject);
                     if (selectedPrefab && selectedPrefab.GetComponent<Animator>())
                     {
@@ -507,7 +441,7 @@ namespace Reallusion.Import
             }
             else
             {
-                Debug.LogWarning("No compatible animated character!");
+                Util.LogWarn("No compatible animated character!");
             }
         }
 
@@ -540,32 +474,6 @@ namespace Reallusion.Import
                 showRetarget = false;
         }      
         
-        public static bool StopAnimationMode(UnityEngine.Object obj = null)
-        {
-            bool inAnimationMode = false;
-            if (AnimationMode.InAnimationMode())
-            {
-                inAnimationMode = true;
-                AnimationMode.StopAnimationMode();
-                if (obj)
-                {
-                    GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(obj);
-                    Util.TryResetScenePrefab(scenePrefab);
-                }
-            }
-
-            return inAnimationMode;
-        }
-
-        public static void RestartAnimationMode(bool inAnimationMode)
-        {
-            if (inAnimationMode)
-            {
-                if (!AnimationMode.InAnimationMode())
-                    AnimationMode.StartAnimationMode();
-            }
-        }        
-
         public static void StartTimer(float delay)
         {
             timer = delay;

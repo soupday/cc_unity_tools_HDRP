@@ -19,7 +19,6 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 #if HDRP_10_5_0_OR_NEWER
 using UnityEngine.Rendering.HighDefinition;
 using UnityEditor.Rendering.HighDefinition;
@@ -40,7 +39,7 @@ namespace Reallusion.Import
 
     public static class Pipeline
     {
-        public const string VERSION = "1.5.1";
+        public const string VERSION = "1.5.2";
 
 #if HDRP_10_5_0_OR_NEWER
         // version

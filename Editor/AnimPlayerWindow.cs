@@ -68,8 +68,7 @@ namespace Reallusion.Import
         public static void ShowPlayer() 
         {
             if (!isShown)
-            {
-                Debug.Log("WINDOW: SHOWING PLAYER");
+            {                
                 SceneView.duringSceneGui -= AnimPlayerWindow.OnSceneGUI;
                 SceneView.duringSceneGui += AnimPlayerWindow.OnSceneGUI;
                 isShown = true;
@@ -80,8 +79,7 @@ namespace Reallusion.Import
         public static void HidePlayer()
         {
             if (isShown)
-            {
-                Debug.Log("WINDOW: HIDING PLAYER");
+            {                
                 SceneView.duringSceneGui -= AnimPlayerWindow.OnSceneGUI;
                 AnimPlayerGUI.CleanUp();
                 
@@ -97,7 +95,7 @@ namespace Reallusion.Import
         
         public static void Empty(int id)
         {
-            Debug.Log("Showing " + id);
+            Util.LogInfo("Showing " + id);
         }
     }
 }

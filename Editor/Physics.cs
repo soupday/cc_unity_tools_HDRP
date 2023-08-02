@@ -276,15 +276,11 @@ namespace Reallusion.Import
 
         public void AddPhysics(bool applyInstance)
         {
-            bool animationMode = WindowManager.StopAnimationMode();
-
             AddColliders();
             AddCloth();
             AddSpringBones();
 
             if (applyInstance) PrefabUtility.ApplyPrefabInstance(prefabInstance, InteractionMode.AutomatedAction);
-
-            WindowManager.RestartAnimationMode(animationMode);            
         }
 
         public void RemoveAllPhysics()

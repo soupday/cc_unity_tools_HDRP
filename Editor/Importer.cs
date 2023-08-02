@@ -323,7 +323,7 @@ namespace Reallusion.Import
 
             // create prefab.
             string prefabAssetPath = RL.InitCharacterPrefab(characterInfo);
-            GameObject prefabInstance = RL.InstantiateModelFromSource(characterInfo, fbx);
+            GameObject prefabInstance = RL.InstantiateModelFromSource(characterInfo, fbx, prefabAssetPath);
 
             // setup 2 pass hair in the prefab.
             if (characterInfo.DualMaterialHair)
@@ -356,8 +356,7 @@ namespace Reallusion.Import
             int animationRetargeted = characterInfo.DualMaterialHair ? 2 : 1;
             bool replace = characterInfo.animationRetargeted != animationRetargeted;
             if (replace) Util.LogInfo("Retargeting all imported animations.");
-            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbxPath, prefabInstance, replace);
-            characterInfo.animationRetargeted = animationRetargeted;
+            AnimRetargetGUI.GenerateCharacterTargetedAnimations(fbxPath, prefabInstance, replace);            
 
             // create default animator if there isn't one:
             //  commenting out due to a unity bug in 2022+,
@@ -377,6 +376,8 @@ namespace Reallusion.Import
                     }
                 }
             }
+
+            characterInfo.animationRetargeted = animationRetargeted;
 
             // save final prefab instance and remove from scene
             GameObject prefabAsset = RL.SaveAndRemovePrefabInstance(prefabInstance, prefabAssetPath);
@@ -2664,7 +2665,6 @@ namespace Reallusion.Import
                 bool replace = characterInfo.animationRetargeted != animationRetargeted;
                 if (replace) Util.LogInfo("Retargeting all imported animations: " + motionAssetPath);
                 AnimRetargetGUI.GenerateCharacterTargetedAnimations(motionAssetPath, targetCharacterModel, replace);
-                characterInfo.animationRetargeted = animationRetargeted;
             }            
         }
     }

@@ -1095,8 +1095,9 @@ namespace Reallusion.Import
         public static bool AssetPathIsEmpty(string assetPath)
         {
             const string emptyGuid = "00000000000000000000000000000000";
+            string pathGUID = AssetDatabase.AssetPathToGUID(assetPath);
 
-            return AssetDatabase.AssetPathToGUID(assetPath).Equals(emptyGuid);
+            return (pathGUID.Equals(emptyGuid) || string.IsNullOrEmpty(pathGUID));
         }
 
         public static bool HasMaterialKeywords(GameObject obj, params string[] keywords)

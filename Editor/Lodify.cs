@@ -16,7 +16,6 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -112,7 +111,7 @@ namespace Reallusion.Import
             {
                 if (lodObject.polyCount == lodObjects[i].polyCount)
                 {
-                    Debug.LogWarning("LOD level with same poly count detected: skipping " + lodObj.name);
+                    Util.LogWarn("LOD level with same poly count detected: skipping " + lodObj.name);
                     return;
                 }
                 if (lodObject.polyCount > lodObjects[i].polyCount)
