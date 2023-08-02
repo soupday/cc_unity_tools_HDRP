@@ -84,8 +84,6 @@ namespace Reallusion.Import
                 EditorApplication.update -= UpdateCallback;
                 EditorApplication.playModeStateChanged -= PlayStateChangeCallback;
 
-                WindowManager.StopAnimationMode();
-
                 if (CharacterAnimator)       
                 {
                     GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator.gameObject);
@@ -162,16 +160,12 @@ namespace Reallusion.Import
         {
             if (doneInitFace) ResetFace(true, true);
 
-            // stop animation mode
-            WindowManager.StopAnimationMode();
-
             if (!animator || CharacterAnimator != animator) doneInitFace = false;
 
-            CharacterAnimator = animator;
+            CharacterAnimator = animator;            
             OriginalClip = clip;
             
             SetupCharacterAndAnimation();
-            //WorkingClip = CloneClip(OriginalClip);
 
             AnimRetargetGUI.RebuildClip();
 
@@ -186,47 +180,6 @@ namespace Reallusion.Import
 
             // finally, apply the face
             ApplyFace();
-
-            if (WorkingClip && CharacterAnimator)
-            {
-                // also restarts animation mode
-                //SampleOnce();
-            }
-
-            /*  Original Code:
-             
-            if (doneInitFace) ResetFace(true, true);
-
-            // stop animation mode
-            WindowManager.StopAnimationMode();
-
-            if (!animator || CharacterAnimator != animator) doneInitFace = false;
-
-            CharacterAnimator = animator;
-            OriginalClip = clip;
-            WorkingClip = CloneClip(OriginalClip);
-
-            AnimRetargetGUI.RebuildClip();
-
-            MeshFacialProfile = FacialProfileMapper.GetMeshFacialProfile(animator ? animator.gameObject : null);
-            ClipFacialProfile = FacialProfileMapper.GetAnimationClipFacialProfile(clip);
-            
-            time = 0f;
-            play = false;            
-
-            // intitialise the face refs if needed
-            if (!doneInitFace) InitFace();
-
-            // finally, apply the face
-            //ApplyFace();
-
-            if (WorkingClip && CharacterAnimator)
-            {
-                // also restarts animation mode
-                SampleOnce();
-            }
-             
-            */
         }
 
         #region Animator Setup
@@ -270,7 +223,7 @@ namespace Reallusion.Import
 
         // Animaton Override Controller
         [SerializeField]
-        private static AnimatorOverrideController animatorOverrideController;
+        public static AnimatorOverrideController animatorOverrideController;
         
 
         // Playback
@@ -327,9 +280,6 @@ namespace Reallusion.Import
 
             // reset the animation player
             ResetAnimationPlayer();
-
-
-            
         }
         
         private static AnimatorController CreateAnimatiorController()
@@ -363,12 +313,49 @@ namespace Reallusion.Import
         private static void ApplyDefaultSettings()
         {
             flagSettings = AnimatorFlags.AutoLoopPlayback;
-            FootIK = true;
+            SetFootIK(true);
             CharacterAnimator.SetFloat(paramDirection, 0f);
             if (CharacterAnimator != null)
             {
                 CharacterAnimator.applyRootMotion = true;
             }
+        }
+
+        // Important IK enable/disable function used by the retargeter
+        // (or you can't see the effects of changing the heel curves)
+        public static void SetFootIK(bool enable)
+        {
+            FootIK = enable;
+
+            if (playbackAnimatorController)
+            {
+                AnimatorControllerLayer[] allLayer = playbackAnimatorController.layers;
+                for (int i = 0; i < allLayer.Length; i++)
+                {
+                    ChildAnimatorState[] states = allLayer[i].stateMachine.states;
+                    for (int j = 0; j < states.Length; j++)
+                    {
+                        if (states[j].state.nameHash == controlStateHash)
+                        {
+                            states[j].state.iKOnFeet = FootIK;
+                            allLayer[i].iKPass = FootIK;
+                        }
+                    }
+                }
+
+                if (EditorApplication.isPlaying) CharacterAnimator.gameObject.SetActive(false);
+                playbackAnimatorController.layers = allLayer;
+                if (EditorApplication.isPlaying) CharacterAnimator.gameObject.SetActive(true);                
+            }
+        }
+
+        // called by the retargetter to revert all settings to default
+        public static void ForceSettingsReset()
+        {
+            ApplyDefaultSettings();
+            SetFootIK(false);
+            SetClipSettings(WorkingClip);
+            FirstFrameButton();
         }
 
         private static void SelectOverrideAnimation(AnimationClip clip, AnimatorOverrideController aoc)
@@ -392,6 +379,22 @@ namespace Reallusion.Import
             overrides[0] = new KeyValuePair<AnimationClip, AnimationClip>(overrides[0].Key, WorkingClip);
             aoc.ApplyOverrides(overrides);
             FirstFrameButton();
+        }
+
+        public static void SelectOverrideAnimationWithoutReset(AnimationClip clip, AnimatorOverrideController aoc)
+        {
+            WorkingClip = clip;
+
+            List<KeyValuePair<AnimationClip, AnimationClip>> overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>(aoc.overridesCount);
+            aoc.GetOverrides(overrides);
+
+            foreach (var v in overrides)
+            {
+                Util.LogInfo("Overrides: " + " Key: " + v.Key + " Value: " + v.Value);
+            }
+
+            overrides[0] = new KeyValuePair<AnimationClip, AnimationClip>(overrides[0].Key, WorkingClip);
+            aoc.ApplyOverrides(overrides);
         }
 
         private static void ResetAnimationPlayer()
@@ -423,7 +426,6 @@ namespace Reallusion.Import
             AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
             CharacterAnimator.applyRootMotion = !flagSettings.HasFlag(AnimatorFlags.AnimateOnTheSpot);
         }
-
 
         public static void ResetToBaseAnimatorController()
         {
@@ -524,105 +526,6 @@ namespace Reallusion.Import
         }
 
         #region IMGUI
-        /* //Original DrawPlayer() method
-        public static void ORIGINALDrawPlayer()
-        {            
-            GUILayout.BeginVertical();
-            EditorGUI.BeginChangeCheck();
-            AnimFoldOut = EditorGUILayout.Foldout(AnimFoldOut, "Animation Playback", EditorStyles.foldout);
-            if (EditorGUI.EndChangeCheck())
-            {
-                //if (foldOut && FacialMorphIMGUI.FoldOut)
-                //    FacialMorphIMGUI.FoldOut = false;
-                doOnceCatchMouse = true;
-            }
-            if (AnimFoldOut)
-            {
-                EditorGUI.BeginChangeCheck();
-                Animator selectedAnimator = (Animator)EditorGUILayout.ObjectField(new GUIContent("Scene Model", "Animated model in scene"), CharacterAnimator, typeof(Animator), true);
-                AnimationClip selectedClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation", "Animation to play and manipulate"), OriginalClip, typeof(AnimationClip), false);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    UpdateAnimatorClip(selectedAnimator, selectedClip);
-                }
-
-                GUI.enabled = WorkingClip && CharacterAnimator;
-
-                EditorGUI.BeginDisabledGroup(!AnimationMode.InAnimationMode());
-
-                if (WorkingClip != null)
-                {
-                    float startTime = 0.0f;
-                    float stopTime = WorkingClip.length;
-                    EditorGUI.BeginChangeCheck();
-                    time = EditorGUILayout.Slider(time, startTime, stopTime);
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        ResetFace();
-                    }
-                }
-                else
-                {
-                    float value = 0f;
-                    value = EditorGUILayout.Slider(value, 0f, 1f); //disabled dummy entry
-                }
-
-                GUILayout.BeginHorizontal(EditorStyles.toolbar);
-                // "Animation.FirstKey"
-                if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Animation.FirstKey").image, "First Frame"), EditorStyles.toolbarButton))
-                {
-                    play = false;
-                    time = 0f;
-                    ResetFace();
-                }
-                // "Animation.PrevKey"
-                if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Animation.PrevKey").image, "Previous Frame"), EditorStyles.toolbarButton))
-                {
-                    play = false;
-                    time -= 0.0166f;
-                    ResetFace();
-                }
-                // "Animation.Play"
-                EditorGUI.BeginChangeCheck();
-                play = GUILayout.Toggle(play, new GUIContent(EditorGUIUtility.IconContent("Animation.Play").image, "Play (Toggle)"), EditorStyles.toolbarButton);
-                if (EditorGUI.EndChangeCheck())
-                {                    
-                    ResetFace();
-                }
-                // "PauseButton"
-                if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PauseButton").image, "Pause"), EditorStyles.toolbarButton))
-                {
-                    play = false;
-                    ResetFace();
-                }
-                // "Animation.NextKey"
-                if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Animation.NextKey").image, "Next Frame"), EditorStyles.toolbarButton))
-                {
-                    play = false;
-                    time += 0.0166f;
-                    ResetFace();
-                }
-                // "Animation.LastKey"
-                if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Animation.LastKey").image, "Last Frame"), EditorStyles.toolbarButton))
-                {
-                    play = false;
-                    time = WorkingClip.length;
-                    ResetFace();
-                }
-
-                if (!UnityEditorInternal.InternalEditorUtility.isApplicationActive) play = false;                
-
-                GUILayout.EndHorizontal();
-
-                EditorGUI.EndDisabledGroup();
-
-                GUI.enabled = true;
-            }
-            GUILayout.EndVertical();
-        }
-        //
-        */
-
         public class Styles
         {
             public GUIStyle settingsButton;
@@ -686,14 +589,14 @@ namespace Reallusion.Import
                 GUILayout.BeginHorizontal();
 
                 GUILayout.Space(4f);
-
+                EditorGUI.BeginDisabledGroup(AnimRetargetGUI.IsPlayerShown());
                 EditorGUI.BeginChangeCheck();
-                FootIK = GUILayout.Toggle(FootIK, new GUIContent("IK", "Toggle feet IK"), guiStyles.settingsButton, GUILayout.Width(24f), GUILayout.Height(24f));
+                FootIK = GUILayout.Toggle(FootIK, new GUIContent("IK", FootIK ? "Toggle feet IK - Currently: ON" : "Toggle feet IK - Currently: OFF"), guiStyles.settingsButton, GUILayout.Width(24f), GUILayout.Height(24f));
                 if (EditorGUI.EndChangeCheck())
                 {
                     ToggleIKButton();
                 }
-
+                EditorGUI.EndDisabledGroup();
                 // Camera Bone Tracker
 
                 if (!CheckTackingStatus())
@@ -731,11 +634,12 @@ namespace Reallusion.Import
                     ResetCharacterAndPlayer();
                 }
 
+                EditorGUI.BeginDisabledGroup(AnimRetargetGUI.IsPlayerShown());
                 if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d__Menu").image, "Animation Clip Preferences"), guiStyles.settingsButton, GUILayout.Width(20f), GUILayout.Height(20f)))
                 {
                     ShowPrefsGenericMenu();
                 }
-
+                EditorGUI.EndDisabledGroup();
 
                 GUILayout.Space(4f);
 
@@ -783,30 +687,23 @@ namespace Reallusion.Import
 
                 EditorGUI.BeginDisabledGroup(!(CharacterAnimator && WorkingClip));
                 GUILayout.BeginHorizontal(EditorStyles.toolbar);
+
                 // "Animation.FirstKey"
                 if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Animation.FirstKey").image, "First Frame"), EditorStyles.toolbarButton))
                 {
                     FirstFrameButton();
                 }
+
                 // "Animation.PrevKey"
                 if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Animation.PrevKey").image, "Previous Frame"), EditorStyles.toolbarButton))
                 {
                     PrevFrameButton();
                 }
+
                 // "Animation.Play"
                 Texture playButton = playbackSpeed > 0 ? EditorGUIUtility.IconContent("d_forward@2x").image : EditorGUIUtility.IconContent("d_back@2x").image;
                 Texture pauseButton = EditorGUIUtility.IconContent("PauseButton").image;
-                /*
-                if (GUILayout.Button(new GUIContent(playButton, "Play"), EditorStyles.toolbarButton, GUILayout.Height(30f)))            
-                {
-                    PlayButton();
-                }
-                // "PauseButton"
-                if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("PauseButton").image, "Pause"), EditorStyles.toolbarButton))
-                {
-                    PauseButton();
-                }
-                */
+                
                 // play/pause: "Animation.Play" / "PauseButton"
 
                 if (GUILayout.Button(new GUIContent(play ? pauseButton : playButton, play ? "Pause" : "Play"), EditorStyles.toolbarButton, GUILayout.Height(30f)))
@@ -819,6 +716,7 @@ namespace Reallusion.Import
                 {
                     NextFrameButton();
                 }
+
                 // "Animation.LastKey"
                 if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Animation.LastKey").image, "Last Frame"), EditorStyles.toolbarButton))
                 {
@@ -836,24 +734,7 @@ namespace Reallusion.Import
                     ApplicationPlayToggle();
                 }
 
-
                 GUILayout.EndHorizontal();
-
-                /*
-                EditorGUILayout.Space(28f);
-                GUILayout.BeginHorizontal(EditorStyles.toolbar);
-                GUILayout.FlexibleSpace();
-
-                Texture bigPlayButton = EditorApplication.isPlaying ? EditorGUIUtility.IconContent("preAudioPlayOn").image : EditorGUIUtility.IconContent("preAudioPlayOff").image;
-                string playToggleTxt = EditorApplication.isPlaying ? "Exit 'Play Mode'." : "Enter 'Play Mode' and focus on the scene view window. This is to be used to evaluate play mode physics whilst allowing visualization of objects such as colliders.";
-                if (GUILayout.Button(new GUIContent(bigPlayButton, playToggleTxt), EditorStyles.toolbarButton, GUILayout.Height(100f), GUILayout.Width(100f)))
-                {
-                    ApplicationPlayToggle();
-                }
-
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
-                 */
             }
             GUILayout.EndVertical();
         }
@@ -867,22 +748,7 @@ namespace Reallusion.Import
         {
             // Alternative method - retrieve a copy of the layers - modify then reapply
             // find the controlstate by nameHash
-            AnimatorControllerLayer[] allLayer = playbackAnimatorController.layers;
-            for (int i = 0; i < allLayer.Length; i++)
-            {
-                ChildAnimatorState[] states = allLayer[i].stateMachine.states;
-                for (int j = 0; j < states.Length; j++)
-                {
-                    if (states[j].state.nameHash == controlStateHash)
-                    {
-                        states[j].state.iKOnFeet = FootIK;
-                        allLayer[i].iKPass = FootIK;
-                    }
-                }
-            }
-            if (EditorApplication.isPlaying) CharacterAnimator.gameObject.SetActive(false);
-            playbackAnimatorController.layers = allLayer;
-            if (EditorApplication.isPlaying) CharacterAnimator.gameObject.SetActive(true);
+            SetFootIK(FootIK);
 
             // originally using the cached default state directly ...
             // both methods encounter errors when changing foot ik during runtime
@@ -903,7 +769,7 @@ namespace Reallusion.Import
                 CharacterAnimator.Update(time);
             }
         }
-
+        
         // playback speed slider sets speed multiplier directly in edit mode but requires an update in play mode
         private static void PlaybackSpeedSlider()
         {
@@ -927,13 +793,10 @@ namespace Reallusion.Import
             // reset the player
             ResetAnimationPlayer();
 
-            // clear all the animation data  ==============================================================
-            // ============================================================================================
+            // clear all the animation data
             WorkingClip = null;
             OriginalClip = null;
-            // ENSURE RESET OF SELECTION FIELDS TOO
-            // ============================================================================================
-
+            
             // clear the animation controller + override controller
             // remove the on-disk temporary controller
             ResetToBaseAnimatorController();
@@ -1400,16 +1263,7 @@ namespace Reallusion.Import
         };
 
         #endregion Pose reset and bone tracking
-        public static void SampleOnce()
-        {
-            if (CharacterAnimator && WorkingClip)
-            {
-                if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
-                AnimationMode.BeginSampling();
-                AnimationMode.SampleAnimationClip(CharacterAnimator.gameObject, WorkingClip, time);
-                AnimationMode.EndSampling();
-            }
-        }
+        
 
         #region Update
         private static void PlayStateChangeCallback(PlayModeStateChange state)
@@ -1514,50 +1368,8 @@ namespace Reallusion.Import
             }
         }
 
-        
+
         #endregion Update
-
-
-        private static void UpdateDelegate()
-        {
-            if (updateTime == 0f) updateTime = EditorApplication.timeSinceStartup;
-            deltaTime = EditorApplication.timeSinceStartup - updateTime;
-            updateTime = EditorApplication.timeSinceStartup;
-
-            AdjustEyes();
-
-            if (!EditorApplication.isPlaying && AnimationMode.InAnimationMode())
-            {
-                if (WorkingClip && CharacterAnimator)
-                {
-                    if (play)
-                    {
-                        double frameDuration = 1.0f / WorkingClip.frameRate;
-
-                        time += (float)deltaTime;
-                        frameTime += deltaTime;
-                        if (time >= WorkingClip.length)
-                            time = 0f;
-
-                        if (frameTime < frameDuration) return;
-                        frameTime = 0f;
-                    }
-                    else
-                        frameTime = 1f;
-
-                    if (current != time || forceUpdate)
-                    {
-                        AnimationMode.BeginSampling();
-                        AnimationMode.SampleAnimationClip(CharacterAnimator.gameObject, WorkingClip, time);
-                        AnimationMode.EndSampling();
-                        SceneView.RepaintAll();
-                        
-                        AnimPlayerGUI.current = time;
-                        forceUpdate = false;
-                    }
-                }
-            }
-        }
 
         #endregion AnimPlayer
 
