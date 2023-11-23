@@ -16,10 +16,11 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//#define SOUPDEV
+#define SOUPDEV
 
 using UnityEngine;
 using UnityEditor;
+using System.IO;
 
 namespace Reallusion.Import
 {
@@ -441,6 +442,25 @@ namespace Reallusion.Import
             if (File.Exists(filePath)) return assetPath;
             else return "";
         }
+
+
+        [MenuItem("Reallusion/Dev/Magica Weight Map", priority = 220)]
+        public static void DoMagicaWeightMap()
+        {
+            CharacterInfo currentCharacter = ImporterWindow.Current.Character;
+
+            string[] folders = new string[] { "Assets", "Packages" };            
+            Texture2D physXWeightMap = Util.FindTexture(folders, "physXWeightMapTest");
+
+            string folder = ComputeBake.BakeTexturesFolder(currentCharacter.path);
+            string name = "magicaWeightMapTest";
+            float threshold = 1f / 255f;
+            Vector2Int size = new Vector2Int(64, 64);
+            // should create the texture in: <current character folder>/Baked/<character name>/Textures
+
+            Texture2D magicaWeightMap = ComputeBake.BakeMagicaWeightMap(physXWeightMap, threshold, size, folder, name);
+        }
+
 #endif
     }
 }

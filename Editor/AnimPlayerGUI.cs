@@ -49,7 +49,7 @@ namespace Reallusion.Import
         {
             if (scenePrefab)
             {
-                scenePrefab = Util.TryResetScenePrefab(scenePrefab);                
+                //scenePrefab = Util.TryResetScenePrefab(scenePrefab);                
                 SetCharacter(scenePrefab);
             }
 
@@ -84,11 +84,11 @@ namespace Reallusion.Import
                 EditorApplication.update -= UpdateCallback;
                 EditorApplication.playModeStateChanged -= PlayStateChangeCallback;
 
-                if (CharacterAnimator)       
-                {
-                    GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator.gameObject);
-                    Util.TryResetScenePrefab(scenePrefab);
-                }
+                //if (CharacterAnimator)       
+                ///{
+                    //GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator.gameObject);
+                    //Util.TryResetScenePrefab(scenePrefab);
+                //}
 
 #if SCENEVIEW_OVERLAY_COMPATIBLE
                 //2021.2.0a17+          
@@ -246,12 +246,10 @@ namespace Reallusion.Import
         // GUIStyles
         private static Styles guiStyles;
 
-        [SerializeField]
-        private static List<BoneItem> boneItemList;
-        [SerializeField]
-        public static bool isTracking = false;
-        [SerializeField]
-        private static GameObject lastTracked;
+        [SerializeField] private static List<BoneItem> boneItemList;
+        [SerializeField] public static bool isTracking = false;
+        [SerializeField] public static GameObject lastTracked;
+        [SerializeField] public static bool trackingPermitted = true;
         private static string boneNotFound = "not found";
 
         // ----------------------------------------------------------------------------
@@ -602,6 +600,7 @@ namespace Reallusion.Import
                 if (!CheckTackingStatus())
                     CancelBoneTracking(false); //object focus lost - arrange ui to reflect that, but dont fight with the scene camera
 
+                EditorGUI.BeginDisabledGroup(!trackingPermitted);
                 if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Camera Gizmo").image, "Select individual bone to track with the scene camera."), guiStyles.settingsButton, GUILayout.Width(24f), GUILayout.Height(24f)))
                 {
                     GenerateBoneMenu();
@@ -614,6 +613,7 @@ namespace Reallusion.Import
                 {
                     CancelBoneTracking(true); //tracking deliberately cancelled - leave scene camera in last position with last tracked object still selected
                 }
+                EditorGUI.EndDisabledGroup();
                 EditorGUI.EndDisabledGroup();
                 GUILayout.FlexibleSpace();
 
@@ -725,7 +725,20 @@ namespace Reallusion.Import
                 EditorGUI.EndDisabledGroup();
 
                 GUILayout.Space(10f);
-                GUILayout.Label(new GUIContent(EditorGUIUtility.IconContent("d_UnityEditor.GameView").image, "Controls for 'Play Mode'"), guiStyles.playIconStyle, GUILayout.Width(24f), GUILayout.Height(24f));
+                //GUILayout.Label(new GUIContent(EditorGUIUtility.IconContent("d_UnityEditor.GameView").image, "Controls for 'Play Mode'"), guiStyles.playIconStyle, GUILayout.Width(24f), GUILayout.Height(24f));
+                                
+                if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_ViewToolOrbit On").image, "Select the character root."), EditorStyles.toolbarButton))
+                {
+                    if (ColliderManagerEditor.EditMode)
+                    {
+                        Selection.activeObject = null;
+                    }
+                    else
+                    {
+                        Selection.activeObject = selectedAnimator.gameObject;
+                    }
+                        
+                }
 
                 Texture bigPlayButton = EditorApplication.isPlaying ? EditorGUIUtility.IconContent("preAudioPlayOn").image : EditorGUIUtility.IconContent("preAudioPlayOff").image;
                 string playToggleTxt = EditorApplication.isPlaying ? "Exit 'Play Mode'." : "Enter 'Play Mode' and focus on the scene view window. This is to be used to evaluate play mode physics whilst allowing visualization of objects such as colliders.";
@@ -1140,6 +1153,34 @@ namespace Reallusion.Import
             scene.FrameSelected(true, true);
             scene.FrameSelected(true, true);
             scene.Repaint();
+        }
+
+        public static void ForbidTracking() 
+        {
+            // this is called by the collider manager editor script to use its own tracking while editing colliders
+            // this avoids having an objected selected since its control handles will be visible and cause problems
+            
+            if (isTracking)
+            {
+                isTracking = false;
+                Selection.activeObject = null;
+            }
+
+            trackingPermitted = false;
+
+            if (boneItemList != null)
+            {
+                foreach (BoneItem boneItem in boneItemList)
+                {
+                    if (boneItem.selected)
+                        boneItem.selected = false;
+                }
+            }
+        }
+
+        public static void AllowTracking()
+        {
+            trackingPermitted = true;
         }
 
         public static void ReEstablishTracking(string humanBoneName)
