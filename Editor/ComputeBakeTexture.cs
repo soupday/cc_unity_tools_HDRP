@@ -105,6 +105,15 @@ namespace Reallusion.Import
                         importer.mipMapsPreserveCoverage = false;
                     }
                     importer.mipmapFilter = TextureImporterMipFilter.BoxFilter;
+                    if ((flags & Importer.FLAG_READ_WRITE) > 0)
+                    {
+                        importer.isReadable = true;
+                    }
+                    if ((flags & Importer.FLAG_UNCOMPRESSED) > 0)
+                    {
+                        importer.textureCompression = TextureImporterCompression.Uncompressed;
+                        importer.compressionQuality = 0;
+                    }
                     importer.SaveAndReimport();
                     //AssetDatabase.WriteImportSettingsIfDirty(filePath);
                 }

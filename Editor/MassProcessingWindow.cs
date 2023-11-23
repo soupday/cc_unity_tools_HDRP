@@ -27,6 +27,7 @@ namespace Reallusion.Import
 {
     public class MassProcessingWindow : EditorWindow
     {
+        public static MassProcessingWindow massProcessingWindow;
         enum WindowMode { standard, extended }
         public enum DragBarId { a, b }
         public enum SortType { ascending, descending }
@@ -82,9 +83,11 @@ namespace Reallusion.Import
         private Texture2D iconFilterRemove;
         private Texture2D iconRefreshList;
 
+        Rect prev = new Rect();
+
         private bool initDone = false;                
         private ImporterWindow importerWindow;
-        List<CharacterInfo> workingList;
+        public List<CharacterInfo> workingList;
         List<CharacterListDisplay> displayList;        
         CharacterInfo characterSettings;
         private bool isMassSelected = false;
@@ -94,7 +97,7 @@ namespace Reallusion.Import
         [MenuItem("Reallusion/Processing Tools/Batch Processing", priority = 400)]
         public static void ATInitAssetProcessing()
         {
-            OpenProcessingWindow();
+            massProcessingWindow = OpenProcessingWindow();
         }
 
         [MenuItem("Reallusion/Processing Tools/Batch Processing", true)]
@@ -919,21 +922,38 @@ namespace Reallusion.Import
                         menu.AddItem(new GUIContent("MSAA Coverage Hair"), characterSettings.CoverageHair, HairOptionSelected, CharacterInfo.HairQuality.Coverage);
                     menu.ShowAsContext();
                 }
-
-                int features = 2;
-                if (Pipeline.isHDRP12) features++; // tessellation
-                if (Pipeline.is3D || Pipeline.isURP) features++; // Amplify
-                EditorGUI.BeginChangeCheck();
-                if (features == 1)
-                    characterSettings.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(characterSettings.ShaderFlags);
-                else if (features > 1)
-                    characterSettings.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(characterSettings.ShaderFlags);
-                if (EditorGUI.EndChangeCheck())
+                // /*
+                bool showDebugEnumPopup = false;
+                if (showDebugEnumPopup)
                 {
-                    ValidateSettings(characterSettings);
+                    int features = 2;
+                    if (Pipeline.isHDRP12) features++; // tessellation
+                    if (Pipeline.is3D || Pipeline.isURP) features++; // Amplify
+                    EditorGUI.BeginChangeCheck();
+                    if (features == 1)
+                        characterSettings.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumPopup(characterSettings.ShaderFlags);
+                    else if (features > 1)
+                        characterSettings.ShaderFlags = (CharacterInfo.ShaderFeatureFlags)EditorGUILayout.EnumFlagsField(characterSettings.ShaderFlags);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        ValidateSettings(characterSettings);
+                    }
+                    GUI.enabled = true;
                 }
-                GUI.enabled = true;
+                // */
+                //////////////
 
+                if (Event.current.type == EventType.Repaint)
+                    prev = GUILayoutUtility.GetLastRect();
+
+                if (EditorGUILayout.DropdownButton(
+                    content: new GUIContent("Features"),
+                    focusType: FocusType.Passive))
+                {
+                    ImporterFeaturesWindow.ShowAtPosition(new Rect(prev.x, prev.y + 20f, prev.width, prev.height), characterSettings);
+                }
+                //////////////
+                ///
                 GUILayout.Space(8f);
 
                 if (characterSettings.BuiltBasicMaterials) GUI.enabled = false;
@@ -1027,8 +1047,7 @@ namespace Reallusion.Import
             }
         }
 
-
-        private bool ValidateSettings(CharacterInfo characterSettings, bool refresh = true)
+        public bool ValidateSettings(CharacterInfo characterSettings, bool refresh = true)
         {
             bool dirty = false;
             if (characterSettings != null)

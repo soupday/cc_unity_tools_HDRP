@@ -22,6 +22,7 @@ using UnityEngine;
 using System;
 using System.IO;
 using UnityEditor.Animations;
+using System.Reflection;
 
 namespace Reallusion.Import
 {
@@ -119,6 +120,16 @@ namespace Reallusion.Import
             return BaseGeneration.Unknown;
         }
 
+        public static void ForceLegacyBlendshapeNormals(ModelImporter importer)
+        {
+            string pName = "legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes";
+            PropertyInfo prop = importer.GetType().GetProperty(pName, 
+                                                                BindingFlags.Instance | 
+                                                                BindingFlags.NonPublic | 
+                                                                BindingFlags.Public);
+            prop.SetValue(importer, true);
+        }
+
         public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, CharacterInfo info, Avatar avatar = null)
         {            
             // import normals to avoid mesh smoothing issues            
@@ -129,12 +140,12 @@ namespace Reallusion.Import
             switch(importSet)
             {
                 case 0: // From CC3/4
-                    importer.importNormals = ModelImporterNormals.Calculate;
+                    importer.importNormals = ModelImporterNormals.Import;
                     importer.importBlendShapes = true;
-                    importer.importBlendShapeNormals = ModelImporterNormals.Calculate;                    
+                    importer.importBlendShapeNormals = ModelImporterNormals.Import;                    
                     importer.normalCalculationMode = ModelImporterNormalCalculationMode.AreaAndAngleWeighted;                    
-                    importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.FromAngle;
-                    importer.normalSmoothingAngle = 120f;
+                    importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.PreferSmoothingGroups;
+                    importer.normalSmoothingAngle = 60f;
                     break;
                 case 1: // From Blender
                     importer.importNormals = ModelImporterNormals.Import;
@@ -142,7 +153,7 @@ namespace Reallusion.Import
                     importer.importBlendShapeNormals = ModelImporterNormals.Import;
                     importer.normalCalculationMode = ModelImporterNormalCalculationMode.AreaAndAngleWeighted;                    
                     importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.PreferSmoothingGroups;
-                    importer.normalSmoothingAngle = 120f;
+                    importer.normalSmoothingAngle = 60f;
                     break;                
             }
             importer.importTangents = ModelImporterTangents.CalculateMikk;
@@ -151,6 +162,7 @@ namespace Reallusion.Import
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.keepQuads = false;
             importer.weldVertices = true;
+            ForceLegacyBlendshapeNormals(importer);
 
             importer.autoGenerateAvatarMappingIfUnspecified = true;
             

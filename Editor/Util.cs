@@ -17,11 +17,14 @@
  */
 
 using System.IO;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Object = UnityEngine.Object;
 using System.Linq;
+using System.Data.Sql;
 
 namespace Reallusion.Import
 {
@@ -1352,6 +1355,27 @@ namespace Reallusion.Import
         public static void LogAlways(string message)
         {
             Debug.Log(message);
+        }
+
+
+        public static void TransferSkinnedMeshes(GameObject fromPrefab, GameObject toPrefab)
+        {
+            GameObject fromInstanceRoot = GameObject.Instantiate(fromPrefab);
+            GameObject toInstanceRoot = GameObject.Instantiate(toPrefab);
+            Transform[] toTransforms = toInstanceRoot.GetComponentsInChildren<Transform>();
+            SkinnedMeshRenderer[] renderers = fromInstanceRoot.GetComponentsInChildren<SkinnedMeshRenderer>();
+            foreach (SkinnedMeshRenderer smr in renderers)
+            {
+                GameObject newMesh = GameObject.Instantiate(smr.gameObject);
+                newMesh.transform.SetParent(toInstanceRoot.transform, true);
+                SkinnedMeshRenderer newSMR = newMesh.GetComponent<SkinnedMeshRenderer>();
+                for (int i = 0; i < newSMR.bones.Length; i++)
+                {
+                    string boneName = smr.bones[i].name;
+                    Transform toBone = System.Array.Find(toTransforms, t => t.name.Equals(boneName));
+                    if (toBone) newSMR.bones[i] = toBone;
+                }                
+            }
         }
     }    
 }

@@ -21,6 +21,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEditor;
 using System;
+using Object = UnityEngine.Object;
+
 
 namespace Reallusion.Import
 {
@@ -216,21 +218,26 @@ namespace Reallusion.Import
                             {
                                 for (int ci = 0; ci < colliders.Count; ci++)
                                 {
-                                    Collider cc = colliders[ci];
-                                    bool include = false;
-                                    if (includeAllLimbColliders)
+                                    if (colliders[ci] != null)
                                     {
-                                        if (cc.name.Contains("_Thigh_")) include = true;
-                                        if (cc.name.Contains("_Calf_")) include = true;
-                                        if (cc.name.Contains("_Upperarm_")) include = true;
-                                    }
-                                    if (cc.name.Contains("_Forearm_")) include = true;
-                                    if (cc.name.Contains("_Hand_")) include = true;
-                                    if (include && !detectedColliders.Contains(cc))
-                                    {
-                                        detectedColliders.Add(cc);
-                                        colliders.Remove(cc);
-                                        ci--;
+                                        //Debug.Log("Collider: " + ci + "/" + colliders.Count + " is " + colliders[ci].GetType());
+                                        Collider cc = colliders[ci];
+
+                                        bool include = false;
+                                        if (includeAllLimbColliders)
+                                        {
+                                            if (cc.name.Contains("_Thigh_")) include = true;
+                                            if (cc.name.Contains("_Calf_")) include = true;
+                                            if (cc.name.Contains("_Upperarm_")) include = true;
+                                        }
+                                        if (cc.name.Contains("_Forearm_")) include = true;
+                                        if (cc.name.Contains("_Hand_")) include = true;
+                                        if (include && !detectedColliders.Contains(cc))
+                                        {
+                                            detectedColliders.Add(cc);
+                                            colliders.Remove(cc);
+                                            ci--;
+                                        }
                                     }
                                 }
                             }
@@ -287,18 +294,20 @@ namespace Reallusion.Import
                                     for (int ci = 0; ci < colliders.Count; ci++)
                                     {
                                         Collider cc = colliders[ci];
-
-                                        if (cc.bounds.Contains(world))
+                                        if (cc != null)
                                         {
-                                            detectedColliders.Add(cc);
-                                            colliders.Remove(cc);
-                                            ci--;
-                                        }
-                                        else if (cc.bounds.SqrDistance(world) < worldMax * worldMax)
-                                        {
-                                            detectedColliders.Add(cc);
-                                            colliders.Remove(cc);
-                                            ci--;
+                                            if (cc.bounds.Contains(world))
+                                            {
+                                                detectedColliders.Add(cc);
+                                                colliders.Remove(cc);
+                                                ci--;
+                                            }
+                                            else if (cc.bounds.SqrDistance(world) < worldMax * worldMax)
+                                            {
+                                                detectedColliders.Add(cc);
+                                                colliders.Remove(cc);
+                                                ci--;
+                                            }
                                         }
                                     }
                                 }
