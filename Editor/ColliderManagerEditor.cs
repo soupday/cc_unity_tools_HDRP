@@ -39,7 +39,6 @@ namespace Reallusion.Import
 
         private ColliderManager colliderManager;
         private ColliderSettings currentCollider;
-        private bool symmetrical = true;
         private Texture2D editModeEnable, editModeDisable, magicaIcon;
         private Color baseBackground;
 
