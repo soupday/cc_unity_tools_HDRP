@@ -38,7 +38,7 @@ namespace Reallusion.Import
         [HideInInspector] public string[] manipulatorArray = { "Position", "Rotation", "Scale" };
         [HideInInspector] public enum ColliderAxis { x, y, z }
         [HideInInspector] public bool transformSymmetrically = true;
-        [HideInInspector] public bool frameSymmetryPair = true;
+        [HideInInspector] public bool frameSymmetryPair = false;
         [HideInInspector] public enum MirrorPlane { x, z }
         [HideInInspector] public MirrorPlane selectedMirrorPlane;
         [HideInInspector] public IList genericColliderList;
