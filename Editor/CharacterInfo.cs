@@ -303,7 +303,7 @@ namespace Reallusion.Import
                 if (fbx == null)
                 {
                     fbx = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                    Util.LogInfo("CharInfo: " + name + " FBX Loaded");
+                    Util.LogDetail("CharInfo: " + name + " FBX Loaded");
                 }
                 return fbx;
             }
@@ -394,7 +394,7 @@ namespace Reallusion.Import
                 if (jsonData == null)
                 {
                     jsonData = Util.GetJsonData(jsonFilepath);
-                    Util.LogInfo("CharInfo: " + name + " JsonData Fetched");
+                    Util.LogDetail("CharInfo: " + name + " JsonData Fetched");
                 }
                 return jsonData;
             }
@@ -689,7 +689,7 @@ namespace Reallusion.Import
 
             if (generation != oldGen)
             {
-                Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
+                Util.LogDetail("CharInfo: " + name + " Generation detected: " + generation.ToString());
                 Write();
             }
         }
@@ -702,7 +702,7 @@ namespace Reallusion.Import
             CheckOverride();
             if (generation != oldGen)
             {
-                Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
+                Util.LogDetail("CharInfo: " + name + " Generation detected: " + generation.ToString());
                 Write();
             }
         }
@@ -765,7 +765,7 @@ namespace Reallusion.Import
             {
                 jsonData = null;
                 fbx = null;
-                Util.LogInfo("CharInfo: " + name + " Data Released!");
+                Util.LogDetail("CharInfo: " + name + " Data Released!");
             }
         }
 
@@ -902,20 +902,7 @@ namespace Reallusion.Import
             {
                 Util.LogWarn("The Importer Window is not open - please open the CC/iC importer window before continuing.");
                 return;
-            }
-
-            // see which flags are set.
-            /*
-            var flags = System.Enum.GetValues(typeof(ShaderFeatureFlags));
-            foreach (var flag in flags)
-            {
-                ShaderFeatureFlags f = (ShaderFeatureFlags)flag;
-                if (ShaderFlags.HasFlag(f))
-                    Debug.Log("ShaderFlag " + f.ToString() + " is set.");
-            }
-            */
-
-            //return;  // temp to stop code execution
+            }            
 
             if (ShaderFlags.HasFlag(ShaderFeatureFlags.ClothPhysics))
             {

@@ -29,11 +29,12 @@ namespace Reallusion.Import
         private GameObject lodRoot;
         private LODGroup lodGroup;
         private string characterName;
-        private List<LODObject> lodObjects;
+        private List<LODObject> lodSortObjects;
         private List<GameObject> lodInstances;
+        private List<GameObject> toDelete;
         private int numLevels;
         private Dictionary<string, Transform> boneMap;        
-        private string folder;        
+        private string folder;
 
         public struct LODObject
         {
@@ -63,29 +64,27 @@ namespace Reallusion.Import
             {
                 // determine character name and prefab folder path
                 characterName = objects[0].name;
-                string prefabName = characterName + "_LODGroup.prefab";
+                string prefabName = characterName + "_LOD.prefab";
                 if (!string.IsNullOrEmpty(name)) prefabName = name + ".prefab";
                 folder = Path.GetDirectoryName(AssetDatabase.GetAssetPath(objects[0]));
 
                 // create LOD group and add lod instances
-                AddLODInstances(objects);
+                MakeLODInstances(objects);
 
                 // process the LOD instances, separate and sort the lod characters
-                ProcessLODInstances();
+                ProcessLODInstances();                
 
                 // remap the bones and fill the LOD groups
-                if (lod0BoneRoot)
+                if (lodRoot && lod0BoneRoot)
                 {
+                    lodRoot.name = characterName;
                     GenerateBoneMap();
                     FillLODGroups();
-                }
-
-                // finally copy the LOD0 animator settings
-                ProcessAnimators();
+                }                
 
                 // Clean up
                 CleanUp();
-
+                
                 string prefabPath = Path.Combine(folder, prefabName);
                 GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(lodRoot, prefabPath);
 
@@ -97,35 +96,44 @@ namespace Reallusion.Import
             return null;
         }
 
-        private void AddLODObject(GameObject lodObj, GameObject boneRootSearch = null)
+        private bool AddSortLODObject(GameObject lodLevelObj, GameObject boneRootSearch = null)
         {
-            if (boneRootSearch == null) boneRootSearch = lodObj;
+            if (boneRootSearch == null) boneRootSearch = lodLevelObj;
 
             LODObject lodObject = new LODObject()
             {
-                lodObject = lodObj,
-                polyCount = CountPolys(lodObj),
+                lodObject = lodLevelObj,
+                polyCount = CountPolys(lodLevelObj),
                 boneRoot = FindBoneRoot(boneRootSearch.transform),
             };
-            for (int i = 0; i < lodObjects.Count; i++)
+
+            // unparent from original container
+            lodLevelObj.transform.parent = null;
+
+            for (int i = 0; i < lodSortObjects.Count; i++)
             {
-                if (lodObject.polyCount == lodObjects[i].polyCount)
+                if (lodObject.polyCount == lodSortObjects[i].polyCount)
                 {
-                    Util.LogWarn("LOD level with same poly count detected: skipping " + lodObj.name);
-                    return;
+                    Util.LogWarn("LOD level with same poly count detected: skipping " + lodLevelObj.name);
+                    return false;
                 }
-                if (lodObject.polyCount > lodObjects[i].polyCount)
+                if (lodObject.polyCount > lodSortObjects[i].polyCount)
                 {
-                    lodObjects.Insert(i, lodObject);
-                    return;
+                    // insert largest first
+                    lodSortObjects.Insert(i, lodObject);
+                    return true;
                 }
             }
-            lodObjects.Add(lodObject);
+
+            // add smallest last
+            lodSortObjects.Add(lodObject);
+            return true;
         }
 
         private void ProcessLODInstances()
         {
-            lodObjects = new List<LODObject>(lodInstances.Count);
+            lodSortObjects = new List<LODObject>(lodInstances.Count);
+            toDelete = new List<GameObject>();
             
             foreach (GameObject lodObj in lodInstances)
             {
@@ -138,8 +146,8 @@ namespace Reallusion.Import
 
                 if (lodCount == 1)
                 {                    
-                    // add lod instance to polycount sorted lod objects
-                    AddLODObject(lodObj);
+                    // add lod character instance to polycount sorted lod objects
+                    AddSortLODObject(lodObj);
                 }
                 else if (lodCount > 1)
                 {
@@ -157,66 +165,68 @@ namespace Reallusion.Import
                             string levelString = r.name.Substring(r.name.Length - 1, 1);
                             if (int.TryParse(levelString, out int level))
                             {
-                                // move this LOD level into it's own lodContainer (child of the LODGroup)
-                                GameObject lodContainer = new GameObject(name + "_LOD" + level.ToString());
-                                lodContainer.transform.parent = lodRoot.transform;
-                                lodContainer.transform.localPosition = Vector3.zero;
-                                lodContainer.transform.localRotation = Quaternion.identity;
-                                CopyAnimator(lodObj, lodContainer);
-                                r.transform.parent = lodContainer.transform;                                
-                                AddLODObject(lodContainer, lodObj);
+                                // move this LOD level into it's own lodContainer and add to sorted lod objects
+                                GameObject lodContainer = new GameObject(name + "_LOD" + level.ToString());                                
+                                r.transform.parent = lodContainer.transform;
+                                AddSortLODObject(lodContainer, lodObj);
                             }
                         }
                         else
                         {
                             // assume any mesh without a _LOD<N> suffix is part of the original model (LOD0)                            
-                            // move this LOD level into it's own lod0Container (child of the LODGroup)
+                            // leave these meshes in their original container and use this as the
+                            // LOD0 root container and unparent this from the instance.
+                            // (this lod0Container should have the animator and any physics components)
                             if (!lod0Container)
                             {
-                                lod0Container = new GameObject(name + "_LOD0");
-                                lod0Container.transform.parent = lodRoot.transform;
-                                lod0Container.transform.localPosition = Vector3.zero;
-                                lod0Container.transform.localRotation = Quaternion.identity;
-                                CopyAnimator(lodObj, lod0Container);
+                                Animator lodAnimator = lodObj.GetComponentInChildren<Animator>();
+                                if (lodAnimator)
+                                {
+                                    lod0Container = lodAnimator.gameObject;
+                                    if (lodAnimator.transform != r.transform.parent)
+                                        toDelete.Add(r.transform.parent.gameObject);
+                                }
                             }
-                            r.transform.parent = lod0Container.transform;
                         }
                     }
 
-                    // Add the LOD0 container
+                    // Add the LOD0 container if found
                     if (lod0Container)
-                    {
-                        AddLODObject(lod0Container, lodObj);                        
-                    }                    
+                    {                        
+                        AddSortLODObject(lod0Container, lodObj);
+                    }
                 }
-
             }
 
-            numLevels = lodObjects.Count;
+            numLevels = lodSortObjects.Count;
 
             if (numLevels > 0)
-            {              
+            {
                 // fetch the LOD0 bone root
-                lod0BoneRoot = lodObjects[0].boneRoot;
+                lod0BoneRoot = lodSortObjects[0].boneRoot;
+                lodRoot = lodSortObjects[0].lodObject;
 
-                // move to lodRoot
-                lod0BoneRoot.parent = lodRoot.transform;                
+                // parent to lodRoot if needed
+                if (lod0BoneRoot.parent != lodRoot.transform)
+                {
+                    lod0BoneRoot.parent = lodRoot.transform;
+                }
             }
         }
 
-        private void AddLODInstances(Object[] objects)
+        private void MakeLODInstances(Object[] lodCharacters)
         {
-            lodRoot = new GameObject(characterName);
-            lodGroup = lodRoot.AddComponent<LODGroup>();
-            lodInstances = new List<GameObject>(objects.Length);
+            lodInstances = new List<GameObject>(lodCharacters.Length);
 
-            foreach (Object obj in objects)
+            if (lodCharacters.Length > 0)
             {
-                GameObject lodInstance = (GameObject)GameObject.Instantiate(obj, lodRoot.transform);
-                lodInstance.name = obj.name;
-                lodInstances.Add(lodInstance);
-
-            }            
+                foreach (Object lodCharacter in lodCharacters)
+                {
+                    GameObject lodInstance = (GameObject)GameObject.Instantiate(lodCharacter);
+                    lodInstance.name = lodCharacter.name;
+                    lodInstances.Add(lodInstance);
+                }
+            }
         }
 
         private void CopyAnimator(GameObject from, GameObject to)
@@ -233,11 +243,11 @@ namespace Reallusion.Import
                 toAnimator.updateMode = fromAnimator.updateMode;
                 toAnimator.cullingMode = fromAnimator.cullingMode;
             }
-        }
+        }        
 
         private void ProcessAnimators()
         {
-            GameObject lod0 = lodObjects[0].lodObject;
+            GameObject lod0 = lodSortObjects[0].lodObject;
 
             // find and copy the lod0 animator settings
             if (lod0)
@@ -253,18 +263,20 @@ namespace Reallusion.Import
             int totalPolys = 0;
             int processedPolys = 0;
 
-            foreach (LODObject lob in lodObjects) totalPolys += lob.polyCount;            
+            foreach (LODObject lob in lodSortObjects) totalPolys += lob.polyCount;            
 
-            foreach (LODObject lob in lodObjects)
-            {                
-                GameObject lodInstance = lob.lodObject;
+            foreach (LODObject lob in lodSortObjects)
+            {                                
                 List<Renderer> lodRenderers = new List<Renderer>();
-                Renderer[] renderers = lodInstance.GetComponentsInChildren<Renderer>();
+                Renderer[] renderers = lob.lodObject.GetComponentsInChildren<Renderer>();
                 foreach (Renderer r in renderers)
                 {
                     RemapLODMesh(r.gameObject);
                     lodRenderers.Add(r);
-                    r.gameObject.transform.parent = lodRoot.transform;
+                    if (r.gameObject.transform.parent != lodRoot.transform)
+                    {
+                        r.gameObject.transform.parent = lodRoot.transform;
+                    }
                 }
                 processedPolys += lob.polyCount;
                 // distribute transition sizes by the square root of processed polygon density
@@ -274,6 +286,8 @@ namespace Reallusion.Import
                 level++;                
             }
 
+            lodGroup = lodRoot.GetComponent<LODGroup>();
+            if (lodGroup == null) lodGroup = lodRoot.AddComponent<LODGroup>();
             lodGroup.SetLODs(lods);
         }
 
@@ -315,17 +329,19 @@ namespace Reallusion.Import
 
         private void RemapLODMesh(GameObject gameObject)
         {
-            SkinnedMeshRenderer smr = gameObject.GetComponent<SkinnedMeshRenderer>();
+            SkinnedMeshRenderer smr = gameObject.GetComponent<SkinnedMeshRenderer>();            
 
             if (smr)
             {
+                Transform rootBone = smr.rootBone;
                 Transform[] newBones = new Transform[smr.bones.Length];
                 for (int i = 0; i < smr.bones.Length; ++i)
                 {
                     newBones[i] = GetBoneMapping(smr.bones[i]);
                 }
                 smr.bones = newBones;
-            }
+                smr.rootBone = GetBoneMapping(rootBone);
+            }            
         }
 
         public static int CountPolys(GameObject asset)
@@ -353,14 +369,19 @@ namespace Reallusion.Import
         private void CleanUp()
         {   
             // remove all the old lod object containers
-            foreach (LODObject lob in lodObjects)
+            foreach (LODObject lob in lodSortObjects)
             {
-                GameObject.DestroyImmediate(lob.lodObject);
+                if (lob.lodObject != lodRoot) GameObject.DestroyImmediate(lob.lodObject);
             }
 
             foreach (GameObject obj in lodInstances)
             {
-                GameObject.DestroyImmediate(obj);
+                if (obj != lodRoot) GameObject.DestroyImmediate(obj);
+            }
+
+            foreach (GameObject obj in toDelete)
+            {
+                if (obj != lodRoot) GameObject.DestroyImmediate(obj);
             }
         }
     }
