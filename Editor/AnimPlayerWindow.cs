@@ -95,7 +95,7 @@ namespace Reallusion.Import
         
         public static void Empty(int id)
         {
-            Util.LogInfo("Showing " + id);
+            Util.LogDetail("Showing " + id);
         }
     }
 }

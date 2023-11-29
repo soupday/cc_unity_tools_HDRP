@@ -63,6 +63,8 @@ namespace Reallusion.Import
         public const int FLAG_ALPHA_DATA = 32;
         public const int FLAG_HAIR_ID = 64;
         public const int FLAG_WRAP_CLAMP = 1024;
+        public const int FLAG_READ_WRITE = 2048;
+        public const int FLAG_UNCOMPRESSED = 2048;
 
         public const float MAX_SMOOTHNESS = 0.897f;        
         public const float TRA_SPECULAR_SCALE = 0.2f;
@@ -203,7 +205,7 @@ namespace Reallusion.Import
 
             // fetch the character json export data.            
             jsonData = info.JsonData;            
-            if (info.MeshJsonData == null) Util.LogError("Unable to find Json mesh data!");
+            if (jsonData == null) Util.LogError("Unable to find Json data!");
             
             jsonPhysicsData = info.PhysicsJsonData;
             if (jsonPhysicsData == null)
@@ -771,7 +773,6 @@ namespace Reallusion.Import
             if (templateMaterial)
             {
                 Util.LogInfo("    Using template material: " + templateMaterial.name);
-                //Debug.Log("Copying from Material template: " + templateMaterial.name);
                 if (templateMaterial.shader && templateMaterial.shader != remapMaterial.shader)
                     remapMaterial.shader = templateMaterial.shader;
                 remapMaterial.CopyPropertiesFromMaterial(templateMaterial);
@@ -2484,7 +2485,11 @@ namespace Reallusion.Import
             WrinkleManager wm = obj.AddComponent<WrinkleManager>();
             wm.headMaterial = mat;
             wm.skinnedMeshRenderer = smr;
-            float overallWeight = matJson.GetFloatValue("Wrinkle/WrinkleOverallWeight");
+            float overallWeight = 1;
+            if (matJson.PathExists("Wrinkle/WrinkleOverallWeight"))
+            {
+                overallWeight = matJson.GetFloatValue("Wrinkle/WrinkleOverallWeight");
+            }
             wm.BuildConfig(BuildWrinkleProps(matJson), overallWeight);
         }
 

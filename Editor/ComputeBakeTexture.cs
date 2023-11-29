@@ -45,16 +45,12 @@ namespace Reallusion.Import
             width = size.x;
             height = size.y;
             this.flags = flags;
-            //Debug.Log(QualitySettings.activeColorSpace);
             // RenderTextureReadWrite.sRGB/Linear is ignored:
             //     on windows platforms it is always linear
             //     on MacOS platforms it is always gamma
             renderTexture = new RenderTexture(width, height, 0,
                 RenderTextureFormat.ARGB32,
                 IsRGB ? RenderTextureReadWrite.sRGB : RenderTextureReadWrite.Linear);
-            //Debug.Log(renderTexture.descriptor.colorFormat);
-            //Debug.Log(renderTexture.descriptor.graphicsFormat);
-            //Debug.Log(renderTexture.descriptor.sRGB);            
             saveTexture = new Texture2D(width, height, TextureFormat.ARGB32, true, !IsRGB);
             folderPath = folder;
             textureName = name;
@@ -105,6 +101,15 @@ namespace Reallusion.Import
                         importer.mipMapsPreserveCoverage = false;
                     }
                     importer.mipmapFilter = TextureImporterMipFilter.BoxFilter;
+                    if ((flags & Importer.FLAG_READ_WRITE) > 0)
+                    {
+                        importer.isReadable = true;
+                    }
+                    if ((flags & Importer.FLAG_UNCOMPRESSED) > 0)
+                    {
+                        importer.textureCompression = TextureImporterCompression.Uncompressed;
+                        importer.compressionQuality = 0;
+                    }
                     importer.SaveAndReimport();
                     //AssetDatabase.WriteImportSettingsIfDirty(filePath);
                 }

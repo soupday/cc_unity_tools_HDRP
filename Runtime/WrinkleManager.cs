@@ -637,11 +637,28 @@ namespace Reallusion.Import
                 BuildConfig();
             }
         }
-           
+
         void Start()
         {
             updateTimer = 0f;
-            CheckInit();
+
+            if (Application.isPlaying)
+            {
+                SkinnedMeshRenderer smr = GetComponent<SkinnedMeshRenderer>();
+                if (smr)
+                {
+                    foreach (Material mat in smr.materials)
+                    {
+                        if (mat.IsKeywordEnabled("BOOLEAN_IS_HEAD_ON"))
+                        {
+                            headMaterial = mat;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            CheckInit();            
         }
 
         void Update()

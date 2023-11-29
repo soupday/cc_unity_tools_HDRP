@@ -33,10 +33,28 @@ namespace Reallusion.Import
             NoFeatures = 0, 
             Tessellation = 1, 
             ClothPhysics = 2, 
-            HairPhysics = 4, 
+            HairPhysics = 4,
             SpringBoneHair = 8, 
             WrinkleMaps = 16,
+            MagicaCloth = 32,
+            MagicaBone = 64,
+            UnityClothPhysics = 128,
+            UnityClothHairPhysics = 256
         }
+
+        // 'radio groups' of mutually exclusive settings
+        public static ShaderFeatureFlags[] clothGroup =
+        {
+            ShaderFeatureFlags.UnityClothPhysics, // UnityEngine.Cloth instance
+            ShaderFeatureFlags.MagicaCloth // MagicaCloth2 instance set to 'Mesh Cloth' mode
+        };
+
+        public static ShaderFeatureFlags[] hairGroup =
+        {
+            ShaderFeatureFlags.UnityClothHairPhysics, // UnityEngine.Cloth instance for hair objects
+            ShaderFeatureFlags.SpringBoneHair, // DynamicBone springbones
+            ShaderFeatureFlags.MagicaBone // MagicaCloth2 instance set to 'Bone Cloth' mode for springbones
+        };
 
         public enum RigOverride { None = 0, Generic, Humanoid }
 
@@ -225,11 +243,12 @@ namespace Reallusion.Import
             if (qualHair == HairQuality.Coverage && Pipeline.isHDRP)
                 qualHair = HairQuality.Default;
 
-            if ((ShaderFlags & ShaderFeatureFlags.SpringBoneHair) > 0 &&
-                (ShaderFlags & ShaderFeatureFlags.HairPhysics) > 0)
-            {
-                ShaderFlags -= ShaderFeatureFlags.SpringBoneHair;
-            }
+            //if ((ShaderFlags & ShaderFeatureFlags.SpringBoneHair) > 0 &&
+            //    (ShaderFlags & ShaderFeatureFlags.HairPhysics) > 0)
+            //{
+            //    ShaderFlags -= ShaderFeatureFlags.SpringBoneHair;
+            //}
+            CheckRadioGroupFlags();  // set default unity cloth simulation flags if unset
         }
 
         public CharacterInfo(string guid)
@@ -249,7 +268,7 @@ namespace Reallusion.Import
             if (File.Exists(infoFilepath))            
                 Read();
             else
-                Write();            
+                Write();
         }
 
         public void CopySettings(CharacterInfo from)
@@ -284,7 +303,7 @@ namespace Reallusion.Import
                 if (fbx == null)
                 {
                     fbx = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                    Util.LogInfo("CharInfo: " + name + " FBX Loaded");
+                    Util.LogDetail("CharInfo: " + name + " FBX Loaded");
                 }
                 return fbx;
             }
@@ -375,7 +394,7 @@ namespace Reallusion.Import
                 if (jsonData == null)
                 {
                     jsonData = Util.GetJsonData(jsonFilepath);
-                    Util.LogInfo("CharInfo: " + name + " JsonData Fetched");
+                    Util.LogDetail("CharInfo: " + name + " JsonData Fetched");
                 }
                 return jsonData;
             }
@@ -394,6 +413,17 @@ namespace Reallusion.Import
             }
         }
 
+        public string JsonVersion
+        {
+            get
+            {
+                string jsonPath = name + "/Version";
+                if (JsonData.PathExists(jsonPath))
+                    return JsonData.GetStringValue(jsonPath);
+                return "";
+            }
+        }
+
         public QuickJSON CharacterJsonData
         {
             get
@@ -405,27 +435,72 @@ namespace Reallusion.Import
             }
         }
 
-        public QuickJSON MeshJsonData
+        public QuickJSON ObjectsJsonData
         {
             get
             {
-                string jsonPath = name + "/Object/" + name + "/Meshes";
-                if (JsonData.PathExists(jsonPath))
-                    return JsonData.GetObjectAtPath(jsonPath);
+                if (JsonVersion.StartsWith("1.20."))
+                {
+                    string jsonPath = name + "/Object/" + name + "/Nodes";
+                    if (JsonData.PathExists(jsonPath))
+                        return JsonData.GetObjectAtPath(jsonPath);
+                }
+                else
+                {
+                    string jsonPath = name + "/Object/" + name + "/Meshes";
+                    if (JsonData.PathExists(jsonPath))
+                        return JsonData.GetObjectAtPath(jsonPath);
+                }
                 return null;
+            }
+        }
+
+        public string ObjectsMatJsonPath(string objName, string matName)
+        {
+            if (JsonVersion.StartsWith("1.20."))
+            {
+                return objName + "/Meshes/" + objName + "/Materials/" + matName;
+            }
+            else
+            {
+                return objName + "/Materials/" + matName;
+            }            
+        }
+
+        public string ObjectsMaterialsJsonPath(string objName)
+        {
+            if (JsonVersion.StartsWith("1.20."))
+            {
+                return objName + "/Meshes/" + objName + "/Materials/";
+            }
+            else
+            {
+                return objName + "/Materials/";
+            }
+        }
+
+        public string ObjectsMeshJsonPath(string objName)
+        {
+            if (JsonVersion.StartsWith("1.20."))
+            {
+                return "Nodes/" + objName + "/Meshes/" + objName;
+            }
+            else
+            {
+                return "Meshes/" + objName;
             }
         }
 
         public QuickJSON GetMatJson(GameObject obj, string sourceName)
         {
-            QuickJSON jsonMeshData = MeshJsonData;
+            QuickJSON objectsData = ObjectsJsonData;
             QuickJSON matJson = null;
             string objName = obj.name;
             string jsonPath = "";
-            if (jsonMeshData != null)
+            if (objectsData != null)
             {
-                jsonPath = objName + "/Materials/" + sourceName;
-                matJson = jsonMeshData.GetObjectAtPath(jsonPath);                
+                jsonPath = ObjectsMatJsonPath(objName, sourceName);
+                matJson = objectsData.GetObjectAtPath(jsonPath);
                                 
                 if (matJson == null)
                 {
@@ -433,8 +508,8 @@ namespace Reallusion.Import
                     {
                         objName = objName.Substring(0, objName.IndexOf("_Extracted", System.StringComparison.InvariantCultureIgnoreCase));
 
-                        jsonPath = objName + "/Materials/" + sourceName;
-                        matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                        jsonPath = ObjectsMatJsonPath(objName, sourceName);                        
+                        matJson = objectsData.GetObjectAtPath(jsonPath);
                     }
                 }
 
@@ -444,11 +519,11 @@ namespace Reallusion.Import
                     if (objName.Contains(" "))
                     {
                         Util.LogWarn("Object name " + objName + " contains a space, this can cause the materials to setup incorrectly...");
-                        string[] split = objName.Split(' ');                        
-                        jsonPath = split[0] + "/Materials/" + sourceName;
-                        if (jsonMeshData.PathExists(jsonPath))
+                        string[] split = objName.Split(' ');
+                        jsonPath = ObjectsMatJsonPath(split[0], sourceName);                        
+                        if (objectsData.PathExists(jsonPath))
                         {
-                            matJson = jsonMeshData.GetObjectAtPath(jsonPath);
+                            matJson = objectsData.GetObjectAtPath(jsonPath);
                             Util.LogWarn(" - Found matching object/material data for: " + split[0] + "/" + sourceName);
                         }
                     }
@@ -462,7 +537,7 @@ namespace Reallusion.Import
 
                     string realObjName = null;                    
 
-                    if (jsonMeshData.PathExists(objName))
+                    if (objectsData.PathExists(objName))
                     {
                         realObjName = objName;
                     }
@@ -474,14 +549,14 @@ namespace Reallusion.Import
                         {
                             Util.LogWarn("Object name " + objName + " may be incorrectly suffixed by InstaLod exporter. Attempting to untangle...");
                             string specObjName = objName.Substring(0, objName.Length - 2);
-                            if (jsonMeshData.PathExists(specObjName))
+                            if (objectsData.PathExists(specObjName))
                             {
                                 realObjName = specObjName;
                             }                            
                             else
                             {
                                 // finally search for an object name in the mesh json whose name starts with the truncted source name
-                                realObjName = jsonMeshData.FindKeyName(specObjName);                                
+                                realObjName = objectsData.FindKeyName(specObjName);                                
                             }
                         }
                     }
@@ -490,7 +565,7 @@ namespace Reallusion.Import
                     {
                         string realMatName = null;                        
 
-                        if (jsonMeshData.PathExists(realObjName + "/Materials/" + sourceName))
+                        if (objectsData.PathExists(ObjectsMatJsonPath(realObjName, sourceName)))
                         {
                             realMatName = sourceName;
                         }
@@ -501,22 +576,22 @@ namespace Reallusion.Import
                             {
                                 Util.LogWarn("Material name " + sourceName + " may by suffixed by InstaLod exporter. Attempting to untangle...");
                                 string specMatName = sourceName.Substring(0, sourceName.Length - 2);
-                                if (jsonMeshData.PathExists(realObjName + "/Materials/" + specMatName))
+                                if (objectsData.PathExists(ObjectsMatJsonPath(realObjName, specMatName)))
                                 {
                                     realMatName = specMatName;
                                 }
                                 else
                                 {
                                     // finally search for an object name in the mesh json whose name starts with the truncted source name
-                                    realMatName = jsonMeshData.FindKeyName(realObjName + "/Materials/", specMatName);
+                                    realMatName = objectsData.FindKeyName(ObjectsMaterialsJsonPath(realObjName), specMatName);
                                 }
                             }
                         }
 
                         if (realObjName != null && realMatName != null &&
-                            jsonMeshData.PathExists(realObjName + "/Materials/" + realMatName))
+                            objectsData.PathExists(ObjectsMatJsonPath(realObjName, realMatName)))
                         {
-                            matJson = jsonMeshData.GetObjectAtPath(realObjName + "/Materials/" + realMatName);
+                            matJson = objectsData.GetObjectAtPath(ObjectsMatJsonPath(realObjName, realMatName));
                             if (matJson != null)
                             {
                                 Util.LogWarn(" - Found matching object/material data for: " + realObjName + "/" + realMatName);
@@ -614,7 +689,7 @@ namespace Reallusion.Import
 
             if (generation != oldGen)
             {
-                Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
+                Util.LogDetail("CharInfo: " + name + " Generation detected: " + generation.ToString());
                 Write();
             }
         }
@@ -627,7 +702,7 @@ namespace Reallusion.Import
             CheckOverride();
             if (generation != oldGen)
             {
-                Util.LogInfo("CharInfo: " + name + " Generation detected: " + generation.ToString());
+                Util.LogDetail("CharInfo: " + name + " Generation detected: " + generation.ToString());
                 Write();
             }
         }
@@ -657,14 +732,16 @@ namespace Reallusion.Import
 
         public bool AnyJsonMaterialPathExists(string path)
         {
-            QuickJSON meshJson = MeshJsonData;
+            QuickJSON objectsJson = ObjectsJsonData;
 
-            foreach (MultiValue mvMesh in meshJson.values)
+            foreach (MultiValue mvMesh in objectsJson.values)
             {
                 if (mvMesh.Type == MultiType.Object)
                 {
                     QuickJSON objJson = mvMesh.ObjectValue;
-                    QuickJSON materialsJson = objJson.GetObjectAtPath("Materials");
+                    string objName = mvMesh.Key;
+                    string materialsPath = ObjectsMaterialsJsonPath(objName);
+                    QuickJSON materialsJson = objectsJson.GetObjectAtPath(materialsPath);
                     if (materialsJson != null)
                     {
                         foreach (MultiValue mvMat in materialsJson.values)
@@ -688,7 +765,7 @@ namespace Reallusion.Import
             {
                 jsonData = null;
                 fbx = null;
-                Util.LogInfo("CharInfo: " + name + " Data Released!");
+                Util.LogDetail("CharInfo: " + name + " Data Released!");
             }
         }
 
@@ -710,7 +787,6 @@ namespace Reallusion.Import
                 }
             }
         }
-
 
         public void Read()
         {
@@ -819,6 +895,105 @@ namespace Reallusion.Import
             writer.Close();
             AssetDatabase.ImportAsset(infoFilepath);            
         }
-    }
 
+        public void CheckRadioGroupFlags()
+        {
+            if (ImporterWindow.Current == null)
+            {
+                Util.LogWarn("The Importer Window is not open - please open the CC/iC importer window before continuing.");
+                return;
+            }            
+
+            if (ShaderFlags.HasFlag(ShaderFeatureFlags.ClothPhysics))
+            {
+                if (!ImporterWindow.Current.MagicaCloth2Available)
+                {
+                    ShaderFlags |= ShaderFeatureFlags.UnityClothPhysics;
+                }
+
+                if (!GroupHasFlagSet(clothGroup))
+                {
+                    ShaderFlags |= ShaderFeatureFlags.UnityClothPhysics;
+                }
+            }
+            else
+            {
+                if (GroupHasFlagSet(clothGroup))
+                {
+                    ShaderFlags |= ShaderFeatureFlags.ClothPhysics;
+                }
+            }
+
+            if (ShaderFlags.HasFlag(ShaderFeatureFlags.HairPhysics))
+            {
+                if (!ImporterWindow.Current.MagicaCloth2Available && !ImporterWindow.Current.DynamicBoneAvailable)
+                {
+                    ShaderFlags |= ShaderFeatureFlags.UnityClothHairPhysics;
+                }
+
+                if (!GroupHasFlagSet(hairGroup))
+                {
+                    ShaderFlags |= ShaderFeatureFlags.UnityClothHairPhysics;
+                }
+            }
+            else
+            {
+                if (GroupHasFlagSet(hairGroup))
+                {
+                    ShaderFlags |= ShaderFeatureFlags.HairPhysics;
+                }
+            }
+        }
+
+        public void EnsureDefaultsAreSet(ShaderFeatureFlags flag)
+        {
+            if (ImporterWindow.Current == null)
+            {
+                Util.LogWarn("The Importer Window is not open - please open the CC/iC importer window before continuing.");
+                return;
+            }
+
+            // if no alternatives are available or the flags are unset - then set unity physics as a default when activating cloth or hair physics
+            switch (flag)
+            {
+                case ShaderFeatureFlags.ClothPhysics:
+                    {
+                        if (!ImporterWindow.Current.MagicaCloth2Available)
+                        {
+                            ShaderFlags |= ShaderFeatureFlags.UnityClothPhysics;
+                        }
+
+                        if (!GroupHasFlagSet(clothGroup))
+                        {
+                            ShaderFlags |= ShaderFeatureFlags.UnityClothPhysics;
+                        }
+
+                        break;
+                    }
+                case ShaderFeatureFlags.HairPhysics:
+                    {
+                        if (!ImporterWindow.Current.MagicaCloth2Available && !ImporterWindow.Current.DynamicBoneAvailable)
+                        {
+                            ShaderFlags |= ShaderFeatureFlags.UnityClothHairPhysics;
+                        }
+
+                        if (!GroupHasFlagSet(hairGroup))
+                        {
+                            ShaderFlags |= ShaderFeatureFlags.UnityClothHairPhysics;
+                        }
+
+                        break;
+                    }
+            }
+        }
+
+        public bool GroupHasFlagSet(ShaderFeatureFlags[] group)
+        {
+            foreach (ShaderFeatureFlags groupFlag in group)
+            {
+                if (ShaderFlags.HasFlag(groupFlag)) return true;
+            }
+            return false;
+        }
+    }
 }

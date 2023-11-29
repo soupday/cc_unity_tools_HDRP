@@ -6,6 +6,7 @@
 #pragma kernel RLHDRPMask
 #pragma kernel RLURPMetallicGloss
 #pragma kernel RLGradient
+#pragma kernel RLMagicaWeightMap
 //
 #pragma kernel RLDiffuseBlend
 #pragma kernel RLMask
@@ -227,6 +228,9 @@ float4 redMaskR;
 float4 greenMaskR;
 float4 blueMaskR;
 float4 alphaMaskR;
+
+TEX2D(WeightMap);
+float threshold;
 
 // Node functions
 //
@@ -489,6 +493,26 @@ void RLGradient(uint3 id : SV_DispatchThreadID)
     float v = (id.x / float(w - 1));
 
     Result[id.xy] = float4(v, v, v, 1);
+}
+
+[numthreads(1, 1, 1)]
+void RLMagicaWeightMap(uint3 id : SV_DispatchThreadID)
+{
+    int w, h;
+    Result.GetDimensions(w, h);
+    float2 uv = GetUV(id.xy);
+    
+    float weight = SAMPLE(WeightMap, uv).r;
+    // float threshold;
+
+    // red = static
+    float r = weight <= threshold ? 1 : 0;
+    // green = can move
+    float g = weight > threshold ? 1 : 0;
+    // blue = obey limit
+    float b = weight >= threshold ? weight : 0;
+
+    Result[id.xy] = float4(r, g, b, 1);
 }
 
 // Generic Bake kernels

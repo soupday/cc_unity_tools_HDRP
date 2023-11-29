@@ -22,6 +22,7 @@ using UnityEngine;
 using System;
 using System.IO;
 using UnityEditor.Animations;
+using System.Reflection;
 
 namespace Reallusion.Import
 {
@@ -119,6 +120,16 @@ namespace Reallusion.Import
             return BaseGeneration.Unknown;
         }
 
+        public static void ForceLegacyBlendshapeNormals(ModelImporter importer)
+        {
+            string pName = "legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes";
+            PropertyInfo prop = importer.GetType().GetProperty(pName, 
+                                                                BindingFlags.Instance | 
+                                                                BindingFlags.NonPublic | 
+                                                                BindingFlags.Public);
+            prop.SetValue(importer, true);
+        }
+
         public static void HumanoidImportSettings(GameObject fbx, ModelImporter importer, CharacterInfo info, Avatar avatar = null)
         {            
             // import normals to avoid mesh smoothing issues            
@@ -129,12 +140,12 @@ namespace Reallusion.Import
             switch(importSet)
             {
                 case 0: // From CC3/4
-                    importer.importNormals = ModelImporterNormals.Calculate;
+                    importer.importNormals = ModelImporterNormals.Import;
                     importer.importBlendShapes = true;
-                    importer.importBlendShapeNormals = ModelImporterNormals.Calculate;                    
+                    importer.importBlendShapeNormals = ModelImporterNormals.Import;                    
                     importer.normalCalculationMode = ModelImporterNormalCalculationMode.AreaAndAngleWeighted;                    
-                    importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.FromAngle;
-                    importer.normalSmoothingAngle = 120f;
+                    importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.PreferSmoothingGroups;
+                    importer.normalSmoothingAngle = 60f;
                     break;
                 case 1: // From Blender
                     importer.importNormals = ModelImporterNormals.Import;
@@ -142,7 +153,7 @@ namespace Reallusion.Import
                     importer.importBlendShapeNormals = ModelImporterNormals.Import;
                     importer.normalCalculationMode = ModelImporterNormalCalculationMode.AreaAndAngleWeighted;                    
                     importer.normalSmoothingSource = ModelImporterNormalSmoothingSource.PreferSmoothingGroups;
-                    importer.normalSmoothingAngle = 120f;
+                    importer.normalSmoothingAngle = 60f;
                     break;                
             }
             importer.importTangents = ModelImporterTangents.CalculateMikk;
@@ -151,6 +162,7 @@ namespace Reallusion.Import
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.keepQuads = false;
             importer.weldVertices = true;
+            ForceLegacyBlendshapeNormals(importer);
 
             importer.autoGenerateAvatarMappingIfUnspecified = true;
             
@@ -705,10 +717,7 @@ namespace Reallusion.Import
         }
 
         public static GameObject CreateLODInstanceFromModel(CharacterInfo info, GameObject modelSource)
-        {
-            GameObject sceneLODInstance = new GameObject();
-            LODGroup lodGroup = sceneLODInstance.AddComponent<LODGroup>();            
-
+        {                        
             Renderer[] renderers = modelSource.transform.GetComponentsInChildren<Renderer>(true);
             int lodLevels = 0;
             foreach (Renderer child in renderers)
@@ -720,43 +729,16 @@ namespace Reallusion.Import
                 }
             }
 
-            if (renderers.Length == lodLevels)
+            bool originalCharacter = renderers.Length != lodLevels;
+
+            lodLevels += 1;
+            LOD[] lods = new LOD[lodLevels];
+            GameObject sceneLODInstance = PrefabUtility.InstantiatePrefab(modelSource) as GameObject;
+            LODGroup lodGroup = sceneLODInstance.AddComponent<LODGroup>();            
+            Renderer[] prefabRenderers = sceneLODInstance.transform.GetComponentsInChildren<Renderer>(true);                
+
+            if (originalCharacter)
             {
-                LOD[] lods = new LOD[lodLevels];
-                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(modelSource) as GameObject;
-                lodPrefabTemp.transform.SetParent(sceneLODInstance.transform, false);
-                Renderer[] prefabRenderers = lodPrefabTemp.transform.GetComponentsInChildren<Renderer>(true);
-
-                for (int i = 0; i < lodLevels; i++) // Does not process LOD0
-                {
-                    string LODLevel = "_LOD" + (i + 1);
-                    for (int j = 0; j < prefabRenderers.Length; j++)
-                    {
-                        if (prefabRenderers[j].name.Contains(LODLevel))
-                        {
-                            Renderer[] rendererLOD = new Renderer[1];
-                            rendererLOD[0] = prefabRenderers[j];
-                            lods[i] = new LOD(1.0F / (i + 2), rendererLOD);
-                        }
-
-                        if (i == lodLevels - 1)
-                        {
-                            lods[i].screenRelativeTransitionHeight = (0.02f);
-                        }
-                    }
-                }
-
-                lodGroup.SetLODs(lods);
-                lodGroup.RecalculateBounds();
-            }
-            else
-            {
-                lodLevels++;
-                LOD[] lods = new LOD[lodLevels];
-                GameObject lodPrefabTemp = PrefabUtility.InstantiatePrefab(modelSource) as GameObject;
-                lodPrefabTemp.transform.SetParent(sceneLODInstance.transform, false);
-                Renderer[] prefabRenderers = lodPrefabTemp.transform.GetComponentsInChildren<Renderer>(true);                
-
                 List<Renderer> renderersListLOD0 = new List<Renderer>();
                 for (int i = 0; i < prefabRenderers.Length; i++) // Process LOD0
                 {
@@ -767,26 +749,29 @@ namespace Reallusion.Import
                 }
                 Renderer[] renderersLOD0 = renderersListLOD0.ToArray();
                 lods[0] = new LOD((1.0F / (2)), renderersLOD0);
-                for (int i = 1; i < lodLevels; i++)
+            }
+
+            for (int i = 1; i < lodLevels; i++) // Does not process LOD0
+            {
+                string LODLevel = "_LOD" + i;
+                for (int j = 0; j < prefabRenderers.Length; j++)
                 {
-                    string LODLevel = "_LOD" + i;
-                    for (int j = 0; j < prefabRenderers.Length; j++)
+                    if (prefabRenderers[j].name.EndsWith(LODLevel))
                     {
-                        if (prefabRenderers[j].name.Contains(LODLevel))
-                        {
-                            Renderer[] rendererLOD = new Renderer[1];
-                            rendererLOD[0] = prefabRenderers[j];
-                            lods[i] = new LOD(1.0F / (i + 2), rendererLOD);
-                        }
-                        if (i == lodLevels - 1)
-                        {
-                            lods[i].screenRelativeTransitionHeight = (0.02f);
-                        }
+                        Renderer[] rendererLOD = new Renderer[1];
+                        rendererLOD[0] = prefabRenderers[j];
+                        lods[i] = new LOD(1.0F / (i + 2), rendererLOD);
+                    }
+
+                    if (i == lodLevels - 1)
+                    {
+                        lods[i].screenRelativeTransitionHeight = 0.02f;
                     }
                 }
-                lodGroup.SetLODs(lods);
-                lodGroup.RecalculateBounds();
-            }            
+            }
+
+            lodGroup.SetLODs(lods);
+            lodGroup.RecalculateBounds();
 
             return sceneLODInstance;
         }
@@ -806,7 +791,7 @@ namespace Reallusion.Import
             foreach (Renderer r in renderers)
             {
                 int index = r.name.LastIndexOf("_LOD");                
-                if (index >= 0 && r.name.Length - index == 5 && char.IsDigit(r.name[r.name.Length - 1]))
+                if (index >= 0 && r.name.Length == index + 5 && char.IsDigit(r.name[r.name.Length - 1]))
                 {
                     // any mesh with a _LOD<N> suffix is a LOD level
                     string levelString = r.name.Substring(r.name.Length - 1, 1);

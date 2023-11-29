@@ -306,6 +306,8 @@ namespace Reallusion.Import
         {
             if (paths.Length > 0)
             {
+                if (string.IsNullOrEmpty(paths[0]))
+                    return this;
                 MultiValue mv = GetValue(paths[0]);
                 if (paths.Length > 1 && mv.Type == MultiType.Object)
                     return mv.ObjectValue.GetObjectAtPath(paths.Skip(1).ToArray());

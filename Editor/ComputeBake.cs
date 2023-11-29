@@ -84,6 +84,18 @@ namespace Reallusion.Import
             importAssets = new List<string>();
         }
 
+        public static string BakeTexturesFolder(string fbxPath, string textureFolderOverride = null)
+        {                        
+            string characterName = Path.GetFileNameWithoutExtension(fbxPath);
+            string fbxFolder = Path.GetDirectoryName(fbxPath);
+            string bakeFolder = Util.CreateFolder(fbxFolder, BAKE_FOLDER);
+            string characterFolder = Util.CreateFolder(bakeFolder, characterName);
+            string texturesFolder = Util.CreateFolder(characterFolder, 
+                string.IsNullOrEmpty(textureFolderOverride) ? TEXTURES_FOLDER : textureFolderOverride);
+
+            return texturesFolder;
+        }
+
         private static Vector2Int GetMaxSize(Texture2D a)
         {
             Vector2Int max = new Vector2Int(MIN_SIZE, MIN_SIZE);
@@ -1972,6 +1984,27 @@ namespace Reallusion.Import
             {
                 int kernel = bakeShader.FindKernel("RLGradient");
                 bakeTarget.Create(bakeShader, kernel);
+                bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
+                return bakeTarget.SaveAndReimport();
+            }
+
+            return null;
+        }
+
+        public static Texture2D BakeMagicaWeightMap(Texture2D physXWeightMap, float threshold, Vector2Int size, string folder, string name)
+        {            
+            ComputeBakeTexture bakeTarget =
+                new ComputeBakeTexture(size, folder, name, Importer.FLAG_ALPHA_DATA | 
+                                                           Importer.FLAG_READ_WRITE | 
+                                                           Importer.FLAG_UNCOMPRESSED);
+
+            ComputeShader bakeShader = Util.FindComputeShader(COMPUTE_SHADER);
+            if (bakeShader)
+            {
+                int kernel = bakeShader.FindKernel("RLMagicaWeightMap");
+                bakeTarget.Create(bakeShader, kernel);
+                bakeShader.SetTexture(kernel, "WeightMap", physXWeightMap);
+                bakeShader.SetFloat("threshold", threshold);
                 bakeShader.Dispatch(kernel, bakeTarget.width, bakeTarget.height, 1);
                 return bakeTarget.SaveAndReimport();
             }

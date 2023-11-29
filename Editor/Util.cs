@@ -17,11 +17,14 @@
  */
 
 using System.IO;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Object = UnityEngine.Object;
 using System.Linq;
+using System.Data.Sql;
 
 namespace Reallusion.Import
 {
@@ -824,7 +827,7 @@ namespace Reallusion.Import
                 // first look for an animation that matches the prefab name
                 found = FindAnimation(f, name, false, true);
 
-                // then look for an animation that matches the base name of the character (before any _LodSomething)
+                // then look for an animation that matches the base name of the character (before any _LodN)
                 if (!found)
                 {
                     int index = name.IndexOf("_Lod", System.StringComparison.InvariantCultureIgnoreCase);
@@ -987,17 +990,7 @@ namespace Reallusion.Import
                         if (prefabObj.transform.localScale != source.transform.localScale) resetSca = true;
                         if (resetPos) prefabObj.transform.localPosition = source.transform.localPosition;
                         if (resetRot) prefabObj.transform.localRotation = source.transform.localRotation;
-                        if (resetSca) prefabObj.transform.localScale = source.transform.localScale;
-                        /*
-                        if (resetPos || resetRot || resetSca) 
-                        { 
-                            string report = "Resetting " + prefabObj.name + ":";
-                            if (resetPos) report += " Position";
-                            if (resetRot) report += " Rotation";
-                            if (resetSca) report += " Scale";
-                            Debug.Log(report);
-                        }
-                        */
+                        if (resetSca) prefabObj.transform.localScale = source.transform.localScale;                        
                     }                    
 
                     for (int i = 0; i < prefabObj.transform.childCount; i++)
@@ -1142,7 +1135,11 @@ namespace Reallusion.Import
             return false;
         }
 
-
+        private static Editor MakeEditor(string guid)
+        {
+            Object o = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(Object));
+            return Editor.CreateEditor(o);
+        }
 
         const string prefsFailString = "xxxxxxxxxxxxxx";
         const char delimiterChar = ',';
@@ -1153,10 +1150,10 @@ namespace Reallusion.Import
             if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(assetInstanceID, out string guid, out long localid))
             {
                 string outString = assetInstanceID.ToString() + delimiterChar + guid.ToString() + delimiterChar + localid.ToString();
-                LogInfo("Instance ID: " + assetInstanceID.ToString());
-                LogInfo("GUID: " + guid.ToString());
-                LogInfo("localID: " + localid.ToString());
-                LogInfo("outString: " + outString);
+                LogDetail("Instance ID: " + assetInstanceID.ToString());
+                LogDetail("GUID: " + guid.ToString());
+                LogDetail("localID: " + localid.ToString());
+                LogDetail("outString: " + outString);
 
                 EditorPrefs.SetString(editorPrefsKey, outString);
                 return true;
@@ -1195,8 +1192,8 @@ namespace Reallusion.Import
             {
                 string[] split = assetString.Split(new char[] { delimiterChar });
 
-                LogInfo("assetString: " + assetString);
-                LogInfo("split count: " + split.Length);                
+                LogDetail("assetString: " + assetString);
+                LogDetail("split count: " + split.Length);                
 
                 if (split.Length == 3)
                 {
@@ -1204,22 +1201,22 @@ namespace Reallusion.Import
                     string guid = split[1];
                     long localid = long.Parse(split[2]);
 
-                    LogInfo("Found Instance ID: " + assetInstanceID.ToString());
-                    LogInfo("Found GUID: " + guid.ToString());
-                    LogInfo("Found localID: " + localid.ToString());
+                    LogDetail("Found Instance ID: " + assetInstanceID.ToString());
+                    LogDetail("Found GUID: " + guid.ToString());
+                    LogDetail("Found localID: " + localid.ToString());
 
                     Object[] potentials = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GUIDToAssetPath(guid));
 
-                    LogInfo(potentials.Length + " Sub objects found for GUID: " + guid);
+                    LogDetail(potentials.Length + " Sub objects found for GUID: " + guid);
                     if (potentials.Length == 0)
                     {
                         Object potentialAsset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(Object));
                         if (potentialAsset != null)
                         {
-                            LogInfo(potentialAsset.GetType().Name);
+                            LogDetail(potentialAsset.GetType().Name);
                             if (potentialAsset.GetType() == typeof(T))
                             {
-                                LogInfo("Successfully found single asset: " + potentialAsset.GetType().Name + " Named: " + potentialAsset.name);
+                                LogDetail("Successfully found single asset: " + potentialAsset.GetType().Name + " Named: " + potentialAsset.name);
                                 asset = potentialAsset;
                                 return true;
                             }
@@ -1235,7 +1232,7 @@ namespace Reallusion.Import
                                 {
                                     if (potential.GetType() == typeof(T))
                                     {
-                                        LogInfo("Successfully found embedded asset: " + potential.GetType().Name + " Named: " + potential.name);
+                                        LogDetail("Successfully found embedded asset: " + potential.GetType().Name + " Named: " + potential.name);
                                         asset = potential;
                                         return true;
                                     }
@@ -1333,6 +1330,14 @@ namespace Reallusion.Import
             }
         }
 
+        public static void LogDetail(string message)
+        {
+            if (LOG_LEVEL >= 3)
+            {
+                Debug.Log(message);
+            }
+        }
+
         public static void LogWarn(string message)
         {
             if (LOG_LEVEL >= 1)
@@ -1352,6 +1357,27 @@ namespace Reallusion.Import
         public static void LogAlways(string message)
         {
             Debug.Log(message);
+        }
+
+
+        public static void TransferSkinnedMeshes(GameObject fromPrefab, GameObject toPrefab)
+        {
+            GameObject fromInstanceRoot = GameObject.Instantiate(fromPrefab);
+            GameObject toInstanceRoot = GameObject.Instantiate(toPrefab);
+            Transform[] toTransforms = toInstanceRoot.GetComponentsInChildren<Transform>();
+            SkinnedMeshRenderer[] renderers = fromInstanceRoot.GetComponentsInChildren<SkinnedMeshRenderer>();
+            foreach (SkinnedMeshRenderer smr in renderers)
+            {
+                GameObject newMesh = GameObject.Instantiate(smr.gameObject);
+                newMesh.transform.SetParent(toInstanceRoot.transform, true);
+                SkinnedMeshRenderer newSMR = newMesh.GetComponent<SkinnedMeshRenderer>();
+                for (int i = 0; i < newSMR.bones.Length; i++)
+                {
+                    string boneName = smr.bones[i].name;
+                    Transform toBone = System.Array.Find(toTransforms, t => t.name.Equals(boneName));
+                    if (toBone) newSMR.bones[i] = toBone;
+                }                
+            }
         }
     }    
 }

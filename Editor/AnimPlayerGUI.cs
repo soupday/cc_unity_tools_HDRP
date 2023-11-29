@@ -49,7 +49,7 @@ namespace Reallusion.Import
         {
             if (scenePrefab)
             {
-                scenePrefab = Util.TryResetScenePrefab(scenePrefab);                
+                //scenePrefab = Util.TryResetScenePrefab(scenePrefab);                
                 SetCharacter(scenePrefab);
             }
 
@@ -84,11 +84,11 @@ namespace Reallusion.Import
                 EditorApplication.update -= UpdateCallback;
                 EditorApplication.playModeStateChanged -= PlayStateChangeCallback;
 
-                if (CharacterAnimator)       
-                {
-                    GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator.gameObject);
-                    Util.TryResetScenePrefab(scenePrefab);
-                }
+                //if (CharacterAnimator)       
+                ///{
+                    //GameObject scenePrefab = Util.GetScenePrefabInstanceRoot(CharacterAnimator.gameObject);
+                    //Util.TryResetScenePrefab(scenePrefab);
+                //}
 
 #if SCENEVIEW_OVERLAY_COMPATIBLE
                 //2021.2.0a17+          
@@ -121,7 +121,7 @@ namespace Reallusion.Import
         public static void SetCharacter(GameObject scenePrefab)
         {
             if (scenePrefab)
-                Util.LogInfo("scenePrefab.name: " + scenePrefab.name + " " + PrefabUtility.IsPartOfPrefabInstance(scenePrefab));            
+                Util.LogDetail("scenePrefab.name: " + scenePrefab.name + " " + PrefabUtility.IsPartOfPrefabInstance(scenePrefab));            
 
             if (!scenePrefab && WindowManager.IsPreviewScene)
                 scenePrefab = WindowManager.GetPreviewScene().GetPreviewCharacter();
@@ -246,12 +246,10 @@ namespace Reallusion.Import
         // GUIStyles
         private static Styles guiStyles;
 
-        [SerializeField]
-        private static List<BoneItem> boneItemList;
-        [SerializeField]
-        public static bool isTracking = false;
-        [SerializeField]
-        private static GameObject lastTracked;
+        [SerializeField] private static List<BoneItem> boneItemList;
+        [SerializeField] public static bool isTracking = false;
+        [SerializeField] public static GameObject lastTracked;
+        [SerializeField] public static bool trackingPermitted = true;
         private static string boneNotFound = "not found";
 
         // ----------------------------------------------------------------------------
@@ -286,7 +284,7 @@ namespace Reallusion.Import
         {
             controllerPath = dirString + controllerName + ".controller";
 
-            Util.LogInfo("Creating Temporary file " + controllerPath);
+            Util.LogDetail("Creating Temporary file " + controllerPath);
             AnimatorController a = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
             a.name = controllerName;
             // play mode parameters
@@ -373,7 +371,7 @@ namespace Reallusion.Import
 
             foreach (var v in overrides)
             {
-                Util.LogInfo("Overrides: " + " Key: " + v.Key + " Value: " + v.Value);
+                Util.LogDetail("Overrides: " + " Key: " + v.Key + " Value: " + v.Value);
             }
 
             overrides[0] = new KeyValuePair<AnimationClip, AnimationClip>(overrides[0].Key, WorkingClip);
@@ -390,7 +388,7 @@ namespace Reallusion.Import
 
             foreach (var v in overrides)
             {
-                Util.LogInfo("Overrides: " + " Key: " + v.Key + " Value: " + v.Value);
+                Util.LogDetail("Overrides: " + " Key: " + v.Key + " Value: " + v.Value);
             }
 
             overrides[0] = new KeyValuePair<AnimationClip, AnimationClip>(overrides[0].Key, WorkingClip);
@@ -439,7 +437,7 @@ namespace Reallusion.Import
 
             if (!characterPrefab) return;
 
-            Util.LogInfo(("Attempting to reset: " + characterPrefab.name));            
+            Util.LogDetail(("Attempting to reset: " + characterPrefab.name));            
 
             GameObject basePrefab = PrefabUtility.GetCorrespondingObjectFromSource(characterPrefab);
 
@@ -448,36 +446,36 @@ namespace Reallusion.Import
                 if (true) //(PrefabUtility.IsAnyPrefabInstanceRoot(basePrefab))
                 {
                     string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
-                    Util.LogInfo((basePrefab.name + "Prefab instance root found: " + prefabPath));
+                    Util.LogDetail((basePrefab.name + "Prefab instance root found: " + prefabPath));
 
-                    Util.LogInfo("Loaded Prefab: " + basePrefab.name);
+                    Util.LogDetail("Loaded Prefab: " + basePrefab.name);
                     Animator baseAnimator = basePrefab.GetComponent<Animator>();
                     if (!baseAnimator) baseAnimator = basePrefab.GetComponentInChildren<Animator>();
                     if (baseAnimator != null)
                     {
-                        Util.LogInfo("Prefab Animator: " + baseAnimator.name);
+                        Util.LogDetail("Prefab Animator: " + baseAnimator.name);
                         if (baseAnimator.runtimeAnimatorController)
                         {
-                            Util.LogInfo("Prefab Animator Controller: " + baseAnimator.runtimeAnimatorController.name);
+                            Util.LogDetail("Prefab Animator Controller: " + baseAnimator.runtimeAnimatorController.name);
                             string controllerpath = AssetDatabase.GetAssetPath(baseAnimator.runtimeAnimatorController);
-                            Util.LogInfo("Prefab Animator Controller Path: " + controllerpath);
+                            Util.LogDetail("Prefab Animator Controller Path: " + controllerpath);
                             AnimatorController baseController = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerpath);
 
                             if (CharacterAnimator.runtimeAnimatorController != null)
                             {
                                 // ensure the created override controller is the one on the animator
                                 // to avoid wiping user generated controller (it will have to be a disk asset - but nevertheless)
-                                Util.LogInfo("Current controller on character: " + CharacterAnimator.runtimeAnimatorController.name);
+                                Util.LogDetail("Current controller on character: " + CharacterAnimator.runtimeAnimatorController.name);
                                 if (CharacterAnimator.runtimeAnimatorController.GetType() == typeof(AnimatorOverrideController) && CharacterAnimator.runtimeAnimatorController.name == overrideName)
                                 {
-                                    Util.LogInfo("Created override controller found: can reset");
+                                    Util.LogDetail("Created override controller found: can reset");
                                     CharacterAnimator.runtimeAnimatorController = baseController;
                                 }
                             }
                         }
                         else
                         {
-                            Util.LogInfo("NO Prefab Animator Controller");
+                            Util.LogDetail("NO Prefab Animator Controller");
                             CharacterAnimator.runtimeAnimatorController = null;
                         }
                     }
@@ -495,7 +493,7 @@ namespace Reallusion.Import
                 {
                     //if (showMessages) 
 
-                    Util.LogInfo("Override controller: " + controllerPath + " exists -- removing");
+                    Util.LogDetail("Override controller: " + controllerPath + " exists -- removing");
                     AssetDatabase.DeleteAsset(controllerPath);
                 }
             }
@@ -602,6 +600,7 @@ namespace Reallusion.Import
                 if (!CheckTackingStatus())
                     CancelBoneTracking(false); //object focus lost - arrange ui to reflect that, but dont fight with the scene camera
 
+                EditorGUI.BeginDisabledGroup(!trackingPermitted);
                 if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("Camera Gizmo").image, "Select individual bone to track with the scene camera."), guiStyles.settingsButton, GUILayout.Width(24f), GUILayout.Height(24f)))
                 {
                     GenerateBoneMenu();
@@ -614,6 +613,7 @@ namespace Reallusion.Import
                 {
                     CancelBoneTracking(true); //tracking deliberately cancelled - leave scene camera in last position with last tracked object still selected
                 }
+                EditorGUI.EndDisabledGroup();
                 EditorGUI.EndDisabledGroup();
                 GUILayout.FlexibleSpace();
 
@@ -725,7 +725,20 @@ namespace Reallusion.Import
                 EditorGUI.EndDisabledGroup();
 
                 GUILayout.Space(10f);
-                GUILayout.Label(new GUIContent(EditorGUIUtility.IconContent("d_UnityEditor.GameView").image, "Controls for 'Play Mode'"), guiStyles.playIconStyle, GUILayout.Width(24f), GUILayout.Height(24f));
+                //GUILayout.Label(new GUIContent(EditorGUIUtility.IconContent("d_UnityEditor.GameView").image, "Controls for 'Play Mode'"), guiStyles.playIconStyle, GUILayout.Width(24f), GUILayout.Height(24f));
+                                
+                if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_ViewToolOrbit On").image, "Select the character root."), EditorStyles.toolbarButton))
+                {
+                    if (ColliderManagerEditor.EditMode)
+                    {
+                        Selection.activeObject = null;
+                    }
+                    else
+                    {
+                        Selection.activeObject = selectedAnimator.gameObject;
+                    }
+                        
+                }
 
                 Texture bigPlayButton = EditorApplication.isPlaying ? EditorGUIUtility.IconContent("preAudioPlayOn").image : EditorGUIUtility.IconContent("preAudioPlayOff").image;
                 string playToggleTxt = EditorApplication.isPlaying ? "Exit 'Play Mode'." : "Enter 'Play Mode' and focus on the scene view window. This is to be used to evaluate play mode physics whilst allowing visualization of objects such as colliders.";
@@ -1140,6 +1153,34 @@ namespace Reallusion.Import
             scene.FrameSelected(true, true);
             scene.FrameSelected(true, true);
             scene.Repaint();
+        }
+
+        public static void ForbidTracking() 
+        {
+            // this is called by the collider manager editor script to use its own tracking while editing colliders
+            // this avoids having an objected selected since its control handles will be visible and cause problems
+            
+            if (isTracking)
+            {
+                isTracking = false;
+                Selection.activeObject = null;
+            }
+
+            trackingPermitted = false;
+
+            if (boneItemList != null)
+            {
+                foreach (BoneItem boneItem in boneItemList)
+                {
+                    if (boneItem.selected)
+                        boneItem.selected = false;
+                }
+            }
+        }
+
+        public static void AllowTracking()
+        {
+            trackingPermitted = true;
         }
 
         public static void ReEstablishTracking(string humanBoneName)
