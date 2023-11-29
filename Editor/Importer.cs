@@ -2485,7 +2485,11 @@ namespace Reallusion.Import
             WrinkleManager wm = obj.AddComponent<WrinkleManager>();
             wm.headMaterial = mat;
             wm.skinnedMeshRenderer = smr;
-            float overallWeight = matJson.GetFloatValue("Wrinkle/WrinkleOverallWeight");
+            float overallWeight = 1;
+            if (matJson.PathExists("Wrinkle/WrinkleOverallWeight"))
+            {
+                overallWeight = matJson.GetFloatValue("Wrinkle/WrinkleOverallWeight");
+            }
             wm.BuildConfig(BuildWrinkleProps(matJson), overallWeight);
         }
 
