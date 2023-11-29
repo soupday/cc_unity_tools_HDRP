@@ -1,6 +1,15 @@
 Changelog
 =========
 
+### 1.6.0
+- Fixes to root bones and physics components in LOD combiner.
+- Support for Magica Cloth 2 Physics (if present) - Cloth simulation and spring bones.
+- Collider Manager rebuild to support magica cloth
+    - Collider editor now uses direct on screen manipulation of colliders.
+- Support for Json Schema 1.2
+    - A bug in CC4 can cause the character to export with this schema.
+- Run time wrinkle material fix.
+
 ### 1.5.2
 - Animation Retargeter fixes.
     - AnimationMode removed.

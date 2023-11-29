@@ -470,14 +470,11 @@ namespace Reallusion.Import
             foreach (EditorCurveBinding binding in curveBindings)
             {
                 Keyframe[] testKeys = AnimationUtility.GetEditorCurve(clip, binding).keys;
-                //Debug.Log(Math.Round(testKeys[0].value, 3) + " -- " + Math.Round(testKeys[testKeys.Length - 1].value, 3) + " --- " + (Math.Round(testKeys[0].value, 3) != Math.Round(testKeys[testKeys.Length - 1].value, 3)));
                 if (Math.Round(testKeys[0].value, 2) != Math.Round(testKeys[testKeys.Length - 1].value, 2))
                 {
                     canLoop = false;
-                    //Debug.Log(binding.propertyName + " 0: " + testKeys[0].value + " last: " + testKeys[testKeys.Length - 1].value);
                 }
             }
-            //Debug.Log("Animation Clip " + clip.name + (canLoop ? " can loop" : " can NOT loop"));
             return canLoop;
         }
 
@@ -528,7 +525,6 @@ namespace Reallusion.Import
             AnimPlayerGUI.SelectOverrideAnimationWithoutReset(swapClip, AnimPlayerGUI.animatorOverrideController);
             AnimPlayerGUI.UpdateAnimator();
         }
-
 
         static void ApplyPose(int mode)
         {
@@ -1325,14 +1321,11 @@ namespace Reallusion.Import
             return assetPath;
         }
 
-        
-
-
         static AnimationClip WriteAnimationToAssetDatabase(AnimationClip workingClip, string assetPath, bool originalSettings = false)
         {            
             if (string.IsNullOrEmpty(assetPath)) return null;
 
-            Util.LogInfo("Writing Asset: " + assetPath);
+            Util.LogDetail("Writing Asset: " + assetPath);
 
             var output = Object.Instantiate(workingClip);  // clone so that workingClip isn't locked to an on-disk asset
             AnimationClip outputClip = output as AnimationClip;
@@ -1367,12 +1360,12 @@ namespace Reallusion.Import
             if (asset == null)
             {
                 // New
-                Util.LogInfo("Writing New Asset: " + assetPath);
+                Util.LogDetail("Writing New Asset: " + assetPath);
                 AssetDatabase.CreateAsset(outputClip, assetPath);
             }
             else
             {
-                Util.LogInfo("Updating Existing Asset: " + assetPath);
+                Util.LogDetail("Updating Existing Asset: " + assetPath);
                 outputClip.name = asset.name;
                 EditorUtility.CopySerialized(outputClip, asset);
                 AssetDatabase.SaveAssets();

@@ -773,7 +773,6 @@ namespace Reallusion.Import
             if (templateMaterial)
             {
                 Util.LogInfo("    Using template material: " + templateMaterial.name);
-                //Debug.Log("Copying from Material template: " + templateMaterial.name);
                 if (templateMaterial.shader && templateMaterial.shader != remapMaterial.shader)
                     remapMaterial.shader = templateMaterial.shader;
                 remapMaterial.CopyPropertiesFromMaterial(templateMaterial);

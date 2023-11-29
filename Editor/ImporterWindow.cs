@@ -1139,6 +1139,7 @@ namespace Reallusion.Import
             string label = "Log Everything";
             if (Util.LOG_LEVEL == 0) label = "Log Errors Only";
             if (Util.LOG_LEVEL == 1) label = "Log Warnings and Errors";
+            if (Util.LOG_LEVEL == 2) label = "Log Messages";
             if (EditorGUILayout.DropdownButton(
                 content: new GUIContent(label),
                 focusType: FocusType.Passive))
@@ -1146,7 +1147,8 @@ namespace Reallusion.Import
                 GenericMenu menu = new GenericMenu();
                 menu.AddItem(new GUIContent("Log Errors Only"), Util.LOG_LEVEL == 0, LogOptionSelected, 0);
                 menu.AddItem(new GUIContent("Log Warnings and Errors"), Util.LOG_LEVEL == 1, LogOptionSelected, 1);
-                menu.AddItem(new GUIContent("Log Everything"), Util.LOG_LEVEL == 2, LogOptionSelected, 2);
+                menu.AddItem(new GUIContent("Log Messages"), Util.LOG_LEVEL == 2, LogOptionSelected, 2);
+                menu.AddItem(new GUIContent("Log Everything"), Util.LOG_LEVEL == 3, LogOptionSelected, 3);
                 menu.ShowAsContext();
             }
             GUILayout.Space(ROW_SPACE);

@@ -1293,7 +1293,6 @@ namespace Reallusion.Import
                 {
                     if (t.FullName.iContains("ContainerWindow"))
                     {
-                        //Debug.Log("Type: " + t.FullName + " Found In: " + assembly.FullName);
                         var showModeField = t.GetField("m_ShowMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                         var positionProperty = t.GetProperty("position", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                         if (showModeField != null && positionProperty != null)

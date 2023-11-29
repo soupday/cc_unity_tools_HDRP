@@ -333,7 +333,6 @@ namespace Reallusion.Import
 
                             Vector3 deltaSum = Vector3.zero;
                             for (int d = 0; d < srcMesh.vertexCount; d++) deltaSum += deltaVerts[d];
-                            //Debug.Log(name + ": deltaSum = " + deltaSum.ToString());
 
                             if (deltaSum.magnitude > 0.1f)
                                 dstMesh.AddBlendShapeFrame(name, frameWeight, deltaVerts, deltaNormals, deltaTangents);

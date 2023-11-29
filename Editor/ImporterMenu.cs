@@ -16,7 +16,7 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define SOUPDEV
+//#define SOUPDEV
 
 using UnityEngine;
 using UnityEditor;
