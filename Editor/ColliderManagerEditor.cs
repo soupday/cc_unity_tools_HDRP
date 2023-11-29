@@ -216,40 +216,51 @@ namespace Reallusion.Import
                                     float h = c.height;
                                     float r = c.radius;      
                                     
-                                    Vector3 hDir, rDir;
+                                    Vector3 hDir, rDir, r2Dir;
                                     if (c.axis == ColliderManager.ColliderAxis.y)
                                     {
                                         hDir = c.transform.up;
                                         rDir = c.transform.forward;
+                                        r2Dir = c.transform.right;
                                     }
                                     else if (c.axis == ColliderManager.ColliderAxis.z)
                                     {
                                         hDir = c.transform.forward;
                                         rDir = c.transform.up;
+                                        r2Dir = c.transform.right;
                                     }
                                     else // x
                                     {
                                         hDir = c.transform.right;
                                         rDir = c.transform.forward;
+                                        r2Dir = c.transform.up;
                                     }
                                     hDir *= h * 0.5f;
                                     rDir *= r;
+                                    r2Dir *= r;
                                     Vector3 hDelta = SceneView.lastActiveSceneView.camera.WorldToViewportPoint(c.transform.position + hDir) -
                                                      SceneView.lastActiveSceneView.camera.WorldToViewportPoint(c.transform.position);
                                     Vector3 rDelta = SceneView.lastActiveSceneView.camera.WorldToViewportPoint(c.transform.position + rDir) -
                                                      SceneView.lastActiveSceneView.camera.WorldToViewportPoint(c.transform.position);
-                                    
+                                    Vector3 r2Delta = SceneView.lastActiveSceneView.camera.WorldToViewportPoint(c.transform.position + r2Dir) -
+                                                      SceneView.lastActiveSceneView.camera.WorldToViewportPoint(c.transform.position);
+                                    if (Mathf.Abs(r2Delta.x) > Mathf.Abs(rDelta.x))
+                                    {
+                                        rDelta = r2Delta;
+                                        rDir = r2Dir;
+                                    }
+
                                     float hSign = 1f;
                                     float rSign = 1f;                                    
                                     if (Mathf.Abs(hDelta.x) > Mathf.Abs(hDelta.y)) hSign = -Mathf.Sign(hDelta.x);
                                     else hSign = -Mathf.Sign(hDelta.y);
                                     if (Mathf.Abs(rDelta.x) > Mathf.Abs(rDelta.y)) rSign = Mathf.Sign(rDelta.x);
                                     else rSign = Mathf.Sign(rDelta.y);
-
-                                    h = Handles.ScaleValueHandle(h,
-                                                                c.transform.position - (hDir * hSign),
-                                                                c.transform.rotation * Quaternion.Euler(90, 0, 0),                                                                
-                                                                0.075f, Handles.DotHandleCap, 1);
+                                    Vector3 hPos = c.transform.position - (hDir * hSign);
+                                    h = Handles.ScaleValueHandle(h, hPos,
+                                                                 c.transform.rotation * Quaternion.Euler(90, 0, 0),
+                                                                 HandleUtility.GetHandleSize(hPos),
+                                                                 Handles.DotHandleCap, 1);                                    
 
                                     Handles.DrawWireArc(c.transform.position,
                                                         c.transform.up,
@@ -257,10 +268,11 @@ namespace Reallusion.Import
                                                         180,
                                                         r);
 
-                                    r = Handles.ScaleValueHandle(r,
-                                                                c.transform.position + (rDir * rSign),
-                                                                c.transform.rotation,
-                                                                0.075f, Handles.DotHandleCap, 1);
+                                    Vector3 rPos = c.transform.position + (rDir * rSign);
+                                    r = Handles.ScaleValueHandle(r, rPos,                                                                
+                                                                 c.transform.rotation,
+                                                                 HandleUtility.GetHandleSize(rPos),
+                                                                 Handles.DotHandleCap, 1);
 
                                     if (EditorGUI.EndChangeCheck())
                                     {
@@ -1023,7 +1035,7 @@ namespace Reallusion.Import
                 framingBounds = new Bounds(pos, Vector3.one * mult);
 
             SceneView.lastActiveSceneView.Frame(framingBounds, false);
-            SceneView.lastActiveSceneView.rotation = Quaternion.Euler(180f, 0f, 180f);
+            //SceneView.lastActiveSceneView.rotation = Quaternion.Euler(180f, 0f, 180f);
         }
 
         private ColliderManager.AbstractCapsuleCollider DetermineMirrorImageCollider(ColliderManager.AbstractCapsuleCollider collider)
