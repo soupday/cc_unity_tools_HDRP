@@ -671,6 +671,7 @@ namespace Reallusion.Import
 
         [HideInInspector] public Collider[] colliders;
         [HideInInspector] public GameObject[] clothMeshes;
+        [HideInInspector] public GameObject[] magicaClothMeshes;
         [HideInInspector] public ColliderSettings[] settings;
         [HideInInspector] public string characterGUID;
         

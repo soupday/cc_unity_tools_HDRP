@@ -32,14 +32,16 @@ namespace Reallusion.Import
         { 
             NoFeatures = 0, 
             Tessellation = 1, 
-            ClothPhysics = 2, 
-            HairPhysics = 4,
-            SpringBoneHair = 8, 
+            ClothPhysics = 2, // group flag to allow selection between UnityClothPhysics & MagicaCloth
+            HairPhysics = 4, // group flag to allow selection between UnityClothHairPhysics & MagicaClothHairPhysics
+            SpringBoneHair = 8,  // dynamic bone springbones
             WrinkleMaps = 16,
-            MagicaCloth = 32,
-            MagicaBone = 64,
-            UnityClothPhysics = 128,
-            UnityClothHairPhysics = 256
+            MagicaCloth = 32, // Magica Mesh Cloth for clothing items
+            MagicaBone = 64, // Magica Bone Cloth for hair
+            UnityClothPhysics = 128, // Unity Cloth for clothing items 
+            UnityClothHairPhysics = 256, // Unity Cloth for hair items
+            MagicaClothHairPhysics = 512, // Magica Mesh Cloth for hair items
+            SpringBonePhysics = 1024  // group flag to allow selection between SpringBoneHair & MagicaBone
         }
 
         // 'radio groups' of mutually exclusive settings
@@ -52,6 +54,11 @@ namespace Reallusion.Import
         public static ShaderFeatureFlags[] hairGroup =
         {
             ShaderFeatureFlags.UnityClothHairPhysics, // UnityEngine.Cloth instance for hair objects
+            ShaderFeatureFlags.MagicaClothHairPhysics // Magica Cloth 2 'Mesh Cloth' for hair objects
+        };
+
+        public static ShaderFeatureFlags[] springGroup =
+        {
             ShaderFeatureFlags.SpringBoneHair, // DynamicBone springbones
             ShaderFeatureFlags.MagicaBone // MagicaCloth2 instance set to 'Bone Cloth' mode for springbones
         };
@@ -980,6 +987,25 @@ namespace Reallusion.Import
                         if (!GroupHasFlagSet(hairGroup))
                         {
                             ShaderFlags |= ShaderFeatureFlags.UnityClothHairPhysics;
+                        }
+
+                        break;
+                    }
+                case ShaderFeatureFlags.SpringBonePhysics:
+                    {
+                        bool dyn = ImporterWindow.Current.DynamicBoneAvailable;
+                        bool mag = ImporterWindow.Current.MagicaCloth2Available;
+
+                        if (dyn && mag)
+                        {
+                            ShaderFlags |= ShaderFeatureFlags.MagicaBone;
+                        }
+                        else
+                        {
+                            if (mag)
+                                ShaderFlags |= ShaderFeatureFlags.MagicaBone; 
+                            else if (dyn)
+                                ShaderFlags |= ShaderFeatureFlags.SpringBoneHair;
                         }
 
                         break;

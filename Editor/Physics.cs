@@ -183,6 +183,75 @@ namespace Reallusion.Import
             }
         }
 
+        // global values for magica mesh cloth reduction settings (for both hair and cloth)
+
+        // Magica Cloth 2 - default poly reduction settings for proxy mesh
+        public const float CLOTHSIMPLEDISTANCE_DEFAULT = 0.06f;
+        public const float CLOTHSHAPEDISTANCE_DEFAULT = 0.06f;
+        public const float HAIRSIMPLEDISTANCE_DEFAULT = 0.12f;
+        public const float HAIRSHAPEDISTANCE_DEFAULT = 0.12f;
+
+        public static float CLOTHSIMPLEDISTANCE
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Physics_Magica_Cloth_Simple_Distance"))
+                    return EditorPrefs.GetFloat("RL_Physics_Magica_Cloth_Simple_Distance");
+                return CLOTHSIMPLEDISTANCE_DEFAULT;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Physics_Magica_Cloth_Simple_Distance", value);
+            }
+        }
+
+        public static float CLOTHSHAPEDISTANCE
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Physics_Magica_Cloth_Shape_Distance"))
+                    return EditorPrefs.GetFloat("RL_Physics_Magica_Cloth_Shape_Distance");
+                return CLOTHSHAPEDISTANCE_DEFAULT;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Physics_Magica_Cloth_Shape_Distance", value);
+            }
+        }
+
+        public static float HAIRSIMPLEDISTANCE
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Physics_Magica_Hair_Simple_Distance"))
+                    return EditorPrefs.GetFloat("RL_Physics_Magica_Hair_Simple_Distance");
+                return HAIRSIMPLEDISTANCE_DEFAULT;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Physics_Magica_Hair_Simple_Distance", value);
+            }
+        }
+
+        public static float HAIRSHAPEDISTANCE
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Physics_Magica_Hair_Shape_Distance"))
+                    return EditorPrefs.GetFloat("RL_Physics_Magica_Hair_Shape_Distance");
+                return HAIRSHAPEDISTANCE_DEFAULT;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Physics_Magica_Hair_Shape_Distance", value);
+            }
+        }
+
+
         // bones that can have spring bone colliders
         private List<string> GetVaildSpringBoneColliders()
         {
@@ -205,10 +274,12 @@ namespace Reallusion.Import
         private bool addUnityHairPhysics = false;
         private bool addHairSpringBones = false;
         private bool addMagicaHairSpringBones = false;
+        private bool addMagicaClothHairPhysics = false;
 
         private List<CollisionShapeData> boneColliders;
         private List<SoftPhysicsData> softPhysics;
         private List<GameObject> clothMeshes;
+        private List<GameObject> magicaClothMeshes;
 
         private string characterName;
         private string fbxFolder;
@@ -226,6 +297,7 @@ namespace Reallusion.Import
             boneColliders = new List<CollisionShapeData>();
             softPhysics = new List<SoftPhysicsData>();
             clothMeshes = new List<GameObject>();
+            magicaClothMeshes = new List<GameObject>();
             modelScale = 0.01f;
             fbxFolder = info.folder;
             characterGUID = info.guid;
@@ -239,6 +311,7 @@ namespace Reallusion.Import
             addUnityHairPhysics = (info.ShaderFlags & CharacterInfo.ShaderFeatureFlags.UnityClothHairPhysics) > 0;
             addHairSpringBones = (info.ShaderFlags & CharacterInfo.ShaderFeatureFlags.SpringBoneHair) > 0;
             addMagicaHairSpringBones = (info.ShaderFlags & CharacterInfo.ShaderFeatureFlags.MagicaBone) > 0;
+            addMagicaClothHairPhysics = (info.ShaderFlags & CharacterInfo.ShaderFeatureFlags.MagicaClothHairPhysics) > 0;
             string fbmFolder = Path.Combine(fbxFolder, characterName + ".fbm");
             string texFolder = Path.Combine(fbxFolder, "textures", characterName);
             textureFolders = new List<string>() { fbmFolder, texFolder };
@@ -567,6 +640,12 @@ namespace Reallusion.Import
                     GameObject.DestroyImmediate(colliderManagerInstance);
                 }
 
+                var prefabNavigationInstance = g.GetComponent<PrefabNavigation>();
+                if (prefabNavigationInstance != null)
+                {
+                    GameObject.DestroyImmediate(prefabNavigationInstance);
+                }
+
                 if (magicaClothType != null)
                 {
                     var magicaClothInstance = g.GetComponent(magicaClothType);
@@ -706,11 +785,15 @@ namespace Reallusion.Import
         private void AddCloth()
         {
             clothMeshes.Clear();
+            magicaClothMeshes.Clear();
 
             PrepWeightMaps();
 
-            if (MagicaCloth2IsAvailable() && addMagicaClothPhysics) AddMagicaMeshCloth();
-            
+            if (MagicaCloth2IsAvailable() && (addMagicaClothPhysics || addMagicaClothHairPhysics))
+            {
+                AddMagicaMeshCloth();
+            }
+
             if (addUnityClothPhysics || addUnityHairPhysics)
             {
                 List<string> hairMeshNames = FindHairMeshes();
@@ -913,7 +996,7 @@ namespace Reallusion.Import
         private void AddMagicaMeshCloth()
         {
             // construct a single instance of magica cloth
-            var cloth = AddMagicaClothInstance(0);
+            //var cloth = AddMagicaClothInstance(0);
 
             // add relevant skinned mesh renderers along with converted weight maps
             // add a list of colliders that can interact with the cloth instance
@@ -927,17 +1010,45 @@ namespace Reallusion.Import
                     foreach (SoftPhysicsData data in softPhysics)
                     {
                         string meshName = obj.name;
+                        if (meshName.iContains("_Extracted"))
+                        {
+                            meshName = meshName.Remove(meshName.IndexOf("_Extracted"));
+                        }
+
                         // omit hair for the moment
-                        if (!data.isHair)
+                        if (!data.isHair && addMagicaClothPhysics)
                         {
                             if (meshName == data.meshName)
                             {
+                                obj.AddComponent<PrefabNavigation>();
+                                var cloth = AddMagicaClothInstance(0, obj);
                                 DoMagicaCloth(cloth, obj, data);
+                                SetMagicaParameters(cloth);
+                                magicaClothMeshes.Add(obj);
+                            }
+                        }
+
+                        if (data.isHair && addMagicaClothHairPhysics)
+                        {
+                            if (meshName == data.meshName)
+                            {
+                                obj.AddComponent<PrefabNavigation>();
+                                var cloth = AddMagicaClothInstance(0, obj);
+                                DoMagicaCloth(cloth, obj, data);
+                                SetMagicaParameters(cloth);
+                                magicaClothMeshes.Add(obj);
                             }
                         }
                     }
                 }
 
+                ColliderManager colliderManager = prefabInstance.GetComponent<ColliderManager>();
+                if (colliderManager)
+                {
+                    colliderManager.magicaClothMeshes = magicaClothMeshes.ToArray();
+                }
+
+                /*
                 IList magicaColliderList = FetchMagicaColliders(prefabInstance.gameObject);
 
                 var serializedDataProperty = cloth.GetType().GetProperty("SerializeData");
@@ -974,7 +1085,48 @@ namespace Reallusion.Import
 
                 MethodInfo setParameterChange = cloth.GetType().GetMethod("SetParameterChange");
                 setParameterChange.Invoke(cloth, new object[] { });
+                */
             }
+        }
+
+        private void SetMagicaParameters(Object cloth)
+        {
+            IList magicaColliderList = FetchMagicaColliders(prefabInstance.gameObject);
+
+            var serializedDataProperty = cloth.GetType().GetProperty("SerializeData");
+            var serializedData = serializedDataProperty.GetValue(cloth);
+
+            var particleRadius = serializedData.GetType().GetField("radius");
+            if (particleRadius != null)
+            {
+                var particleRadiusData = particleRadius.GetValue(serializedData);
+                var particleRadiusValueField = particleRadiusData.GetType().GetField("value");
+                if (particleRadiusValueField != null)
+                {
+                    particleRadiusValueField.SetValue(particleRadiusData, 0.01f); // set the particle radius -- helps avoid the collider pushing out the cloth
+                }
+            }
+
+            var collisionConstraint = serializedData.GetType().GetField("colliderCollisionConstraint");
+            if (collisionConstraint != null)
+            {
+                var collisionConstraintData = collisionConstraint.GetValue(serializedData);
+                if (collisionConstraintData != null)
+                {
+                    var colliderListField = collisionConstraintData.GetType().GetField("colliderList");
+                    if (colliderListField != null)
+                    {
+                        var actualColliderList = colliderListField.GetValue(collisionConstraintData);
+                        if (actualColliderList != null)
+                        {
+                            colliderListField.SetValue(collisionConstraintData, magicaColliderList);
+                        }
+                    }
+                }
+            }
+
+            MethodInfo setParameterChange = cloth.GetType().GetMethod("SetParameterChange");
+            setParameterChange.Invoke(cloth, new object[] { });
         }
 
         private void DoMagicaCloth(Object cloth, GameObject obj, SoftPhysicsData data)
@@ -1010,8 +1162,8 @@ namespace Reallusion.Import
                         if (reductionSettingField != null)
                         {
                             var reductionsettingFieldValue = reductionSettingField.GetValue(serializedData);
-                            SetTypeField(reductionsettingFieldValue.GetType(), reductionsettingFieldValue, "simpleDistance", 0.06f);
-                            SetTypeField(reductionsettingFieldValue.GetType(), reductionsettingFieldValue, "shapeDistance", 0.06f);
+                            SetTypeField(reductionsettingFieldValue.GetType(), reductionsettingFieldValue, "simpleDistance", data.isHair ? HAIRSIMPLEDISTANCE : CLOTHSIMPLEDISTANCE);
+                            SetTypeField(reductionsettingFieldValue.GetType(), reductionsettingFieldValue, "shapeDistance", data.isHair ? HAIRSHAPEDISTANCE : CLOTHSHAPEDISTANCE);
                         }
 
                         var paintModeField = serializedData.GetType().GetField("paintMode");
@@ -1148,6 +1300,45 @@ namespace Reallusion.Import
             }
             return null;
         }
+
+        private Object AddMagicaClothInstance(int typeValue, GameObject g)
+        {
+            // enum ClothProcess.ClothType MeshCloth = 0, BoneCloth = 1
+
+            CharacterInfo currentChar = ImporterWindow.Current.Character;
+            string fbxPath = currentChar.path;
+            ModelImporter importer = (ModelImporter)AssetImporter.GetAtPath(fbxPath);
+            if (importer != null)
+            {
+                if (!importer.isReadable)
+                {
+                    importer.isReadable = true;
+                    importer.SaveAndReimport();
+                }
+            }
+
+            //GameObject g = prefabInstance.gameObject;
+            Type clothType = GetTypeInAssemblies("MagicaCloth2.MagicaCloth");
+            if (clothType != null)
+            {
+                // add cloth component
+                var existingCloth = g.GetComponent(clothType);
+                if (existingCloth)
+                {
+                    if (GetMagicaClothType(existingCloth) == typeValue)
+                    {
+                        GameObject.DestroyImmediate(existingCloth); // if its an existing instance of same type then destroy it
+                    }
+                }
+
+                var cloth = g.AddComponent(clothType);
+
+                bool clothSet = SetMagicaClothType(cloth, typeValue);
+                return cloth;
+            }
+            return null;
+        }
+
 
         private int GetMagicaClothType(Object cloth)
         {

@@ -393,7 +393,12 @@ namespace Reallusion.Import
 
             if (colliderManager.clothMeshes != null && colliderManager.clothMeshes.Length > 0)
             {
-                DrawClothShortcuts();
+                DrawUnityClothShortcuts();
+            }
+
+            if (colliderManager.magicaClothMeshes != null && colliderManager.magicaClothMeshes.Length > 0)
+            {
+                DrawMagicaClothShortcuts();
             }
 
             if (resetAfterGUI)
@@ -935,10 +940,10 @@ namespace Reallusion.Import
             }
         }
 
-        public void DrawClothShortcuts()
+        public void DrawUnityClothShortcuts()
         {
             GUILayout.Space(10f);
-            GUILayout.Label("Available Cloth Meshes", EditorStyles.boldLabel);
+            GUILayout.Label("Available Unity Cloth Meshes", EditorStyles.boldLabel);
             GUILayout.Space(10f);
 
             GUI.backgroundColor = editMode ? Color.Lerp(baseBackground, Color.green, 0.9f) : baseBackground;
@@ -948,7 +953,7 @@ namespace Reallusion.Import
 
             GUILayout.BeginVertical();
 
-            GUI.backgroundColor = Color.Lerp(baseBackground, Color.green, 0.25f);
+            GUI.backgroundColor = Color.Lerp(baseBackground, Color.blue, 0.20f);
             if (colliderManager.clothMeshes != null)
             {
                 foreach (GameObject clothMesh in colliderManager.clothMeshes)
@@ -968,7 +973,43 @@ namespace Reallusion.Import
             GUILayout.EndVertical();
             GUILayout.Space(6f);
             GUILayout.EndVertical();// (EditorStyles.helpBox);
-        }        
+        }
+
+        public void DrawMagicaClothShortcuts()
+        {
+            GUILayout.Space(10f);
+            GUILayout.Label("Available Magica Cloth Meshes", EditorStyles.boldLabel);
+            GUILayout.Space(10f);
+
+            GUI.backgroundColor = editMode ? Color.Lerp(baseBackground, Color.green, 0.9f) : baseBackground;
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUI.backgroundColor = baseBackground;
+            GUILayout.Space(10f);
+
+            GUILayout.BeginVertical();
+
+            GUI.backgroundColor = Color.Lerp(baseBackground, Color.green, 0.25f);
+            if (colliderManager.magicaClothMeshes != null)
+            {
+                foreach (GameObject clothMesh in colliderManager.magicaClothMeshes)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(clothMesh.name, GUILayout.Width(160f)))
+                    {
+                        Selection.activeObject = clothMesh;
+                    }
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndHorizontal();
+                    GUILayout.Space(4f);
+                }
+            }
+            GUI.backgroundColor = baseBackground;
+            GUILayout.EndVertical();
+            GUILayout.Space(6f);
+            GUILayout.EndVertical();// (EditorStyles.helpBox);
+        }
+
 
         // see: https://forum.unity.com/threads/drawing-capsule-gizmo.354634/#post-4100557
         public static void DrawWireCapsule(Vector3 _pos, Quaternion _rot, float _radius, float _height, ColliderManager.ColliderAxis _axis, Color _color = default(Color))
