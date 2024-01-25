@@ -16,7 +16,6 @@
  * along with CC_Unity_Tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using Codice.Client.Common.FsNodeReaders;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -53,9 +52,6 @@ namespace Reallusion.Import
         public float weight;        
         public bool enabled = false;
         public float min = 0f, max = 1f;
-        // DGG
-        public bool hasCachedRule { get; set; }
-        public WrinkleRule cachedRule { get; set; }
 
         public WrinkleRuleSet(Dictionary<string, WrinkleProp> props,
                                string rn, float min = 0f, float max = 1f)
@@ -199,20 +195,6 @@ namespace Reallusion.Import
                 { "head_wm3_normal_head_wm3_browRaiseCorrection_R", new WrinkleRule(MaskSet.setBCC, MaskSide.none, 1) },
 
             };
-        }
-
-        // DGG
-        private WrinkleRule LookupWrinkleRule(WrinkleRuleSet wm)
-        {
-            if (!wm.hasCachedRule)
-            {
-                if (wrinkleRules.TryGetValue(wm.ruleName, out WrinkleRule rule))
-                {
-                    wm.cachedRule = rule;
-                    wm.hasCachedRule = true;                    
-                }                
-            }
-            return wm.cachedRule;
         }
 
         public void BuildConfig(Dictionary<string, WrinkleProp> props = null, float overallWeight = 1.0f)
@@ -626,19 +608,14 @@ namespace Reallusion.Import
 
                     foreach (WrinkleRuleSet wm in wc.ruleSets)
                     {
-                        LookupWrinkleRule(wm);
-                        /*// DGG - inlined
-                        if (!wm.hasCachedRule)
+                        if (wrinkleRules.TryGetValue(wm.ruleName, out WrinkleRule rule))
                         {
-                            if (wrinkleRules.TryGetValue(wm.ruleName, out WrinkleRule rule))
-                            {
-                                wm.cachedRule = rule;
-                                wm.hasCachedRule = true;
-                            }
-                        }                        
-                        */
-                        wm.enabled = wm.hasCachedRule;
-
+                            wm.enabled = true;
+                        }
+                        else
+                        {
+                            wm.enabled = false;
+                        }
                     }
                 }                
             }
@@ -722,23 +699,7 @@ namespace Reallusion.Import
                                 if (wm.enabled)
                                 {
                                     float weight = Mathf.Lerp(wm.min, wm.max, blendShapeWeight) * wm.weight;
-
-                                    WrinkleRule rule = LookupWrinkleRule(wm);
-                                    
-                                    /*// DGG - inlined
-                                    WrinkleRule rule;
-                                    if (!wm.hasCachedRule)
-                                    {
-                                        if (wrinkleRules.TryGetValue(wm.ruleName, out rule))
-                                        {
-                                            wm.cachedRule = rule;
-                                            wm.hasCachedRule = true;
-                                        }
-                                    }
-                                    else 
-                                    {
-                                        rule = wm.cachedRule;
-                                    } */                                   
+                                    WrinkleRule rule = wrinkleRules[wm.ruleName];
 
                                     int il = ((int)rule.mask) - 1;
                                     int ir = il + 5;

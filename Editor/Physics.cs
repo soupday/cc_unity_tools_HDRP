@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Collections;
 using Object = UnityEngine.Object;
 using UnityEngine.Diagnostics;
+using static Reallusion.Import.ColliderManager;
 
 namespace Reallusion.Import
 {
@@ -190,6 +191,7 @@ namespace Reallusion.Import
         public const float CLOTHSHAPEDISTANCE_DEFAULT = 0.06f;
         public const float HAIRSIMPLEDISTANCE_DEFAULT = 0.12f;
         public const float HAIRSHAPEDISTANCE_DEFAULT = 0.12f;
+        public const float MAGICA_WEIGHTMAP_THRESHOLD_PC_DEFAULT = 0.5f;
 
         public static float CLOTHSIMPLEDISTANCE
         {
@@ -251,6 +253,21 @@ namespace Reallusion.Import
             }
         }
 
+        public static float MAGICA_WEIGHTMAP_THRESHOLD_PC
+        {
+            get
+            {
+                if (EditorPrefs.HasKey("RL_Physics_Magica_WeightMap_Threshold_Percent"))
+                    return EditorPrefs.GetFloat("RL_Physics_Magica_WeightMap_Threshold_Percent");
+                return 0.5f;
+            }
+
+            set
+            {
+                EditorPrefs.SetFloat("RL_Physics_Magica_WeightMap_Threshold_Percent", value);
+            }
+        }
+
 
         // bones that can have spring bone colliders
         private List<string> GetVaildSpringBoneColliders()
@@ -278,8 +295,9 @@ namespace Reallusion.Import
 
         private List<CollisionShapeData> boneColliders;
         private List<SoftPhysicsData> softPhysics;
-        private List<GameObject> clothMeshes;
-        private List<GameObject> magicaClothMeshes;
+        //private List<GameObject> clothMeshes;
+        private List<ColliderManager.EnableStatusGameObject> clothMeshes;
+        private List<ColliderManager.EnableStatusGameObject> magicaClothMeshes;
 
         private string characterName;
         private string fbxFolder;
@@ -296,8 +314,10 @@ namespace Reallusion.Import
             this.prefabInstance = prefabInstance;
             boneColliders = new List<CollisionShapeData>();
             softPhysics = new List<SoftPhysicsData>();
-            clothMeshes = new List<GameObject>();
-            magicaClothMeshes = new List<GameObject>();
+            //clothMeshes = new List<GameObject>();
+            //magicaClothMeshes = new List<GameObject>();
+            clothMeshes = new List<ColliderManager.EnableStatusGameObject>();
+            magicaClothMeshes = new List<ColliderManager.EnableStatusGameObject>();
             modelScale = 0.01f;
             fbxFolder = info.folder;
             characterGUID = info.guid;
@@ -796,48 +816,7 @@ namespace Reallusion.Import
 
             if (addUnityClothPhysics || addUnityHairPhysics)
             {
-                List<string> hairMeshNames = FindHairMeshes();
-                Transform[] transforms = prefabInstance.GetComponentsInChildren<Transform>();
-                foreach (Transform t in transforms)
-                {
-                    GameObject obj = t.gameObject;                    
-                    foreach (SoftPhysicsData data in softPhysics)
-                    {
-                        string meshName = obj.name;
-                        if (meshName.iContains("_Extracted"))
-                        {
-                            meshName = meshName.Remove(meshName.IndexOf("_Extracted"));
-                        }
-
-                        if (meshName == data.meshName)
-                        {
-                            if (CanAddPhysics(meshName, hairMeshNames))
-                            {                                
-                                if (!data.isHair && addUnityClothPhysics)
-                                {
-                                    DoCloth(obj, meshName);
-                                    clothMeshes.Add(obj);
-                                }
-                                
-                                if (data.isHair && addUnityHairPhysics)
-                                {
-                                    DoCloth(obj, meshName);
-                                    clothMeshes.Add(obj);
-                                }
-                            }
-                            else
-                            {
-                                RemoveCloth(obj);
-                            }
-                        }
-                    }
-                }
-
-                ColliderManager colliderManager = prefabInstance.GetComponent<ColliderManager>();
-                if (colliderManager)
-                {
-                    colliderManager.clothMeshes = clothMeshes.ToArray();
-                }
+                AddUnityClothInstance();
             }
         }
 
@@ -911,95 +890,153 @@ namespace Reallusion.Import
             }
         }
 
-        private void DoCloth(GameObject clothTarget, string meshName)
-        {            
-            SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
-            if (!renderer) return;
-            Mesh mesh = renderer.sharedMesh;
-            if (!mesh) return;
-
-            List<WeightMapper.PhysicsSettings> settingsList = new List<WeightMapper.PhysicsSettings>();
-
-            bool hasPhysics = false;
-
-            for (int i = 0; i < mesh.subMeshCount; i++)//
+        private void AddUnityClothInstance()
+        {
+            List<string> hairMeshNames = FindHairMeshes();
+            Transform[] transforms = prefabInstance.GetComponentsInChildren<Transform>();
+            foreach (Transform t in transforms)
             {
-                Material mat = renderer.sharedMaterials[i];
-
-                if (!mat) continue;
-                string sourceName = mat.name;
-                if (sourceName.iContains("_2nd_Pass")) continue;
-                if (sourceName.iContains("_1st_Pass"))
-                {
-                    sourceName = sourceName.Remove(sourceName.IndexOf("_1st_Pass"));
-                }
-
+                GameObject obj = t.gameObject;
                 foreach (SoftPhysicsData data in softPhysics)
-                {                    
-                    if (data.materialName == sourceName &&
-                        data.meshName == meshName &&
-                        CanAddPhysics(data))
+                {
+                    string meshName = obj.name;
+                    if (meshName.iContains("_Extracted"))
                     {
-                        WeightMapper.PhysicsSettings settings = new WeightMapper.PhysicsSettings();
+                        meshName = meshName.Remove(meshName.IndexOf("_Extracted"));
+                    }
 
-                        settings.name = sourceName;
-                        settings.activate = data.activate;
-                        settings.gravity = data.gravity;
-                        settings.selfCollision = Importer.USE_SELF_COLLISION ? data.selfCollision : false;
-                        settings.softRigidCollision = data.softRigidCollision;
-                        settings.softRigidMargin = data.softRigidMargin;
-
-                        if (data.isHair)
+                    if (meshName == data.meshName)
+                    {
+                        if (CanAddPhysics(meshName, hairMeshNames))
                         {
-                            // hair meshes degenerate quickly if less than full stiffness 
-                            // (too dense, too many verts?)
-                            settings.bending = 0f;
-                            settings.stretch = 0f;
+                            if (!data.isHair && addUnityClothPhysics)
+                            {
+                                DoCloth(obj, meshName);
+                                //clothMeshes.Add(obj);
+                                Cloth cloth = obj.GetComponent<Cloth>();
+                                if (cloth != null)
+                                {
+                                    cloth.enabled = data.activate;
+                                    if (!data.activate)
+                                        Debug.Log("Physics setup for " + meshName + " added. Unity Cloth component is currently set to inactive (using settings from Character Creator export).");
+                                    clothMeshes.Add(new EnableStatusGameObject(obj, data.activate));
+                                }
+                            }
+
+                            if (data.isHair && addUnityHairPhysics)
+                            {
+                                DoCloth(obj, meshName);
+                                //clothMeshes.Add(obj);
+                                Cloth cloth = obj.GetComponent<Cloth>();
+                                if (cloth != null)
+                                {
+                                    cloth.enabled = data.activate;
+                                    if (!data.activate)
+                                        Debug.Log("Physics setup for " + meshName + " added. Unity Cloth component is currently set to inactive (using settings from Character Creator export).");
+                                    clothMeshes.Add(new EnableStatusGameObject(obj, data.activate));
+                                }
+                            }
                         }
                         else
                         {
-                            settings.bending = data.bending;
-                            settings.stretch = data.stretch;
+                            RemoveCloth(obj);
                         }
-
-                        settings.solverFrequency = data.solverFrequency;
-                        settings.stiffnessFrequency = data.stiffnessFrequency;
-                        settings.mass = data.mass;
-                        settings.friction = data.friction;
-                        settings.damping = data.damping;
-                        settings.selfMargin = data.selfMargin;
-                        settings.maxDistance = 20f;
-                        settings.maxPenetration = 10f;
-                        settings.colliderThreshold = PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD;
-
-                        Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
-                        if (!weightMap) weightMap = Texture2D.blackTexture;
-                        settings.weightMap = weightMap;
-
-                        settingsList.Add(settings);
-                        hasPhysics = true;
                     }
                 }
             }
 
-            if (hasPhysics)
+            ColliderManager colliderManager = prefabInstance.GetComponent<ColliderManager>();
+            if (colliderManager)
             {
-                WeightMapper mapper = clothTarget.GetComponent<WeightMapper>();
-                if (!mapper) mapper = clothTarget.AddComponent<WeightMapper>();
-
-                mapper.settings = settingsList.ToArray();
-                mapper.characterGUID = characterGUID;
-                mapper.ApplyWeightMap();
+                colliderManager.clothMeshes = clothMeshes.ToArray();
             }
         }
 
+
+       private void DoCloth(GameObject clothTarget, string meshName)
+       {            
+           SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
+           if (!renderer) return;
+           Mesh mesh = renderer.sharedMesh;
+           if (!mesh) return;
+
+           List<WeightMapper.PhysicsSettings> settingsList = new List<WeightMapper.PhysicsSettings>();
+
+           bool hasPhysics = false;
+
+           for (int i = 0; i < mesh.subMeshCount; i++)//
+           {
+               Material mat = renderer.sharedMaterials[i];
+
+               if (!mat) continue;
+               string sourceName = mat.name;
+               if (sourceName.iContains("_2nd_Pass")) continue;
+               if (sourceName.iContains("_1st_Pass"))
+               {
+                   sourceName = sourceName.Remove(sourceName.IndexOf("_1st_Pass"));
+               }
+
+               foreach (SoftPhysicsData data in softPhysics)
+               {                    
+                   if (data.materialName == sourceName &&
+                       data.meshName == meshName &&
+                       CanAddPhysics(data))
+                   {
+                       WeightMapper.PhysicsSettings settings = new WeightMapper.PhysicsSettings();
+
+                       settings.name = sourceName;
+                       settings.activate = data.activate;
+                       settings.gravity = data.gravity;
+                       settings.selfCollision = Importer.USE_SELF_COLLISION ? data.selfCollision : false;
+                       settings.softRigidCollision = data.softRigidCollision;
+                       settings.softRigidMargin = data.softRigidMargin;
+
+                       if (data.isHair)
+                       {
+                           // hair meshes degenerate quickly if less than full stiffness 
+                           // (too dense, too many verts?)
+                           settings.bending = 0f;
+                           settings.stretch = 0f;
+                       }
+                       else
+                       {
+                           settings.bending = data.bending;
+                           settings.stretch = data.stretch;
+                       }
+
+                       settings.solverFrequency = data.solverFrequency;
+                       settings.stiffnessFrequency = data.stiffnessFrequency;
+                       settings.mass = data.mass;
+                       settings.friction = data.friction;
+                       settings.damping = data.damping;
+                       settings.selfMargin = data.selfMargin;
+                       settings.maxDistance = 20f;
+                       settings.maxPenetration = 10f;
+                       settings.colliderThreshold = PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD;
+
+                       Texture2D weightMap = GetTextureFrom(data.weightMapPath, data.materialName, "WeightMap", out string texName, true);
+                       if (!weightMap) weightMap = Texture2D.blackTexture;
+                       settings.weightMap = weightMap;
+
+                       settingsList.Add(settings);
+                       hasPhysics = true;
+                   }
+               }
+           }
+
+           if (hasPhysics)
+           {
+               WeightMapper mapper = clothTarget.GetComponent<WeightMapper>();
+               if (!mapper) mapper = clothTarget.AddComponent<WeightMapper>();
+
+               mapper.settings = settingsList.ToArray();
+               mapper.characterGUID = characterGUID;
+               mapper.ApplyWeightMap();
+           }
+       }
+
         private void AddMagicaMeshCloth()
         {
-            // construct a single instance of magica cloth
-            //var cloth = AddMagicaClothInstance(0);
-
-            // add relevant skinned mesh renderers along with converted weight maps
-            // add a list of colliders that can interact with the cloth instance
             Type clothType = GetTypeInAssemblies("MagicaCloth2.MagicaCloth");
             if (clothType != null)
             {
@@ -1015,28 +1052,41 @@ namespace Reallusion.Import
                             meshName = meshName.Remove(meshName.IndexOf("_Extracted"));
                         }
 
-                        // omit hair for the moment
                         if (!data.isHair && addMagicaClothPhysics)
                         {
-                            if (meshName == data.meshName)
+                            if (CanAddMagicaCloth(obj, meshName))
                             {
-                                obj.AddComponent<PrefabNavigation>();
-                                var cloth = AddMagicaClothInstance(0, obj);
-                                DoMagicaCloth(cloth, obj, data);
-                                SetMagicaParameters(cloth);
-                                magicaClothMeshes.Add(obj);
+                                if (meshName == data.meshName)
+                                {
+                                    obj.AddComponent<PrefabNavigation>();
+                                    var cloth = AddMagicaClothInstance(0, obj); // typeValue 0 == create magic mesh cloth 
+                                    SetComponentEnabled(cloth, data.activate);
+                                    if (!data.activate)
+                                        Debug.Log("Physics setup for " + meshName + " added. Magica Cloth component is currently set to inactive (using settings from Character Creator export).");
+                                    DoMagicaCloth(cloth, obj, data);
+                                    SetMagicaParameters(cloth);
+                                    //magicaClothMeshes.Add(obj);
+                                    magicaClothMeshes.Add(new EnableStatusGameObject(obj, GetMagicaComponentEnableStatus(obj)));
+                                }
                             }
                         }
 
                         if (data.isHair && addMagicaClothHairPhysics)
                         {
-                            if (meshName == data.meshName)
+                            if (CanAddMagicaCloth(obj, meshName))
                             {
-                                obj.AddComponent<PrefabNavigation>();
-                                var cloth = AddMagicaClothInstance(0, obj);
-                                DoMagicaCloth(cloth, obj, data);
-                                SetMagicaParameters(cloth);
-                                magicaClothMeshes.Add(obj);
+                                if (meshName == data.meshName)
+                                {
+                                    obj.AddComponent<PrefabNavigation>();
+                                    var cloth = AddMagicaClothInstance(0, obj);
+                                    SetComponentEnabled(cloth, data.activate);
+                                    if (!data.activate)
+                                        Debug.Log("Physics setup for " + meshName + " added. Magica Cloth component is currently set to inactive (using settings from Character Creator export).");
+                                    DoMagicaCloth(cloth, obj, data);
+                                    SetMagicaParameters(cloth);
+                                    //magicaClothMeshes.Add(obj);
+                                    magicaClothMeshes.Add(new EnableStatusGameObject(obj, GetMagicaComponentEnableStatus(obj)));
+                                }
                             }
                         }
                     }
@@ -1047,46 +1097,40 @@ namespace Reallusion.Import
                 {
                     colliderManager.magicaClothMeshes = magicaClothMeshes.ToArray();
                 }
-
-                /*
-                IList magicaColliderList = FetchMagicaColliders(prefabInstance.gameObject);
-
-                var serializedDataProperty = cloth.GetType().GetProperty("SerializeData");
-                var serializedData = serializedDataProperty.GetValue(cloth);
-
-                var particleRadius = serializedData.GetType().GetField("radius");
-                if (particleRadius != null)
-                {
-                    var particleRadiusData = particleRadius.GetValue(serializedData);
-                    var particleRadiusValueField = particleRadiusData.GetType().GetField("value");
-                    if (particleRadiusValueField != null)
-                    {
-                        particleRadiusValueField.SetValue(particleRadiusData, 0.01f); // set the particle radius -- helps avoid the collider pushing out the cloth
-                    }
-                }
-
-                var collisionConstraint = serializedData.GetType().GetField("colliderCollisionConstraint");
-                if (collisionConstraint != null)
-                {
-                    var collisionConstraintData = collisionConstraint.GetValue(serializedData);
-                    if (collisionConstraintData != null)
-                    {
-                        var colliderListField = collisionConstraintData.GetType().GetField("colliderList");
-                        if (colliderListField != null)
-                        {
-                            var actualColliderList = colliderListField.GetValue(collisionConstraintData);
-                            if (actualColliderList != null)
-                            {
-                                colliderListField.SetValue(collisionConstraintData, magicaColliderList);
-                            }
-                        }
-                    }
-                }
-
-                MethodInfo setParameterChange = cloth.GetType().GetMethod("SetParameterChange");
-                setParameterChange.Invoke(cloth, new object[] { });
-                */
             }
+        }
+
+        private bool CanAddMagicaCloth(GameObject clothTarget, string meshName)  // adds an equivalent check to the 1st/2nd pass logic in DoCloth()
+        {
+            SkinnedMeshRenderer renderer = clothTarget.GetComponent<SkinnedMeshRenderer>();
+            if (!renderer) return false;
+            Mesh mesh = renderer.sharedMesh;
+            if (!mesh) return false;
+
+            bool canAddMagicaCloth = false;
+
+            for (int i = 0; i < mesh.subMeshCount; i++)
+            {
+                Material mat = renderer.sharedMaterials[i];
+
+                if (!mat) continue;
+                string sourceName = mat.name;
+                if (sourceName.iContains("_2nd_Pass")) continue;
+                if (sourceName.iContains("_1st_Pass"))
+                {
+                    sourceName = sourceName.Remove(sourceName.IndexOf("_1st_Pass"));
+                }
+
+                foreach (SoftPhysicsData data in softPhysics)
+                {
+                    if (data.materialName == sourceName && data.meshName == meshName && CanAddPhysics(data))
+                    {
+                        canAddMagicaCloth = true;
+                    }
+                }
+            }
+
+            return canAddMagicaCloth;
         }
 
         private void SetMagicaParameters(Object cloth)
@@ -1103,10 +1147,11 @@ namespace Reallusion.Import
                 var particleRadiusValueField = particleRadiusData.GetType().GetField("value");
                 if (particleRadiusValueField != null)
                 {
-                    particleRadiusValueField.SetValue(particleRadiusData, 0.01f); // set the particle radius -- helps avoid the collider pushing out the cloth
+                    particleRadiusValueField.SetValue(particleRadiusData, 0.005f); // set the particle radius -- helps avoid the collider pushing out the cloth
                 }
             }
 
+            // add a list of colliders that can interact with the cloth instance
             var collisionConstraint = serializedData.GetType().GetField("colliderCollisionConstraint");
             if (collisionConstraint != null)
             {
@@ -1129,9 +1174,66 @@ namespace Reallusion.Import
             setParameterChange.Invoke(cloth, new object[] { });
         }
 
+        private static Component GetMagicaClothComponentRef(GameObject gameObject)
+        {
+            Type clothType = GetTypeInAssemblies("MagicaCloth2.MagicaCloth");
+            if (clothType != null)
+            {
+                return gameObject.GetComponent(clothType);
+            }
+            return null;
+        }
+
+        public static bool GetComponentEnabled(Object component)
+        {
+            var enabledProperty = component.GetType().GetProperty("enabled");
+            if (enabledProperty != null)
+            {
+
+                bool isEnabled = (bool)enabledProperty.GetValue(component);
+                return isEnabled;
+            }
+            return false;
+        }        
+
+        private static void SetComponentEnabled(Object component, bool enabled)
+        {
+            /*
+            foreach (PropertyInfo prop in component.GetType().GetProperties())
+            {
+                Debug.Log(prop.Name);
+            }
+            */
+
+            var enabledProperty = component.GetType().GetProperty("enabled");
+            if (enabledProperty != null)
+            {
+                enabledProperty.SetValue(component, enabled);
+
+                bool isEnabled = (bool)enabledProperty.GetValue(component);
+                //Debug.Log(component.name + " enabled status: " + isEnabled);                
+            }
+        }
+
+        public static bool GetMagicaComponentEnableStatus(GameObject gameObject)
+        {
+            var comp = GetMagicaClothComponentRef(gameObject);
+            if (comp != null)
+                return GetComponentEnabled(comp);
+            else return false;
+        }
+
+        public static void SetMagicaComponentEnableStatus(GameObject gameObject, bool enabled)
+        {
+            var comp = GetMagicaClothComponentRef(gameObject);
+            if (comp != null)
+                SetComponentEnabled(comp, enabled);
+        }
+
         private void DoMagicaCloth(Object cloth, GameObject obj, SoftPhysicsData data)
         {
             // needs a skinned mesh renderer, a weightmap and a list of magica colliders
+            // add relevant skinned mesh renderers along with converted weight maps
             var serializedDataProperty = cloth.GetType().GetProperty("SerializeData");
             var serializedData = serializedDataProperty.GetValue(cloth);
 
@@ -1913,7 +2015,7 @@ namespace Reallusion.Import
                 Texture2D physXWeightMap = Util.FindTexture(folders, "physXWeightMapTest");
                 string folder = ComputeBake.BakeTexturesFolder(currentCharacter.path);
                 string name = Path.GetFileNameWithoutExtension(data.weightMapPath) + "_" + MAGICA_WEIGHT_SIZE + "_magica";// "magicaWeightMapTest";
-                float threshold = 0f; // 1f / 255f;
+                float threshold = MAGICA_WEIGHTMAP_THRESHOLD_PC / 100f; //0f; // 1f / 255f;
                 Vector2Int size = new Vector2Int(MAGICA_WEIGHT_SIZE, MAGICA_WEIGHT_SIZE);
                 // should create the texture in: <current character folder>/Baked/<character name>/Textures
                 lowOutputMap = ComputeBake.BakeMagicaWeightMap(weightMap, threshold, size, folder, name);
