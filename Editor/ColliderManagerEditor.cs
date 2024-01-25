@@ -51,7 +51,8 @@ namespace Reallusion.Import
         [SerializeField] private bool activeEdit = false;
         public static bool EditMode => Current != null && Current.editMode;
         public static ColliderManagerEditor Current { get; private set; }
-        
+
+        private bool enableStatusDirty = false;
 
         public static string CURRENT_COLLIDER_NAME
         {
@@ -73,11 +74,13 @@ namespace Reallusion.Import
             Current = this;
             colliderManager = (ColliderManager)target;
             InitIcons();
+            UpdateClothShortcutList();
+            //SyncEnableStatus();
         }
 
         private void OnDestroy()
         {
-            if (Current == this) Current = null;            
+            if (Current == this) Current = null;
         }
 
         private void OnDisable()
@@ -119,7 +122,7 @@ namespace Reallusion.Import
             //magicaIcon = Util.FindTexture(new string[] { "Assets", "Packages" }, "icon-collider");
             //if (magicaIcon == null)
             //{
-                magicaIcon = (Texture2D)EditorGUIUtility.IconContent("CircleCollider2D Icon").image;
+            magicaIcon = (Texture2D)EditorGUIUtility.IconContent("CircleCollider2D Icon").image;
             //}
             colliderManager.currentEditType = ColliderManager.ColliderType.Unknown;
             colliderManager.magicaCloth2Available = Physics.MagicaCloth2IsAvailable();
@@ -214,8 +217,8 @@ namespace Reallusion.Import
                                     Handles.color = Color.green;
                                     EditorGUI.BeginChangeCheck();
                                     float h = c.height;
-                                    float r = c.radius;      
-                                    
+                                    float r = c.radius;
+
                                     Vector3 hDir, rDir, r2Dir;
                                     if (c.axis == ColliderManager.ColliderAxis.y)
                                     {
@@ -251,7 +254,7 @@ namespace Reallusion.Import
                                     }
 
                                     float hSign = 1f;
-                                    float rSign = 1f;                                    
+                                    float rSign = 1f;
                                     if (Mathf.Abs(hDelta.x) > Mathf.Abs(hDelta.y)) hSign = -Mathf.Sign(hDelta.x);
                                     else hSign = -Mathf.Sign(hDelta.y);
                                     if (Mathf.Abs(rDelta.x) > Mathf.Abs(rDelta.y)) rSign = Mathf.Sign(rDelta.x);
@@ -260,7 +263,7 @@ namespace Reallusion.Import
                                     h = Handles.ScaleValueHandle(h, hPos,
                                                                  c.transform.rotation * Quaternion.Euler(90, 0, 0),
                                                                  HandleUtility.GetHandleSize(hPos),
-                                                                 Handles.DotHandleCap, 1);                                    
+                                                                 Handles.DotHandleCap, 1);
 
                                     Handles.DrawWireArc(c.transform.position,
                                                         c.transform.up,
@@ -269,7 +272,7 @@ namespace Reallusion.Import
                                                         r);
 
                                     Vector3 rPos = c.transform.position + (rDir * rSign);
-                                    r = Handles.ScaleValueHandle(r, rPos,                                                                
+                                    r = Handles.ScaleValueHandle(r, rPos,
                                                                  c.transform.rotation,
                                                                  HandleUtility.GetHandleSize(rPos),
                                                                  Handles.DotHandleCap, 1);
@@ -326,12 +329,12 @@ namespace Reallusion.Import
 
             if (e.type == EventType.KeyUp)
             {
-                
+
             }
 
             if (e.type == EventType.KeyDown)
             {
-                
+
             }
         }
 
@@ -347,17 +350,17 @@ namespace Reallusion.Import
                         }
                         break;
                     }
-                    case Tool.Rotate:
+                case Tool.Rotate:
                     {
                         if (colliderManager.manipulator != ColliderManager.ManipulatorType.rotation)
                         {
                             colliderManager.manipulator = ColliderManager.ManipulatorType.rotation;
                         }
                         break;
-                        }
-                    case Tool.Scale:
+                    }
+                case Tool.Scale:
                     {
-                        if(colliderManager.manipulator != ColliderManager.ManipulatorType.scale)
+                        if (colliderManager.manipulator != ColliderManager.ManipulatorType.scale)
                         {
                             colliderManager.manipulator = ColliderManager.ManipulatorType.scale;
                         }
@@ -366,13 +369,74 @@ namespace Reallusion.Import
             }
         }
 
+        public void SyncEnableStatus()
+        {
+            if (colliderManager.clothMeshes != null && colliderManager.clothMeshes.Length > 0)
+            {
+                //Debug.Log("Syncing UnityCloth Enabled Status");
+                foreach (ColliderManager.EnableStatusGameObject clothMesh in colliderManager.clothMeshes)
+                {
+                    Cloth c = clothMesh.GameObject.GetComponent<Cloth>();
+                    if (c != null) {
+                        clothMesh.EnabledStatus = c.enabled;
+                    }
+                }
+            }
+
+            if (colliderManager.magicaCloth2Available)
+            {
+                if (colliderManager.magicaClothMeshes != null && colliderManager.magicaClothMeshes.Length > 0)
+                {
+                    //Debug.Log("Syncing Magica Cloth Enabled Status");
+                    foreach (ColliderManager.EnableStatusGameObject clothMesh in colliderManager.magicaClothMeshes)
+                    {
+                        clothMesh.EnabledStatus = Physics.GetMagicaComponentEnableStatus(clothMesh.GameObject);
+                    }
+                }
+            }
+        }
+
+        private void DrawClothShortcutUpdate()
+        {
+            if (GUILayout.Button("Refresh"))
+            {
+                UpdateClothShortcutList();
+            }
+        }
+        public void UpdateClothShortcutList()
+        {
+            if (colliderManager.magicaCloth2Available)
+            {
+                Type clothType = Physics.GetTypeInAssemblies("MagicaCloth2.MagicaCloth");
+                if (clothType != null)
+                {
+                    Component[] magicaClothInstances = colliderManager.gameObject.GetComponentsInChildren(clothType);
+                    List<ColliderManager.EnableStatusGameObject> magicaList = new List<ColliderManager.EnableStatusGameObject>();
+                    foreach(Component magicaComponent in magicaClothInstances)
+                    {
+                        GameObject g = magicaComponent.gameObject;
+                        magicaList.Add(new ColliderManager.EnableStatusGameObject(g, Physics.GetMagicaComponentEnableStatus(g)));
+                    }
+                    colliderManager.magicaClothMeshes = magicaList.ToArray();
+                }
+            }
+
+            Component[] unityClothInstances = colliderManager.gameObject.GetComponentsInChildren<Cloth>();
+            List<ColliderManager.EnableStatusGameObject> nativeList = new List<ColliderManager.EnableStatusGameObject>();
+            foreach (Component clothComponent in unityClothInstances)
+            {
+                GameObject g = clothComponent.gameObject;
+                nativeList.Add(new ColliderManager.EnableStatusGameObject(g, Physics.GetComponentEnabled(clothComponent)));
+            }
+            colliderManager.clothMeshes = nativeList.ToArray();
+        }
 
         public override void OnInspectorGUI()
         {
             //CatchKeyEvents();
             SyncMode();
 
-            if (colliderManager.abstractedCapsuleColliders == null || 
+            if (colliderManager.abstractedCapsuleColliders == null ||
                 colliderManager.abstractedCapsuleColliders.Count == 0)
             {
                 CreateAbstractColliders();
@@ -382,6 +446,10 @@ namespace Reallusion.Import
 
             baseBackground = GUI.backgroundColor;
             base.OnInspectorGUI();
+
+
+            DrawShortCutSave();
+
 
             DrawEditAssistBlock();
             //DrawColliderSetSelector();
@@ -393,8 +461,15 @@ namespace Reallusion.Import
 
             if (colliderManager.clothMeshes != null && colliderManager.clothMeshes.Length > 0)
             {
-                DrawClothShortcuts();
+                DrawUnityClothShortcuts();
             }
+
+            if (colliderManager.magicaClothMeshes != null && colliderManager.magicaClothMeshes.Length > 0)
+            {
+                DrawMagicaClothShortcuts();
+            }
+
+            //DrawClothShortcutUpdate();
 
             if (resetAfterGUI)
             {
@@ -540,11 +615,11 @@ namespace Reallusion.Import
             bool active = colliderManager.currentEditType.HasFlag(ColliderManager.ColliderType.UnityEngine);
             GUI.backgroundColor = active ? Color.Lerp(baseBackground, Color.blue, 0.35f) : baseBackground;
             if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("CapsuleCollider Icon").image, "Native UnityEngine colliders"), GUILayout.Width(iconSize), GUILayout.Height(iconSize)))
-            {                
+            {
                 if (active)
                     colliderManager.currentEditType ^= ColliderManager.ColliderType.UnityEngine;
                 else
-                    colliderManager.currentEditType |= ColliderManager.ColliderType.UnityEngine;                
+                    colliderManager.currentEditType |= ColliderManager.ColliderType.UnityEngine;
             }
             GUI.backgroundColor = baseBackground;
 
@@ -565,7 +640,7 @@ namespace Reallusion.Import
 
             active = colliderManager.currentEditType.HasFlag(ColliderManager.ColliderType.DynamicBone);
             GUI.backgroundColor = active ? Color.Lerp(baseBackground, Color.blue, 0.35f) : baseBackground;
-            if(GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("FixedJoint Icon").image, "Dynamic Bone colliders"), GUILayout.Width(iconSize), GUILayout.Height(iconSize)))
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("FixedJoint Icon").image, "Dynamic Bone colliders"), GUILayout.Width(iconSize), GUILayout.Height(iconSize)))
             {
                 if (active)
                     colliderManager.currentEditType ^= ColliderManager.ColliderType.DynamicBone;
@@ -643,7 +718,7 @@ namespace Reallusion.Import
                     GUILayout.BeginVertical();
                     GUILayout.Space(active ? 1f : 0f);
                     GUILayout.BeginHorizontal();
-                    
+
                     GUILayout.FlexibleSpace();
 
                     EditorGUI.BeginDisabledGroup(!c.isEnabled);
@@ -693,7 +768,7 @@ namespace Reallusion.Import
                     // end of off button
 
                     GUILayout.FlexibleSpace();
-                    
+
                     GUILayout.EndHorizontal();
 
                     if (active)
@@ -706,7 +781,7 @@ namespace Reallusion.Import
                     if (active)
                         GUILayout.Space(1f);
 
-                    
+
                 }
             }
             GUILayout.Space(10f);
@@ -793,7 +868,7 @@ namespace Reallusion.Import
             GUI.backgroundColor = colliderManager.manipulator == ColliderManager.ManipulatorType.position ? Color.Lerp(baseBackground, Color.blue, 0.35f) : baseBackground;
             //GUIStyle style = (colliderManager.manipulator == ColliderManager.ManipulatorType.position ? colliderManagerStyles.currentButton : colliderManagerStyles.normalButton);
             //if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_MoveTool on").image, "Transform position tool"), style, GUILayout.Width(30f)))
-            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_MoveTool on").image, "Transform position tool"),  GUILayout.Width(30f)))
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_MoveTool on").image, "Transform position tool"), GUILayout.Width(30f)))
             {
                 colliderManager.manipulator = ColliderManager.ManipulatorType.position;
                 Tools.current = Tool.Move;
@@ -804,7 +879,7 @@ namespace Reallusion.Import
             GUI.backgroundColor = colliderManager.manipulator == ColliderManager.ManipulatorType.rotation ? Color.Lerp(baseBackground, Color.blue, 0.35f) : baseBackground;
             //style = (colliderManager.manipulator == ColliderManager.ManipulatorType.rotation ? colliderManagerStyles.currentButton : colliderManagerStyles.normalButton);
             //if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_RotateTool On").image, "Transform rotation tool"), style, GUILayout.Width(30f)))
-            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_RotateTool On").image, "Transform rotation tool"),  GUILayout.Width(30f)))
+            if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_RotateTool On").image, "Transform rotation tool"), GUILayout.Width(30f)))
             {
                 colliderManager.manipulator = ColliderManager.ManipulatorType.rotation;
                 Tools.current = Tool.Rotate;
@@ -818,7 +893,7 @@ namespace Reallusion.Import
             if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("ScaleTool On").image, "Transform scale tool"), GUILayout.Width(30f)))
             {
                 colliderManager.manipulator = ColliderManager.ManipulatorType.scale;
-                Tools.current = Tool.Scale;                
+                Tools.current = Tool.Scale;
                 //SceneView.RepaintAll();
             }
             GUI.backgroundColor = baseBackground;
@@ -829,12 +904,12 @@ namespace Reallusion.Import
             {
                 resetAfterGUI = true;
             }
-            
+
             if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_TreeEditor.Refresh").image, "Reset Collider To Default"), colliderManagerStyles.normalButton, GUILayout.Width(30f)))
             {
-                colliderManager.ResetSingleAbstractCollider(PhysicsSettingsStore.RecallAbstractColliderSettings(colliderManager, true), colliderManager.selectedAbstractCapsuleCollider.name, colliderManager.transformSymmetrically);                
+                colliderManager.ResetSingleAbstractCollider(PhysicsSettingsStore.RecallAbstractColliderSettings(colliderManager, true), colliderManager.selectedAbstractCapsuleCollider.name, colliderManager.transformSymmetrically);
             }
-            
+
             if (GUILayout.Button(new GUIContent(EditorGUIUtility.IconContent("d_clear").image, "Only Deselect Collider"), colliderManagerStyles.normalButton, GUILayout.Width(30f)))
             {
                 DeSelectColliderForEdit();
@@ -856,7 +931,7 @@ namespace Reallusion.Import
             GUILayout.Label("Save and Recall Colliders", EditorStyles.boldLabel);
             GUILayout.Space(10f);
 
-            GUI.backgroundColor = editMode ? Color.Lerp(baseBackground, Color.green, 0.9f) : baseBackground;            
+            GUI.backgroundColor = editMode ? Color.Lerp(baseBackground, Color.green, 0.9f) : baseBackground;
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUI.backgroundColor = baseBackground;
             GUILayout.Space(10f);
@@ -902,12 +977,12 @@ namespace Reallusion.Import
             GUILayout.EndHorizontal();
 
             GUILayout.Space(10f);
-
+            /*
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (Application.isPlaying) GUI.enabled = false;
             GUI.backgroundColor = Color.Lerp(baseBackground, Color.cyan, 0.25f);
-            GUIContent applyLabel = new GUIContent("Apply to Prefab", "Save the current collider settings to the character prefab.");
+            GUIContent applyLabel = new GUIContent("Save Changes to Prefab", "Save ALL changes to the character prefab.\nThis includes the current collider settings.");
             if (GUILayout.Button(applyLabel, GUILayout.Width(BUTTON_WIDTH)))
             {
                 CommitPrefab(colliderManager);
@@ -916,7 +991,7 @@ namespace Reallusion.Import
             GUI.backgroundColor = baseBackground;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-
+            */
             GUILayout.Space(10f);
 
             GUILayout.EndVertical();// (EditorStyles.helpBox);
@@ -932,13 +1007,71 @@ namespace Reallusion.Import
             {
                 // save prefab asset
                 PrefabUtility.ApplyPrefabInstance(prefabRoot, InteractionMode.UserAction);
+                Debug.Log("ALL changes have been comitted to the character prefab.");
+                enableStatusDirty = false;
             }
         }
 
-        public void DrawClothShortcuts()
+        public void DrawUnityClothShortcuts()
         {
             GUILayout.Space(10f);
-            GUILayout.Label("Available Cloth Meshes", EditorStyles.boldLabel);
+            GUILayout.Label("Available Unity Cloth Meshes", EditorStyles.boldLabel);
+            GUILayout.Space(10f);
+
+            GUI.backgroundColor = editMode ? Color.Lerp(baseBackground, Color.green, 0.9f) : baseBackground;
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUI.backgroundColor = baseBackground;
+            GUILayout.Space(10f);
+
+            GUILayout.BeginVertical();
+
+            GUI.backgroundColor = Color.Lerp(baseBackground, Color.blue, 0.20f);
+            if (colliderManager.clothMeshes != null)
+            {
+                foreach (ColliderManager.EnableStatusGameObject clothMesh in colliderManager.clothMeshes)
+                {
+                    if (clothMesh.GameObject != null)
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button(clothMesh.GameObject.name, GUILayout.Width(160f)))
+                        {
+                            Selection.activeObject = clothMesh.GameObject;
+                        }
+                        GUILayout.Space(4f);
+                        GUILayout.BeginVertical();
+                        GUILayout.Space(4f);
+                        EditorGUI.BeginChangeCheck();
+                        clothMesh.EnabledStatus = GUILayout.Toggle(clothMesh.EnabledStatus, "");
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            Cloth cloth = clothMesh.GameObject.GetComponent<Cloth>();
+                            if (cloth != null)
+                                cloth.enabled = clothMesh.EnabledStatus;
+                            /*
+                            WeightMapper weightMapper = clothMesh.GameObject.GetComponent<WeightMapper>();
+                            if (weightMapper != null)
+                                weightMapper.enabled = clothMesh.EnabledStatus;
+                            */
+                            enableStatusDirty = true;
+                        }
+                        GUILayout.EndVertical();
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndHorizontal();
+                        GUILayout.Space(4f);
+                    }
+                }
+            }
+            GUI.backgroundColor = baseBackground;
+            GUILayout.EndVertical();
+            GUILayout.Space(10f);
+            GUILayout.EndVertical();// (EditorStyles.helpBox);
+        }
+
+        public void DrawMagicaClothShortcuts()
+        {
+            GUILayout.Space(10f);
+            GUILayout.Label("Available Magica Cloth Meshes", EditorStyles.boldLabel);
             GUILayout.Space(10f);
 
             GUI.backgroundColor = editMode ? Color.Lerp(baseBackground, Color.green, 0.9f) : baseBackground;
@@ -949,26 +1082,74 @@ namespace Reallusion.Import
             GUILayout.BeginVertical();
 
             GUI.backgroundColor = Color.Lerp(baseBackground, Color.green, 0.25f);
-            if (colliderManager.clothMeshes != null)
+            if (colliderManager.magicaClothMeshes != null)
             {
-                foreach (GameObject clothMesh in colliderManager.clothMeshes)
+                foreach (ColliderManager.EnableStatusGameObject clothMesh in colliderManager.magicaClothMeshes)
                 {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button(clothMesh.name, GUILayout.Width(160f)))
+                    if (clothMesh.GameObject != null)
                     {
-                        Selection.activeObject = clothMesh;
+                        GUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button(clothMesh.GameObject.name, GUILayout.Width(160f)))
+                        {
+                            Selection.activeObject = clothMesh.GameObject;
+                        }
+                        GUILayout.Space(4f);
+                        GUILayout.BeginVertical();
+                        GUILayout.Space(4f);
+                        EditorGUI.BeginChangeCheck();
+                        clothMesh.EnabledStatus = GUILayout.Toggle(clothMesh.EnabledStatus, "");
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            Physics.SetMagicaComponentEnableStatus(clothMesh.GameObject, clothMesh.EnabledStatus);
+                            enableStatusDirty = true;
+                        }
+                        GUILayout.EndVertical();
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndHorizontal();
+                        GUILayout.Space(4f);
                     }
-                    GUILayout.FlexibleSpace();
-                    GUILayout.EndHorizontal();
-                    GUILayout.Space(4f);
                 }
             }
             GUI.backgroundColor = baseBackground;
             GUILayout.EndVertical();
-            GUILayout.Space(6f);
+            GUILayout.Space(10f);
             GUILayout.EndVertical();// (EditorStyles.helpBox);
-        }        
+        }
+
+        private void DrawShortCutSave()
+        {
+            GUILayout.Space(10f);
+            GUILayout.Label("Save Prefab", EditorStyles.boldLabel);
+            GUILayout.Space(10f);
+
+            GUI.backgroundColor = editMode ? Color.Lerp(baseBackground, Color.green, 0.9f) : baseBackground;
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUI.backgroundColor = baseBackground;
+            GUILayout.Space(10f);
+
+            GUILayout.BeginVertical();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (Application.isPlaying) GUI.enabled = false;
+            GUI.backgroundColor = enableStatusDirty ? Color.Lerp(baseBackground, Color.cyan, 0.35f) : Color.Lerp(baseBackground, Color.cyan, 0.15f);
+            string toolTip = "Save ALL changes to the character prefab." + (enableStatusDirty ? "\nChanges have been made to the enable status of the cloth components.\nThese can be saved to the prefab here." : "");
+            GUIContent applyLabel = new GUIContent("Save Changes to Prefab", toolTip);
+            if (GUILayout.Button(applyLabel, GUILayout.Width(BUTTON_WIDTH)))
+            {
+                //save to prefab
+                CommitPrefab(colliderManager);
+            }
+            GUI.enabled = true;
+            GUI.backgroundColor = baseBackground;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndVertical();
+            GUILayout.Space(10f);
+            GUILayout.EndVertical();// (EditorStyles.helpBox);
+        }
 
         // see: https://forum.unity.com/threads/drawing-capsule-gizmo.354634/#post-4100557
         public static void DrawWireCapsule(Vector3 _pos, Quaternion _rot, float _radius, float _height, ColliderManager.ColliderAxis _axis, Color _color = default(Color))

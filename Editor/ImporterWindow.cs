@@ -1102,7 +1102,7 @@ namespace Reallusion.Import
             GUILayout.Label("Mip-map Bias");
             GUILayout.Space(ROW_SPACE);
             GUILayout.BeginHorizontal();
-            Importer.MIPMAP_BIAS = GUILayout.HorizontalSlider(Importer.MIPMAP_BIAS, -1f, 1f);
+            Importer.MIPMAP_BIAS = GUILayout.HorizontalSlider(Importer.MIPMAP_BIAS, -1f, 1f, GUILayout.Width(160f));
             GUILayout.Label(Importer.MIPMAP_BIAS.ToString("0.00"),
                             GUILayout.Width(40f));
             GUILayout.EndHorizontal();
@@ -1114,12 +1114,72 @@ namespace Reallusion.Import
             GUILayout.Label("Physics Collider Shrink");
             GUILayout.Space(ROW_SPACE);
             GUILayout.BeginHorizontal();
-            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = GUILayout.HorizontalSlider(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS, -2, 2f);
+            Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = GUILayout.HorizontalSlider(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS, -2, 2f, GUILayout.Width(160f));
             GUILayout.Label(Physics.PHYSICS_SHRINK_COLLIDER_RADIUS.ToString("0.00"), 
                             GUILayout.Width(40f));
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
             GUILayout.Space(ROW_SPACE);
+
+
+            if (MagicaCloth2Available)
+            {
+                GUILayout.Space(10f);
+                GUILayout.BeginVertical(new GUIContent("", "Set global values for Magica Cloth 2 proxy mesh reduction settings. NB these settings will only be applied the next time the character physics are built."), importerStyles.labelStyle);
+                GUILayout.Label("Magica Cloth 2 - Reduction Settings");
+                GUILayout.Space(ROW_SPACE);
+                GUILayout.Label("Cloth Objects");
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(20f);
+                GUILayout.Label("Simple Distance", GUILayout.Width(100f));
+                Physics.CLOTHSIMPLEDISTANCE = (float)Math.Round(GUILayout.HorizontalSlider(Physics.CLOTHSIMPLEDISTANCE, 0f, 0.2f, GUILayout.Width(100f)), 3);
+                GUILayout.Label(Physics.CLOTHSIMPLEDISTANCE.ToString("0.000"),
+                                GUILayout.Width(40f));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(20f);
+                GUILayout.Label("Shape Distance", GUILayout.Width(100f));
+                Physics.CLOTHSHAPEDISTANCE = (float)Math.Round(GUILayout.HorizontalSlider(Physics.CLOTHSHAPEDISTANCE, 0f, 0.2f, GUILayout.Width(100f)), 3);
+                GUILayout.Label(Physics.CLOTHSHAPEDISTANCE.ToString("0.000"),
+                                GUILayout.Width(40f));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
+                GUILayout.Label("Hair Objects");
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(20f);
+                GUILayout.Label("Simple Distance", GUILayout.Width(100f));
+                Physics.HAIRSIMPLEDISTANCE = (float)Math.Round(GUILayout.HorizontalSlider(Physics.HAIRSIMPLEDISTANCE, 0f, 0.2f, GUILayout.Width(100f)), 3);
+                GUILayout.Label(Physics.HAIRSIMPLEDISTANCE.ToString("0.000"),
+                                GUILayout.Width(40f));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(20f);
+                GUILayout.Label("Shape Distance", GUILayout.Width(100f));
+                Physics.HAIRSHAPEDISTANCE = (float)Math.Round(GUILayout.HorizontalSlider(Physics.HAIRSHAPEDISTANCE, 0f, 0.2f, GUILayout.Width(100f)), 3);
+                GUILayout.Label(Physics.HAIRSHAPEDISTANCE.ToString("0.000"),
+                                GUILayout.Width(40f));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
+                GUILayout.Space(ROW_SPACE);
+                GUILayout.EndVertical();
+                GUILayout.BeginVertical(new GUIContent("", "Set the threshold for conversion of the PhysX weightmap into the 'Fixed/Moveable' system used by Magica Cloth 2.  When a very low value is set then any slight movement allowed by PhysX will also allow movement in Magica Cloth 2."), importerStyles.labelStyle);
+
+                GUILayout.Label("Weightmap Threshold %", GUILayout.Width(140f));
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(12f);
+                Physics.MAGICA_WEIGHTMAP_THRESHOLD_PC = (float)Math.Round(GUILayout.HorizontalSlider(Physics.MAGICA_WEIGHTMAP_THRESHOLD_PC, 0f, 20f, GUILayout.Width(214f)), 2);
+                GUILayout.Label(Physics.MAGICA_WEIGHTMAP_THRESHOLD_PC.ToString("0.00") + " %",
+                                GUILayout.Width(50f));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
+                GUILayout.EndVertical();
+                GUILayout.Space(ROW_SPACE);
+            }
 
             /*
             GUILayout.Space(10f);
@@ -1497,6 +1557,13 @@ namespace Reallusion.Import
             Importer.USE_DIGITAL_HUMAN_SHADER = false;
             Physics.PHYSICS_SHRINK_COLLIDER_RADIUS = 0.5f;
             Physics.PHYSICS_WEIGHT_MAP_DETECT_COLLIDER_THRESHOLD = 0.25f;
+            
+            Physics.CLOTHSIMPLEDISTANCE = Physics.CLOTHSHAPEDISTANCE_DEFAULT;
+            Physics.CLOTHSHAPEDISTANCE = Physics.CLOTHSHAPEDISTANCE_DEFAULT;
+            Physics.HAIRSIMPLEDISTANCE = Physics.HAIRSIMPLEDISTANCE_DEFAULT;
+            Physics.HAIRSHAPEDISTANCE = Physics.HAIRSHAPEDISTANCE_DEFAULT;
+            Physics.MAGICA_WEIGHTMAP_THRESHOLD_PC = Physics.MAGICA_WEIGHTMAP_THRESHOLD_PC_DEFAULT;
+
             Util.LOG_LEVEL = 0;
             ICON_AREA_WIDTH = ICON_WIDTH;
         }

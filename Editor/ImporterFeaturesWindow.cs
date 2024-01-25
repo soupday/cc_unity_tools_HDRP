@@ -172,6 +172,10 @@ namespace Reallusion.Import
                     if (DrawFlagSelectionLine(line++, CharacterInfo.ShaderFeatureFlags.UnityClothHairPhysics, "Unity Hair Physics", SUB_SECTION_INDENT, CharacterInfo.hairGroup))
                         flagChanged = true;
 
+                    if (DrawFlagSelectionLine(line++, CharacterInfo.ShaderFeatureFlags.MagicaClothHairPhysics, "Magica Cloth 2 Hair Physics", SUB_SECTION_INDENT, CharacterInfo.hairGroup))
+                        flagChanged = true;
+
+                    /*
                     if (importerWindow.DynamicBoneAvailable)
                     {
                         if (DrawFlagSelectionLine(line++, CharacterInfo.ShaderFeatureFlags.SpringBoneHair, "Dynamic Bone Springbones", SUB_SECTION_INDENT, CharacterInfo.hairGroup))
@@ -182,8 +186,32 @@ namespace Reallusion.Import
                         if (DrawFlagSelectionLine(line++, CharacterInfo.ShaderFeatureFlags.MagicaBone, "Magica Bone Springbones", SUB_SECTION_INDENT, CharacterInfo.hairGroup))
                             flagChanged = true;
                     }
+                    */
                 }
             }
+
+            // Spring Bone Physics
+            if (importerWindow.DynamicBoneAvailable || importerWindow.MagicaCloth2Available)
+            {
+                if (DrawFlagSelectionLine(line++, CharacterInfo.ShaderFeatureFlags.SpringBonePhysics, "Enable Spring Bone Physics", SECTION_INDENT))
+                    flagChanged = true;
+
+                if (contextCharacter.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.SpringBonePhysics))
+                {
+                    if (importerWindow.MagicaCloth2Available)
+                    {
+                        if (DrawFlagSelectionLine(line++, CharacterInfo.ShaderFeatureFlags.MagicaBone, "Magica Bone Springbones", SUB_SECTION_INDENT, CharacterInfo.springGroup))
+                            flagChanged = true;
+                    }
+                    if (importerWindow.DynamicBoneAvailable)
+                    {
+                        if (DrawFlagSelectionLine(line++, CharacterInfo.ShaderFeatureFlags.SpringBoneHair, "Dynamic Bone Springbones", SUB_SECTION_INDENT, CharacterInfo.springGroup))
+                            flagChanged = true;
+                    }                    
+                }
+            }
+
+            DrawLabelLine(line++, "");
 
             if (Event.current.type == EventType.Repaint)
             {
@@ -247,21 +275,35 @@ namespace Reallusion.Import
                 {
                     contextCharacter.ShaderFlags ^= flag; // toggle changed to OFF => bitwise XOR to remove flag
 
-                    // since the section flag is being unset then all the entries should be unset too
-                    switch(flag)
+                    // if  the group flag is being unset then all the 'radio group' entries should be unset too
+                    switch (flag)
                     {
                         case CharacterInfo.ShaderFeatureFlags.ClothPhysics:
                             {
+                                foreach (CharacterInfo.ShaderFeatureFlags groupFlag in CharacterInfo.clothGroup)
+                                {
+                                    if (contextCharacter.ShaderFlags.HasFlag(groupFlag))
+                                        contextCharacter.ShaderFlags ^= groupFlag;
+                                }
+
+                                /*
                                 if (contextCharacter.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.MagicaCloth))
                                     contextCharacter.ShaderFlags ^= CharacterInfo.ShaderFeatureFlags.MagicaCloth;
 
                                 if (contextCharacter.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.UnityClothPhysics))
                                     contextCharacter.ShaderFlags ^= CharacterInfo.ShaderFeatureFlags.UnityClothPhysics;
-
+                                */
                                 break;
                             }
                         case CharacterInfo.ShaderFeatureFlags.HairPhysics:
                             {
+                                foreach (CharacterInfo.ShaderFeatureFlags groupFlag in CharacterInfo.hairGroup)
+                                {
+                                    if (contextCharacter.ShaderFlags.HasFlag(groupFlag))
+                                        contextCharacter.ShaderFlags ^= groupFlag;
+                                }
+
+                                /*
                                 if (contextCharacter.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.MagicaBone))
                                     contextCharacter.ShaderFlags ^= CharacterInfo.ShaderFeatureFlags.MagicaBone;
 
@@ -270,6 +312,16 @@ namespace Reallusion.Import
 
                                 if (contextCharacter.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.UnityClothHairPhysics))
                                     contextCharacter.ShaderFlags ^= CharacterInfo.ShaderFeatureFlags.UnityClothHairPhysics;
+                                */
+                                break;
+                            }
+                        case CharacterInfo.ShaderFeatureFlags.SpringBonePhysics:
+                            {
+                                foreach (CharacterInfo.ShaderFeatureFlags groupFlag in CharacterInfo.springGroup)
+                                {
+                                    if (contextCharacter.ShaderFlags.HasFlag(groupFlag))
+                                        contextCharacter.ShaderFlags ^= groupFlag;
+                                }
 
                                 break;
                             }
