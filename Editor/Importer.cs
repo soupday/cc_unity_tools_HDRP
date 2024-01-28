@@ -341,7 +341,7 @@ namespace Reallusion.Import
             if ((clothPhysics || hairPhysics || springBoneHair) && jsonPhysicsData != null)
             {
                 Physics physics = new Physics(characterInfo, prefabInstance);
-                physics.AddPhysics(false);
+                physics.AddPhysics(true);
             }
 
             if (blenderProject)

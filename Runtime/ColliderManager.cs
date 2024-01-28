@@ -514,6 +514,26 @@ namespace Reallusion.Import
         }
 
 
+        [Serializable]
+        public class EnableStatusGameObject
+        {
+            public GameObject GameObject;
+            public bool EnabledStatus;
+
+            public EnableStatusGameObject(GameObject gameObject, bool enabledStatus)
+            {
+                GameObject = gameObject;
+                EnabledStatus = enabledStatus;
+            }
+
+            public EnableStatusGameObject()
+            {
+
+            }
+
+        }
+
+
         //end of additions
 
         [Serializable]
@@ -670,7 +690,10 @@ namespace Reallusion.Import
         }
 
         [HideInInspector] public Collider[] colliders;
-        [HideInInspector] public GameObject[] clothMeshes;
+        //[HideInInspector] public GameObject[] clothMeshes;
+        [HideInInspector] public EnableStatusGameObject[] clothMeshes;
+        //[HideInInspector] public GameObject[] magicaClothMeshes;
+        [HideInInspector] public EnableStatusGameObject[] magicaClothMeshes;
         [HideInInspector] public ColliderSettings[] settings;
         [HideInInspector] public string characterGUID;
         
@@ -723,7 +746,7 @@ namespace Reallusion.Import
                 cs.Update();
             }
         }
-
+        /*
         public void RefreshData()
         {
             Collider[] allColliders = gameObject.GetComponentsInChildren<Collider>();
@@ -758,7 +781,7 @@ namespace Reallusion.Import
             settings = foundColliderSettings.ToArray();
             clothMeshes = foundClothMeshes.ToArray();            
         }
-        
+        */
         // Start or Update message needed to show an enable/disable checkbox in the inspector
         private void Start()
         {

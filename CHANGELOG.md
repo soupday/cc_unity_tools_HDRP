@@ -1,6 +1,10 @@
 Changelog
 =========
 
+### 1.6.1
+- Magica Cloth 2 support for hair physics.
+    - Magica Cloth and collider navigation tools added.
+
 ### 1.6.0
 - Fixes to root bones and physics components in LOD combiner.
 - Support for Magica Cloth 2 Physics (if present) - Cloth simulation and spring bones.
