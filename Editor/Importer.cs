@@ -1595,8 +1595,9 @@ namespace Reallusion.Import
             if (matJson != null)
             {
                 float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");
+                bool specularBakeZero = false;
 
-                // work around CC4 Head specular export bug
+                // work around CC4 Head specular export bug, when exporting with bake skin option
                 if (specular == 0.0f && materialType == MaterialType.Head)
                 {
                     float skinSpecular = 0.0f;
@@ -1618,6 +1619,7 @@ namespace Reallusion.Import
                     {
                         Util.LogWarn("Specular export bug in skin material, setting head specular to: " + skinSpecular);
                         specular = skinSpecular;
+                        specularBakeZero = true;
                     }
                 }
 
@@ -1643,7 +1645,10 @@ namespace Reallusion.Import
 
                 if (materialType == MaterialType.Head)
                 {
-                    mat.SetFloatIf("_ColorBlendStrength", matJson.GetFloatValue("Custom Shader/Variable/BaseColor Blend2 Strength"));
+                    // specular bake bug bakes color blend into diffuse
+                    float colorBlenderStrength = matJson.GetFloatValue("Custom Shader/Variable/BaseColor Blend2 Strength");
+                    if (specularBakeZero) colorBlenderStrength = 0.0f;
+                    mat.SetFloatIf("_ColorBlendStrength", colorBlenderStrength);
                     mat.SetFloatIf("_NormalBlendStrength", matJson.GetFloatValue("Custom Shader/Variable/NormalMap Blend Strength"));
                     mat.SetFloatIf("_MouthCavityAO", matJson.GetFloatValue("Custom Shader/Variable/Inner Mouth Ao"));
                     mat.SetFloatIf("_NostrilCavityAO", matJson.GetFloatValue("Custom Shader/Variable/Nostril Ao"));
