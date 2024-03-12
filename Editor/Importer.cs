@@ -1464,7 +1464,7 @@ namespace Reallusion.Import
                 if (matJson.PathExists("Textures/Normal/Strength"))
                     mat.SetFloat("_NormalScale", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
             }
-        }
+        }        
 
         private void ConnectHQSkinMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
             MaterialType materialType, QuickJSON matJson)
@@ -1594,14 +1594,40 @@ namespace Reallusion.Import
 
             if (matJson != null)
             {
+                float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");
+
+                // work around CC4 Head specular export bug
+                if (specular == 0.0f && materialType == MaterialType.Head)
+                {
+                    float skinSpecular = 0.0f;
+                    QuickJSON materialsJson = jsonData.FindParentOf(matJson);
+                    if (materialsJson != null)
+                    {
+                        QuickJSON skinJson = null;
+                        if (materialsJson.PathExists("Std_Skin_Body"))
+                            skinJson = materialsJson.GetObjectAtPath("Std_Skin_Body");
+                        else if (materialsJson.PathExists("Std_Skin_Arm"))
+                            skinJson = materialsJson.GetObjectAtPath("Std_Skin_Arm");
+                        else if (materialsJson.PathExists("Std_Skin_Leg"))
+                            skinJson = materialsJson.GetObjectAtPath("Std_Skin_Leg");
+                        if (skinJson != null)
+                            skinSpecular = skinJson.GetFloatValue("Custom Shader/Variable/_Specular");
+                    }
+
+                    if (skinSpecular != 0.0f)
+                    {
+                        Util.LogWarn("Specular export bug in skin material, setting head specular to: " + skinSpecular);
+                        specular = skinSpecular;
+                    }
+                }
+
                 mat.SetFloatIf("_AOStrength", Mathf.Clamp01(matJson.GetFloatValue("Textures/AO/Strength") / 100f));
                 if (matJson.PathExists("Textures/Glow/Texture Path"))
                     mat.SetColorIf("_EmissiveColor", Color.white * (matJson.GetFloatValue("Textures/Glow/Strength") / 100f));
                 if (matJson.PathExists("Textures/Normal/Strength"))
                     mat.SetFloatIf("_NormalStrength", matJson.GetFloatValue("Textures/Normal/Strength") / 100f);
                 mat.SetFloatIf("_MicroNormalTiling", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Tiling"));
-                mat.SetFloatIf("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));                
-                float specular = matJson.GetFloatValue("Custom Shader/Variable/_Specular");                
+                mat.SetFloatIf("_MicroNormalStrength", matJson.GetFloatValue("Custom Shader/Variable/MicroNormal Strength"));                                
                 float smoothnessMax = Util.CombineSpecularToSmoothness(specular, ValueByPipeline(1f, 0.9f, 1f));
                 mat.SetFloatIf("_SmoothnessMax", smoothnessMax);
                 //float secondarySmoothness = 0.85f * smoothnessMax;
