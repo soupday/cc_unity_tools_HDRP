@@ -9,6 +9,8 @@ Changelog
 - Mesh extraction checks for duplicate blend shape names.
 - URP Amplify hair shaders support for Forward+ additional lights.
 - URP Amplify shaders recompiled for ASE-1.9.6 (Fixes URP17 issues).
+- Fix to colliders not being added with just hair physics.
+- Fix to HDRP diffusion profiles not being added in HDRP17.
 
 ### 1.6.2
 - URP Amplify shader fix for when there is no main light.
