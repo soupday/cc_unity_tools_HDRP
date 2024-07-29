@@ -61,6 +61,8 @@
 #pragma kernel RLChannelPackLinear
 #pragma kernel RLChannelPackSymmetryLinear
 
+#pragma multi_compile _ _MAC_OS
+
 // Defines
 //
 #define SAMPLE(tex,coord) tex.SampleLevel (sampler##tex,coord, 0)
@@ -351,6 +353,8 @@ float4 LinearTosRGB(float4 In)
 {
 #ifdef UNITY_COLORSPACE_GAMMA    
     return In; 
+#elif _MAC_OS
+    return In;
 #else
     float3 sRGBLo = In.xyz * 12.92;
     float3 sRGBHi = (pow(max(abs(In.xyz), 1.192092896e-07), float3(1.0 / 2.4, 1.0 / 2.4, 1.0 / 2.4)) * 1.055) - 0.055;
@@ -804,7 +808,8 @@ void RLHeadMask(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength) * cavityAO;
-    float detailMask = mask.b * subsurfaceFlattenNormals;
+    //float detailMask = mask.b * subsurfaceFlattenNormals;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, ao, detailMask, smoothness);
@@ -864,7 +869,8 @@ void RLSkinMask(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * subsurfaceFlattenNormals;
+    //float detailMask = mask.b * subsurfaceFlattenNormals;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, ao, detailMask, smoothness);
@@ -887,7 +893,8 @@ void RLHeadMetallicGloss(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength) * cavityAO;
-    float detailMask = mask.b * subsurfaceFlattenNormals;
+    //float detailMask = mask.b * subsurfaceFlattenNormals;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, metallic, metallic, smoothness);
@@ -909,7 +916,8 @@ void RLSkinMetallicGloss(uint3 id : SV_DispatchThreadID)
 
     float metallic = mask.r;
     float ao = INVERTED_SCALE(mask.g, aoStrength);
-    float detailMask = mask.b * subsurfaceFlattenNormals;
+    //float detailMask = mask.b * subsurfaceFlattenNormals;
+    float detailMask = mask.b;
     float smoothness = lerp(smoothnessMin, smoothnessMax, pow(mask.a, smoothnessPower));
     smoothness = saturate((1.0 + smoothnessMod + microSmoothnessMod) * smoothness);
     float4 packed = float4(metallic, metallic, metallic, smoothness);
@@ -989,11 +997,13 @@ void RLHeadNormal(uint3 id : SV_DispatchThreadID)
     float3 normalBlend = SAMPLE_NORMAL(NormalBlend, uv);
     float microScatteringMultiplier = HeadScatterMask(uv) * subsurfaceScale;
     float subsurface = SAMPLE(Subsurface, uv).y * microScatteringMultiplier;
-    float subsurfaceFlattenNormals = saturate(1.0 - (subsurface * subsurface * sssNormalSoften));
+    float subsurfaceFlattenNormals = saturate(1.0 - (subsurface * subsurface * sssNormalSoften));    
 
     float3 mn, bn, on;
-    NormalStrength_float3(normal, normalStrength * subsurfaceFlattenNormals, mn);
-    NormalStrength_float3(normalBlend, normalBlendStrength * subsurfaceFlattenNormals, bn);
+    //NormalStrength_float3(normal, normalStrength * subsurfaceFlattenNormals, mn);
+    //NormalStrength_float3(normalBlend, normalBlendStrength * subsurfaceFlattenNormals, bn);
+    NormalStrength_float3(normal, normalStrength, mn);
+    NormalStrength_float3(normalBlend, normalBlendStrength, bn);
     NormalBlend_float3(mn, bn, on);
 
     Result[id.xy] = PackNormal(on);
@@ -1011,7 +1021,8 @@ void RLSkinNormal(uint3 id : SV_DispatchThreadID)
     float subsurfaceFlattenNormals = saturate(1.0 - (subsurface * subsurface * sssNormalSoften));
 
     float3 ns; 
-    NormalStrength_float3(normal, normalStrength * subsurfaceFlattenNormals, ns);
+    //NormalStrength_float3(normal, normalStrength * subsurfaceFlattenNormals, ns);
+    NormalStrength_float3(normal, normalStrength, ns);
 
     Result[id.xy] = PackNormal(ns);
 }

@@ -594,8 +594,11 @@ namespace Reallusion.Import
 
             UpdateBlendShapeIndices();
         }
-         
-        private void UpdateBlendShapeIndices()
+
+		/// <summary>
+		/// Update the blend shape indices for the wrinkle configurations.
+		/// </summary>
+        public void UpdateBlendShapeIndices()
         {
             if (skinnedMeshRenderer && headMaterial)
             {
