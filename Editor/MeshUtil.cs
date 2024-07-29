@@ -21,6 +21,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using System.IO;
 using System.Collections.Generic;
+using UnityEngine.AI;
 
 namespace Reallusion.Import
 {
@@ -324,18 +325,20 @@ namespace Reallusion.Import
                     for (int i = 0; i < srcMesh.blendShapeCount; i++)
                     {
                         string name = srcMesh.GetBlendShapeName(i);
-
-                        int frameCount = srcMesh.GetBlendShapeFrameCount(i);
-                        for (int f = 0; f < frameCount; f++)
+                        if (dstMesh.GetBlendShapeIndex(name) == -1)
                         {
-                            float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
-                            srcMesh.GetBlendShapeFrameVertices(i, f, deltaVerts, deltaNormals, deltaTangents);
+                            int frameCount = srcMesh.GetBlendShapeFrameCount(i);
+                            for (int f = 0; f < frameCount; f++)
+                            {
+                                float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
+                                srcMesh.GetBlendShapeFrameVertices(i, f, deltaVerts, deltaNormals, deltaTangents);
 
-                            Vector3 deltaSum = Vector3.zero;
-                            for (int d = 0; d < srcMesh.vertexCount; d++) deltaSum += deltaVerts[d];
+                                Vector3 deltaSum = Vector3.zero;
+                                for (int d = 0; d < srcMesh.vertexCount; d++) deltaSum += deltaVerts[d];
 
-                            if (deltaSum.magnitude > 0.1f)
-                                dstMesh.AddBlendShapeFrame(name, frameWeight, deltaVerts, deltaNormals, deltaTangents);
+                                if (deltaSum.magnitude > 0.1f)
+                                    dstMesh.AddBlendShapeFrame(name, frameWeight, deltaVerts, deltaNormals, deltaTangents);
+                            }
                         }
                     }
                 }
@@ -394,13 +397,15 @@ namespace Reallusion.Import
                 for (int i = 0; i < srcMesh.blendShapeCount; i++)
                 {
                     string name = srcMesh.GetBlendShapeName(i);
-
-                    int frameCount = srcMesh.GetBlendShapeFrameCount(i);
-                    for (int f = 0; f < frameCount; f++)
+                    if (dstMesh.GetBlendShapeIndex(name) == -1)
                     {
-                        float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
-                        srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
-                        dstMesh.AddBlendShapeFrame(name, frameWeight, bufVerts, bufNormals, bufTangents);
+                        int frameCount = srcMesh.GetBlendShapeFrameCount(i);
+                        for (int f = 0; f < frameCount; f++)
+                        {
+                            float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
+                            srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
+                            dstMesh.AddBlendShapeFrame(name, frameWeight, bufVerts, bufNormals, bufTangents);
+                        }
                     }
                 }
             }
@@ -471,13 +476,15 @@ namespace Reallusion.Import
                     for (int i = 0; i < srcMesh.blendShapeCount; i++)
                     {
                         string name = srcMesh.GetBlendShapeName(i);
-
-                        int frameCount = srcMesh.GetBlendShapeFrameCount(i);
-                        for (int f = 0; f < frameCount; f++)
+                        if (dstMesh.GetBlendShapeIndex(name) == -1)
                         {
-                            float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
-                            srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
-                            dstMesh.AddBlendShapeFrame(name, frameWeight, bufVerts, bufNormals, bufTangents);
+                            int frameCount = srcMesh.GetBlendShapeFrameCount(i);
+                            for (int f = 0; f < frameCount; f++)
+                            {
+                                float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
+                                srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
+                                dstMesh.AddBlendShapeFrame(name, frameWeight, bufVerts, bufNormals, bufTangents);
+                            }
                         }
                     }
                 }
@@ -839,23 +846,29 @@ namespace Reallusion.Import
                 for (int i = 0; i < srcMesh.blendShapeCount; i++)
                 {
                     string name = srcMesh.GetBlendShapeName(i);
-
-                    int frameCount = srcMesh.GetBlendShapeFrameCount(i);
-                    for (int f = 0; f < frameCount; f++)
+                    if (newMesh.GetBlendShapeIndex(name) == -1)
                     {
-                        float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
-                        srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
-                        for (int vertIndex = 0; vertIndex < maxVerts; vertIndex++)
+                        int frameCount = srcMesh.GetBlendShapeFrameCount(i);
+                        for (int f = 0; f < frameCount; f++)
                         {
-                            int remappedIndex = remapping[vertIndex];
-                            if (remappedIndex >= 0)
+                            float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
+                            srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
+                            for (int vertIndex = 0; vertIndex < maxVerts; vertIndex++)
                             {
-                                frameVerts[remappedIndex] = bufVerts[vertIndex];
-                                frameNormals[remappedIndex] = bufNormals[vertIndex];
-                                frameTangents[remappedIndex] = bufTangents[vertIndex];
+                                int remappedIndex = remapping[vertIndex];
+                                if (remappedIndex >= 0)
+                                {
+                                    frameVerts[remappedIndex] = bufVerts[vertIndex];
+                                    frameNormals[remappedIndex] = bufNormals[vertIndex];
+                                    frameTangents[remappedIndex] = bufTangents[vertIndex];
+                                }
                             }
+                            newMesh.AddBlendShapeFrame(name, frameWeight, frameVerts, frameNormals, frameTangents);
                         }
-                        newMesh.AddBlendShapeFrame(name, frameWeight, frameVerts, frameNormals, frameTangents);
+                    }
+                    else
+                    {
+                        Util.LogWarn("Blend shape: " + name + " has duplicate name, already exists in mesh!");
                     }
                 }
             }
@@ -1005,23 +1018,25 @@ namespace Reallusion.Import
                 for (int i = 0; i < srcMesh.blendShapeCount; i++)
                 {
                     string name = srcMesh.GetBlendShapeName(i);
-
-                    int frameCount = srcMesh.GetBlendShapeFrameCount(i);
-                    for (int f = 0; f < frameCount; f++)
+                    if (newMesh.GetBlendShapeIndex(name) == -1)
                     {
-                        float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
-                        srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
-                        for (int vertIndex = 0; vertIndex < maxVerts; vertIndex++)
+                        int frameCount = srcMesh.GetBlendShapeFrameCount(i);
+                        for (int f = 0; f < frameCount; f++)
                         {
-                            int remappedIndex = remapping[vertIndex];
-                            if (remappedIndex >= 0)
+                            float frameWeight = srcMesh.GetBlendShapeFrameWeight(i, f);
+                            srcMesh.GetBlendShapeFrameVertices(i, f, bufVerts, bufNormals, bufTangents);
+                            for (int vertIndex = 0; vertIndex < maxVerts; vertIndex++)
                             {
-                                frameVerts[remappedIndex] = bufVerts[vertIndex];
-                                frameNormals[remappedIndex] = bufNormals[vertIndex];
-                                frameTangents[remappedIndex] = bufTangents[vertIndex];
+                                int remappedIndex = remapping[vertIndex];
+                                if (remappedIndex >= 0)
+                                {
+                                    frameVerts[remappedIndex] = bufVerts[vertIndex];
+                                    frameNormals[remappedIndex] = bufNormals[vertIndex];
+                                    frameTangents[remappedIndex] = bufTangents[vertIndex];
+                                }
                             }
+                            newMesh.AddBlendShapeFrame(name, frameWeight, frameVerts, frameNormals, frameTangents);
                         }
-                        newMesh.AddBlendShapeFrame(name, frameWeight, frameVerts, frameNormals, frameTangents);
                     }
                 }
             }

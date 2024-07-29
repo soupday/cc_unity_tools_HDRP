@@ -102,6 +102,23 @@ namespace Reallusion.Import
                 }
             }
 
+            if (prop == "BOOLEAN_ANISOTROPIC")
+            {
+                for (int i = 0; i < sources.Length; i++)
+                {
+                    if (value == 1f)
+                    {
+                        if (pass1[i]) pass1[i].EnableKeyword("BOOLEAN_ANISOTROPIC_ON");
+                        if (pass2[i]) pass2[i].EnableKeyword("BOOLEAN_ANISOTROPIC_ON");
+                    }
+                    else
+                    {
+                        if (pass1[i]) pass1[i].DisableKeyword("BOOLEAN_ANISOTROPIC_ON");
+                        if (pass2[i]) pass2[i].DisableKeyword("BOOLEAN_ANISOTROPIC_ON");
+                    }
+                }
+            }
+
             return true;
         }
 
