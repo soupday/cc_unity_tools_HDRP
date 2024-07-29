@@ -431,7 +431,8 @@ namespace Reallusion.Import
                 var prefabRoot = editingScope.prefabContentsRoot;
                 PurgeAllPhysicsComponents(prefabRoot);
 
-                if (characterInfo.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.ClothPhysics) || characterInfo.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.ClothPhysics))
+                if (characterInfo.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.ClothPhysics) || 
+                    characterInfo.ShaderFlags.HasFlag(CharacterInfo.ShaderFeatureFlags.HairPhysics))
                 {
                     AddCollidersToPrefabRoot(prefabRoot);
                 }
