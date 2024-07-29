@@ -1562,10 +1562,11 @@ namespace Reallusion.Import
             firstPass = null;
             secondPass = null;
 
-            bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");
+            bool useAmplify = characterInfo.BakeCustomShaders && mat.shader.name.iContains("/Amplify/");            
             bool useTessellation = characterInfo.BuiltFeatureTessellation;
             bool useWrinkleMaps = characterInfo.BuiltFeatureWrinkleMaps;
             bool useDigitalHuman = characterInfo.BakeCustomShaders && mat.shader.name.iEndsWith("_DH");
+            float diffuseAO = (useAmplify || (IS_URP && CUSTOM_SHADERS)) ? 0f : aoOccludeAll;
 
             Texture2D bakedBaseMap = diffuse;
             Texture2D bakedMaskMap = mask;
@@ -1577,7 +1578,7 @@ namespace Reallusion.Import
             if (enableColor)
             {
                 bakedBaseMap = BakeHairDiffuseMap(diffuse, blend, id, root, mask,
-                    diffuseStrength, alphaPower, alphaRemap, aoStrength, (useAmplify ? 0f : aoOccludeAll),
+                    diffuseStrength, alphaPower, alphaRemap, aoStrength, diffuseAO,
                     rootColor, rootColorStrength, endColor, endColorStrength, globalStrength,
                     invertRootMap, baseColorStrength, highlightBlend,
                     highlightAColor, highlightADistribution, highlightAOverlapEnd,
@@ -1590,7 +1591,7 @@ namespace Reallusion.Import
             else
             {
                 bakedBaseMap = BakeHairDiffuseMap(diffuse, blend, mask,
-                    diffuseStrength, alphaPower, alphaRemap, aoStrength, (useAmplify ? 0f : aoOccludeAll),
+                    diffuseStrength, alphaPower, alphaRemap, aoStrength, diffuseAO,
                     blendStrength, vertexBaseColor, vertexColorStrength,
                     sourceName + "_BaseMap");
             }
@@ -1620,6 +1621,7 @@ namespace Reallusion.Import
                 Action<Material> SetCustom = (bakeMat) =>
                 {
                     bakeMat.SetFloatIf("_AOOccludeAll", aoOccludeAll);
+                    Debug.Log("AO Occlude All = " + aoOccludeAll);
                     bakeMat.SetTextureIf("_FlowMap", flow);
                     bakeMat.SetFloatIf("_FlowMapFlipGreen", flowMapFlipGreen);
                     bakeMat.SetFloatIf("_Translucency", translucency);
@@ -1913,7 +1915,8 @@ namespace Reallusion.Import
                 alphaChannel = CheckBlank(alphaChannel);
 
                 int kernel = bakeShader.FindKernel("RLChannelPackLinear");
-                bakeTarget.Create(bakeShader, kernel);
+                bakeTarget.Create(bakeShader, kernel);                
+
                 bakeShader.SetTexture(kernel, "RedChannel", redChannel);
                 bakeShader.SetTexture(kernel, "GreenChannel", greenChannel);
                 bakeShader.SetTexture(kernel, "BlueChannel", blueChannel);
@@ -1949,7 +1952,8 @@ namespace Reallusion.Import
                 alphaChannelR = CheckBlank(alphaChannelR);
 
                 int kernel = bakeShader.FindKernel("RLChannelPackSymmetryLinear");
-                bakeTarget.Create(bakeShader, kernel);
+                bakeTarget.Create(bakeShader, kernel);				
+
                 bakeShader.SetTexture(kernel, "RedChannelL", redChannelL);
                 bakeShader.SetTexture(kernel, "GreenChannelL", greenChannelL);
                 bakeShader.SetTexture(kernel, "BlueChannelL", blueChannelL);
@@ -2192,7 +2196,8 @@ namespace Reallusion.Import
                 cavityAO = CheckMask(cavityAO);
 
                 int kernel = bakeShader.FindKernel("RLHeadDiffuse");
-                bakeTarget.Create(bakeShader, kernel);
+                bakeTarget.Create(bakeShader, kernel);				
+
                 bakeShader.SetTexture(kernel, "Diffuse", diffuse);
                 bakeShader.SetTexture(kernel, "ColorBlend", blend);
                 bakeShader.SetTexture(kernel, "CavityAO", cavityAO);
@@ -2431,7 +2436,8 @@ namespace Reallusion.Import
                 baseMap = CheckDiffuse(baseMap);
 
                 int kernel = bakeShader.FindKernel(kernelName);
-                bakeTarget.Create(bakeShader, kernel);
+                bakeTarget.Create(bakeShader, kernel);				
+
                 bakeShader.SetTexture(kernel, "Subsurface", subsurface);
                 bakeShader.SetTexture(kernel, "NMUILMask", NMUIL);
                 bakeShader.SetTexture(kernel, "CFULCMask", CFULC);

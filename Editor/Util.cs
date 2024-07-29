@@ -391,7 +391,13 @@ namespace Reallusion.Import
                 if (shader != null)
                 {
                     if (shader.name.iEquals(name))
-                    {
+                    {                        
+#if UNITY_2020_3_OR_NEWER                        
+                        if (Application.platform == RuntimePlatform.OSXEditor)
+                            shader.EnableKeyword("_MAC_OS");
+                        else
+                            shader.DisableKeyword("_MAC_OS");
+#endif
                         return shader;
                     }
                 }
