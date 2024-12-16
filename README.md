@@ -1,9 +1,9 @@
 # CC/iC Unity Tools HDRP
 
 ## Important
-Development of the CC/iC Unity Tools has moved to a single version for all pipelines: [CCiC-Unity-Tools](https://github.com/soupday/CCiC-Unity-Tools)
+*Development of the CC/iC Unity Tools has moved to a single version for all pipelines*: [CCiC-Unity-Tools](https://github.com/soupday/CCiC-Unity-Tools)
 
-This repository will **not** be updated any further.
+*This repository will **not** be updated any further.*
 
 Read Me
 =======
