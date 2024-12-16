@@ -741,22 +741,25 @@ namespace Reallusion.Import
         {
             QuickJSON objectsJson = ObjectsJsonData;
 
-            foreach (MultiValue mvMesh in objectsJson.values)
+            if (objectsJson != null)
             {
-                if (mvMesh.Type == MultiType.Object)
+                foreach (MultiValue mvMesh in objectsJson.values)
                 {
-                    QuickJSON objJson = mvMesh.ObjectValue;
-                    string objName = mvMesh.Key;
-                    string materialsPath = ObjectsMaterialsJsonPath(objName);
-                    QuickJSON materialsJson = objectsJson.GetObjectAtPath(materialsPath);
-                    if (materialsJson != null)
+                    if (mvMesh.Type == MultiType.Object)
                     {
-                        foreach (MultiValue mvMat in materialsJson.values)
+                        QuickJSON objJson = mvMesh.ObjectValue;
+                        string objName = mvMesh.Key;
+                        string materialsPath = ObjectsMaterialsJsonPath(objName);
+                        QuickJSON materialsJson = objectsJson.GetObjectAtPath(materialsPath);
+                        if (materialsJson != null)
                         {
-                            if (mvMat.Type == MultiType.Object)
+                            foreach (MultiValue mvMat in materialsJson.values)
                             {
-                                QuickJSON matjson = mvMat.ObjectValue;
-                                if (matjson.PathExists(path)) return true;
+                                if (mvMat.Type == MultiType.Object)
+                                {
+                                    QuickJSON matjson = mvMat.ObjectValue;
+                                    if (matjson.PathExists(path)) return true;
+                                }
                             }
                         }
                     }

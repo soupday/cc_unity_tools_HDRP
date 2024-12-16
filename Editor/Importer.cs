@@ -1469,6 +1469,9 @@ namespace Reallusion.Import
         private void ConnectHQSkinMaterial(GameObject obj, string sourceName, Material sharedMat, Material mat,
             MaterialType materialType, QuickJSON matJson)
         {
+            bool hasWrinkle = false;
+            if (matJson != null) hasWrinkle = matJson.PathExists("Wrinkle");
+
             ConnectTextureTo(sourceName, mat, "_DiffuseMap", "Diffuse",
                     matJson, "Textures/Base Color",
                     FLAG_SRGB);
@@ -1534,7 +1537,7 @@ namespace Reallusion.Import
                     matJson, "Custom Shader/Image/NormalMap Blend",
                     FLAG_NORMAL);
                  
-                if (characterInfo.FeatureUseWrinkleMaps && matJson.PathExists("Wrinkle"))
+                if (characterInfo.FeatureUseWrinkleMaps && hasWrinkle)
                 {
                     ConnectTextureTo(sourceName, mat, "_WrinkleDiffuseBlend1", "Wrinkle_Diffuse1",
                         matJson, "Wrinkle/Textures/Diffuse_1",
@@ -2525,15 +2528,18 @@ namespace Reallusion.Import
           
         private void AddWrinkleManager(GameObject obj, SkinnedMeshRenderer smr, Material mat, QuickJSON matJson)
         {
-            WrinkleManager wm = obj.AddComponent<WrinkleManager>();
-            wm.headMaterial = mat;
-            wm.skinnedMeshRenderer = smr;
-            float overallWeight = 1;
-            if (matJson.PathExists("Wrinkle/WrinkleOverallWeight"))
+            if (matJson != null)
             {
-                overallWeight = matJson.GetFloatValue("Wrinkle/WrinkleOverallWeight");
+                WrinkleManager wm = obj.AddComponent<WrinkleManager>();
+                wm.headMaterial = mat;
+                wm.skinnedMeshRenderer = smr;
+                float overallWeight = 1;
+                if (matJson.PathExists("Wrinkle/WrinkleOverallWeight"))
+                {
+                    overallWeight = matJson.GetFloatValue("Wrinkle/WrinkleOverallWeight");
+                }
+                wm.BuildConfig(BuildWrinkleProps(matJson), overallWeight);
             }
-            wm.BuildConfig(BuildWrinkleProps(matJson), overallWeight);
         }
 
         private void CopyWrinkleMasks(string folder)
